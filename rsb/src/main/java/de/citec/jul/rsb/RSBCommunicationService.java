@@ -164,8 +164,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 		}
 	}
 
-	
-
 	public ConnectionState getState() {
 		return state;
 	}
