@@ -8,21 +8,22 @@ package de.citec.jul.exception;
  *
  * @author divine
  */
-public class VerificationFailedException extends Exception {
+public class VerificationFailedException extends CouldNotPerformException {
 
-	public VerificationFailedException(Throwable cause) {
-		super(cause);
-	}
+    public VerificationFailedException(String message) {
+        super(message);
+    }
 
-	public VerificationFailedException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public VerificationFailedException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public VerificationFailedException(String message) {
-		super(message);
-	}
+    public VerificationFailedException(Throwable cause) {
+        super(cause);
+    }
 
-	public VerificationFailedException() {
-	}
-	
+    public VerificationFailedException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }

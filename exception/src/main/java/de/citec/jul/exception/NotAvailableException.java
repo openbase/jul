@@ -9,7 +9,7 @@ package de.citec.jul.exception;
  *
  * @author mpohling
  */
-public class NotAvailableException extends Exception {
+public class NotAvailableException extends CouldNotPerformException {
 
     public NotAvailableException(Object object, String message) {
         this(object.getClass(), message);

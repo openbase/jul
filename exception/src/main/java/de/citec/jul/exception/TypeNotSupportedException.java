@@ -10,7 +10,7 @@ package de.citec.jul.exception;
  *
  * @author mpohling
  */
-public class TypeNotSupportedException extends Exception {
+public class TypeNotSupportedException extends CouldNotPerformException {
 
 	public TypeNotSupportedException(String message) {
 		super(message);

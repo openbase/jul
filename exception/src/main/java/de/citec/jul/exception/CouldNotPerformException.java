@@ -21,4 +21,8 @@ public class CouldNotPerformException extends Exception {
 	public CouldNotPerformException(Throwable cause) {
 		super(cause);
 	}
+
+    public CouldNotPerformException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

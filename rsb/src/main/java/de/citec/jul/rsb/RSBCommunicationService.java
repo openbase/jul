@@ -40,7 +40,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
 	protected final Logger logger;
 
-	protected final MB builder;
+	protected final MB data;
 	protected RSBInformerInterface<M> informer;
 	protected LocalServer server;
 	protected WatchDog serverWatchDog;
@@ -51,7 +51,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 	public RSBCommunicationService(final Scope scope, final MB builder) {
 		this.logger = LoggerFactory.getLogger(getClass());
 		this.scope = new Scope(scope.toString().toLowerCase());
-		this.builder = builder;
+		this.data = builder;
 		logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
 	}
         
@@ -103,7 +103,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 	}
 
 	private Class<? extends M> detectMessageClass() {
-		return (Class<? extends M>) ((M) builder.clone().buildPartial()).getClass();
+		return (Class<? extends M>) ((M) data.clone().buildPartial()).getClass();
 	}
 
 	public void activate() {
@@ -129,18 +129,18 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
 	public M getMessage() throws RSBException {
 		try {
-			return (M) builder.clone().build();
+			return (M) data.clone().build();
 		} catch (Exception ex) {
 			throw new RSBException("Could not build message!", ex);
 		}
 	}
 
 	public MB cloneBuilder() {
-		return (MB) builder.clone();
+		return (MB) data.clone();
 	}
 
 	public MB getBuilder() {
-		return builder;
+		return data;
 	}
 
 	public Scope getScope() {
@@ -158,7 +158,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
 	protected final void setField(String name, Object value) {
 		try {
-			builder.setField(builder.getDescriptorForType().findFieldByName(name), value);
+			data.setField(data.getDescriptorForType().findFieldByName(name), value);
 		} catch (Exception ex) {
 			logger.warn("Could not set field [" + name + "=" + value + "] for " + this);
 		}
