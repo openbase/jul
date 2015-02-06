@@ -5,6 +5,7 @@
  */
 package de.citec.jul.schedule;
 
+import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
@@ -12,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Activatable;
 import rsb.RSBException;
+import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.NotAvailableException;
 
 /**
  *
@@ -19,198 +22,214 @@ import rsb.RSBException;
  */
 public class WatchDog implements Activatable {
 
-	private final Object EXECUTION_LOCK = new Object();
-	private final Object STATE_LOCK = new Object();
+    private final Object EXECUTION_LOCK = new Object();
+    private final Object STATE_LOCK = new Object();
 
-	private static final long DELAY = 10000;
+    private static final long DELAY = 10000;
 
-	public enum ServiceState {
+    public enum ServiceState {
 
-		Unknown, Constructed, Initializing, Running, Terminating, Finished, Failed
-	};
+        Unknown, Constructed, Initializing, Running, Terminating, Finished, Failed
+    };
 
-	protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-	private final Activatable service;
-	private final String serviceName;
-	private Minder minder;
-	private ServiceState serviceState = ServiceState.Unknown;
+    private final Activatable service;
+    private final String serviceName;
+    private Minder minder;
+    private ServiceState serviceState = ServiceState.Unknown;
 
-	private final Observable<ServiceState> serviceStateObserable;
+    private final Observable<ServiceState> serviceStateObserable;
 
-	public WatchDog(final Activatable task, final String serviceName) {
-		this.service = task;
-		this.serviceName = serviceName;
-		this.serviceStateObserable = new Observable<>();
+    public WatchDog(final Activatable task, final String serviceName) throws InstantiationException {
+        try {
+            this.service = task;
+            this.serviceName = serviceName;
+            this.serviceStateObserable = new Observable<>();
 
-		Runtime.getRuntime().addShutdownHook(new Thread() {
+            if (task == null) {
+                throw new NotAvailableException("task");
+            }
 
-			@Override
-			public void run() {
-				try {
-					deactivate();
-				} catch (InterruptedException ex) {
-					logger.error("Could not shutdown "+serviceName+"!", ex);
-				}
-			}
-		});
+            Runtime.getRuntime().addShutdownHook(new Thread() {
 
-		setServiceState(ServiceState.Constructed);
-	}
+                @Override
+                public void run() {
+                    try {
+                        deactivate();
+                    } catch (InterruptedException ex) {
+                        logger.error("Could not shutdown " + serviceName + "!", ex);
+                    }
+                }
+            });
 
-	@Override
-	public void activate() {
-		logger.trace("Try to activate service: " + serviceName);
-		synchronized (EXECUTION_LOCK) {
-			logger.trace("Init activation of service: " + serviceName);
-			if (minder != null) {
-				logger.warn("Skip activation, Service[" + serviceName + "] already running!");
-				return;
-			}
-			minder = new Minder(serviceName + "WatchDog");
-			logger.trace("Start activation of service: " + serviceName);
-			minder.start();
-		}
+            setServiceState(ServiceState.Constructed);
+        } catch (CouldNotPerformException ex) {
+            throw new InstantiationException(this, ex);
+        }
+    }
 
-		try {
-			waitForActivation();
-		} catch (InterruptedException ex) {
-			logger.warn("Could not wait for service activation!", ex);
-		}
-	}
+    @Override
+    public void activate() {
+        logger.trace("Try to activate service: " + serviceName);
+        synchronized (EXECUTION_LOCK) {
+            logger.trace("Init activation of service: " + serviceName);
+            if (minder != null) {
+                logger.warn("Skip activation, Service[" + serviceName + "] already running!");
+                return;
+            }
+            minder = new Minder(serviceName + "WatchDog");
+            logger.trace("Start activation of service: " + serviceName);
+            minder.start();
+        }
 
-	@Override
-	public void deactivate() throws InterruptedException {
-		logger.trace("Try to deactivate service: " + serviceName);
-		synchronized (EXECUTION_LOCK) {
-			logger.trace("Init deactivation of service: " + serviceName);
-			if (minder == null) {
-				logger.warn("Skip deactivation, Service[" + serviceName + "] not running!");
-				return;
-			}
+        try {
+            waitForActivation();
+        } catch (InterruptedException ex) {
+            logger.warn("Could not wait for service activation!", ex);
+        }
+    }
 
-			logger.trace("Init service interruption...");
-			minder.interrupt();
-			logger.trace("Wait for service interruption...");
-			minder.join();
-			minder = null;
-			logger.trace("Service interrupted!");
-		}
-	}
+    @Override
+    public void deactivate() throws InterruptedException {
+        logger.trace("Try to deactivate service: " + serviceName);
+        synchronized (EXECUTION_LOCK) {
+            logger.trace("Init deactivation of service: " + serviceName);
+            if (minder == null) {
+                logger.warn("Skip deactivation, Service[" + serviceName + "] not running!");
+                return;
+            }
 
-	@Override
-	public boolean isActive() {
-		return minder != null;
-	}
+            logger.trace("Init service interruption...");
+            minder.interrupt();
+            logger.trace("Wait for service interruption...");
+            minder.join();
+            minder = null;
+            logger.trace("Service interrupted!");
+        }
+    }
 
-	public String getServiceName() {
-		return serviceName;
-	}
+    @Override
+    public boolean isActive() {
+        return minder != null;
+    }
 
-	public void waitForActivation() throws InterruptedException {
+    public String getServiceName() {
+        return serviceName;
+    }
 
-		synchronized (STATE_LOCK) {
-			if (serviceState == ServiceState.Running) {
-				return;
-			}
+    public void waitForActivation() throws InterruptedException {
 
-			addObserver(new Observer<ServiceState>() {
+        synchronized (STATE_LOCK) {
+            if (serviceState == ServiceState.Running) {
+                return;
+            }
 
-				@Override
-				public void update(Observable<ServiceState> source, ServiceState data) throws Exception {
-					if (data == ServiceState.Running) {
-						synchronized (STATE_LOCK) {
-							STATE_LOCK.notify();
-						}
-					}
-				}
-			});
-			STATE_LOCK.wait();
-		}
-	}
+            addObserver(new Observer<ServiceState>() {
 
-	private class Minder extends Thread {
+                @Override
+                public void update(Observable<ServiceState> source, ServiceState data) throws Exception {
+                    if (data == ServiceState.Running) {
+                        synchronized (STATE_LOCK) {
+                            STATE_LOCK.notify();
+                        }
+                    }
+                }
+            });
+            STATE_LOCK.wait();
+        }
+    }
 
-		private Minder(String name) {
-			super(name);
-			setServiceState(ServiceState.Initializing);
-		}
+    private class Minder extends Thread {
 
-		@Override
-		public void run() {
-			try {
-				while (!isInterrupted()) {
-					if (!service.isActive()) {
-						setServiceState(ServiceState.Initializing);
-						try {
-							service.activate();
-							setServiceState(ServiceState.Running);
-						} catch (RSBException ex) {
-							logger.error("Could not start Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
-							setServiceState(ServiceState.Failed);
-						}
-					}
-					waitWithinDelay();
-				}
-			} catch (InterruptedException ex) {
-				logger.debug("Catch Service[" + serviceName + "] interruption.");
-			}
+        private Minder(String name) {
+            super(name);
+            setServiceState(ServiceState.Initializing);
+        }
 
-			while (service.isActive()) {
-				setServiceState(ServiceState.Terminating);
-				try {
-					service.deactivate();
-					setServiceState(ServiceState.Finished);
-				} catch (RSBException | InterruptedException ex) {
-					logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
-					try {
-						waitWithinDelay();
-					} catch (InterruptedException exx) {
-						logger.debug("Catch Service[" + serviceName + "] interruption during shutdown!");
-					}
-				}
-			}
-		}
+        @Override
+        public void run() {
+            try {
+                try {
+                    while (!isInterrupted()) {
+                        if (!service.isActive()) {
+                            setServiceState(ServiceState.Initializing);
+                            try {
+                                service.activate();
+                                setServiceState(ServiceState.Running);
+                            } catch (RSBException ex) {
+                                logger.error("Could not start Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
+                                setServiceState(ServiceState.Failed);
+                            }
+                        }
+                        waitWithinDelay();
+                    }
+                } catch (InterruptedException ex) {
+                    logger.debug("Catch Service[" + serviceName + "] interruption.");
+                }
 
-		private void waitWithinDelay() throws InterruptedException {
-			Thread.sleep(DELAY);
-		}
-	}
+                while (service.isActive()) {
+                    setServiceState(ServiceState.Terminating);
+                    try {
+                        service.deactivate();
+                        setServiceState(ServiceState.Finished);
+                    } catch (RSBException | InterruptedException ex) {
+                        logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
+                        try {
+                            waitWithinDelay();
+                        } catch (InterruptedException exx) {
+                            logger.debug("Catch Service[" + serviceName + "] interruption during shutdown!");
+                        }
+                    }
+                }
 
-	public Activatable getService() {
-		return service;
-	}
+            } catch (Throwable tr) {
+                logger.error("Fatal watchdog execution error! Release all locks...", tr);
+                synchronized (STATE_LOCK) {
+                    STATE_LOCK.notifyAll();
+                }
+            }
+        }
 
-	private void setServiceState(final ServiceState serviceState) {
-		try {
-			synchronized (STATE_LOCK) {
-				if (this.serviceState == serviceState) {
-					return;
-				}
-				this.serviceState = serviceState;
-			}
-			logger.info(this + " is now " + serviceState.name().toLowerCase() + ".");
-			serviceStateObserable.notifyObservers(serviceState);
-		} catch (MultiException ex) {
-			logger.warn("Could not notify statechange to all instanzes!", ex);
-			ex.printExceptionStack();
-		}
-	}
+        private void waitWithinDelay() throws InterruptedException {
+            Thread.sleep(DELAY);
+        }
+    }
 
-	public ServiceState getServiceState() {
-		return serviceState;
-	}
+    public Activatable getService() {
+        return service;
+    }
 
-	public void addObserver(Observer<ServiceState> observer) {
-		serviceStateObserable.addObserver(observer);
-	}
+    private void setServiceState(final ServiceState serviceState) {
+        try {
+            synchronized (STATE_LOCK) {
+                if (this.serviceState == serviceState) {
+                    return;
+                }
+                this.serviceState = serviceState;
+            }
+            logger.info(this + " is now " + serviceState.name().toLowerCase() + ".");
+            serviceStateObserable.notifyObservers(serviceState);
+        } catch (MultiException ex) {
+            logger.warn("Could not notify statechange to all instanzes!", ex);
+            ex.printExceptionStack();
+        }
+    }
 
-	public void removeObserver(Observer<ServiceState> observer) {
-		serviceStateObserable.removeObserver(observer);
-	}
+    public ServiceState getServiceState() {
+        return serviceState;
+    }
 
-	@Override
-	public String toString() {
-		return getClass().getSimpleName()+"["+serviceName+"]";
-	}
+    public void addObserver(Observer<ServiceState> observer) {
+        serviceStateObserable.addObserver(observer);
+    }
+
+    public void removeObserver(Observer<ServiceState> observer) {
+        serviceStateObserable.removeObserver(observer);
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[" + serviceName + "]";
+    }
 }
