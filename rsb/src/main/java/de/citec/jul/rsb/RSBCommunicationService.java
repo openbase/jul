@@ -54,10 +54,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
     }
 
-    public RSBCommunicationService(final String id, final ScopeProvider location, final MB builder) {
-        this(generateScope(id, location), builder);
+    public RSBCommunicationService(final String lable, final ScopeProvider location, final MB builder) {
+        this(generateScope(lable, location), builder);
     }
 
+    public static Scope generateScope(final String id, final ScopeProvider location) {
+        return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + id));
+    }
+    
     public static Scope generateScope(final String id, final ScopeProvider location) {
         return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + id));
     }
