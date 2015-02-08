@@ -58,12 +58,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         this(generateScope(lable, location), builder);
     }
 
-    public static Scope generateScope(final String id, final ScopeProvider location) {
-        return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + id));
-    }
-    
-    public static Scope generateScope(final String id, final ScopeProvider location) {
-        return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + id));
+    public static Scope generateScope(final String label, final ScopeProvider location) {
+        return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + label));
     }
 
     public void init(final InformerType informerType) throws RSBException {
