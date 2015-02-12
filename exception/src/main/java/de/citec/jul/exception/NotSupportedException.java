@@ -15,6 +15,10 @@ public class NotSupportedException extends CouldNotPerformException {
 		super("Given "+context+" is not supported by "+source+": "+message);
 	}
 
+	public NotSupportedException(Object context, Class source) {
+		this(context, source.getSimpleName());
+	}
+
 	public NotSupportedException(Object context, Object source) {
 		super("Given "+context+" is not supported by "+source+"!");
 	}

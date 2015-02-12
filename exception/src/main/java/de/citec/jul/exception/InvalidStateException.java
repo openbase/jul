@@ -9,7 +9,7 @@ package de.citec.jul.exception;
  *
  * @author Divine <DivineThreepwood@gmail.com>
  */
-public class InvalidStateException extends Exception {
+public class InvalidStateException extends CouldNotPerformException {
 
 	public InvalidStateException(String message) {
 		super(message);

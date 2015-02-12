@@ -143,6 +143,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         listenerWatchDog.deactivate();
     }
 
+	public boolean isConnected() {
+		return listenerWatchDog.isActive() && listener.isActive() && remoteServerWatchDog.isActive() && remoteServer.isActive();
+	}
+
     private void activateRemoteServer() {
         remoteServerWatchDog.activate();
     }
