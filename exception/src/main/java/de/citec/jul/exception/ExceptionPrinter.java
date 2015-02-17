@@ -29,7 +29,7 @@ public class ExceptionPrinter {
         logger.error(th.getMessage());
         Throwable internalThrowable = th.getCause();
         while (internalThrowable != null) {
-            logger.error("=== " + internalThrowable.getMessage());
+            logger.error("=== "+internalThrowable.getClass().getSimpleName() + "[" + internalThrowable.getMessage()+"]");
             internalThrowable = internalThrowable.getCause();
         }
         

@@ -15,6 +15,6 @@ public class InvocationFailedException extends CouldNotPerformException {
         this(callable.getClass(), target.getClass(), cause);
     }
     public InvocationFailedException(Class callable, Class target, final Throwable cause) {
-        super("Coudl not invoke "+callable.getSimpleName()+" on "+target.getName()+".", cause);
+        super("Could not invoke "+callable.getSimpleName()+" on "+target.getName()+".", cause);
     }    
 }
