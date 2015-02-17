@@ -7,6 +7,7 @@ package de.citec.jul.rsb;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
@@ -143,9 +144,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         listenerWatchDog.deactivate();
     }
 
-	public boolean isConnected() {
-		return listenerWatchDog.isActive() && listener.isActive() && remoteServerWatchDog.isActive() && remoteServer.isActive();
-	}
+    public boolean isConnected() {
+        return listenerWatchDog.isActive() && listener.isActive() && remoteServerWatchDog.isActive() && remoteServer.isActive();
+    }
 
     private void activateRemoteServer() {
         remoteServerWatchDog.activate();
@@ -173,8 +174,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
             return remoteServer.call(methodName, type);
         } catch (RSBException | ExecutionException | TimeoutException ex) {
-            logger.error("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
-            throw ex;
+            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
 
@@ -239,7 +239,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 notifyUpdated(data);
                 notifyObservers(data);
             } catch (Exception ex) {
-                logger.error("Could not notify data update! Given Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + this.getClass().getName() + "]!", ex);
+                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify data update! Given Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + this.getClass().getName() + "]!", ex));
             }
         }
     }

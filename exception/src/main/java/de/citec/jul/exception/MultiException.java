@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
  */
 public class MultiException extends Exception {
 
-    private final org.slf4j.Logger logger = LoggerFactory.getLogger(getClass());
     private final Map<Object, Exception> exceptionMap = new HashMap<>();
     
     public MultiException(final String message, final Map<Object, Exception> exceptions) {
@@ -30,7 +29,7 @@ public class MultiException extends Exception {
 
 	public void printExceptionStack() {
 		for(Object source : exceptionMap.keySet()) {
-			logger.error("Exception from "+source.toString()+":", exceptionMap.get(source));
+			LoggerFactory.getLogger(source.getClass()).error("Exception from "+source.toString()+":", exceptionMap.get(source));
 		}
 	}
 }

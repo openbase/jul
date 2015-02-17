@@ -36,7 +36,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public final static Scope SCOPE_SUFFIX_INFORMER = new Scope("/status");
 
     public final static String RPC_REQUEST_STATUS = "requestStatus";
-    public final static Event RPC_FEEDBACK_OK = new Event(String.class, "OK");
+    public final static Event RPC_SUCCESS = new Event(String.class, "Success");
 
     protected final Logger logger;
 
@@ -90,7 +90,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 @Override
                 public Event internalInvoke(Event request) throws Throwable {
                     requestStatus();
-                    return RPC_FEEDBACK_OK;
+                    return RPC_SUCCESS;
                 }
             });
             registerMethods(server);
