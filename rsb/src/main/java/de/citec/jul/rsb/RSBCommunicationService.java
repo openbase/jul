@@ -7,6 +7,7 @@ package de.citec.jul.rsb;
 
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessage.Builder;
+import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.rsb.RSBInformerInterface.InformerType;
 import de.citec.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     protected final MB data;
     protected RSBInformerInterface<M> informer;
     protected LocalServer server;
+    protected WatchDog informerWatchDog;
     protected WatchDog serverWatchDog;
     protected Scope scope;
     private ConnectionState state;
@@ -75,7 +77,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 default:
                     throw new AssertionError("Could not handle unknown " + informerType.getClass().getSimpleName() + "[" + informerType.name() + "].");
             }
-        } catch (InitializeException ex) {
+            informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
+        } catch (InitializeException | InstantiationException ex) {
             throw new RSBException("Could not init informer.", ex);
         }
 
@@ -107,11 +110,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public void activate() {
         logger.debug("Activate RSBCommunicationService for: " + this);
-        try {
-            informer.activate();
-        } catch (RSBException ex) {
-            throw new AssertionError(ex);
-        }
+        informerWatchDog.activate();
         serverWatchDog.activate();
         state = ConnectionState.Online;
     }
@@ -128,17 +127,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public M getMessage() throws RSBException {
         try {
-            return (M) data.clone().build();
+            return (M) cloneData().build();
         } catch (Exception ex) {
             throw new RSBException("Could not build message!", ex);
         }
     }
 
-    public MB cloneBuilder() {
+    public MB cloneData() {
         return (MB) data.clone();
     }
 
-    public MB getBuilder() {
+    public MB getData() {
         return data;
     }
 

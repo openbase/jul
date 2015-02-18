@@ -8,6 +8,9 @@ package de.citec.jul.rsb;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.InitializationException;
+import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
@@ -19,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 import rsb.Event;
 import rsb.Factory;
 import rsb.Handler;
+import rsb.InitializeException;
 import rsb.Listener;
 import rsb.RSBException;
 import rsb.Scope;
@@ -46,41 +50,45 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         this.initialized = false;
     }
 
-    public void init(final String label, final ScopeProvider location) {
+    public void init(final String label, final ScopeProvider location) throws InitializationException {
         init(generateScope(label, detectMessageClass(), location));
     }
 
-    public synchronized void init(final Scope scope) {
-
-        if (initialized) {
-            logger.warn("Skip initialization because " + this + " already initialized!");
-            return;
-        }
-
-        this.scope = new Scope(scope.toString().toLowerCase());
-        logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
-
-        initListener(this.scope);
-        initRemoteServer(this.scope);
+    public synchronized void init(final Scope scope) throws InitializationException {
 
         try {
-            addHandler(mainHandler, true);
-        } catch (InterruptedException ex) {
-            logger.warn("Could not register main handler!", ex);
+            if (initialized) {
+                logger.warn("Skip initialization because " + this + " already initialized!");
+                return;
+            }
+
+            this.scope = new Scope(scope.toString().toLowerCase());
+            logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
+
+            initListener(this.scope);
+            initRemoteServer(this.scope);
+
+            try {
+                addHandler(mainHandler, true);
+            } catch (InterruptedException ex) {
+                logger.warn("Could not register main handler!", ex);
+            }
+            initialized = true;
+        } catch (CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
         }
-        initialized = true;
     }
 
-    private void initListener(final Scope scope) {
+    private void initListener(final Scope scope) throws CouldNotPerformException {
         try {
             this.listener = Factory.getInstance().createListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_INFORMER));
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_INFORMER) + "]");
-        } catch (Exception ex) {
-            logger.error("Could not create Listener on scope [" + scope.toString() + "]!", ex);
+        } catch (InitializeException | InstantiationException ex) {
+            throw new CouldNotPerformException("Could not create Listener on scope [" + scope.toString() + "]!", ex);
         }
     }
 
-    private void initRemoteServer(final Scope scope) {
+    private void initRemoteServer(final Scope scope) throws CouldNotPerformException {
         try {
             this.remoteServer = Factory.getInstance().createRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_RPC));
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_RPC) + "]");
@@ -106,7 +114,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 }
             });
         } catch (Exception ex) {
-            logger.error("Could not create RemoteServer on scope [" + scope.toString() + "]!", ex);
+            throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope.toString() + "]!", ex);
         }
     }
 
@@ -118,22 +126,24 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    public void activate() {
+    public void activate() throws InvalidStateException {
         if (!initialized) {
-            logger.warn("Skip activation because " + this + " is not initialized!");
-            return;
+            throw new InvalidStateException("Skip activation because " + this + " is not initialized!");
         }
         activateListener();
         activateRemoteServer();
     }
 
-    public void deactivate() throws InterruptedException {
-        if (!initialized) {
-            logger.warn("Skip deactivation because " + this + " is not initialized!");
-            return;
+    public void deactivate() throws InterruptedException, InvalidStateException, CouldNotPerformException {
+        try {
+            if (!initialized) {
+                throw new InvalidStateException("Skip deactivation because " + this + " is not initialized!");
+            }
+            deactivateListener();
+            deactivateRemoteServer();
+        } catch (InvalidStateException | InterruptedException ex) {
+            throw new CouldNotPerformException("Could not deactivate " + getClass().getSimpleName() + "!", ex);
         }
-        deactivateListener();
-        deactivateRemoteServer();
     }
 
     private void activateListener() {
@@ -200,8 +210,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public void shutdown() {
         try {
             deactivate();
-        } catch (InterruptedException ex) {
-            logger.warn("Could not deactivate remote service!", ex);
+        } catch (CouldNotPerformException | InterruptedException ex) {
+            logger.error("Could not deactivate remote service!", ex);
         }
         super.shutdown();
     }
