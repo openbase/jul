@@ -7,6 +7,7 @@ package de.citec.jul.rsb;
 
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessage.Builder;
+import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.rsb.RSBInformerInterface.InformerType;
 import de.citec.jul.schedule.WatchDog;
@@ -64,7 +65,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + label));
     }
 
-    public void init(final InformerType informerType) throws RSBException {
+    public void init(final InformerType informerType) throws InitializationException {
         try {
             logger.info("Init " + informerType.name().toLowerCase() + " informer service...");
             switch (informerType) {
@@ -79,7 +80,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             }
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
         } catch (InitializeException | InstantiationException ex) {
-            throw new RSBException("Could not init informer.", ex);
+            throw new InitializationException(this, ex);
         }
 
         try {
@@ -99,8 +100,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             registerMethods(server);
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_RPC)) + "]");
 
-        } catch (Exception ex) {
-            throw new RSBException("Could not init rpc server.", ex);
+        } catch (RSBException | InstantiationException ex) {
+            throw new InitializationException(this, ex);
         }
     }
 
