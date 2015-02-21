@@ -29,6 +29,7 @@
         <module>pattern</module>
         <module>exception</module>
         <module>visual</module>
+        <module>processing</module>
     </modules>
     
     <dependencies>
