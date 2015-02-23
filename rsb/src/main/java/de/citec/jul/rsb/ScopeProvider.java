@@ -13,7 +13,5 @@ import rsb.Scope;
  */
 public interface ScopeProvider {
     
-    public final static String SEPARATOR = "/";
-    
     public Scope getScope();
 }

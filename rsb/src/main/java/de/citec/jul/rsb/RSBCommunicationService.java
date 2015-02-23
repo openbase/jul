@@ -27,7 +27,7 @@ import rsb.patterns.LocalServer;
  * @param <M>
  * @param <MB>
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends Builder> {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends Builder> implements ScopeProvider {
 
     public enum ConnectionState {
 
@@ -40,29 +40,29 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public final static String RPC_REQUEST_STATUS = "requestStatus";
     public final static Event RPC_SUCCESS = new Event(String.class, "Success");
 
-    protected final Logger logger;
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected final MB data;
     protected RSBInformerInterface<M> informer;
     protected LocalServer server;
     protected WatchDog informerWatchDog;
     protected WatchDog serverWatchDog;
+
+    protected final MB data;
     protected Scope scope;
     private ConnectionState state;
 
     public RSBCommunicationService(final Scope scope, final MB builder) {
-        this.logger = LoggerFactory.getLogger(getClass());
         this.scope = new Scope(scope.toString().toLowerCase());
         this.data = builder;
         logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
     }
 
-    public RSBCommunicationService(final String lable, final ScopeProvider location, final MB builder) {
-        this(generateScope(lable, location), builder);
+    public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) {
+        this(generateScope(name, lable, location), builder);
     }
 
-    public static Scope generateScope(final String label, final ScopeProvider location) {
-        return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + label));
+    public static Scope generateScope(final String name, final String label, final ScopeProvider location) {
+        return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + name).concat(new Scope(Scope.COMPONENT_SEPARATOR + label)));
     }
 
     public void init(final InformerType informerType) throws InitializationException {
@@ -70,15 +70,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             logger.info("Init " + informerType.name().toLowerCase() + " informer service...");
             switch (informerType) {
                 case Single:
-                    this.informer = new RSBSingleInformer(scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
+                    this.informer = new RSBSingleInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
                     break;
                 case Distributed:
-                    this.informer = new RSBDistributedInformer(scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
+                    this.informer = new RSBDistributedInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
                     break;
                 default:
                     throw new AssertionError("Could not handle unknown " + informerType.getClass().getSimpleName() + "[" + informerType.name() + "].");
             }
-            informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
+            informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
         } catch (InitializeException | InstantiationException ex) {
             throw new InitializationException(this, ex);
         }
@@ -86,7 +86,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         try {
             logger.info("Init rpc server...");
             // Get local server object which allows to expose remotely callable methods.
-            server = Factory.getInstance().createLocalServer(scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_RPC)));
+            server = Factory.getInstance().createLocalServer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)));
 
             // register rpc methods.
             server.addMethod(RPC_REQUEST_STATUS, new Callback() {
@@ -98,7 +98,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 }
             });
             registerMethods(server);
-            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(ScopeProvider.SEPARATOR).concat(SCOPE_SUFFIX_RPC)) + "]");
+            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)) + "]");
 
         } catch (RSBException | InstantiationException ex) {
             throw new InitializationException(this, ex);

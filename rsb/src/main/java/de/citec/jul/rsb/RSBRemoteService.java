@@ -229,7 +229,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     public static Scope generateScope(final String label, final Class typeClass, final ScopeProvider location) {
-        return location.getScope().concat(new Scope(ScopeProvider.SEPARATOR + typeClass.getSimpleName())).concat(new Scope(ScopeProvider.SEPARATOR + label));
+        return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + typeClass.getSimpleName())).concat(new Scope(Scope.COMPONENT_SEPARATOR + label));
     }
 
     @Override
