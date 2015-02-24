@@ -30,6 +30,7 @@
         <module>exception</module>
         <module>visual</module>
         <module>processing</module>
+        <module>interface</module>
     </modules>
     
     <dependencies>
