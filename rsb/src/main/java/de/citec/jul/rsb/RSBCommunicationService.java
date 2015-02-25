@@ -9,6 +9,7 @@ import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.iface.Activatable;
 import de.citec.jul.rsb.RSBInformerInterface.InformerType;
 import de.citec.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -27,154 +28,164 @@ import rsb.patterns.LocalServer;
  * @param <M>
  * @param <MB>
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends Builder> implements ScopeProvider {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends Builder> implements ScopeProvider, Activatable {
 
-    public enum ConnectionState {
+	public enum ConnectionState {
 
-        Online, Offline
-    };
+		Online, Offline
+	};
 
-    public final static Scope SCOPE_SUFFIX_RPC = new Scope("/ctrl");
-    public final static Scope SCOPE_SUFFIX_INFORMER = new Scope("/status");
+	public final static Scope SCOPE_SUFFIX_RPC = new Scope("/ctrl");
+	public final static Scope SCOPE_SUFFIX_INFORMER = new Scope("/status");
 
-    public final static String RPC_REQUEST_STATUS = "requestStatus";
-    public final static Event RPC_SUCCESS = new Event(String.class, "Success");
+	public final static String RPC_REQUEST_STATUS = "requestStatus";
+	public final static Event RPC_SUCCESS = new Event(String.class, "Success");
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+	protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected RSBInformerInterface<M> informer;
-    protected LocalServer server;
-    protected WatchDog informerWatchDog;
-    protected WatchDog serverWatchDog;
+	protected RSBInformerInterface<M> informer;
+	protected LocalServer server;
+	protected WatchDog informerWatchDog;
+	protected WatchDog serverWatchDog;
 
-    protected final MB data;
-    protected Scope scope;
-    private ConnectionState state;
+	protected final MB data;
+	protected Scope scope;
+	private ConnectionState state;
 
-    public RSBCommunicationService(final Scope scope, final MB builder) {
-        this.scope = new Scope(scope.toString().toLowerCase());
-        this.data = builder;
-        logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
-    }
+	public RSBCommunicationService(final Scope scope, final MB builder) {
+		this.scope = new Scope(scope.toString().toLowerCase());
+		this.data = builder;
+		logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
+	}
 
-    public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) {
-        this(generateScope(name, lable, location), builder);
-    }
+	public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) {
+		this(generateScope(name, lable, location), builder);
+	}
 
-    public static Scope generateScope(final String name, final String label, final ScopeProvider location) {
-        return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + name).concat(new Scope(Scope.COMPONENT_SEPARATOR + label)));
-    }
+	public static Scope generateScope(final String name, final String label, final ScopeProvider location) {
+		return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + name).concat(new Scope(Scope.COMPONENT_SEPARATOR + label)));
+	}
 
-    public void init(final InformerType informerType) throws InitializationException {
-        try {
-            logger.info("Init " + informerType.name().toLowerCase() + " informer service...");
-            switch (informerType) {
-                case Single:
-                    this.informer = new RSBSingleInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
-                    break;
-                case Distributed:
-                    this.informer = new RSBDistributedInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
-                    break;
-                default:
-                    throw new AssertionError("Could not handle unknown " + informerType.getClass().getSimpleName() + "[" + informerType.name() + "].");
-            }
-            informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
-        } catch (InitializeException | InstantiationException ex) {
-            throw new InitializationException(this, ex);
-        }
+	public void init(final InformerType informerType) throws InitializationException {
+//		registerConverter();
+		try {
+			logger.info("Init " + informerType.name().toLowerCase() + " informer service...");
+			switch (informerType) {
+				case Single:
+					this.informer = new RSBSingleInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
+					break;
+				case Distributed:
+					this.informer = new RSBDistributedInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
+					break;
+				default:
+					throw new AssertionError("Could not handle unknown " + informerType.getClass().getSimpleName() + "[" + informerType.name() + "].");
+			}
+			informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
+		} catch (InitializeException | InstantiationException ex) {
+			throw new InitializationException(this, ex);
+		}
 
-        try {
-            logger.info("Init rpc server...");
-            // Get local server object which allows to expose remotely callable methods.
-            server = Factory.getInstance().createLocalServer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)));
+		try {
+			logger.info("Init rpc server...");
+			// Get local server object which allows to expose remotely callable methods.
+			server = Factory.getInstance().createLocalServer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)));
 
-            // register rpc methods.
-            server.addMethod(RPC_REQUEST_STATUS, new Callback() {
+			// register rpc methods.
+			server.addMethod(RPC_REQUEST_STATUS, new Callback() {
 
-                @Override
-                public Event internalInvoke(Event request) throws Throwable {
-                    requestStatus();
-                    return RPC_SUCCESS;
-                }
-            });
-            registerMethods(server);
-            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)) + "]");
+				@Override
+				public Event internalInvoke(Event request) throws Throwable {
+					requestStatus();
+					return RPC_SUCCESS;
+				}
+			});
+			registerMethods(server);
+			serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)) + "]");
 
-        } catch (RSBException | InstantiationException ex) {
-            throw new InitializationException(this, ex);
-        }
-    }
+		} catch (RSBException | InstantiationException ex) {
+			throw new InitializationException(this, ex);
+		}
+	}
 
-    private Class<? extends M> detectMessageClass() {
-        return (Class<? extends M>) ((M) data.clone().buildPartial()).getClass();
-    }
+	private Class<? extends M> detectMessageClass() {
+		return (Class<? extends M>) ((M) data.clone().buildPartial()).getClass();
+	}
 
-    public void activate() {
-        logger.debug("Activate RSBCommunicationService for: " + this);
-        informerWatchDog.activate();
-        serverWatchDog.activate();
-        state = ConnectionState.Online;
-    }
+	@Override
+	public void activate() {
+		logger.debug("Activate RSBCommunicationService for: " + this);
+		informerWatchDog.activate();
+		serverWatchDog.activate();
+		state = ConnectionState.Online;
+	}
 
-    public void deactivate() throws InterruptedException {
-        try {
-            informer.deactivate();
-        } catch (RSBException ex) {
-            throw new AssertionError(ex);
-        }
-        serverWatchDog.deactivate();
-        state = ConnectionState.Offline;
-    }
+	@Override
+	public void deactivate() throws InterruptedException {
+		try {
+			informer.deactivate();
+		} catch (RSBException ex) {
+			throw new AssertionError(ex);
+		}
+		serverWatchDog.deactivate();
+		state = ConnectionState.Offline;
+	}
 
-    public M getMessage() throws RSBException {
-        try {
-            return (M) cloneData().build();
-        } catch (Exception ex) {
-            throw new RSBException("Could not build message!", ex);
-        }
-    }
+	@Override
+	public boolean isActive() {
+		return informerWatchDog.isActive() && serverWatchDog.isActive();
+	}
 
-    public MB cloneData() {
-        return (MB) data.clone();
-    }
+	public M getMessage() throws RSBException {
+		try {
+			return (M) cloneData().build();
+		} catch (Exception ex) {
+			throw new RSBException("Could not build message!", ex);
+		}
+	}
 
-    public MB getData() {
-        return data;
-    }
+	public MB cloneData() {
+		return (MB) data.clone();
+	}
 
-    public Scope getScope() {
-        return scope;
-    }
+	public MB getData() {
+		return data;
+	}
 
-    public void notifyChange() {
-        logger.debug("Notify change of " + this);
-        try {
-            informer.send(getMessage());
-        } catch (Exception ex) {
-            logger.error("Could not notify update", ex);
-        }
-    }
+	public Scope getScope() {
+		return scope;
+	}
 
-    protected final void setField(String name, Object value) {
-        try {
-            data.setField(data.getDescriptorForType().findFieldByName(name), value);
-        } catch (Exception ex) {
-            logger.warn("Could not set field [" + name + "=" + value + "] for " + this);
-        }
-    }
+	public void notifyChange() {
+		logger.debug("Notify change of " + this);
+		try {
+			informer.send(getMessage());
+		} catch (Exception ex) {
+			logger.error("Could not notify update", ex);
+		}
+	}
 
-    public ConnectionState getState() {
-        return state;
-    }
+	protected final void setField(String name, Object value) {
+		try {
+			data.setField(data.getDescriptorForType().findFieldByName(name), value);
+		} catch (Exception ex) {
+			logger.warn("Could not set field [" + name + "=" + value + "] for " + this);
+		}
+	}
 
-    public void requestStatus() {
-        notifyChange();
-    }
+	public ConnectionState getState() {
+		return state;
+	}
 
-    public abstract void registerMethods(final LocalServer server) throws RSBException;
+	public void requestStatus() {
+		notifyChange();
+	}
 
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "[" + scope + "]";
-    }
+	public abstract void registerMethods(final LocalServer server) throws RSBException;
+
+//	public abstract void registerConverter();
+
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "[" + scope + "]";
+	}
 }

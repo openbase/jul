@@ -23,7 +23,7 @@ import de.citec.jul.exception.NotAvailableException;
 public class WatchDog implements Activatable {
 
 	private final Object EXECUTION_LOCK = new Object();
-	private final Object STATE_LOCK = new Object();
+	private final Object activationLock;
 
 	private static final long DELAY = 10000;
 
@@ -43,9 +43,11 @@ public class WatchDog implements Activatable {
 
 	public WatchDog(final Activatable task, final String serviceName) throws InstantiationException {
 		try {
+
 			this.service = task;
 			this.serviceName = serviceName;
 			this.serviceStateObserable = new Observable<>();
+			this.activationLock = new SyncObject(serviceName+"WatchDogLock");
 
 			if (task == null) {
 				throw new NotAvailableException("task");
@@ -106,6 +108,7 @@ public class WatchDog implements Activatable {
 			minder.join();
 			minder = null;
 			logger.trace("Service interrupted!");
+			skipActivation();
 		}
 	}
 
@@ -120,7 +123,7 @@ public class WatchDog implements Activatable {
 
 	public void waitForActivation() throws InterruptedException {
 
-		synchronized (STATE_LOCK) {
+		synchronized (activationLock) {
 			if (serviceState == ServiceState.Running) {
 				return;
 			}
@@ -130,13 +133,19 @@ public class WatchDog implements Activatable {
 				@Override
 				public void update(Observable<ServiceState> source, ServiceState data) throws Exception {
 					if (data == ServiceState.Running) {
-						synchronized (STATE_LOCK) {
-							STATE_LOCK.notify();
+						synchronized (activationLock) {
+							activationLock.notifyAll();
 						}
 					}
 				}
 			});
-			STATE_LOCK.wait();
+			activationLock.wait();
+		}
+	}
+
+	public void skipActivation() {
+		synchronized (activationLock) {
+			activationLock.notifyAll();
 		}
 	}
 
@@ -175,7 +184,7 @@ public class WatchDog implements Activatable {
 						service.deactivate();
 						setServiceState(ServiceState.Finished);
 					} catch (RSBException | InterruptedException ex) {
-                        logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
+						logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
 						try {
 							waitWithinDelay();
 						} catch (InterruptedException exx) {
@@ -185,9 +194,7 @@ public class WatchDog implements Activatable {
 				}
 			} catch (Throwable tr) {
 				logger.error("Fatal watchdog execution error! Release all locks...", tr);
-				synchronized (STATE_LOCK) {
-					STATE_LOCK.notifyAll();
-				}
+				skipActivation();
 			}
 		}
 
@@ -202,7 +209,7 @@ public class WatchDog implements Activatable {
 
 	private void setServiceState(final ServiceState serviceState) {
 		try {
-			synchronized (STATE_LOCK) {
+			synchronized (activationLock) {
 				if (this.serviceState == serviceState) {
 					return;
 				}
