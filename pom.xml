@@ -31,13 +31,14 @@
         <module>visual</module>
         <module>processing</module>
         <module>interface</module>
+        <module>storage</module>
     </modules>
     
     <dependencies>
         <dependency>
             <groupId>de.cit-ec</groupId>
             <artifactId>jps</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
