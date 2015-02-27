@@ -19,13 +19,14 @@ import java.io.File;
 /**
  *
  * @author mpohling
+ * @param <DT>
  */
-public class JSonFileProcessor {
+public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor<DT>  {
 
     private final ObjectMapper mapper;
     private final JsonFactory jsonFactory;
 
-    public JSonFileProcessor() {
+    public JSonObjectFileProcessor() {
         this.jsonFactory = new JsonFactory();
         this.jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false); // disable auto-close of the outputStream
         this.mapper = new ObjectMapper(jsonFactory);
@@ -36,22 +37,27 @@ public class JSonFileProcessor {
         this.mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     }
 
-    public <T extends Object> T deserialize(final File file, final Class<T> clazz) throws CouldNotPerformException {
-        try {
-            JsonParser parser = jsonFactory.createParser(file);
-            T deviceStruct = mapper.readValue(parser, clazz);
-            return deviceStruct;
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not serialize " + clazz.getSimpleName() + " into " + file + "!", ex);
-        }
-    }
-
-    public <T extends Object> File serialize(final T object, final File file, final Class<T> clazz) throws CouldNotPerformException {
+    @Override
+    public File serialize(final DT object, final File file) throws CouldNotPerformException {
         try {
             JsonGenerator generator = jsonFactory.createGenerator(file, JsonEncoding.UTF8);
             generator.setPrettyPrinter(new DefaultPrettyPrinter());
             mapper.writeValue(generator, object);
             return file;
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not serialize " + object.getClass().getSimpleName() + " into " + file + "!", ex);
+        }
+    }
+    
+    @Override
+    public DT deserialize(File file, DT message) throws CouldNotPerformException {
+        return deserialize(file, (Class<DT>) message.getClass());
+    }
+    
+    public <T extends Object> T deserialize(final File file, final Class<T> clazz) throws CouldNotPerformException {
+        try {
+            JsonParser parser = jsonFactory.createParser(file);
+            return mapper.readValue(parser, clazz);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not serialize " + clazz.getSimpleName() + " into " + file + "!", ex);
         }

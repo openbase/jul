@@ -16,11 +16,12 @@ import org.apache.commons.io.FileUtils;
  * @author mpohling
  * @param <M>
  */
-public class ProtoBufFileProcessor<M extends GeneratedMessage> {
+public class ProtoBufFileProcessor<M extends GeneratedMessage> implements FileProcessor<M> {
 
     public ProtoBufFileProcessor() {
     }
 
+    @Override
     public M deserialize(final File file, final M message) throws CouldNotPerformException {
         try {
             JsonFormat.merge(FileUtils.readFileToString(file), message.newBuilderForType());
@@ -30,7 +31,8 @@ public class ProtoBufFileProcessor<M extends GeneratedMessage> {
         }
     }
 
-    public <T extends Object> File serialize(final M message, final File file) throws CouldNotPerformException {
+    @Override
+    public File serialize(final M message, final File file) throws CouldNotPerformException {
         try {
             FileUtils.writeStringToFile(file, JsonFormat.printToString(message));
             return file;

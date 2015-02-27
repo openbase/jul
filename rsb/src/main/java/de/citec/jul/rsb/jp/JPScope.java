@@ -30,8 +30,7 @@ public class JPScope extends AbstractJavaProperty<Scope> {
 
     @Override
     protected Scope parse(List<String> list) throws Exception {
-        checkArgumentCount(1);
-        return new Scope(list.get(0));
+        return new Scope(getOneArgumentResult());
     }
     
     @Override

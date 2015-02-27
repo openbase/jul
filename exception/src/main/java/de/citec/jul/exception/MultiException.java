@@ -5,31 +5,60 @@
  */
 package de.citec.jul.exception;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
 import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author mpohling
  */
-public class MultiException extends Exception {
+public class MultiException extends CouldNotPerformException {
 
-    private final Map<Object, Exception> exceptionMap = new HashMap<>();
+    private final ExceptionStack exceptionStack;
     
-    public MultiException(final String message, final Map<Object, Exception> exceptions) {
+    public MultiException(final String message, final ExceptionStack exceptionStack) {
         super(message);
-        exceptionMap.putAll(exceptions);
+        this.exceptionStack = exceptionStack;
     }
 
-	public Map<Object, Exception> getExceptionStack() {
-		return Collections.unmodifiableMap(exceptionMap);
+	public ExceptionStack getExceptionStack() {
+		return exceptionStack;
 	}
 
 	public void printExceptionStack() {
-		for(Object source : exceptionMap.keySet()) {
-			LoggerFactory.getLogger(source.getClass()).error("Exception from "+source.toString()+":", exceptionMap.get(source));
+		for(SourceExceptionEntry entry : exceptionStack) {
+			LoggerFactory.getLogger(entry.getSource().getClass()).error("Exception from "+entry.getSource().toString()+":", entry.getException());
 		}
 	}
+    
+    public static class ExceptionStack extends ArrayList<SourceExceptionEntry> {
+
+        public void add(Object source, Exception exception) {
+           super.add(new SourceExceptionEntry(source, exception));
+        }
+        
+        public void checkAndThrow(String message) throws MultiException {
+            if(!isEmpty()) {
+                throw new MultiException(message, this);
+            }
+        }
+    }
+    
+    public static class SourceExceptionEntry {
+        private final Object source;
+        private final Exception exception;
+
+        public SourceExceptionEntry(Object source, Exception exception) {
+            this.source = source;
+            this.exception = exception;
+        }
+
+        public Object getSource() {
+            return source;
+        }
+
+        public Exception getException() {
+            return exception;
+        }
+    }
 }

@@ -3,16 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.iface;
+package de.citec.jul.storage;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
- * @param <ID>
+ * @author mpohling
  */
-public interface Identifiable<ID> {
+public interface FileNameProvider<C> {
     
-    public String FIELD_ID = "id";
-    
-	public ID getId();
+    public String getFileName(final C context);
 }
