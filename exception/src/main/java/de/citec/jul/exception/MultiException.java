@@ -15,36 +15,46 @@ import org.slf4j.LoggerFactory;
 public class MultiException extends CouldNotPerformException {
 
     private final ExceptionStack exceptionStack;
-    
+
     public MultiException(final String message, final ExceptionStack exceptionStack) {
         super(message);
         this.exceptionStack = exceptionStack;
     }
 
-	public ExceptionStack getExceptionStack() {
-		return exceptionStack;
-	}
+    public ExceptionStack getExceptionStack() {
+        return exceptionStack;
+    }
 
-	public void printExceptionStack() {
-		for(SourceExceptionEntry entry : exceptionStack) {
-			LoggerFactory.getLogger(entry.getSource().getClass()).error("Exception from "+entry.getSource().toString()+":", entry.getException());
-		}
-	}
-    
-    public static class ExceptionStack extends ArrayList<SourceExceptionEntry> {
-
-        public void add(Object source, Exception exception) {
-           super.add(new SourceExceptionEntry(source, exception));
-        }
-        
-        public void checkAndThrow(String message) throws MultiException {
-            if(!isEmpty()) {
-                throw new MultiException(message, this);
-            }
+    public void printExceptionStack() {
+        for (SourceExceptionEntry entry : exceptionStack) {
+            LoggerFactory.getLogger(entry.getSource().getClass()).error("Exception from " + entry.getSource().toString() + ":", entry.getException());
         }
     }
-    
+
+    public static ExceptionStack push(final Object source, final Exception exception, ExceptionStack exceptionStack) {
+        if (exceptionStack == null) {
+            exceptionStack = new MultiException.ExceptionStack();
+        }
+        exceptionStack.push(source, exception);
+        return exceptionStack;
+    }
+
+    public static void checkAndThrow(final String message, final ExceptionStack exceptionStack) throws MultiException {
+        if (exceptionStack == null || exceptionStack.isEmpty()) {
+            return;
+        }
+        throw new MultiException(message, exceptionStack);
+    }
+
+    public static class ExceptionStack extends ArrayList<SourceExceptionEntry> {
+
+        public void push(final Object source, final Exception exception) {
+            super.add(new SourceExceptionEntry(source, exception));
+        }
+    }
+
     public static class SourceExceptionEntry {
+
         private final Object source;
         private final Exception exception;
 

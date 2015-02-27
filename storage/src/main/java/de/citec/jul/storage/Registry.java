@@ -55,6 +55,22 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> {
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
         }
     }
+    
+    public void update(final VALUE entry) throws CouldNotPerformException {
+        logger.info("Update "+entry+"...");
+        try {
+            checkAccess();
+            synchronized (SYNC) {
+                if (!registry.containsKey(entry.getId())) {
+                    throw new InvalidStateException("Entry not registered!");
+                }
+                // replace
+                registry.put(entry.getId(), entry);
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not update " + entry + "!", ex);
+        }
+    }
 
     public VALUE remove(final VALUE entry) throws CouldNotPerformException {
         logger.info("Remove "+entry+"...");

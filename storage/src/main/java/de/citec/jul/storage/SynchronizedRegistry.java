@@ -26,8 +26,6 @@ import org.slf4j.LoggerFactory;
  */
 public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
 
-    private static final Logger logger = LoggerFactory.getLogger(SynchronizedRegistry.class);
-    
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
     private final FileProcessor<VALUE> fileProcessor;
@@ -52,6 +50,12 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
     }
 
     @Override
+    public void update(VALUE entry) throws CouldNotPerformException {
+        super.update(entry);
+        fileSynchronizerMap.get(entry.getId()).save(entry);
+    }
+    
+    @Override
     public VALUE remove(VALUE entry) throws CouldNotPerformException {
         VALUE removedValue = super.remove(entry);
         fileSynchronizerMap.get(entry.getId()).delete();
@@ -67,7 +71,7 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
 
     public void loadRegistry() throws MultiException {
         logger.info("Load registry out of "+databaseDirectory+"...");
-        ExceptionStack exceptionStack = new MultiException.ExceptionStack();
+        ExceptionStack exceptionStack = null;
         for (File file : databaseDirectory.listFiles(new JSonFileFilter())) {
             try {
                 FileSynchronizer<VALUE> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
@@ -76,23 +80,23 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
                 super.register(entry);
 
             } catch (CouldNotPerformException ex) {
-                exceptionStack.add(this, ex);
+                MultiException.push(this, ex, exceptionStack);
             }
         }
-        exceptionStack.checkAndThrow("Could not load all registry enties!");
+        MultiException.checkAndThrow("Could not load all registry enties!", exceptionStack);
     }
 
     public void saveRegistry() throws MultiException {
         logger.info("Save registry into "+databaseDirectory+"...");
-        ExceptionStack exceptionStack = new MultiException.ExceptionStack();
+        ExceptionStack exceptionStack = null;
         for (FileSynchronizer<VALUE> fileSynchronizer : fileSynchronizerMap.values()) {
             try {
                 fileSynchronizer.save();
             } catch (CouldNotPerformException ex) {
-                exceptionStack.add(this, ex);
+                MultiException.push(this, ex, exceptionStack);
             }
         }
-        exceptionStack.checkAndThrow("Could not save all registry enties!");
+        MultiException.checkAndThrow("Could not save all registry enties!", exceptionStack);
     }
 
     public class JSonFileFilter implements FileFilter {

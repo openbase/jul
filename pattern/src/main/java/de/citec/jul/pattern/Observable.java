@@ -5,10 +5,10 @@
 package de.citec.jul.pattern;
 
 import de.citec.jul.exception.MultiException;
+import de.citec.jul.exception.MultiException.ExceptionStack;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Observable<T> {
 
-	protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Object LOCK = new Object();
     private final List<Observer<T>> observers;
@@ -31,11 +31,11 @@ public class Observable<T> {
     public void addObserver(Observer<T> observer) {
         synchronized (LOCK) {
             if (observers.contains(observer)) {
-				logger.warn("Skip observer registration. Observer["+observer+"] is already registered!");
+                logger.warn("Skip observer registration. Observer[" + observer + "] is already registered!");
                 return;
             }
 
-			observers.add(observer);
+            observers.add(observer);
         }
     }
 
@@ -52,23 +52,16 @@ public class Observable<T> {
     }
 
     public void notifyObservers(T arg) throws MultiException {
-        Map<Object, Exception> exceptionMap = null;
-
+        ExceptionStack exceptionStack = null;
         synchronized (LOCK) {
             for (Observer<T> observer : observers) {
                 try {
                     observer.update(this, arg);
                 } catch (Exception ex) {
-                    if(exceptionMap == null) {
-                        exceptionMap = new HashMap<>();
-                    }
-					exceptionMap.put(observer, ex);
+                    exceptionStack = MultiException.push(observer, ex, exceptionStack);
                 }
             }
         }
-
-        if (exceptionMap != null) {
-            throw new MultiException("Could not notify Data["+arg+"] to all observer!", exceptionMap);
-        }
+        MultiException.checkAndThrow("Could not notify Data[" + arg + "] to all observer!", exceptionStack);
     }
 }
