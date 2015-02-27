@@ -7,7 +7,6 @@ package de.citec.jul.pattern;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

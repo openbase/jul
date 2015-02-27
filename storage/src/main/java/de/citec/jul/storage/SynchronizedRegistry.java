@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * @param <KEY>
  * @param <VALUE>
  */
-public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
+    public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
