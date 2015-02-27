@@ -11,15 +11,15 @@ package de.citec.jul.exception;
 public class InstantiationException extends CouldNotPerformException {
 
 	public InstantiationException(String message, Class clazz) {
-		super("Coult not create "+clazz.getSimpleName()+" instance: " +message);
+		super("Could not create "+clazz.getSimpleName()+" instance: " +message);
 	}
 
 	public InstantiationException(String message, Class clazz, Throwable cause) {
-		super("Coult not create "+clazz.getSimpleName()+" instance: " +message, cause);
+		super("Could not create "+clazz.getSimpleName()+" instance: " +message, cause);
 	}
 
 	public InstantiationException(Class clazz, Throwable cause) {
-		super("Coult not create "+clazz.getSimpleName()+" instance!", cause);
+		super("Could not create "+clazz.getSimpleName()+" instance!", cause);
 	}
 
 	public InstantiationException(String message, Object instance, Throwable cause) {
