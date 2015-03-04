@@ -21,12 +21,14 @@ import rsb.patterns.LocalServer;
  * @author mpohling
  */
 public class RPCHelper {
+
     public static <T> void registerInterface(final Class<T> interfaceClass, final T instance, final LocalServer server) throws RSBException {
+        final Logger logger = LoggerFactory.getLogger(instance.getClass());
+
         for (final Method methode : interfaceClass.getMethods()) {
+            logger.info("Register Method[" + methode.getName() + "] on Scope[" + server.getScope() + "].");
             server.addMethod(methode.getName(), new Callback() {
 
-                private final Logger logger = LoggerFactory.getLogger(instance.getClass());
-                
                 @Override
                 public Event internalInvoke(Event event) throws Throwable {
                     try {
@@ -38,7 +40,5 @@ public class RPCHelper {
                 }
             });
         }
-
-        server.addMethod(RPC_REQUEST_STATUS, null);
     }
 }
