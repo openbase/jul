@@ -70,6 +70,7 @@ import org.slf4j.LoggerFactory;
     }
 
     public void loadRegistry() throws MultiException {
+		assert databaseDirectory != null;
         logger.info("Load registry out of "+databaseDirectory+"...");
         ExceptionStack exceptionStack = null;
         for (File file : databaseDirectory.listFiles(new JSonFileFilter())) {

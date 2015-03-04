@@ -23,7 +23,7 @@ import rsb.patterns.LocalServer;
 public class RPCHelper {
     public static <T> void registerInterface(final Class<T> interfaceClass, final T instance, final LocalServer server) throws RSBException {
         for (final Method methode : interfaceClass.getMethods()) {
-            server.addMethod(methode.getName(), new Callback() {
+	            server.addMethod(methode.getName(), new Callback() {
 
                 private final Logger logger = LoggerFactory.getLogger(instance.getClass());
                 
