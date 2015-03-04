@@ -106,6 +106,10 @@ import org.slf4j.LoggerFactory;
 
         @Override
         public boolean accept(File file) {
+            if(file == null) {
+                return false;
+            }
+            
             return (!file.isHidden()) && file.isFile() && file.getName().toLowerCase().endsWith(JSON_FILE_TYPE);
         }
     }
