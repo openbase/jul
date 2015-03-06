@@ -41,7 +41,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> {
         this.registry = registry;
     }
 
-    public void register(final VALUE entry) throws CouldNotPerformException {
+    public VALUE register(final VALUE entry) throws CouldNotPerformException {
         logger.info("Register "+entry+"...");
         try {
             checkAccess();
@@ -54,9 +54,10 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> {
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
         }
+        return entry;
     }
     
-    public void update(final VALUE entry) throws CouldNotPerformException {
+    public VALUE update(final VALUE entry) throws CouldNotPerformException {
         logger.info("Update "+entry+"...");
         try {
             checkAccess();
@@ -70,6 +71,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> {
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + "!", ex);
         }
+        return entry;
     }
 
     public VALUE remove(final VALUE entry) throws CouldNotPerformException {

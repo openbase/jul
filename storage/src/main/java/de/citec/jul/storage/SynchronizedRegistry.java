@@ -9,14 +9,13 @@ import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
+import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.processing.FileProcessor;
 import java.io.File;
 import java.io.FileFilter;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -24,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * @param <KEY>
  * @param <VALUE>
  */
-    public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
+public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
@@ -34,7 +33,7 @@ import org.slf4j.LoggerFactory;
     public SynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileNameProvider<VALUE> fileNameProvider) {
         this(new HashMap<KEY, VALUE>(), databaseDirectory, fileProcessor, fileNameProvider);
     }
-    
+
     public SynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileNameProvider<VALUE> fileNameProvider) {
         super(registry);
         this.databaseDirectory = databaseDirectory;
@@ -44,17 +43,19 @@ import org.slf4j.LoggerFactory;
     }
 
     @Override
-    public void register(VALUE entry) throws CouldNotPerformException {
+    public VALUE register(VALUE entry) throws CouldNotPerformException {
         super.register(entry);
         fileSynchronizerMap.put(entry.getId(), new FileSynchronizer<>(entry, new File(databaseDirectory, fileNameProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor));
+        return entry;
     }
 
     @Override
-    public void update(VALUE entry) throws CouldNotPerformException {
+    public VALUE update(VALUE entry) throws CouldNotPerformException {
         super.update(entry);
         fileSynchronizerMap.get(entry.getId()).save(entry);
+        return entry;
     }
-    
+
     @Override
     public VALUE remove(VALUE entry) throws CouldNotPerformException {
         VALUE removedValue = super.remove(entry);
@@ -69,11 +70,19 @@ import org.slf4j.LoggerFactory;
         fileSynchronizerMap.clear();
     }
 
-    public void loadRegistry() throws MultiException {
-		assert databaseDirectory != null;
-        logger.info("Load registry out of "+databaseDirectory+"...");
+    public void loadRegistry() throws CouldNotPerformException {
+        assert databaseDirectory != null;
+        logger.info("Load registry out of " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
-        for (File file : databaseDirectory.listFiles(new JSonFileFilter())) {
+
+        File[] listFiles;
+
+            listFiles = databaseDirectory.listFiles(new JSonFileFilter());
+            if(listFiles == null) {
+                throw new NotAvailableException("Could not load registry because database directory["+databaseDirectory.getAbsolutePath()+"] is empty!");
+            }
+
+        for (File file : listFiles) {
             try {
                 FileSynchronizer<VALUE> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
                 VALUE entry = fileSynchronizer.getData();
@@ -88,7 +97,7 @@ import org.slf4j.LoggerFactory;
     }
 
     public void saveRegistry() throws MultiException {
-        logger.info("Save registry into "+databaseDirectory+"...");
+        logger.info("Save registry into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
         for (FileSynchronizer<VALUE> fileSynchronizer : fileSynchronizerMap.values()) {
             try {
@@ -106,10 +115,10 @@ import org.slf4j.LoggerFactory;
 
         @Override
         public boolean accept(File file) {
-            if(file == null) {
+            if (file == null) {
                 return false;
             }
-            
+
             return (!file.isHidden()) && file.isFile() && file.getName().toLowerCase().endsWith(JSON_FILE_TYPE);
         }
     }
@@ -117,8 +126,8 @@ import org.slf4j.LoggerFactory;
     @Override
     public void checkAccess() throws InvalidStateException {
         super.checkAccess();
-        if(!databaseDirectory.canWrite()) {
-            throw new InvalidStateException("DatabaseDirectory["+databaseDirectory.getAbsolutePath()+"] not writable!");
+        if (!databaseDirectory.canWrite()) {
+            throw new InvalidStateException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
         }
     }
 }
