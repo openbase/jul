@@ -73,7 +73,7 @@ public class FileSynchronizer<D> extends Observable<D> {
         return data = fileProcessor.deserialize(file, data);
     }
 
-    public final File save(D data) throws CouldNotPerformException {
+    public final File save(final D data) throws CouldNotPerformException {
         try {
             if (!file.exists()) {
                 throw new NotAvailableException(file, "File not found!");

@@ -52,7 +52,7 @@
         <!-- Json protobuf processor-->
         <dependency>
             <groupId>de.citec</groupId>
-            <artifactId>jul.rsb</artifactId>
+            <artifactId>jul.exception</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>

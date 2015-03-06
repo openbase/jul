@@ -43,21 +43,21 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
     }
 
     @Override
-    public VALUE register(VALUE entry) throws CouldNotPerformException {
+    public VALUE register(final VALUE entry) throws CouldNotPerformException {
         super.register(entry);
         fileSynchronizerMap.put(entry.getId(), new FileSynchronizer<>(entry, new File(databaseDirectory, fileNameProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor));
         return entry;
     }
 
     @Override
-    public VALUE update(VALUE entry) throws CouldNotPerformException {
+    public VALUE update(final VALUE entry) throws CouldNotPerformException {
         super.update(entry);
         fileSynchronizerMap.get(entry.getId()).save(entry);
         return entry;
     }
 
     @Override
-    public VALUE remove(VALUE entry) throws CouldNotPerformException {
+    public VALUE remove(final VALUE entry) throws CouldNotPerformException {
         VALUE removedValue = super.remove(entry);
         fileSynchronizerMap.get(entry.getId()).delete();
         fileSynchronizerMap.remove(entry.getId());
