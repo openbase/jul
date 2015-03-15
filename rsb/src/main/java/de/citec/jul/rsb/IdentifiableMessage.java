@@ -30,6 +30,11 @@ public class IdentifiableMessage<MOB extends GeneratedMessage> implements Identi
     public MOB getMessageOrBuilder() {
         return messageOrBuilder;
     }
+
+	@Override
+	public String toString() {
+		return "Message["+getId()+"]";
+	}
     
     public static class MessageTransformer implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage> {
 

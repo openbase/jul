@@ -70,11 +70,17 @@ public class FileSynchronizer<D> extends Observable<D> {
     }
 
     public final D load() throws CouldNotPerformException {
+		logger.info("Load "+file);
         return data = fileProcessor.deserialize(file, data);
     }
 
     public final File save(final D data) throws CouldNotPerformException {
+		logger.info("Save "+data+" into "+file);
         try {
+			if(data == null) {
+				throw new NotAvailableException("data");
+			}
+
             if (!file.exists()) {
                 throw new NotAvailableException(file, "File not found!");
             }
@@ -85,14 +91,16 @@ public class FileSynchronizer<D> extends Observable<D> {
     }
 
     public final File save() throws CouldNotPerformException {
+		logger.info("Save "+data+" into "+file);
         return save(data);
     }
 
     private File create(D data) throws CouldNotPerformException {
-        if (data == null) {
-            throw new NotAvailableException("data");
-        }
+		logger.info("Create "+file);
         try {
+			if (data == null) {
+				throw new NotAvailableException("data");
+			}
             if (!file.createNewFile()) {
                 throw new CouldNotPerformException("Could not create " + file + "!");
             }
