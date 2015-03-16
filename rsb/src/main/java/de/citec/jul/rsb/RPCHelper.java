@@ -32,11 +32,10 @@ public class RPCHelper {
                 @Override
                 public Event internalInvoke(Event event) throws Throwable {
                     try {
-                        methode.invoke(instance, event.getData());
+                        return new Event(methode.getReturnType(), methode.invoke(instance, event.getData()));
                     } catch (Exception ex) {
                         throw ExceptionPrinter.printHistory(logger, ex);
                     }
-                    return RPC_SUCCESS;
                 }
             });
         }
