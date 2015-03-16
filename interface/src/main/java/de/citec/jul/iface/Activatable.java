@@ -9,7 +9,7 @@ import de.citec.jul.exception.CouldNotPerformException;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine Threepwood
  */
 public interface Activatable {
 

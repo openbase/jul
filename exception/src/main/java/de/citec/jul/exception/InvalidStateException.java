@@ -7,7 +7,7 @@ package de.citec.jul.exception;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine Threepwood
  */
 public class InvalidStateException extends CouldNotPerformException {
 

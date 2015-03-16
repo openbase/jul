@@ -14,7 +14,7 @@ import rsb.Scope;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine Threepwood
  * @param <DataType>
  */
 public class RSBSingleInformer<DataType extends Object> implements RSBInformerInterface<DataType> {

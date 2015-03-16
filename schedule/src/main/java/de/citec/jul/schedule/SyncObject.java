@@ -7,7 +7,7 @@ package de.citec.jul.schedule;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine Threepwood
  */
 public class SyncObject {
 

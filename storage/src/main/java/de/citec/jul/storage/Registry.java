@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine Threepwood
  * @param <KEY>
  * @param <VALUE>
  */

@@ -7,7 +7,7 @@ package de.citec.jul.iface;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine Threepwood
  * @param <ID>
  */
 public interface Identifiable<ID> {

@@ -12,7 +12,7 @@ import rsb.Scope;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine Threepwood
  * @param <DataType>
  */
 public interface RSBInformerInterface<DataType extends Object> extends Activatable {
