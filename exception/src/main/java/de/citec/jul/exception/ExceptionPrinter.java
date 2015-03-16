@@ -8,6 +8,7 @@ package de.citec.jul.exception;
 import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPDebugMode;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -15,33 +16,40 @@ import org.slf4j.Logger;
  */
 public class ExceptionPrinter {
 
-    
-    /**
-     * Print Exception messages without strack trace in non debug mode.
-     * Methode prints recusive all messages of the given exception stack to get a history overview of the causes.
-     * In debug mode the stacktrace is printed in the end of history.
-     * 
-     * @param logger logger with is used as message printer.
-     * @param th exception stack to print.
-     * @return the related Throwable returned for further exception handling.
-     */
-    public static Throwable printHistory(final Logger logger, final Throwable th) {
+	/**
+	 * Print Exception messages without strack trace in non debug mode. Methode
+	 * prints recusive all messages of the given exception stack to get a
+	 * history overview of the causes. In debug mode the stacktrace is printed
+	 * in the end of history.
+	 *
+	 * @param logger logger which is used as message printer.
+	 * @param th exception stack to print.
+	 * @return the related Throwable returned for further exception handling.
+	 */
+	public static Throwable printHistory(final Logger logger, final Throwable th) {
 
-        // Recursive print of all related Exception message without stacktrace.
-        logger.error(th.getMessage());
-        Throwable internalThrowable = th.getCause();
-        while (internalThrowable != null) {
-            logger.error("=== "+internalThrowable.getClass().getSimpleName() + "[" + internalThrowable.getMessage()+"]");
-            internalThrowable = internalThrowable.getCause();
-        }
-        
-        // Print normal stacktrace in debug mode.
-        if (logger.isDebugEnabled() || JPService.getAttribute(JPDebugMode.class).getValue()) {
-            logger.error(th.getMessage(), th);
-            return th;
-        }
-        
-        logger.error("-------------------------------------");
-        return th;
-    }
+		// Recursive print of all related Exception message without stacktrace.
+		logger.error(th.getMessage());
+		Throwable internalThrowable = th.getCause();
+		while (internalThrowable != null) {
+			if (internalThrowable instanceof MultiException) {
+				MultiException.ExceptionStack exceptionStack = ((MultiException)internalThrowable).getExceptionStack();
+				for(MultiException.SourceExceptionEntry entry : exceptionStack) {
+					printHistory(LoggerFactory.getLogger(entry.getSource().getClass()), new Exception("Exception from " + entry.getSource().toString() + ":", entry.getException()));
+				}
+			} else {
+				logger.error("=== " + internalThrowable.getClass().getSimpleName() + "[" + internalThrowable.getMessage() + "]");
+			}
+			internalThrowable = internalThrowable.getCause();
+		}
+
+		// Print normal stacktrace in debug mode.
+		if (logger.isDebugEnabled() || JPService.getProperty(JPDebugMode.class).getValue()) {
+			logger.error(th.getMessage(), th);
+			return th;
+		}
+
+		logger.error("-------------------------------------");
+		return th;
+	}
 }
