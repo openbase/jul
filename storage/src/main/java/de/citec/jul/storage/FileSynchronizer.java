@@ -115,7 +115,7 @@ public class FileSynchronizer<D> extends Observable<D> {
             if (!file.exists()) {
                 throw new FileNotFoundException(file.getAbsolutePath());
             }
-            if (file.delete()) {
+            if (!file.delete()) {
                 throw new CouldNotPerformException("Could not delete File[" + file.getAbsolutePath() + "]!");
             }
         } catch (Exception ex) {
