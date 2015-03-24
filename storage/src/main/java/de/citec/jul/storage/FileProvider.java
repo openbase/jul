@@ -5,11 +5,18 @@
  */
 package de.citec.jul.storage;
 
+import java.io.FileFilter;
+
 /**
  *
  * @author mpohling
+ * @param <C> context
  */
-public interface FileNameProvider<C> {
+public interface FileProvider<C> {
     
     public String getFileName(final C context);
+    
+    public String getFileType();
+    
+    public FileFilter getFileFilter();
 }

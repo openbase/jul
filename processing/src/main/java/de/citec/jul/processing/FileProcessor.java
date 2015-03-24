@@ -5,6 +5,7 @@
  */
 package de.citec.jul.processing;
 
+import de.citec.jul.exception.CouldNotPerformException;
 import java.io.File;
 
 /**
@@ -12,4 +13,5 @@ import java.io.File;
  * @author mpohling
  */
 public interface FileProcessor<A> extends Processor<A, File> {
+    public A deserialize(File file) throws CouldNotPerformException;
 }

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import de.citec.jul.exception.CouldNotPerformException;
 import java.io.File;
+import java.lang.reflect.ParameterizedType;
 
 /**
  *
@@ -51,7 +52,12 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
     
     @Override
     public DT deserialize(File file, DT message) throws CouldNotPerformException {
-        return deserialize(file, (Class<DT>) message.getClass());
+        return deserialize(file);
+    }
+
+    @Override
+    public DT deserialize(File file) throws CouldNotPerformException {
+        return deserialize(file, detectTypeClass());
     }
     
     public <T extends Object> T deserialize(final File file, final Class<T> clazz) throws CouldNotPerformException {
@@ -61,5 +67,11 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not serialize " + clazz.getSimpleName() + " into " + file + "!", ex);
         }
+    }
+    
+    public Class<DT> detectTypeClass() {
+        return (Class<DT>) ((ParameterizedType) getClass()
+                .getGenericSuperclass())
+                .getActualTypeArguments()[0];
     }
 }

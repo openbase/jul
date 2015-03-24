@@ -13,7 +13,6 @@ import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.processing.FileProcessor;
 import java.io.File;
-import java.io.FileFilter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,24 +27,24 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
     private final FileProcessor<VALUE> fileProcessor;
-    private final FileNameProvider<VALUE> fileNameProvider;
+    private final FileProvider<VALUE> fileProvider;
 
-    public SynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileNameProvider<VALUE> fileNameProvider) {
+    public SynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
         this(new HashMap<KEY, VALUE>(), databaseDirectory, fileProcessor, fileNameProvider);
     }
 
-    public SynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileNameProvider<VALUE> fileNameProvider) {
+    public SynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
         super(registry);
         this.databaseDirectory = databaseDirectory;
         this.fileSynchronizerMap = new HashMap<>();
         this.fileProcessor = fileProcessor;
-        this.fileNameProvider = fileNameProvider;
+        this.fileProvider = fileNameProvider;
     }
 
     @Override
     public VALUE register(final VALUE entry) throws CouldNotPerformException {
         super.register(entry);
-        fileSynchronizerMap.put(entry.getId(), new FileSynchronizer<>(entry, new File(databaseDirectory, fileNameProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor));
+        fileSynchronizerMap.put(entry.getId(), new FileSynchronizer<>(entry, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor));
         return entry;
     }
 
@@ -77,7 +76,7 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
 
         File[] listFiles;
 
-            listFiles = databaseDirectory.listFiles(new JSonFileFilter());
+            listFiles = databaseDirectory.listFiles(fileProvider.getFileFilter());
             if(listFiles == null) {
                 throw new NotAvailableException("Could not load registry because database directory["+databaseDirectory.getAbsolutePath()+"] is empty!");
             }
@@ -90,7 +89,7 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
                 super.register(entry);
 
             } catch (CouldNotPerformException ex) {
-                MultiException.push(this, ex, exceptionStack);
+                exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
         }
         MultiException.checkAndThrow("Could not load all registry enties!", exceptionStack);
@@ -103,24 +102,10 @@ public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends 
             try {
                 fileSynchronizer.save();
             } catch (CouldNotPerformException ex) {
-                MultiException.push(this, ex, exceptionStack);
+                exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
         }
         MultiException.checkAndThrow("Could not save all registry enties!", exceptionStack);
-    }
-
-    public class JSonFileFilter implements FileFilter {
-
-        private static final String JSON_FILE_TYPE = "json";
-
-        @Override
-        public boolean accept(File file) {
-            if (file == null) {
-                return false;
-            }
-
-            return (!file.isHidden()) && file.isFile() && file.getName().toLowerCase().endsWith(JSON_FILE_TYPE);
-        }
     }
 
     @Override

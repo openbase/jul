@@ -71,7 +71,7 @@ public class FileSynchronizer<D> extends Observable<D> {
 
     public final D load() throws CouldNotPerformException {
 		logger.info("Load "+file);
-        return data = fileProcessor.deserialize(file, data);
+        return data = fileProcessor.deserialize(file);
     }
 
     public final File save(final D data) throws CouldNotPerformException {

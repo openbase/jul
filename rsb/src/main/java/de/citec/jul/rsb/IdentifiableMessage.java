@@ -7,7 +7,10 @@ package de.citec.jul.rsb;
 
 import de.citec.jul.rsb.processing.ProtoBufFileProcessor;
 import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
+import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.iface.Identifiable;
+import java.lang.reflect.ParameterizedType;
 
 /**
  *
@@ -15,13 +18,13 @@ import de.citec.jul.iface.Identifiable;
  * @param <MOB>
  */
 public class IdentifiableMessage<MOB extends GeneratedMessage> implements Identifiable<String> {
-    
+
     private final MOB messageOrBuilder;
 
     public IdentifiableMessage(MOB messageOrBuilder) {
         this.messageOrBuilder = messageOrBuilder;
     }
-    
+
     @Override
     public String getId() {
         return (String) messageOrBuilder.getField(messageOrBuilder.getDescriptorForType().findFieldByName(FIELD_ID));
@@ -31,17 +34,10 @@ public class IdentifiableMessage<MOB extends GeneratedMessage> implements Identi
         return messageOrBuilder;
     }
 
-	@Override
-	public String toString() {
-		return "Message["+getId()+"]";
-	}
-    
-    public static class MessageTransformer implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage> {
-
-        @Override
-        public GeneratedMessage transform(IdentifiableMessage type) {
-            return type.getMessageOrBuilder();
-        }
-        
+    @Override
+    public String toString() {
+        return "Message[" + getId() + "]";
     }
+    
+    
 }
