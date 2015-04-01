@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.storage;
+package de.citec.jul.storage.file;
 
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.CouldNotPerformException;

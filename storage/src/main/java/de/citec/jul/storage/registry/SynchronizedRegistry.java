@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.storage;
+package de.citec.jul.storage.registry;
 
+import de.citec.jul.storage.file.FileSynchronizer;
+import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;

@@ -17,6 +17,7 @@ import de.citec.jul.pattern.Observer;
 import static de.citec.jul.rsb.RSBCommunicationService.RPC_REQUEST_STATUS;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import rsb.Event;
@@ -26,6 +27,8 @@ import rsb.InitializeException;
 import rsb.Listener;
 import rsb.RSBException;
 import rsb.Scope;
+import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 import rsb.patterns.Future;
 import rsb.patterns.RemoteServer;
 
@@ -254,3 +257,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 }
+
+// Config for test setup.
+//        ParticipantConfig config = rsb.Factory.getInstance().getDefaultParticipantConfig();
+//        
+//        for (Map.Entry<String,TransportConfig> transport : config.getTransports().entrySet()) {
+//            transport.getValue().setEnabled(false);
+//        }
+//        config.getTransports().get("inmemory").setEnabled(true);
+//        Informer informer = rsb.Factory.getInstance().createInformer(new Scope("/"), config);
