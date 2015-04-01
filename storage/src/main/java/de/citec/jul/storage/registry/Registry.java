@@ -162,7 +162,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
             while (!valid) {
                 for (ConsistencyHandler consistencyHandler : consistencyHandlerList) {
                     try {
-                        valid &= consistencyHandler.processData(registry);
+                        valid &= consistencyHandler.processData(registry, this);
                     } catch (CouldNotPerformException ex) {
                         logger.error("Could not verify registry data consistency!", ex);
                         valid = false;

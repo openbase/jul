@@ -24,8 +24,9 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>> {
      * Method is called by the registry in case of entry changes. 
      * 
      * @param dataMap the data map of the underlying registry.
+     * @param registry the underlying registry.
      * @return should return true if any data modifications are applied. Otherwise false.
      * @throws CouldNotPerformException thrown to handle errors.
      */
-    public boolean processData(final Map<KEY, VALUE> dataMap) throws CouldNotPerformException;
+    public boolean processData(final Map<KEY, VALUE> dataMap, final Registry<KEY, VALUE> registry) throws CouldNotPerformException;
 }
