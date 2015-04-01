@@ -162,7 +162,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
             while (!valid) {
                 for (ConsistencyHandler consistencyHandler : consistencyHandlerList) {
                     try {
-                        valid &= consistencyHandler.processData(registry, this);
+                        valid &= !consistencyHandler.processData(registry, this);
                     } catch (CouldNotPerformException ex) {
                         logger.error("Could not verify registry data consistency!", ex);
                         valid = false;
@@ -172,7 +172,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
                 interationCounter++;
 
                 // handle handler interfereience
-                if (interationCounter > consistencyHandlerList.size() * 2) {
+                if (!valid && interationCounter > consistencyHandlerList.size() * 2) {
                     logger.error("Consistency process aborted! ConsistencyHandler interfereience or error detected!");
                     logger.warn("Registry data not consistent!");
                     break;
