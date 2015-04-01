@@ -119,7 +119,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
         }
     }
 
-    public boolean contrains(KEY key) {
+    public boolean contrains(final KEY key) {
         return registry.containsKey(key);
     }
 
@@ -130,7 +130,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
         notifyObservers();
     }
 
-    public void replaceInternalMap(final Map<KEY, VALUE> map) {
+    protected void replaceInternalMap(final Map<KEY, VALUE> map) {
         synchronized (SYNC) {
             registry.clear();
             registry.putAll(map);

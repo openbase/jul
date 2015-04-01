@@ -24,18 +24,18 @@ import java.util.Map;
  * @param <KEY>
  * @param <VALUE>
  */
-public class SynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
+public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
     private final FileProcessor<VALUE> fileProcessor;
     private final FileProvider<VALUE> fileProvider;
 
-    public SynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
+    public FileSynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
         this(new HashMap<KEY, VALUE>(), databaseDirectory, fileProcessor, fileNameProvider);
     }
 
-    public SynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
+    public FileSynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
         super(registry);
         this.databaseDirectory = databaseDirectory;
         this.fileSynchronizerMap = new HashMap<>();
