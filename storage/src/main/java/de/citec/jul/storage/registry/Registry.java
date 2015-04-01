@@ -159,7 +159,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
         synchronized (SYNC) {
             int interationCounter = 0;
             boolean valid = false;
-            while (!valid) {
+            while (!valid && !consistencyHandlerList.isEmpty()) {
                 for (ConsistencyHandler consistencyHandler : consistencyHandlerList) {
                     try {
                         valid &= !consistencyHandler.processData(registry, this);
