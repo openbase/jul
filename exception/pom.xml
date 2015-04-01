@@ -35,5 +35,10 @@
     </properties>
     
     <dependencies>
+        <dependency>
+            <groupId>de.citec</groupId>
+            <artifactId>jps</artifactId>
+            <version>1.0.3</version>
+        </dependency>
     </dependencies>
 </project>

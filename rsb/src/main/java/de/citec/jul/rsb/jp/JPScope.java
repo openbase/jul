@@ -16,17 +16,15 @@ import rsb.Scope;
 public class JPScope extends AbstractJavaProperty<Scope> {
 
 	public final static String[] COMMAND_IDENTIFIERS = {"-s", "--scope"};
-	public final static String[] ARGUMENT_IDENTIFIERS = {"SCOPE"};
 
 	public JPScope(final String[] commandIdentifiers) {
-		super(commandIdentifiers, ARGUMENT_IDENTIFIERS);
+		super(commandIdentifiers, commandIdentifiers);
 	}
     
 	public JPScope() {
-		super(COMMAND_IDENTIFIERS, ARGUMENT_IDENTIFIERS);
+		super(COMMAND_IDENTIFIERS);
 	}
-
-	
+    
     @Override
     protected Scope getPropertyDefaultValue() {
         return new Scope("/");
@@ -40,5 +38,12 @@ public class JPScope extends AbstractJavaProperty<Scope> {
     @Override
 	public String getDescription() {
 		return "Setup the application scope which is used for the rsb communication.";
+    }
+
+    @Override
+    protected String[] generateArgumentIdentifiers() {
+        String[] args = new String[1];
+        args[0] = "SCOPE";
+        return args;
     }
 }

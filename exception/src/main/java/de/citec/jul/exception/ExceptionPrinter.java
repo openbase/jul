@@ -6,7 +6,7 @@
 package de.citec.jul.exception;
 
 import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPDebugMode;
+import de.citec.jps.preset.JPVerbose;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public class ExceptionPrinter {
 		}
 
 		// Print normal stacktrace in debug mode.
-		if (logger.isDebugEnabled() || JPService.getProperty(JPDebugMode.class).getValue()) {
+		if (logger.isDebugEnabled() || JPService.getProperty(JPVerbose.class).getValue()) {
 			logger.error(th.getMessage(), th);
 			return th;
 		}
