@@ -60,6 +60,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public synchronized void init(final Scope scope) throws InitializationException {
 
         try {
+
+            if (scope == null) {
+                throw new NotAvailableException("scope");
+            }
+            
             if (initialized) {
                 logger.warn("Skip initialization because " + this + " already initialized!");
                 return;
@@ -87,7 +92,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             this.listener = Factory.getInstance().createListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_INFORMER));
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_INFORMER) + "]");
         } catch (InitializeException | InstantiationException ex) {
-            throw new CouldNotPerformException("Could not create Listener on scope [" + scope.toString() + "]!", ex);
+            throw new CouldNotPerformException("Could not create Listener on scope [" + scope + "]!", ex);
         }
     }
 
@@ -117,7 +122,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 }
             });
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope.toString() + "]!", ex);
+            throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope + "]!", ex);
         }
     }
 
@@ -237,7 +242,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[scope:" + scope.toString() + "]";
+        return getClass().getSimpleName() + "[scope:" + scope + "]";
     }
 
     public abstract void notifyUpdated(M data);

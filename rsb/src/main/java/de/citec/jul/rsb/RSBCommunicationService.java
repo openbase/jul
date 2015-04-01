@@ -8,8 +8,10 @@ package de.citec.jul.rsb;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessage.Builder;
+import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Activatable;
 import de.citec.jul.rsb.RSBInformerInterface.InformerType;
 import de.citec.jul.schedule.WatchDog;
@@ -53,13 +55,24 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     protected Scope scope;
     private ConnectionState state;
 
-    public RSBCommunicationService(final Scope scope, final MB builder) {
-        this.scope = new Scope(scope.toString().toLowerCase());
+    public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
+        logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
         this.data = builder;
-        logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
+        try {
+            if (builder == null) {
+                throw new NotAvailableException("builder");
+            }
+            
+            if (scope == null) {
+                throw new NotAvailableException("scope");
+            }
+            this.scope = new Scope(scope.toString().toLowerCase());
+        } catch (CouldNotPerformException ex) {
+            throw new InstantiationException(this, ex);
+        }
     }
 
-    public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) {
+    public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) throws InstantiationException {
         this(generateScope(name, lable, location), builder);
     }
 
@@ -177,7 +190,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             logger.warn("Could not set field [" + name + "=" + value + "] for " + this);
         }
     }
-    
+
     protected final Descriptors.FieldDescriptor getFieldDescriptor(int fieldId) {
         return data.getDescriptorForType().findFieldByNumber(fieldId);
     }
@@ -192,7 +205,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public abstract void registerMethods(final LocalServer server) throws RSBException;
 
-//	public abstract void registerConverter();
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[" + scope + "]";
