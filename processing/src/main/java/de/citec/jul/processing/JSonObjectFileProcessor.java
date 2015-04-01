@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import de.citec.jul.exception.CouldNotPerformException;
 import java.io.File;
-import java.lang.reflect.ParameterizedType;
 
 /**
  *
@@ -26,8 +25,10 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
 
     private final ObjectMapper mapper;
     private final JsonFactory jsonFactory;
+    private final Class<DT> dataTypeClass;
 
-    public JSonObjectFileProcessor() {
+    public JSonObjectFileProcessor(final Class<DT> dataTypeClass) {
+        this.dataTypeClass = dataTypeClass;
         this.jsonFactory = new JsonFactory();
         this.jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false); // disable auto-close of the outputStream
         this.mapper = new ObjectMapper(jsonFactory);
@@ -57,7 +58,7 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
 
     @Override
     public DT deserialize(File file) throws CouldNotPerformException {
-        return deserialize(file, detectTypeClass());
+        return deserialize(file, dataTypeClass);
     }
     
     public <T extends Object> T deserialize(final File file, final Class<T> clazz) throws CouldNotPerformException {
@@ -67,11 +68,5 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not serialize " + clazz.getSimpleName() + " into " + file + "!", ex);
         }
-    }
-    
-    public Class<DT> detectTypeClass() {
-        return (Class<DT>) ((ParameterizedType) getClass()
-                .getGenericSuperclass())
-                .getActualTypeArguments()[0];
     }
 }
