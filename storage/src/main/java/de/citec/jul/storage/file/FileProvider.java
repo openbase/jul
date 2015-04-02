@@ -5,6 +5,7 @@
  */
 package de.citec.jul.storage.file;
 
+import de.citec.jul.exception.CouldNotPerformException;
 import java.io.FileFilter;
 
 /**
@@ -14,7 +15,7 @@ import java.io.FileFilter;
  */
 public interface FileProvider<C> {
     
-    public String getFileName(final C context);
+    public String getFileName(final C context) throws CouldNotPerformException ;
     
     public String getFileType();
     

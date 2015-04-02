@@ -17,7 +17,6 @@ import de.citec.jul.pattern.Observer;
 import static de.citec.jul.rsb.RSBCommunicationService.RPC_REQUEST_STATUS;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import rsb.Event;
@@ -27,8 +26,6 @@ import rsb.InitializeException;
 import rsb.Listener;
 import rsb.RSBException;
 import rsb.Scope;
-import rsb.config.ParticipantConfig;
-import rsb.config.TransportConfig;
 import rsb.patterns.Future;
 import rsb.patterns.RemoteServer;
 
@@ -245,7 +242,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return getClass().getSimpleName() + "[scope:" + scope + "]";
     }
 
-    public abstract void notifyUpdated(M data);
+    public abstract void notifyUpdated(M data) throws CouldNotPerformException;
 
     private class InternalUpdateHandler implements Handler {
 

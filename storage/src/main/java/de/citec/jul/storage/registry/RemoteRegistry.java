@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public class RemoteRegistry<M extends GeneratedMessage, MB extends GeneratedMessage.Builder> extends Registry<String, IdentifiableMessage<M>> {
 
-    public synchronized void notifyRegistryUpdated(final Collection<M> values) {
+    public synchronized void notifyRegistryUpdated(final Collection<M> values) throws CouldNotPerformException {
         Map<String, IdentifiableMessage<M>> newRegistryMap = new HashMap<>();
         for (M value : values) {
             IdentifiableMessage<M> data = new IdentifiableMessage(value);
@@ -31,7 +31,7 @@ public class RemoteRegistry<M extends GeneratedMessage, MB extends GeneratedMess
     }
 
     public M getMessage(final String key) throws NotAvailableException {
-        return get(key).getMessageOrBuilder();
+        return get(key).getMessage();
     }
 
     public MB getBuilder(final String key) throws NotAvailableException {
@@ -39,18 +39,18 @@ public class RemoteRegistry<M extends GeneratedMessage, MB extends GeneratedMess
     }
 
     public M register(final M entry) throws CouldNotPerformException {
-        return register(new IdentifiableMessage<>(entry)).getMessageOrBuilder();
+        return register(new IdentifiableMessage<>(entry)).getMessage();
     }
 
     public M update(final M entry) throws CouldNotPerformException {
-        return update(new IdentifiableMessage<>(entry)).getMessageOrBuilder();
+        return update(new IdentifiableMessage<>(entry)).getMessage();
     }
 
     public M remove(final M entry) throws CouldNotPerformException {
-        return remove(new IdentifiableMessage<>(entry)).getMessageOrBuilder();
+        return remove(new IdentifiableMessage<>(entry)).getMessage();
     }
 
-    public boolean contrains(final M key) {
+    public boolean contrains(final M key) throws CouldNotPerformException {
         return contrains(new IdentifiableMessage<>(key).getId());
     }
 }

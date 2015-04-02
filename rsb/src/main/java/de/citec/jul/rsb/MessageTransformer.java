@@ -25,7 +25,7 @@ public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder
     
     @Override
     public M transform(IdentifiableMessage<M> type) {
-        return type.getMessageOrBuilder();
+        return type.getMessage();
     }
 
     @Override

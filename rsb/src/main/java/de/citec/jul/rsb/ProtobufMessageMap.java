@@ -7,8 +7,13 @@ package de.citec.jul.rsb;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message.Builder;
+import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.pattern.Observable;
+import de.citec.jul.pattern.Observer;
 import java.util.HashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -17,8 +22,10 @@ import java.util.Map;
  * @param <VALUE>
  * @param <BUILDER>
  */
-public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage, BUILDER extends Builder> extends HashMap<KEY, VALUE> implements Map<KEY, VALUE> {
+public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage, BUILDER extends Builder> extends HashMap<KEY, VALUE> implements Map<KEY, VALUE>, Observer<VALUE> {
 
+    protected final Logger logger = LoggerFactory.getLogger(ProtobufMessageMap.class);
+    
     private final BUILDER builder;
 
     private final Descriptors.FieldDescriptor fieldDescriptor;
@@ -30,7 +37,15 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage, BUILDER 
 
     @Override
     public VALUE put(KEY key, VALUE value) {
+        if(value == null) {
+            logger.error("Could not add value!", new NotAvailableException("value"));
+            return value;
+        }
         VALUE oldValue = super.put(key, value);
+        if (oldValue != null) {
+            oldValue.removeObserver(this);
+        }
+        value.addObserver(this);
         syncBuilder();
         return oldValue;
     }
@@ -38,18 +53,33 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage, BUILDER 
     @Override
     public VALUE remove(Object key) {
         VALUE removedValue = super.remove(key);
-        syncBuilder();
+        if (removedValue != null) {
+            removedValue.removeObserver(this);
+            syncBuilder();
+        }
         return removedValue;
     }
 
     @Override
-    public void putAll(Map<? extends KEY, ? extends VALUE> m) {
-        super.putAll(m);
+    public void putAll(Map<? extends KEY, ? extends VALUE> valueMap) {
+        for (Entry<? extends KEY, ? extends VALUE> entry : valueMap.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
+            }
+            VALUE oldValue = super.put(entry.getKey(), entry.getValue());
+            if (oldValue != null) {
+                oldValue.removeObserver(this);
+            }
+            entry.getValue().addObserver(this);
+        }
         syncBuilder();
     }
 
     @Override
     public void clear() {
+        for (VALUE value : values()) {
+            value.removeObserver(this);
+        }
         super.clear();
         syncBuilder();
     }
@@ -58,8 +88,13 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage, BUILDER 
         synchronized (builder) {
             builder.clearField(fieldDescriptor);
             for (VALUE value : values()) {
-                builder.addRepeatedField(fieldDescriptor, value.getMessageOrBuilder());
+                builder.addRepeatedField(fieldDescriptor, value.getMessage());
             }
         }
+    }
+
+    @Override
+    public void update(Observable<VALUE> source, VALUE data) throws Exception {
+        syncBuilder();
     }
 }
