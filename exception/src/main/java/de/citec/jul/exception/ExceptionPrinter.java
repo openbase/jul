@@ -19,7 +19,7 @@ public class ExceptionPrinter {
 	/**
 	 * Print Exception messages without strack trace in non debug mode. Methode
 	 * prints recusive all messages of the given exception stack to get a
-	 * history overview of the causes. In debug mode the stacktrace is printed
+	 * history overview of the causes. In verbose mode (app -v) the stacktrace is printed
 	 * in the end of history.
 	 *
 	 * @param logger logger which is used as message printer.
@@ -29,7 +29,7 @@ public class ExceptionPrinter {
 	public static Throwable printHistory(final Logger logger, final Throwable th) {
 
 		// Recursive print of all related Exception message without stacktrace.
-		logger.error(th.getMessage());
+		logger.error(removeNewLines(th.getMessage()));
 		Throwable internalThrowable = th.getCause();
 		while (internalThrowable != null) {
 			if (internalThrowable instanceof MultiException) {
@@ -38,18 +38,22 @@ public class ExceptionPrinter {
 					printHistory(LoggerFactory.getLogger(entry.getSource().getClass()), new Exception("Exception from " + entry.getSource().toString() + ":", entry.getException()));
 				}
 			} else {
-				logger.error("=== " + internalThrowable.getClass().getSimpleName() + "[" + internalThrowable.getMessage() + "]");
+				logger.error("=== " + internalThrowable.getClass().getSimpleName() + "[" + removeNewLines(internalThrowable.getMessage()) + "]");
 			}
 			internalThrowable = internalThrowable.getCause();
 		}
 
-		// Print normal stacktrace in debug mode.
+		// Print normal stacktrace in verbose mode.
 		if (logger.isDebugEnabled() || JPService.getProperty(JPVerbose.class).getValue()) {
-			logger.error(th.getMessage(), th);
+			logger.error(removeNewLines(th.getMessage()), th);
 			return th;
 		}
 
 		logger.error("-------------------------------------");
 		return th;
+	}
+
+	private static String removeNewLines(final String message) {
+		return message.replaceAll("\n", "").trim();
 	}
 }

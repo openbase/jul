@@ -45,6 +45,10 @@ public class MultiException extends CouldNotPerformException {
         }
         throw new MultiException(message, exceptionStack);
     }
+	
+	public static boolean containsException(final ExceptionStack exceptionStack) {
+		return !(exceptionStack == null || exceptionStack.isEmpty());
+	}
 
     public static class ExceptionStack extends ArrayList<SourceExceptionEntry> {
 

@@ -6,6 +6,7 @@
 package de.citec.jul.rsb;
 
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message.Builder;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.pattern.Observable;
@@ -20,17 +21,18 @@ import org.slf4j.LoggerFactory;
  * @author mpohling
  * @param <KEY>
  * @param <VALUE>
- * @param <BUILDER>
+ * @param <M extends GeneratedMessage, MB>
+ * @param <MB>
  */
-public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage, BUILDER extends Builder> extends HashMap<KEY, VALUE> implements Map<KEY, VALUE>, Observer<VALUE> {
+public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage<M>, M extends GeneratedMessage, MB extends Builder> extends HashMap<KEY, VALUE> implements Map<KEY, VALUE>, Observer<M> {
 
     protected final Logger logger = LoggerFactory.getLogger(ProtobufMessageMap.class);
     
-    private final BUILDER builder;
+    private final MB builder;
 
     private final Descriptors.FieldDescriptor fieldDescriptor;
 
-    public ProtobufMessageMap(final BUILDER builder, final Descriptors.FieldDescriptor fieldDescriptor) {
+    public ProtobufMessageMap(final MB builder, final Descriptors.FieldDescriptor fieldDescriptor) {
         this.builder = builder;
         this.fieldDescriptor = fieldDescriptor;
     }
@@ -93,8 +95,8 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage, BUILDER 
         }
     }
 
-    @Override
-    public void update(Observable<VALUE> source, VALUE data) throws Exception {
-        syncBuilder();
-    }
+	@Override
+	public void update(Observable<M> source, M data) throws Exception {
+		syncBuilder();
+	}
 }

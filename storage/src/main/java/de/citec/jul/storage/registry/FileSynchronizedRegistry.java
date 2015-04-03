@@ -29,18 +29,18 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> exte
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
     private final FileProcessor<VALUE> fileProcessor;
-    private final FileProvider<VALUE> fileProvider;
+    private final FileProvider<Identifiable<KEY>> fileProvider;
 
-    public FileSynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
-        this(new HashMap<KEY, VALUE>(), databaseDirectory, fileProcessor, fileNameProvider);
+    public FileSynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) {
+        this(new HashMap<KEY, VALUE>(), databaseDirectory, fileProcessor, fileProvider);
     }
 
-    public FileSynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<VALUE> fileNameProvider) {
+    public FileSynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) {
         super(registry);
         this.databaseDirectory = databaseDirectory;
         this.fileSynchronizerMap = new HashMap<>();
         this.fileProcessor = fileProcessor;
-        this.fileProvider = fileNameProvider;
+        this.fileProvider = fileProvider;
     }
 
     @Override
