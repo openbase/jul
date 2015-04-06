@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Observable<T> {
 
+	// TODO mpohling: must be removed out of performance reasons!
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Object LOCK = new Object();
@@ -50,17 +51,21 @@ public class Observable<T> {
         }
     }
 
-    public void notifyObservers(T arg) throws MultiException {
-        ExceptionStack exceptionStack = null;
+    public void notifyObservers(Observable<T> source, T observable) throws MultiException {
+		ExceptionStack exceptionStack = null;
         synchronized (LOCK) {
             for (Observer<T> observer : observers) {
                 try {
-                    observer.update(this, arg);
+                    observer.update(source, observable);
                 } catch (Exception ex) {
                     exceptionStack = MultiException.push(observer, ex, exceptionStack);
                 }
             }
         }
-        MultiException.checkAndThrow("Could not notify Data[" + arg + "] to all observer!", exceptionStack);
+        MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
+	}
+
+    public void notifyObservers(T observable) throws MultiException {
+		notifyObservers(this, observable);
     }
 }

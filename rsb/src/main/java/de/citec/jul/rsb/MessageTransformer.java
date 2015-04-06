@@ -15,7 +15,7 @@ import de.citec.jul.rsb.processing.ProtoBufFileProcessor;
  * @param <M>
  * @param <MB>
  */
-public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder> implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage<M>, M, MB> {
+public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder> implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage<?, M>, M, MB> {
 
     private final Class<M> messageClass;
     
@@ -24,7 +24,7 @@ public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder
     }
     
     @Override
-    public M transform(IdentifiableMessage<M> type) {
+    public M transform(IdentifiableMessage<?, M> type) {
         return type.getMessage();
     }
 
@@ -39,7 +39,7 @@ public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder
     }
 
     @Override
-    public IdentifiableMessage<M> transform(M message) {
+    public IdentifiableMessage<?, M> transform(M message) {
         return new IdentifiableMessage<>(message);
     }
 }

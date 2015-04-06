@@ -16,41 +16,42 @@ import java.util.Map;
 /**
  *
  * @author mpohling
+ * @param <KEY>
  * @param <M>
  * @param <MB>
  */
-public class RemoteRegistry<M extends GeneratedMessage, MB extends GeneratedMessage.Builder> extends Registry<String, IdentifiableMessage<M>> {
+public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends GeneratedMessage.Builder> extends Registry<KEY, IdentifiableMessage<KEY, M>> {
 
     public synchronized void notifyRegistryUpdated(final Collection<M> values) throws CouldNotPerformException {
-        Map<String, IdentifiableMessage<M>> newRegistryMap = new HashMap<>();
+        Map<KEY, IdentifiableMessage<KEY, M>> newRegistryMap = new HashMap<>();
         for (M value : values) {
-            IdentifiableMessage<M> data = new IdentifiableMessage(value);
+            IdentifiableMessage<KEY, M> data = new IdentifiableMessage<>(value);
             newRegistryMap.put(data.getId(), data);
         }
         replaceInternalMap(newRegistryMap);
     }
 
-    public M getMessage(final String key) throws NotAvailableException {
+    public M getMessage(final KEY key) throws NotAvailableException {
         return get(key).getMessage();
     }
 
-    public MB getBuilder(final String key) throws NotAvailableException {
+    public MB getBuilder(final KEY key) throws NotAvailableException {
         return (MB) getMessage(key).toBuilder();
     }
 
     public M register(final M entry) throws CouldNotPerformException {
-        return register(new IdentifiableMessage<>(entry)).getMessage();
+        return super.register(new IdentifiableMessage<KEY, M>(entry)).getMessage();
     }
 
     public M update(final M entry) throws CouldNotPerformException {
-        return update(new IdentifiableMessage<>(entry)).getMessage();
+        return super.update(new IdentifiableMessage<KEY, M>(entry)).getMessage();
     }
 
     public M remove(final M entry) throws CouldNotPerformException {
-        return remove(new IdentifiableMessage<>(entry)).getMessage();
+        return super.remove(new IdentifiableMessage<KEY, M>(entry)).getMessage();
     }
 
     public boolean contrains(final M key) throws CouldNotPerformException {
-        return contrains(new IdentifiableMessage<>(key).getId());
+        return super.contrains(new IdentifiableMessage<KEY, M>(key).getId());
     }
 }

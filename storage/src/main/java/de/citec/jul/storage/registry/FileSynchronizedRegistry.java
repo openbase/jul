@@ -8,6 +8,7 @@ package de.citec.jul.storage.registry;
 import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
@@ -117,4 +118,14 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> exte
             throw new InvalidStateException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
         }
     }
+
+	@Override
+	public void shutdown() {
+		try {
+			saveRegistry();
+		} catch (MultiException ex) {
+			ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Final save failed!", ex));
+		}
+		super.shutdown();
+	}
 }

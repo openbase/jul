@@ -12,59 +12,70 @@ import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
-import java.util.logging.Level;
+import de.citec.jul.pattern.Observer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author mpohling
- * @param <MOB>
+ * @param <KEY> ID Type
+ * @param <M> Internal Message
  */
-public class IdentifiableMessage<MOB extends GeneratedMessage> extends Observable<MOB> implements Identifiable<String> {
+public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Identifiable<KEY> {
 
-    private static final Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
-    
-    private MOB messageOrBuilder;
+	protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
 
-    public IdentifiableMessage(MOB messageOrBuilder) {
+	private M messageOrBuilder;
+	private Observable<IdentifiableMessage<KEY, M>> observable;
 
-        this.messageOrBuilder = messageOrBuilder;
-    }
+	public IdentifiableMessage(M messageOrBuilder) {
+		this.messageOrBuilder = messageOrBuilder;
+		this.observable = new Observable<>();
+	}
 
-    @Override
-    public String getId() throws CouldNotPerformException {
-        try {
-            if (messageOrBuilder == null) {
-                throw new NotAvailableException("messageOrBuilder");
-            }
-            return (String) messageOrBuilder.getField(messageOrBuilder.getDescriptorForType().findFieldByName(FIELD_ID));
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not detect id.");
-        }
-    }
+	@Override
+	public KEY getId() throws CouldNotPerformException {
+		try {
+			if (messageOrBuilder == null) {
+				throw new NotAvailableException("messageOrBuilder");
+			}
+			return (KEY) messageOrBuilder.getField(messageOrBuilder.getDescriptorForType().findFieldByName(FIELD_ID));
+		} catch (Exception ex) {
+			throw new CouldNotPerformException("Could not detect id.");
+		}
+	}
 
-    public void setMessage(final MOB messageOrBuilder) {
-        this.messageOrBuilder = messageOrBuilder;
-        try {
-            notifyObservers(messageOrBuilder);
-        } catch (MultiException ex) {
+	public void setMessage(final M message) {
+		this.messageOrBuilder = message;
+		try {
+			observable.notifyObservers(this);
+		} catch (MultiException ex) {
             ExceptionPrinter.printHistory(logger, ex);
-        }
-    }
+		}
+	}
 
-    public MOB getMessage() {
-        return messageOrBuilder;
-    }
+	public M getMessage() {
+		return messageOrBuilder;
+	}
 
-    @Override
-    public String toString() {
-        try {
-            return getClass().getSimpleName() + "[" + getId() + "]";
-        } catch (CouldNotPerformException ex) {
+	@SuppressWarnings("unchecked")
+	public void addObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
+		observable.addObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
+	}
+
+	@SuppressWarnings("unchecked")
+	public void removeObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
+		observable.removeObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
+	}
+
+	@Override
+	public String toString() {
+		try {
+			return getClass().getSimpleName() + "[" + getId().toString() + "]";
+		} catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);
-            return getClass().getSimpleName() + "[?]";
-        }
-    }
-
+			return getClass().getSimpleName() + "[?]";
+		}
+	}
 }

@@ -54,6 +54,9 @@ public class ExceptionPrinter {
 	}
 
 	private static String removeNewLines(final String message) {
+		if(message == null) {
+			return "null";
+		}
 		return message.replaceAll("\n", "").trim();
 	}
 }
