@@ -221,8 +221,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         super.shutdown();
     }
 
-    public M getData() throws NotAvailableException {
+    public M getData() throws CouldNotPerformException {
         if (data == null) {
+            requestStatus();
             throw new NotAvailableException("data");
         }
         return data;

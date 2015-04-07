@@ -7,6 +7,7 @@ package de.citec.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
+import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
@@ -41,6 +42,10 @@ public class ProtoBufFileSynchronizedRegistry<KEY, VALUE extends IdentifiableMes
 		};
 		this.regProtobufMessageMap.addObserver(observer);
 	}
+    
+    public boolean contrains(final M message) throws CouldNotPerformException {
+        return contrains(new IdentifiableMessage<KEY, M>(message).getId());
+    }
 
 	@Override
 	public void shutdown() {

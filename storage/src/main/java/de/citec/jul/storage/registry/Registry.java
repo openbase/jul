@@ -120,6 +120,10 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
 		}
 	}
 
+	public boolean contrains(final VALUE entry) throws CouldNotPerformException {
+        return contrains(entry.getId());
+    }
+    
 	public boolean contrains(final KEY key) {
 		return registry.containsKey(key);
 	}
@@ -168,7 +172,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
 				for (ConsistencyHandler<KEY, VALUE> consistencyHandler : consistencyHandlerList) {
 					try {
 						valid &= !consistencyHandler.processData(registry, this);
-					} catch (CouldNotPerformException ex) {
+					} catch (Exception ex) {
 						exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
 						valid = false;
 					}

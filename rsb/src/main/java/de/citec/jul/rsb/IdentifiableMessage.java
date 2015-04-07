@@ -24,58 +24,61 @@ import org.slf4j.LoggerFactory;
  */
 public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Identifiable<KEY> {
 
-	protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
+    protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
 
-	private M messageOrBuilder;
-	private Observable<IdentifiableMessage<KEY, M>> observable;
+    private M messageOrBuilder;
+    private Observable<IdentifiableMessage<KEY, M>> observable;
 
-	public IdentifiableMessage(M messageOrBuilder) {
-		this.messageOrBuilder = messageOrBuilder;
-		this.observable = new Observable<>();
-	}
+    public IdentifiableMessage(M messageOrBuilder) {
+        this.messageOrBuilder = messageOrBuilder;
+        this.observable = new Observable<>();
+    }
 
-	@Override
-	public KEY getId() throws CouldNotPerformException {
-		try {
-			if (messageOrBuilder == null) {
-				throw new NotAvailableException("messageOrBuilder");
-			}
-			return (KEY) messageOrBuilder.getField(messageOrBuilder.getDescriptorForType().findFieldByName(FIELD_ID));
-		} catch (Exception ex) {
-			throw new CouldNotPerformException("Could not detect id.");
-		}
-	}
+    @Override
+    public KEY getId() throws CouldNotPerformException {
+        try {
+            if (messageOrBuilder == null) {
+                throw new NotAvailableException("messageOrBuilder");
+            }
+            return (KEY) messageOrBuilder.getField(messageOrBuilder.getDescriptorForType().findFieldByName(FIELD_ID));
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not detect id.");
+        }
+    }
 
-	public void setMessage(final M message) {
-		this.messageOrBuilder = message;
-		try {
-			observable.notifyObservers(this);
-		} catch (MultiException ex) {
+    public void setMessage(final M message) throws CouldNotPerformException {
+        if (message == null) {
+            throw new NotAvailableException("message");
+        }
+        this.messageOrBuilder = message;
+        try {
+            observable.notifyObservers(this);
+        } catch (MultiException ex) {
             ExceptionPrinter.printHistory(logger, ex);
-		}
-	}
+        }
+    }
 
-	public M getMessage() {
-		return messageOrBuilder;
-	}
+    public M getMessage() {
+        return messageOrBuilder;
+    }
 
-	@SuppressWarnings("unchecked")
-	public void addObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
-		observable.addObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
-	}
+    @SuppressWarnings("unchecked")
+    public void addObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
+        observable.addObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
+    }
 
-	@SuppressWarnings("unchecked")
-	public void removeObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
-		observable.removeObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
-	}
+    @SuppressWarnings("unchecked")
+    public void removeObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
+        observable.removeObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
+    }
 
-	@Override
-	public String toString() {
-		try {
-			return getClass().getSimpleName() + "[" + getId().toString() + "]";
-		} catch (CouldNotPerformException ex) {
+    @Override
+    public String toString() {
+        try {
+            return getClass().getSimpleName() + "[" + getId().toString() + "]";
+        } catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);
-			return getClass().getSimpleName() + "[?]";
-		}
-	}
+            return getClass().getSimpleName() + "[?]";
+        }
+    }
 }
