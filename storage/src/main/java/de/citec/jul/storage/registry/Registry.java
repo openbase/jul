@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,7 +105,8 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
 		}
 	}
 
-	public VALUE get(final KEY key) throws NotAvailableException {
+	public VALUE get(final KEY key) throws CouldNotPerformException {
+		verifyID(key);
 		synchronized (SYNC) {
 			if (!registry.containsKey(key)) {
 				TreeMap<KEY, VALUE> sortedMap = new TreeMap<>(registry);
@@ -121,11 +123,11 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
 	}
 
 	public boolean contrains(final VALUE entry) throws CouldNotPerformException {
-        return contrains(entry.getId());
-    }
-    
-	public boolean contrains(final KEY key) {
-		return registry.containsKey(key);
+		return contrains(entry.getId());
+	}
+
+	public boolean contrains(final KEY key) throws CouldNotPerformException {
+		return registry.containsKey(verifyID(key));
 	}
 
 	public void clean() {
@@ -156,11 +158,33 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
 		}
 	}
 
+	protected KEY verifyID(VALUE entry) throws VerificationFailedException {
+		try {
+			return verifyID(entry.getId());
+		} catch (CouldNotPerformException ex) {
+			throw new VerificationFailedException("Could not verify message!", ex);
+		}
+	}
+
+	protected KEY verifyID(KEY id) throws VerificationFailedException {
+		if (id == null) {
+			throw new VerificationFailedException("Invalid id!", new NotAvailableException("id"));
+		}
+		return id;
+	}
+
 	public void registerConsistencyHandler(final ConsistencyHandler<KEY, VALUE> consistencyHandler) {
 		consistencyHandlerList.add(consistencyHandler);
 	}
 
-	private void notifyConsistencyHandler() {
+	boolean consistencyCheckRunning = false;
+
+	private synchronized void notifyConsistencyHandler() {
+		if (consistencyCheckRunning) {
+			return;
+		}
+		consistencyCheckRunning = true;
+
 		int interationCounter = 0;
 		boolean valid = false;
 		MultiException.ExceptionStack exceptionStack = null;
@@ -185,7 +209,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
 					try {
 						MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
 						throw new InvalidStateException("ConsistencyHandler interference detected!");
-					} catch(CouldNotPerformException ex) {
+					} catch (CouldNotPerformException ex) {
 						ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Consistency process aborted!", ex));
 					}
 					logger.warn("Registry data not consistent!");
@@ -193,6 +217,7 @@ public class Registry<KEY, VALUE extends Identifiable<KEY>> extends Observable<M
 				}
 			}
 		}
+		consistencyCheckRunning = false;
 	}
 
 	@Override

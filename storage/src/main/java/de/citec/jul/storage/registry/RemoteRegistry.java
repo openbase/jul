@@ -31,11 +31,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends Generate
         replaceInternalMap(newRegistryMap);
     }
 
-    public M getMessage(final KEY key) throws NotAvailableException {
+    public M getMessage(final KEY key) throws CouldNotPerformException {
         return get(key).getMessage();
     }
 
-    public MB getBuilder(final KEY key) throws NotAvailableException {
+    public MB getBuilder(final KEY key) throws CouldNotPerformException {
         return (MB) getMessage(key).toBuilder();
     }
 
