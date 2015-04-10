@@ -81,7 +81,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     public void init(final InformerType informerType) throws InitializationException {
-//		registerConverter();
         try {
             logger.info("Init " + informerType.name().toLowerCase() + " informer service...");
             switch (informerType) {
@@ -187,7 +186,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 data.setField(data.getDescriptorForType().findFieldByName(name), value);
             }
         } catch (Exception ex) {
-            logger.warn("Could not set field [" + name + "=" + value + "] for " + this);
+            logger.warn("Could not set field [" + name + "=" + value + "] for " + this, ex);
         }
     }
 
