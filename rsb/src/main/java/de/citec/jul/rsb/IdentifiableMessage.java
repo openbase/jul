@@ -96,12 +96,13 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Ide
         }
     }
 
-    public void setMessage(final M message) throws CouldNotPerformException {
+    public IdentifiableMessage<KEY, M> setMessage(final M message) throws CouldNotPerformException {
         if (message == null) {
             throw new NotAvailableException("message");
         }
         this.internalMessage = message;
         notifyObservers();
+        return this;
     }
 
     public void notifyObservers() {
