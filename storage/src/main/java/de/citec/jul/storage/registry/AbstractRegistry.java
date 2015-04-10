@@ -186,45 +186,46 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     boolean consistencyCheckRunning = false;
 
     private synchronized void notifyConsistencyHandler() {
+        
+        // avoid dublicated consistency check
         if (consistencyCheckRunning) {
             return;
         }
         consistencyCheckRunning = true;
 
         int interationCounter = 0;
-        boolean valid = false;
         MultiException.ExceptionStack exceptionStack = null;
 
         synchronized (SYNC) {
-
-            while (!valid && !consistencyHandlerList.isEmpty() && !entryMap.isEmpty()) {
-                valid = true;
-                for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
-                    for (ENTRY entry : entryMap.values()) {
-                        try {
-                            consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
-                        } catch (EntryModification ex) {
-                            
-                        } catch (Exception ex) {
-                            exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
-                            valid = false;
-                        }
-                    }
-                }
-
-                interationCounter++;
-
+            while(true) {
+                
                 // handle handler interfereience
-                if (!valid && interationCounter > consistencyHandlerList.size() * 2) {
+                if (interationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
                     try {
                         MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
                         throw new InvalidStateException("ConsistencyHandler interference detected!");
                     } catch (CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Consistency process aborted!", ex));
                     }
-                    logger.warn("Registry data not consistent!");
-                    break;
                 }
+                
+                interationCounter++;
+                try {
+                    for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+                        for (ENTRY entry : entryMap.values()) {
+                            try {
+                                consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
+                            } catch (CouldNotPerformException | NullPointerException ex) {
+                                exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
+                            }
+                        }
+                    }
+                } catch (EntryModification ex) {
+                    logger.info("Consistency modification applied: "+ex.getMessage());
+                    continue;
+                }
+                logger.info("Registry consistend.");
+                break;
             }
         }
         consistencyCheckRunning = false;
