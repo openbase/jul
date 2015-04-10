@@ -27,17 +27,17 @@ import org.slf4j.LoggerFactory;
  *
  * @author Divine Threepwood
  * @param <KEY>
- * @param <VALUE>
+ * @param <ENTRY>
  * @param <MAP>
  * @param <R>
  */
-public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends RegistryInterface<KEY, VALUE, MAP, R>> extends Observable<Map<KEY, VALUE>> implements RegistryInterface<KEY, VALUE, MAP, R> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, MAP, R>> extends Observable<Map<KEY, ENTRY>> implements RegistryInterface<KEY, ENTRY, MAP, R> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final SyncObject SYNC = new SyncObject(AbstractRegistry.class);
     protected final MAP entryMap;
-    private final List<ConsistencyHandler<KEY, VALUE, MAP, R>> consistencyHandlerList;
+    private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
     public AbstractRegistry(final MAP entryMap) {
         this.entryMap = entryMap;
@@ -47,7 +47,7 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public VALUE register(final VALUE entry) throws CouldNotPerformException {
+    public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
         logger.info("Register " + entry + "...");
         try {
             checkAccess();
@@ -66,7 +66,7 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public VALUE update(final VALUE entry) throws CouldNotPerformException {
+    public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
         logger.info("Update " + entry + "...");
         try {
             checkAccess();
@@ -86,7 +86,7 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public VALUE remove(final VALUE entry) throws CouldNotPerformException {
+    public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
         logger.info("Remove " + entry + "...");
         try {
             checkAccess();
@@ -105,11 +105,11 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public VALUE get(final KEY key) throws CouldNotPerformException {
+    public ENTRY get(final KEY key) throws CouldNotPerformException {
         verifyID(key);
         synchronized (SYNC) {
             if (!entryMap.containsKey(key)) {
-                TreeMap<KEY, VALUE> sortedMap = new TreeMap<>(entryMap);
+                TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>(entryMap);
                 throw new NotAvailableException("Entry[" + key + "]", "Nearest neighbor is [" + sortedMap.floorKey(key) + "] or [" + sortedMap.ceilingKey(key) + "].");
             }
             return entryMap.get(key);
@@ -117,14 +117,14 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public List<VALUE> getEntries() {
+    public List<ENTRY> getEntries() {
         synchronized (SYNC) {
             return new ArrayList<>(entryMap.values());
         }
     }
 
     @Override
-    public boolean contains(final VALUE entry) throws CouldNotPerformException {
+    public boolean contains(final ENTRY entry) throws CouldNotPerformException {
         return contains(entry.getId());
     }
 
@@ -141,7 +141,7 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
         notifyObservers();
     }
 
-    protected void replaceInternalMap(final Map<KEY, VALUE> map) {
+    protected void replaceInternalMap(final Map<KEY, ENTRY> map) {
         synchronized (SYNC) {
             entryMap.clear();
             entryMap.putAll(map);
@@ -163,7 +163,7 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    protected KEY verifyID(final VALUE entry) throws VerificationFailedException {
+    protected KEY verifyID(final ENTRY entry) throws VerificationFailedException {
         try {
             return verifyID(entry.getId());
         } catch (CouldNotPerformException ex) {
@@ -179,7 +179,7 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void registerConsistencyHandler(final ConsistencyHandler<KEY, VALUE, MAP, R> consistencyHandler) {
+    public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) {
         consistencyHandlerList.add(consistencyHandler);
     }
 
@@ -197,14 +197,18 @@ public class AbstractRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends 
 
         synchronized (SYNC) {
 
-            while (!valid && !consistencyHandlerList.isEmpty()) {
+            while (!valid && !consistencyHandlerList.isEmpty() && !entryMap.isEmpty()) {
                 valid = true;
-                for (ConsistencyHandler<KEY, VALUE, MAP, R> consistencyHandler : consistencyHandlerList) {
-                    try {
-                        valid &= !consistencyHandler.processData(entryMap, (R) this);
-                    } catch (Exception ex) {
-                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
-                        valid = false;
+                for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+                    for (ENTRY entry : entryMap.values()) {
+                        try {
+                            consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
+                        } catch (EntryModification ex) {
+                            
+                        } catch (Exception ex) {
+                            exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
+                            valid = false;
+                        }
                     }
                 }
 

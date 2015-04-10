@@ -17,7 +17,7 @@ public class MultiException extends CouldNotPerformException {
     private final ExceptionStack exceptionStack;
 
     public MultiException(final String message, final ExceptionStack exceptionStack) {
-        super(message);
+        super(message, exceptionStack.get(0).getException());
         this.exceptionStack = exceptionStack;
     }
 
