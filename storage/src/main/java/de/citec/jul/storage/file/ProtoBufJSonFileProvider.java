@@ -17,33 +17,37 @@ import org.apache.commons.io.filefilter.FileFileFilter;
  */
 public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<String>> {
 
-        public static final String FILE_TYPE = "json";
-        public static final String FILE_SUFFIX = "." + FILE_TYPE;
+    public static final String FILE_TYPE = "json";
+    public static final String FILE_SUFFIX = "." + FILE_TYPE;
 
-        @Override
-        public String getFileName(Identifiable<String> context) throws CouldNotPerformException {
-            try {
-                return context.getId().replaceAll("/", "_") + FILE_SUFFIX;
-            } catch (CouldNotPerformException ex) {
-                throw new CouldNotPerformException("Could not generate file name!", ex);
-            }
-        }
-
-        @Override
-        public String getFileType() {
-            return FILE_TYPE;
-        }
-
-        @Override
-        public FileFilter getFileFilter() {
-            return new FileFileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    if (file == null) {
-                        return false;
-                    }
-                    return (!file.isHidden()) && file.isFile() && file.getName().toLowerCase().endsWith(FILE_SUFFIX);
-                }
-            };
+    @Override
+    public String getFileName(Identifiable<String> context) throws CouldNotPerformException {
+        try {
+            return convertIntoValidFileName(context.getId().replaceAll("/", "_")) + FILE_SUFFIX;
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not generate file name!", ex);
         }
     }
+
+    @Override
+    public String getFileType() {
+        return FILE_TYPE;
+    }
+
+    @Override
+    public FileFilter getFileFilter() {
+        return new FileFileFilter() {
+            @Override
+            public boolean accept(File file) {
+                if (file == null) {
+                    return false;
+                }
+                return (!file.isHidden()) && file.isFile() && file.getName().toLowerCase().endsWith(FILE_SUFFIX);
+            }
+        };
+    }
+
+    public String convertIntoValidFileName(final String filename) {
+        return filename.replaceAll("[^0-9a-zA-Z\\-_]+", "_");
+    }
+}

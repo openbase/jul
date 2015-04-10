@@ -16,17 +16,19 @@ import java.util.Map;
  * The handler can be used to establish a registry data consistency. 
  * @param <KEY> the registry key type.
  * @param <VALUE> the registry data value type.
+ * @param <MAP>
+ * @param <R>
  */
-public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>> {
+public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends RegistryInterface<KEY, VALUE, MAP, R>> {
     
     /**
      * Method for establishing a registry data consistency.
      * Method is called by the registry in case of entry changes. 
      * 
-     * @param dataMap the data map of the underlying registry.
+     * @param entryMap the entry map of the underlying registry.
      * @param registry the underlying registry.
      * @return should return true if any data modifications are applied. Otherwise false.
      * @throws CouldNotPerformException thrown to handle errors.
      */
-    public boolean processData(final Map<KEY, VALUE> dataMap, final Registry<KEY, VALUE> registry) throws CouldNotPerformException;
+    public boolean processData(final MAP entryMap, final R registry) throws CouldNotPerformException;
 }

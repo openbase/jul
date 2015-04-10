@@ -20,28 +20,27 @@ import org.slf4j.LoggerFactory;
  *
  * @author mpohling
  * @param <KEY>
- * @param <VALUE>
  * @param <M extends GeneratedMessage, MB>
- * @param <MB>
+ * @param <SIB> Synchronized internal Builder
  */
-public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage<KEY, M>, M extends GeneratedMessage, MB extends Builder> extends HashMap<KEY, VALUE> implements Map<KEY, VALUE> {
+public class ProtobufMessageMap<KEY, M extends GeneratedMessage, SIB extends Builder> extends HashMap<KEY, IdentifiableMessage<KEY, M>> implements Map<KEY, IdentifiableMessage<KEY, M>> {
 
 	protected final Logger logger = LoggerFactory.getLogger(ProtobufMessageMap.class);
 
-	private final MB builder;
-	private final Observer<VALUE> observer;
-	private final Observable<VALUE> observable;
+	private final SIB builder;
+	private final Observer<IdentifiableMessage<KEY, M>> observer;
+	private final Observable<IdentifiableMessage<KEY, M>> observable;
 
 	private final Descriptors.FieldDescriptor fieldDescriptor;
 
-	public ProtobufMessageMap(final MB builder, final Descriptors.FieldDescriptor fieldDescriptor) {
+	public ProtobufMessageMap(final SIB builder, final Descriptors.FieldDescriptor fieldDescriptor) {
 		this.builder = builder;
 		this.fieldDescriptor = fieldDescriptor;
 		this.observable = new Observable<>();
-		this.observer = new Observer<VALUE>() {
+		this.observer = new Observer<IdentifiableMessage<KEY, M>>() {
 
 			@Override
-			public void update(Observable<VALUE> source, VALUE data) throws Exception {
+			public void update(Observable<IdentifiableMessage<KEY, M>> source, IdentifiableMessage<KEY, M> data) throws Exception {
 				syncBuilder();
 				observable.notifyObservers(source, data);
 			}
@@ -49,12 +48,12 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage<KEY, M>, 
 	}
 
 	@Override
-	public VALUE put(KEY key, VALUE value) {
+	public IdentifiableMessage<KEY, M> put(KEY key, IdentifiableMessage<KEY, M> value) {
 		if (value == null) {
 			logger.error("Could not add value!", new NotAvailableException("value"));
 			return value;
 		}
-		VALUE oldValue = super.put(key, value);
+		IdentifiableMessage<KEY, M> oldValue = super.put(key, value);
 		if (oldValue != null) {
 			oldValue.removeObserver(observer);
 		}
@@ -64,8 +63,8 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage<KEY, M>, 
 	}
 
 	@Override
-	public VALUE remove(Object key) {
-		VALUE removedValue = super.remove(key);
+	public IdentifiableMessage<KEY, M> remove(Object key) {
+		IdentifiableMessage<KEY, M> removedValue = super.remove(key);
 		if (removedValue != null) {
 			removedValue.removeObserver(observer);
 			syncBuilder();
@@ -74,12 +73,12 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage<KEY, M>, 
 	}
 
 	@Override
-	public void putAll(Map<? extends KEY, ? extends VALUE> valueMap) {
-		for (Entry<? extends KEY, ? extends VALUE> entry : valueMap.entrySet()) {
+	public void putAll(Map<? extends KEY, ? extends IdentifiableMessage<KEY, M>> valueMap) {
+		for (Entry<? extends KEY, ? extends IdentifiableMessage<KEY, M>> entry : valueMap.entrySet()) {
 			if (entry.getValue() == null) {
 				continue;
 			}
-			VALUE oldValue = super.put(entry.getKey(), entry.getValue());
+			IdentifiableMessage<KEY, M> oldValue = super.put(entry.getKey(), entry.getValue());
 			if (oldValue != null) {
 				oldValue.removeObserver(observer);
 			}
@@ -90,7 +89,7 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage<KEY, M>, 
 
 	@Override
 	public void clear() {
-		for (VALUE value : values()) {
+		for (IdentifiableMessage<KEY, M> value : values()) {
 			value.removeObserver(observer);
 		}
 		super.clear();
@@ -100,17 +99,17 @@ public class ProtobufMessageMap<KEY, VALUE extends IdentifiableMessage<KEY, M>, 
 	private void syncBuilder() {
 		synchronized (builder) {
 			builder.clearField(fieldDescriptor);
-			for (VALUE value : values()) {
+			for (IdentifiableMessage<KEY, M> value : values()) {
 				builder.addRepeatedField(fieldDescriptor, value.getMessage());
 			}
 		}
 	}
 
-	public void addObserver(Observer<VALUE> observer) {
+	public void addObserver(Observer<IdentifiableMessage<KEY, M>> observer) {
 		observable.addObserver(observer);
 	}
 
-	public void removeObserver(Observer<VALUE> observer) {
+	public void removeObserver(Observer<IdentifiableMessage<KEY, M>> observer) {
 		observable.removeObserver(observer);
 	}
 

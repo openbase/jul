@@ -9,6 +9,7 @@ import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message.Builder;
 import com.googlecode.protobuf.format.JsonFormat;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.CouldNotTransformException;
 import de.citec.jul.processing.FileProcessor;
 import java.io.File;
 import org.apache.commons.io.FileUtils;
@@ -61,7 +62,7 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
     
     public static interface TypeToMessageTransformer<T, M extends GeneratedMessage, MB extends Builder> {
         public GeneratedMessage transform(T type);
-        public T transform(M message);
+        public T transform(M message) throws CouldNotTransformException;
         public MB newBuilderForType() throws CouldNotPerformException;
     }
 }

@@ -7,7 +7,9 @@ package de.citec.jul.rsb;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.CouldNotTransformException;
 import de.citec.jul.rsb.processing.ProtoBufFileProcessor;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  *
@@ -18,13 +20,15 @@ import de.citec.jul.rsb.processing.ProtoBufFileProcessor;
 public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder> implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage<?, M>, M, MB> {
 
     private final Class<M> messageClass;
+    private final IdGenerator<?, M> idGenerator;
     
-    public MessageTransformer(Class<M> messageClass) {
+    public MessageTransformer(final Class<M> messageClass, final IdGenerator<?, M> idGenerator) {
         this.messageClass = messageClass;
+        this.idGenerator = idGenerator;
     }
     
     @Override
-    public M transform(IdentifiableMessage<?, M> type) {
+    public M transform(final IdentifiableMessage<?, M> type) {
         return type.getMessage();
     }
 
@@ -33,13 +37,17 @@ public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder
         try {
             Object invoke = messageClass.getMethod("newBuilder").invoke(null);
             return (MB) invoke;
-        } catch (Exception ex) {
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NullPointerException ex) {
             throw new CouldNotPerformException("Coult not generate builder out of message class!", ex);
         }
     }
 
     @Override
-    public IdentifiableMessage<?, M> transform(M message) {
-        return new IdentifiableMessage<>(message);
+    public IdentifiableMessage<?, M> transform(final M message) throws CouldNotTransformException {
+        try {
+            return new IdentifiableMessage<>(message, idGenerator);
+        } catch(de.citec.jul.exception.InstantiationException ex) {
+            throw new CouldNotTransformException("Given message is invalid!" , ex);
+        }
     }
 }

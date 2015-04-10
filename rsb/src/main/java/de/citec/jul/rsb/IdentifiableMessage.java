@@ -8,6 +8,8 @@ package de.citec.jul.rsb;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.VerificationFailedException;
@@ -25,71 +27,110 @@ import org.slf4j.LoggerFactory;
  */
 public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Identifiable<KEY> {
 
-	protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
+    protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
 
-	private M messageOrBuilder;
-	private Observable<IdentifiableMessage<KEY, M>> observable;
+    private M internalMessage;
 
-	public IdentifiableMessage(M messageOrBuilder) {
-		this.messageOrBuilder = messageOrBuilder;
-		this.observable = new Observable<>();
-	}
+    private Observable<IdentifiableMessage<KEY, M>> observable;
 
-	@Override
-	public KEY getId() throws CouldNotPerformException {
-		try {
-			if (messageOrBuilder == null) {
-				throw new NotAvailableException("messageOrBuilder");
-			}
-			if (!messageOrBuilder.hasField(messageOrBuilder.getDescriptorForType().findFieldByName(FIELD_ID))) {
-				throw new VerificationFailedException("Given message has no id value!");
-			}
-			KEY id = (KEY) messageOrBuilder.getField(messageOrBuilder.getDescriptorForType().findFieldByName(FIELD_ID));
+    public IdentifiableMessage(final M message, final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
+        try {
+            if(idGenerator == null) {
+                throw new NotAvailableException("idGenerator");
+            }
+            
+            if(message == null) {
+                throw new NotAvailableException("message");
+            }
+            
+            this.internalMessage = message;
+            this.observable = new Observable<>();
+            this.setupId(idGenerator);
+        } catch (CouldNotPerformException ex) {
+            throw new de.citec.jul.exception.InstantiationException(this, ex);
+        }
+    }
 
-			if(id.toString().isEmpty()) {
-				throw new VerificationFailedException("Detected id is empty!");
-			}
+    @Override
+    public KEY getId() throws CouldNotPerformException {
+        try {
+            if (internalMessage == null) {
+                throw new NotAvailableException("messageOrBuilder");
+            }
+            if (!internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
+                throw new VerificationFailedException("Given message has no id value!");
+            }
+            KEY id = (KEY) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID));
 
-			return id;
-			
-		} catch (Exception ex) {
-			throw new CouldNotPerformException("Could not detect id.");
-		}
-	}
+            if (id.toString().isEmpty()) {
+                throw new VerificationFailedException("Detected id is empty!");
+            }
 
-	public void setMessage(final M message) throws CouldNotPerformException {
-		if (message == null) {
-			throw new NotAvailableException("message");
-		}
-		this.messageOrBuilder = message;
-		try {
-			observable.notifyObservers(this);
-		} catch (MultiException ex) {
-			ExceptionPrinter.printHistory(logger, ex);
-		}
-	}
+            return id;
 
-	public M getMessage() {
-		return messageOrBuilder;
-	}
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not detect id.", ex);
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public void addObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
-		observable.addObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
-	}
+    public final void setupId(final IdGenerator<KEY, M> generator) throws CouldNotPerformException {
+        try {
+            if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
+                return;
+            }
+            setId(generator.generateId(internalMessage));
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not setup id for message: "+internalMessage, ex);
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public void removeObserver(Observer<? extends IdentifiableMessage<KEY, M>> observer) {
-		observable.removeObserver((Observer<IdentifiableMessage<KEY, M>>) observer);
-	}
+    public final void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
+        try {
+            if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
+                throw new InvalidStateException("ID already specified!");
+            }
+            setMessage((M) internalMessage.toBuilder().setField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID), id).build());
+            notifyObservers();
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not setup id!", ex);
+        }
+    }
 
-	@Override
-	public String toString() {
-		try {
-			return getClass().getSimpleName() + "[" + getId().toString() + "]";
-		} catch (CouldNotPerformException ex) {
-			logger.warn("Could not return id value!", ex);
-			return getClass().getSimpleName() + "[?]";
-		}
-	}
+    public void setMessage(final M message) throws CouldNotPerformException {
+        if (message == null) {
+            throw new NotAvailableException("message");
+        }
+        this.internalMessage = message;
+        notifyObservers();
+    }
+
+    public void notifyObservers() {
+        try {
+            observable.notifyObservers(this);
+        } catch (MultiException ex) {
+            ExceptionPrinter.printHistory(logger, ex);
+        }
+    }
+
+    public M getMessage() {
+        return internalMessage;
+    }
+
+    public void addObserver(Observer<IdentifiableMessage<KEY, M>> observer) {
+        observable.addObserver(observer);
+    }
+
+    public void removeObserver(Observer<IdentifiableMessage<KEY, M>> observer) {
+        observable.removeObserver(observer);
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return getClass().getSimpleName() + "[" + getId().toString() + "]";
+        } catch (CouldNotPerformException ex) {
+            logger.warn("Could not return id value!", ex);
+            return getClass().getSimpleName() + "[?]";
+        }
+    }
 }

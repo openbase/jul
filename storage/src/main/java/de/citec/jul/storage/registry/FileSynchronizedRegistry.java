@@ -24,19 +24,17 @@ import java.util.Map;
  * @author mpohling
  * @param <KEY>
  * @param <VALUE>
+ * @param <MAP>
+ * @param <R>
  */
-public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
+public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, MAP, R>> extends AbstractRegistry<KEY, VALUE, MAP, R> implements FileSynchronizedRegistryInterface<KEY, VALUE, MAP, R> {
 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
     private final FileProcessor<VALUE> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
 
-    public FileSynchronizedRegistry(final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) {
-        this(new HashMap<KEY, VALUE>(), databaseDirectory, fileProcessor, fileProvider);
-    }
-
-    public FileSynchronizedRegistry(final Map<KEY, VALUE> registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) {
+    public FileSynchronizedRegistry(final MAP registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) {
         super(registry);
         this.databaseDirectory = databaseDirectory;
         this.fileSynchronizerMap = new HashMap<>();
@@ -72,6 +70,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> exte
         fileSynchronizerMap.clear();
     }
 
+    @Override
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
         logger.info("Load registry out of " + databaseDirectory + "...");
@@ -98,6 +97,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> exte
         MultiException.checkAndThrow("Could not load all registry enties!", exceptionStack);
     }
 
+    @Override
     public void saveRegistry() throws MultiException {
         logger.info("Save registry into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
