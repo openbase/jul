@@ -6,8 +6,6 @@
 package de.citec.jul.rsb;
 
 import de.citec.jul.exception.ExceptionPrinter;
-import static de.citec.jul.rsb.RSBCommunicationService.RPC_REQUEST_STATUS;
-import static de.citec.jul.rsb.RSBCommunicationService.RPC_SUCCESS;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

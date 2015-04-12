@@ -5,7 +5,6 @@
  */
 package de.citec.jul.storage.registry;
 
-import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotSupportedException;
@@ -23,7 +22,7 @@ import java.util.Map;
  * @param <MB>
  * @param <SIB>
  */
-public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M>, Map<KEY, IdentifiableMessage<KEY, M>>, ProtoBufRegistryInterface<KEY, M, MB, SIB>> implements ProtoBufRegistryInterface<KEY, M, MB, SIB> {
+public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistryInterface<KEY, M, MB>> implements ProtoBufRegistryInterface<KEY, M, MB> {
 
     private final IdGenerator<KEY, M> idGenerator;
 
@@ -31,15 +30,15 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         this(idGenerator, new HashMap());
     }
 
-    public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M>> internalMap) {
+    public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) {
         super(internalMap);
         this.idGenerator = idGenerator;
     }
 
     public synchronized void notifyRegistryUpdated(final Collection<M> values) throws CouldNotPerformException {
-        Map<KEY, IdentifiableMessage<KEY, M>> newRegistryMap = new HashMap<>();
+        Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
         for (M value : values) {
-            IdentifiableMessage<KEY, M> data = new IdentifiableMessage<>(value, idGenerator);
+            IdentifiableMessage<KEY, M, MB> data = new IdentifiableMessage<>(value, idGenerator);
             newRegistryMap.put(data.getId(), data);
         }
         replaceInternalMap(newRegistryMap);

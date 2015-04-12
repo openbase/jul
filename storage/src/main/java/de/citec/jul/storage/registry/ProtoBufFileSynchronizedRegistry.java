@@ -14,11 +14,11 @@ import de.citec.jul.pattern.Observer;
 import de.citec.jul.rsb.IdGenerator;
 import de.citec.jul.rsb.IdentifiableMessage;
 import de.citec.jul.rsb.MessageTransformer;
-import de.citec.jul.rsb.ProtobufMessageMap;
+import de.citec.jul.rsb.ProtoBufMessageMap;
+import de.citec.jul.rsb.ProtoBufMessageMapInterface;
 import de.citec.jul.rsb.processing.ProtoBufFileProcessor;
 import de.citec.jul.storage.file.FileProvider;
 import java.io.File;
-import java.util.Map;
 
 /**
  *
@@ -28,58 +28,57 @@ import java.util.Map;
  * @param <MB> Message Builder
  * @param <SIB> Synchronized internal builder
  */
-//public class ProtoBufFileSynchronizedRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M>, ProtobufMessageMap<KEY, M, SIB>, ProtoBufRegistryInterface<KEY, M, MB, SIB>> implements ProtoBufRegistryInterface<KEY, M, MB, SIB> {
-public class ProtoBufFileSynchronizedRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M>,  Map<KEY, IdentifiableMessage<KEY, M>> , ProtoBufRegistryInterface<KEY, M, MB, SIB>> implements ProtoBufRegistryInterface<KEY, M, MB, SIB> {
+public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> implements ProtoBufRegistryInterface<KEY, M, MB> {
 
-    private final ProtobufMessageMap<KEY, M, SIB> protobufMessageMap;
+    private final ProtoBufMessageMap<KEY, M, MB, SIB> protobufMessageMap;
     private final IdGenerator<KEY, M> idGenerator;
-	private final Observer<IdentifiableMessage<KEY, M>> observer;
+    private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
 
-	public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final SIB builder, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) {
-        this(messageClass, new ProtobufMessageMap<KEY, M, SIB>(builder, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final SIB builder, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) {
+        this(messageClass, new ProtoBufMessageMap<KEY, M, MB, SIB>(builder, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
     }
-    
-	public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtobufMessageMap<KEY, M, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) {
-		super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
+
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) {
+        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
         this.idGenerator = idGenerator;
         this.protobufMessageMap = internalMap;
-		this.observer = new Observer<IdentifiableMessage<KEY, M>>() {
+        this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
 
-			@Override
-			public void update(Observable<IdentifiableMessage<KEY, M>> source, IdentifiableMessage<KEY, M> data) throws Exception {
-				ProtoBufFileSynchronizedRegistry.this.update(data);
-			}
-		};
-        
-		protobufMessageMap.addObserver(observer);
-	}
+            @Override
+            public void update(Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
+                ProtoBufFileSynchronizedRegistry.this.update(data);
+            }
+        };
 
-	@Override
-	public void shutdown() {
-		protobufMessageMap.removeObserver(observer);
-		super.shutdown();
-	}
-    
+        protobufMessageMap.addObserver(observer);
+    }
+
+    @Override
+    public void shutdown() {
+        protobufMessageMap.removeObserver(observer);
+        super.shutdown();
+    }
+
     @Override
     public M register(final M message) throws CouldNotPerformException {
-        return super.register(new IdentifiableMessage<>(message, idGenerator)).getMessage();
+        return super.register(new IdentifiableMessage<KEY, M, MB>(message, idGenerator)).getMessage();
     }
-    
+
     @Override
     public boolean contains(final M message) throws CouldNotPerformException {
         return contains(new IdentifiableMessage<>(message, idGenerator).getId());
     }
-    
+
     @Override
     public M update(final M message) throws CouldNotPerformException {
-        return update(new IdentifiableMessage<>(message, idGenerator)).getMessage();
+        return update(new IdentifiableMessage<KEY, M, MB>(message, idGenerator)).getMessage();
     }
 
     @Override
     public M remove(M locationConfig) throws CouldNotPerformException {
-        return remove(new IdentifiableMessage<>(locationConfig, idGenerator)).getMessage();
+        return remove(new IdentifiableMessage<KEY, M, MB>(locationConfig, idGenerator)).getMessage();
     }
-    
+
     @Override
     public M getMessage(final KEY id) throws CouldNotPerformException {
         return get(id).getMessage();

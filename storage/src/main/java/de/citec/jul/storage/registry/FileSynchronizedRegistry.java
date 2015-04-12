@@ -27,7 +27,7 @@ import java.util.Map;
  * @param <MAP>
  * @param <R>
  */
-public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, MAP, R>> extends AbstractRegistry<KEY, VALUE, MAP, R> implements FileSynchronizedRegistryInterface<KEY, VALUE, MAP, R> {
+public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends AbstractRegistry<KEY, VALUE, MAP, R> implements FileSynchronizedRegistryInterface<KEY, VALUE, R> {
 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
@@ -52,6 +52,13 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     @Override
     public VALUE update(final VALUE entry) throws CouldNotPerformException {
         super.update(entry);
+        
+        // ignore update during registration process.
+        if(!fileSynchronizerMap.containsKey(entry.getId())) {
+            logger.debug("Ignore update during registration process of entry "+entry);
+            return entry;
+        }
+        
         fileSynchronizerMap.get(entry.getId()).save(entry);
         return entry;
     }

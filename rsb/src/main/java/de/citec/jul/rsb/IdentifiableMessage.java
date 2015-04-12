@@ -24,14 +24,15 @@ import org.slf4j.LoggerFactory;
  * @author mpohling
  * @param <KEY> ID Type
  * @param <M> Internal Message
+ * @param <MB>
  */
-public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Identifiable<KEY> {
+public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> implements Identifiable<KEY> {
 
     protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
 
     private M internalMessage;
 
-    private Observable<IdentifiableMessage<KEY, M>> observable;
+    private Observable<IdentifiableMessage<KEY, M, MB>> observable;
 
     public IdentifiableMessage(final M message, final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
         try {
@@ -73,7 +74,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Ide
         }
     }
 
-    public final void setupId(final IdGenerator<KEY, M> generator) throws CouldNotPerformException {
+    private void setupId(final IdGenerator<KEY, M> generator) throws CouldNotPerformException {
         try {
             if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
                 return;
@@ -84,19 +85,25 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Ide
         }
     }
 
-    public final void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
+    private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
         try {
             if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
                 throw new InvalidStateException("ID already specified!");
             }
             setMessage((M) internalMessage.toBuilder().setField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID), id).build());
-            notifyObservers();
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not setup id!", ex);
         }
     }
+    
+    public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder) throws CouldNotPerformException {
+        if (builder == null) {
+            throw new NotAvailableException("message");
+        }
+        return setMessage((M) builder.build());
+    }
 
-    public IdentifiableMessage<KEY, M> setMessage(final M message) throws CouldNotPerformException {
+    public IdentifiableMessage<KEY, M, MB> setMessage(final M message) throws CouldNotPerformException {
         if (message == null) {
             throw new NotAvailableException("message");
         }
@@ -117,11 +124,11 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage> implements Ide
         return internalMessage;
     }
 
-    public void addObserver(Observer<IdentifiableMessage<KEY, M>> observer) {
+    public void addObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
         observable.addObserver(observer);
     }
 
-    public void removeObserver(Observer<IdentifiableMessage<KEY, M>> observer) {
+    public void removeObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
         observable.removeObserver(observer);
     }
 

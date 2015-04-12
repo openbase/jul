@@ -17,7 +17,7 @@ import java.lang.reflect.InvocationTargetException;
  * @param <M>
  * @param <MB>
  */
-public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder> implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage<?, M>, M, MB> {
+public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder<MB>> implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage<?, M, MB>, M, MB> {
 
     private final Class<M> messageClass;
     private final IdGenerator<?, M> idGenerator;
@@ -28,7 +28,7 @@ public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder
     }
     
     @Override
-    public M transform(final IdentifiableMessage<?, M> type) {
+    public M transform(final IdentifiableMessage<?, M, MB> type) {
         return type.getMessage();
     }
 
@@ -43,7 +43,7 @@ public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder
     }
 
     @Override
-    public IdentifiableMessage<?, M> transform(final M message) throws CouldNotTransformException {
+    public IdentifiableMessage<?, M, MB> transform(final M message) throws CouldNotTransformException {
         try {
             return new IdentifiableMessage<>(message, idGenerator);
         } catch(de.citec.jul.exception.InstantiationException ex) {

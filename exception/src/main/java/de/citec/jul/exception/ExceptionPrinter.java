@@ -22,14 +22,15 @@ public class ExceptionPrinter {
      * history overview of the causes. In verbose mode (app -v) the stacktrace
      * is printed in the end of history.
      *
+     * @param <T> Exception type
      * @param logger logger which is used as message printer.
      * @param th exception stack to print.
      * @return the related Throwable returned for further exception handling.
      */
-    public static Throwable printHistory(final Logger logger, final Throwable th) {
+    public static <T extends Throwable>  T printHistory(final Logger logger, final T th) {
         Throwable throwable = printHistory(logger, th, "");
         logger.error("=====================================");
-        return throwable;
+        return th;
     }
 
     private static Throwable printHistory(final Logger logger, final Throwable th, final String prefix) {

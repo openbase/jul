@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * @param <MAP>
  * @param <R>
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, MAP, R>> extends Observable<Map<KEY, ENTRY>> implements RegistryInterface<KEY, ENTRY, MAP, R> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>> extends Observable<Map<KEY, ENTRY>> implements RegistryInterface<KEY, ENTRY, R> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -178,7 +178,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return id;
     }
 
-    @Override
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) {
         consistencyHandlerList.add(consistencyHandler);
     }

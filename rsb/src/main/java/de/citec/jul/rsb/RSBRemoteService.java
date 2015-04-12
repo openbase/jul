@@ -19,6 +19,8 @@ import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Factory;
 import rsb.Handler;
@@ -61,7 +63,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             if (scope == null) {
                 throw new NotAvailableException("scope");
             }
-            
+
             if (initialized) {
                 logger.warn("Skip initialization because " + this + " already initialized!");
                 return;
@@ -171,11 +173,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         remoteServerWatchDog.deactivate();
     }
 
-    public <R, T extends Object> R callMethod(String methodName) throws RSBException, ExecutionException, TimeoutException, CouldNotPerformException {
+    public Object callMethod(String methodName) throws RSBException, ExecutionException, TimeoutException, CouldNotPerformException {
         return callMethod(methodName, null);
     }
 
-    public <R, T extends Object> Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException {
+    public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException {
         return callMethodAsync(methodName, null);
     }
 
@@ -206,9 +208,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    public void requestStatus() throws CouldNotPerformException {
-        logger.debug("requestStatus updated.");
-        callMethodAsync(RPC_REQUEST_STATUS);
+    public M requestStatus() throws CouldNotPerformException {
+        try {
+            logger.debug("requestStatus updated.");
+            return (M) callMethod(RPC_REQUEST_STATUS);
+        } catch (RSBException | ExecutionException | TimeoutException | CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not request the current status.", ex);
+        }
     }
 
     @Override
@@ -223,8 +229,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     public M getData() throws CouldNotPerformException {
         if (data == null) {
-            requestStatus();
-            throw new NotAvailableException("data");
+            return requestStatus();
         }
         return data;
     }

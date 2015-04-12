@@ -9,7 +9,6 @@ import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.rsb.IdGenerator;
 import de.citec.jul.rsb.IdentifiableMessage;
-import java.util.Map;
 
 /**
  *
@@ -17,9 +16,8 @@ import java.util.Map;
  * @param <KEY>
  * @param <M>
  * @param <MB>
- * @param <SIB>
  */
-public interface ProtoBufRegistryInterface<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M>, Map<KEY, IdentifiableMessage<KEY, M>>, ProtoBufRegistryInterface<KEY, M, MB, SIB>> {
+public interface ProtoBufRegistryInterface<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> {
 
     public M register(final M entry) throws CouldNotPerformException ;
     

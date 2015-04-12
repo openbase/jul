@@ -7,7 +7,7 @@ package de.citec.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.rsb.IdentifiableMessage;
-import java.util.Map;
+import de.citec.jul.rsb.ProtoBufMessageMapInterface;
 
 /**
  *
@@ -17,9 +17,7 @@ import java.util.Map;
  * @param <KEY> the registry key type.
  * @param <M>
  * @param <MB>
- * @param <SIB>
  */
-public interface ProtoBufRegistryConsistencyHandler<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends ConsistencyHandler<KEY, IdentifiableMessage<KEY, M>, Map<KEY, IdentifiableMessage<KEY, M>>, ProtoBufRegistryInterface<KEY, M, MB, SIB>> {
+public interface ProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> {
     
 }
-//ProtobufMessageMap<KEY, M, SIB>

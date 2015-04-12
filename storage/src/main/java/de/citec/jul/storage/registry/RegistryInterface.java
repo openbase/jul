@@ -9,17 +9,15 @@ import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.iface.Identifiable;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
  * @author mpohling
  * @param <KEY>
  * @param <VALUE>
- * @param <MAP> Internal entry map
  * @param <R>
  */
-public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends RegistryInterface<KEY, VALUE, MAP, R>> {
+public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, R extends RegistryInterface<KEY, VALUE, R>> {
 
     public VALUE register(final VALUE entry) throws CouldNotPerformException;
 
@@ -30,7 +28,7 @@ public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, MAP ext
     public VALUE get(final KEY key) throws CouldNotPerformException;
 
     public List<VALUE> getEntries();
-	
+
     public boolean contains(final VALUE entry) throws CouldNotPerformException;
 
     public boolean contains(final KEY key) throws CouldNotPerformException;
@@ -38,7 +36,5 @@ public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, MAP ext
     public void clean();
 
     public void checkAccess() throws InvalidStateException;
-
-    public void registerConsistencyHandler(final ConsistencyHandler<KEY, VALUE, MAP, R> consistencyHandler);
 
 }

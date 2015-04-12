@@ -9,6 +9,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.NotAvailableException;
@@ -108,8 +109,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
                 @Override
                 public Event internalInvoke(Event request) throws Throwable {
-                    requestStatus();
-                    return RPC_SUCCESS;
+                    
+                    return new Event(detectMessageClass(), requestStatus());
                 }
             });
             registerMethods(server);
@@ -176,7 +177,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         try {
             informer.send(getMessage());
         } catch (Exception ex) {
-            logger.error("Could not notify update", ex);
+            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify update", ex));
         }
     }
 
@@ -198,8 +199,13 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return state;
     }
 
-    public void requestStatus() {
-        notifyChange();
+    public M requestStatus() throws CouldNotPerformException {
+        try {
+            notifyChange();
+            return getMessage();
+        } catch(Exception ex) {
+            throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not request status update.", ex));
+        }
     }
 
     public abstract void registerMethods(final LocalServer server) throws RSBException;
