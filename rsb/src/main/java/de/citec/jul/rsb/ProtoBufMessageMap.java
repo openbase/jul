@@ -131,12 +131,19 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
 
     @Override
     public IdentifiableMessage<KEY, M, MB> get(final KEY key) throws CouldNotPerformException {
+		if(key == null) {
+			throw new NotAvailableException("key");
+		}
+		
+		if(!containsKey(key)) {
+			throw new NotAvailableException("Value for key["+key+"]");
+		}
         return super.get(key);
     }
 
     @Override
     public IdentifiableMessage<KEY, M, MB> get(final M message, final IdGenerator<KEY, M> idGenerator) throws CouldNotPerformException {
-        return super.get(new IdentifiableMessage<KEY, M, MB>(message, idGenerator));
+        return get(new IdentifiableMessage<KEY, M, MB>(message, idGenerator));
     }
 
     @Override

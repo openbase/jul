@@ -9,6 +9,7 @@ import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
@@ -34,7 +35,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     private final FileProcessor<VALUE> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
 
-    public FileSynchronizedRegistry(final MAP registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) {
+    public FileSynchronizedRegistry(final MAP registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
         super(registry);
         this.databaseDirectory = databaseDirectory;
         this.fileSynchronizerMap = new HashMap<>();
