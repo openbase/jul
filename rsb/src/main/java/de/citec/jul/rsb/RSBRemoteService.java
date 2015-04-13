@@ -19,8 +19,6 @@ import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Factory;
 import rsb.Handler;
@@ -113,7 +111,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                                     remoteServerWatchDog.waitForActivation();
                                     requestStatus();
                                 } catch (InterruptedException | CouldNotPerformException ex) {
-                                    logger.warn("Could not trigger data sync!", ex);
+                                    ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not trigger data sync!", ex));
                                 }
                             }
                         }.start();
@@ -125,11 +123,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    public void addHandler(final Handler handler, final boolean wait) throws InterruptedException {
+    public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
         try {
             listener.addHandler(handler, wait);
         } catch (InterruptedException ex) {
-            logger.error("Could not register Handler!", ex);
+            throw new CouldNotPerformException("Could not register Handler!", ex);
         }
     }
 
