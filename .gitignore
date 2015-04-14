@@ -2,3 +2,8 @@
 *.swp
 build
 */target/
+/rsb/scope/target/
+/rsb/container/target/
+/rsb/com/target/
+/rsb/util/target/
+/rsb/processing/target/

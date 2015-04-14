@@ -6,8 +6,8 @@
 package de.citec.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
-import de.citec.jul.rsb.IdentifiableMessage;
-import de.citec.jul.rsb.ProtoBufMessageMapInterface;
+import de.citec.jul.rsb.container.IdentifiableMessage;
+import de.citec.jul.rsb.container.ProtoBufMessageMapInterface;
 
 /**
  *
