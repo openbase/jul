@@ -25,12 +25,8 @@ public class ScopeTransformer {
             if (scope.getComponentList().isEmpty()) {
                 throw new NotAvailableException("element");
             }
-            String stringRep = Scope.COMPONENT_SEPARATOR;
-            for(String component : scope.getComponentList()) {
-                stringRep += component;
-                stringRep += Scope.COMPONENT_SEPARATOR;
-            }
-            return new Scope(stringRep);
+            
+            return new Scope(ScopeGenerator.generateStringRep(scope.getComponentList()));
         } catch (Exception ex) {
             throw new CouldNotTransformException(scope, rsb.Scope.class, ex);
         }
