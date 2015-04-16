@@ -53,13 +53,13 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     @Override
     public VALUE update(final VALUE entry) throws CouldNotPerformException {
         super.update(entry);
-        
+
         // ignore update during registration process.
-        if(!fileSynchronizerMap.containsKey(entry.getId())) {
-            logger.debug("Ignore update during registration process of entry "+entry);
+        if (!fileSynchronizerMap.containsKey(entry.getId())) {
+            logger.debug("Ignore update during registration process of entry " + entry);
             return entry;
         }
-        
+
         fileSynchronizerMap.get(entry.getId()).save(entry);
         return entry;
     }
@@ -86,10 +86,10 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
 
         File[] listFiles;
 
-            listFiles = databaseDirectory.listFiles(fileProvider.getFileFilter());
-            if(listFiles == null) {
-                throw new NotAvailableException("Could not load registry because database directory["+databaseDirectory.getAbsolutePath()+"] is empty!");
-            }
+        listFiles = databaseDirectory.listFiles(fileProvider.getFileFilter());
+        if (listFiles == null) {
+            throw new NotAvailableException("Could not load registry because database directory[" + databaseDirectory.getAbsolutePath() + "] is empty!");
+        }
 
         for (File file : listFiles) {
             try {
@@ -102,6 +102,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
         }
+        notifyConsistencyHandler();
         MultiException.checkAndThrow("Could not load all registry enties!", exceptionStack);
     }
 
@@ -127,13 +128,13 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
         }
     }
 
-	@Override
-	public void shutdown() {
-		try {
-			saveRegistry();
-		} catch (MultiException ex) {
-			ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Final save failed!", ex));
-		}
-		super.shutdown();
-	}
+    @Override
+    public void shutdown() {
+        try {
+            saveRegistry();
+        } catch (MultiException ex) {
+            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Final save failed!", ex));
+        }
+        super.shutdown();
+    }
 }

@@ -50,7 +50,6 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
                 ProtoBufFileSynchronizedRegistry.this.update(data);
             }
         };
-
         protobufMessageMap.addObserver(observer);
     }
 

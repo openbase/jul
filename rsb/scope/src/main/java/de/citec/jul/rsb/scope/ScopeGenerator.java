@@ -24,6 +24,10 @@ public class ScopeGenerator {
         return generateStringRep(scope.getComponentList());
     }
 
+    public static String generateStringRep(final Scope scope) {
+        return generateStringRep(scope.getComponents());
+    }
+
     public static String generateStringRep(final Collection<String> components) {
         String stringRep = Scope.COMPONENT_SEPARATOR;
         for (String component : components) {
@@ -43,7 +47,7 @@ public class ScopeGenerator {
             throw new NotAvailableException("registry");
         }
 
-        if (locationConfig.hasId()) {
+        if (!locationConfig.hasId()) {
             throw new NotAvailableException("location id");
         }
 
@@ -66,15 +70,15 @@ public class ScopeGenerator {
             throw new NotAvailableException("registry");
         }
 
-        if (deviceConfig.hasId()) {
+        if (!deviceConfig.hasId()) {
             throw new NotAvailableException("device id");
         }
 
-        if (deviceConfig.hasPlacementConfig()) {
+        if (!deviceConfig.hasPlacementConfig()) {
             throw new NotAvailableException("placement config");
         }
 
-        if (deviceConfig.getPlacementConfig().hasLocation()) {
+        if (!deviceConfig.getPlacementConfig().hasLocation()) {
             throw new NotAvailableException("location");
         }
 
