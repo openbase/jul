@@ -5,6 +5,7 @@
  */
 package de.citec.jul.storage.registry;
 
+import de.citec.jps.core.JPService;
 import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
@@ -16,6 +17,7 @@ import de.citec.jul.exception.MultiException.ExceptionStack;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.processing.FileProcessor;
+import de.citec.jul.storage.jp.JPInitializeDB;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,12 +83,18 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     @Override
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
+        
+        if(JPService.getProperty(JPInitializeDB.class).getValue()) {
+            return;
+        }
+        
         logger.info("Load registry out of " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
         File[] listFiles;
 
         listFiles = databaseDirectory.listFiles(fileProvider.getFileFilter());
+        
         if (listFiles == null) {
             throw new NotAvailableException("Could not load registry because database directory[" + databaseDirectory.getAbsolutePath() + "] is empty!");
         }

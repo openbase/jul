@@ -48,10 +48,6 @@ public class FileSynchronizer<D> extends Observable<D> {
         this.fileProcessor = fileProcessor;
         this.file = file;
 
-        if (JPService.getProperty(JPInitializeDB.class).getValue()) {
-            initMode = InitMode.REPLACE;
-        }
-
         try {
             switch (initMode) {
                 case CREATE:
@@ -73,6 +69,7 @@ public class FileSynchronizer<D> extends Observable<D> {
                     } catch (Exception ex) {
                     }
                     create(data);
+                    break;
                 default:
                     throw new EnumNotSupportedException(initMode, null);
 
