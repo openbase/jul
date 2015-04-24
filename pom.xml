@@ -38,7 +38,7 @@
         <dependency>
             <groupId>de.citec</groupId>
             <artifactId>jps</artifactId>
-            <version>1.0.3</version>
+            <version>1.0.4-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

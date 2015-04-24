@@ -5,12 +5,14 @@
  */
 package de.citec.jul.storage.file;
 
+import de.citec.jps.core.JPService;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.EnumNotSupportedException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.processing.FileProcessor;
+import de.citec.jul.storage.jp.JPInitializeDB;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -24,7 +26,7 @@ public class FileSynchronizer<D> extends Observable<D> {
 
     public enum InitMode {
 
-        AUTO, CREATE, LOAD
+        AUTO, CREATE, LOAD, REPLACE
     };
 
     private final FileProcessor<D> fileProcessor;
@@ -42,9 +44,14 @@ public class FileSynchronizer<D> extends Observable<D> {
         this(null, file, InitMode.LOAD, fileProcessor);
     }
 
-    public FileSynchronizer(final D data, final File file, final InitMode initMode, final FileProcessor<D> fileProcessor) throws InstantiationException {
+    public FileSynchronizer(final D data, final File file, InitMode initMode, final FileProcessor<D> fileProcessor) throws InstantiationException {
         this.fileProcessor = fileProcessor;
         this.file = file;
+
+        if (JPService.getProperty(JPInitializeDB.class).getValue()) {
+            initMode = InitMode.REPLACE;
+        }
+
         try {
             switch (initMode) {
                 case CREATE:
@@ -60,6 +67,12 @@ public class FileSynchronizer<D> extends Observable<D> {
                         create(data);
                     }
                     break;
+                case REPLACE:
+                    try {
+                        delete();
+                    } catch (Exception ex) {
+                    }
+                    create(data);
                 default:
                     throw new EnumNotSupportedException(initMode, null);
 
@@ -70,16 +83,16 @@ public class FileSynchronizer<D> extends Observable<D> {
     }
 
     public final D load() throws CouldNotPerformException {
-		logger.info("Load "+file);
+        logger.info("Load " + file);
         return data = fileProcessor.deserialize(file);
     }
 
     public final File save(final D data) throws CouldNotPerformException {
-		logger.info("Save "+data+" into "+file);
+        logger.info("Save " + data + " into " + file);
         try {
-			if(data == null) {
-				throw new NotAvailableException("data");
-			}
+            if (data == null) {
+                throw new NotAvailableException("data");
+            }
 
             if (!file.exists()) {
                 throw new NotAvailableException(file, "File not found!");
@@ -91,16 +104,16 @@ public class FileSynchronizer<D> extends Observable<D> {
     }
 
     public final File save() throws CouldNotPerformException {
-		logger.info("Save "+data+" into "+file);
+        logger.info("Save " + data + " into " + file);
         return save(data);
     }
 
     private File create(D data) throws CouldNotPerformException {
-		logger.info("Create "+file);
+        logger.info("Create " + file);
         try {
-			if (data == null) {
-				throw new NotAvailableException("data");
-			}
+            if (data == null) {
+                throw new NotAvailableException("data");
+            }
             if (!file.createNewFile()) {
                 throw new CouldNotPerformException("Could not create " + file + "!");
             }
