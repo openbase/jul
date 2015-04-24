@@ -33,12 +33,4 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-    
-    <dependencies>
-        <dependency>
-            <groupId>de.citec</groupId>
-            <artifactId>jps</artifactId>
-            <version>1.0.3</version>
-        </dependency>
-    </dependencies>
 </project>

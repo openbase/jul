@@ -103,7 +103,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
             }
         }
         notifyConsistencyHandler();
-        MultiException.checkAndThrow("Could not load all registry enties!", exceptionStack);
+        MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
     }
 
     @Override
@@ -117,7 +117,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
         }
-        MultiException.checkAndThrow("Could not save all registry enties!", exceptionStack);
+        MultiException.checkAndThrow("Could not save all registry entries!", exceptionStack);
     }
 
     @Override

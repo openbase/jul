@@ -99,7 +99,7 @@ public class FileSynchronizer<D> extends Observable<D> {
             }
             return fileProcessor.serialize(data, file);
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Coudl not save " + data + "!", ex);
+            throw new CouldNotPerformException("Could not save " + data + "!", ex);
         }
     }
 
