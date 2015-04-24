@@ -5,6 +5,7 @@
  */
 package de.citec.jul.rsb.scope;
 
+import de.citec.jul.exception.CouldNotPerformException;
 import rsb.Scope;
 
 /**
@@ -12,6 +13,6 @@ import rsb.Scope;
  * @author mpohling
  */
 public interface ScopeProvider {
-    
-    public Scope getScope();
+
+    public Scope getScope() throws CouldNotPerformException;
 }

@@ -9,6 +9,7 @@ import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.rsb.util.IdGenerator;
 import de.citec.jul.rsb.container.IdentifiableMessage;
+import java.util.List;
 
 /**
  *
@@ -28,6 +29,8 @@ public interface ProtoBufRegistryInterface<KEY, M extends GeneratedMessage, MB e
     public M remove(final M entry) throws CouldNotPerformException ;
 
     public M getMessage(final KEY key) throws CouldNotPerformException;
+
+    public List<M> getMessages() throws CouldNotPerformException;
 
     public MB getBuilder(final KEY key) throws CouldNotPerformException;
     

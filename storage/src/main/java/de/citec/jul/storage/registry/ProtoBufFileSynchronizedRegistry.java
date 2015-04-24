@@ -20,6 +20,7 @@ import de.citec.jul.rsb.container.transformer.MessageTransformer;
 import de.citec.jul.rsb.processing.ProtoBufFileProcessor;
 import de.citec.jul.storage.file.FileProvider;
 import java.io.File;
+import java.util.List;
 
 /**
  *
@@ -82,6 +83,11 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     @Override
     public M getMessage(final KEY id) throws CouldNotPerformException {
         return get(id).getMessage();
+    }
+
+    @Override
+    public List<M> getMessages() throws CouldNotPerformException {
+        return protobufMessageMap.getMessages();
     }
 
     @Override

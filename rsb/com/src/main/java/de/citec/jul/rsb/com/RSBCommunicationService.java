@@ -10,12 +10,14 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.CouldNotTransformException;
 import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Activatable;
 import de.citec.jul.rsb.com.RSBInformerInterface.InformerType;
+import de.citec.jul.rsb.scope.ScopeTransformer;
 import de.citec.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import rsb.RSBException;
 import rsb.Scope;
 import rsb.patterns.Callback;
 import rsb.patterns.LocalServer;
+import rst.rsb.ScopeType;
 
 /**
  *
@@ -57,6 +60,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     protected Scope scope;
     private ConnectionState state;
 
+    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws CouldNotTransformException, InstantiationException {
+        this(ScopeTransformer.transform(scope), builder);
+    }
+
     public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
         logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
         this.data = builder;
@@ -74,12 +81,16 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) throws InstantiationException {
+    public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) throws InstantiationException, CouldNotPerformException {
         this(generateScope(name, lable, location), builder);
     }
 
-    public static Scope generateScope(final String name, final String label, final ScopeProvider location) {
-        return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + name).concat(new Scope(Scope.COMPONENT_SEPARATOR + label)));
+    public static Scope generateScope(final String name, final String label, final ScopeProvider location) throws CouldNotPerformException {
+        try {
+            return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + name).concat(new Scope(Scope.COMPONENT_SEPARATOR + label)));
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Coult not generate scope!", ex);
+        }
     }
 
     public void init(final InformerType informerType) throws InitializationException {

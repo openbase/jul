@@ -13,7 +13,9 @@ import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import de.citec.jul.rsb.util.IdGenerator;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -150,5 +152,14 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
     @Override
     public IdentifiableMessage<KEY, M, MB> get(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException {
         return get(value.getId());
+    }
+
+    @Override
+    public List<M> getMessages() throws CouldNotPerformException {
+        List<M> messageList = new ArrayList<>();
+        for(IdentifiableMessage<KEY, M, MB> messageContainer : values()) {
+            messageList.add(messageContainer.getMessage());
+        }
+        return messageList;
     }
 }

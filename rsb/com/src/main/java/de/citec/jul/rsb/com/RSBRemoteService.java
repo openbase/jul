@@ -20,6 +20,8 @@ import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Factory;
 import rsb.Handler;
@@ -52,7 +54,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     public void init(final String label, final ScopeProvider location) throws InitializationException {
-        init(generateScope(label, detectMessageClass(), location));
+        try {
+            init(generateScope(label, detectMessageClass(), location));
+        } catch (CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
+        }
     }
 
     public synchronized void init(final Scope scope) throws InitializationException {
@@ -238,8 +244,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return (Class) parameterizedType.getActualTypeArguments()[0];
     }
 
-    public static Scope generateScope(final String label, final Class typeClass, final ScopeProvider location) {
-        return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + typeClass.getSimpleName())).concat(new Scope(Scope.COMPONENT_SEPARATOR + label));
+    public static Scope generateScope(final String label, final Class typeClass, final ScopeProvider location) throws CouldNotPerformException {
+        try {
+            return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + typeClass.getSimpleName())).concat(new Scope(Scope.COMPONENT_SEPARATOR + label));
+
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Coult not generate scope!", ex);
+        }
     }
 
     @Override

@@ -11,8 +11,10 @@ import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.NotSupportedException;
 import de.citec.jul.rsb.util.IdGenerator;
 import de.citec.jul.rsb.container.IdentifiableMessage;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +30,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 	private final IdGenerator<KEY, M> idGenerator;
 
 	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
-		this(idGenerator, new HashMap());
+		this(idGenerator, new HashMap<KEY, IdentifiableMessage<KEY, M, MB>>());
 	}
 
 	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
@@ -92,4 +94,13 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 	public IdGenerator<KEY, M> getIdGenerator() {
 		return idGenerator;
 	}
+
+    @Override
+    public List<M> getMessages() throws CouldNotPerformException {
+        List<M> messageList = new ArrayList<>();
+        for(IdentifiableMessage<KEY, M, MB> messageContainer : getEntries()) {
+            messageList.add(messageContainer.getMessage());
+        }
+        return messageList;
+    }
 }

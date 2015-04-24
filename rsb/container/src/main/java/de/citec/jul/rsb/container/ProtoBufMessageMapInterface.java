@@ -8,6 +8,7 @@ package de.citec.jul.rsb.container;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.rsb.util.IdGenerator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,6 +27,8 @@ public interface ProtoBufMessageMapInterface<KEY extends Comparable<KEY>, M exte
     public IdentifiableMessage<KEY, M, MB> get(final M message, final IdGenerator<KEY, M> idGenerator) throws CouldNotPerformException;
     
     public IdentifiableMessage<KEY, M, MB> get(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException;
+
+    public List<M> getMessages() throws CouldNotPerformException;
     
     public M getMessage(KEY key) throws CouldNotPerformException;
 }
