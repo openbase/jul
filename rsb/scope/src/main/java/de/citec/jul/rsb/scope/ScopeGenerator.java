@@ -75,12 +75,12 @@ public class ScopeGenerator {
             throw new NotAvailableException("placement config");
         }
 
-        if (!deviceConfig.getPlacementConfig().hasLocation()) {
+        if (!deviceConfig.getPlacementConfig().hasLocationConfig()) {
             throw new NotAvailableException("location");
         }
 
         // add location scope
-        ScopeType.Scope.Builder scope = deviceConfig.getPlacementConfig().getLocation().getScope().toBuilder();
+        ScopeType.Scope.Builder scope = deviceConfig.getPlacementConfig().getLocationConfig().getScope().toBuilder();
 
         // add device scope
         scope.addComponent(deviceConfig.getId().toLowerCase());
@@ -98,16 +98,16 @@ public class ScopeGenerator {
             throw new NotAvailableException("unitConfig.label");
         }
 
-        if (!unitConfig.hasPlacement()) {
+        if (!unitConfig.hasPlacementConfig()) {
             throw new NotAvailableException("placement config");
         }
 
-        if (!unitConfig.getPlacement().hasLocation()) {
+        if (!unitConfig.getPlacementConfig().hasLocationConfig()) {
             throw new NotAvailableException("location");
         }
 
         // add location scope
-        ScopeType.Scope.Builder scope = unitConfig.getPlacement().getLocation().getScope().toBuilder();
+        ScopeType.Scope.Builder scope = unitConfig.getPlacementConfig().getLocationConfig().getScope().toBuilder();
 
         // add device scope
         scope.addComponent(unitConfig.getLabel().toLowerCase());
