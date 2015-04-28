@@ -66,7 +66,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             checkAccess();
             synchronized (SYNC) {
                 if (entryMap.containsKey(entry.getId())) {
-                    throw new CouldNotPerformException("Could not register " + entry + "! Entry with same id already registered!");
+                    throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id["+entry.getId()+"] already registered!");
                 }
                 entryMap.put(entry.getId(), entry);
             }

@@ -11,6 +11,7 @@ import de.citec.jul.rsb.container.ProtoBufMessageMapInterface;
 import java.util.Collection;
 import rsb.Scope;
 import rst.homeautomation.device.DeviceConfigType.DeviceConfig;
+import rst.homeautomation.unit.UnitConfigType.UnitConfig;
 import rst.rsb.ScopeType;
 import rst.spatial.LocationConfigType.LocationConfig;
 
@@ -60,14 +61,10 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope setupDeviceScope(final DeviceConfig deviceConfig, final ProtoBufMessageMapInterface<String, LocationConfig, LocationConfig.Builder> registry) throws CouldNotPerformException {
+    public static ScopeType.Scope setupDeviceScope(final DeviceConfig deviceConfig) throws CouldNotPerformException {
 
         if (deviceConfig == null) {
             throw new NotAvailableException("deviceConfig");
-        }
-
-        if (registry == null) {
-            throw new NotAvailableException("registry");
         }
 
         if (!deviceConfig.hasId()) {
@@ -87,6 +84,33 @@ public class ScopeGenerator {
 
         // add device scope
         scope.addComponent(deviceConfig.getId().toLowerCase());
+
+        return scope.build();
+    }
+
+    public static ScopeType.Scope setupUnitScope(final UnitConfig unitConfig) throws CouldNotPerformException {
+
+        if (unitConfig == null) {
+            throw new NotAvailableException("unitConfig");
+        }
+
+        if (!unitConfig.hasLabel()) {
+            throw new NotAvailableException("unitConfig.label");
+        }
+
+        if (!unitConfig.hasPlacement()) {
+            throw new NotAvailableException("placement config");
+        }
+
+        if (!unitConfig.getPlacement().hasLocation()) {
+            throw new NotAvailableException("location");
+        }
+
+        // add location scope
+        ScopeType.Scope.Builder scope = unitConfig.getPlacement().getLocation().getScope().toBuilder();
+
+        // add device scope
+        scope.addComponent(unitConfig.getLabel().toLowerCase());
 
         return scope.build();
     }

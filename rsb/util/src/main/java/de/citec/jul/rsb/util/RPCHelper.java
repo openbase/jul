@@ -5,7 +5,9 @@
  */
 package de.citec.jul.rsb.util;
 
+import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.NotAvailableException;
 import java.lang.reflect.Method;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +30,14 @@ public class RPCHelper {
             server.addMethod(methode.getName(), new Callback() {
 
                 @Override
-                public Event internalInvoke(Event event) throws Throwable {
+                public Event internalInvoke(final Event event) throws Throwable {
                     try {
+                        if(event == null) {
+                            throw new NotAvailableException("event");
+                        }
                         return new Event(methode.getReturnType(), methode.invoke(instance, event.getData()));
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistory(logger, ex);
+                        throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not invoke Method["+methode.getName()+"("+event.getData()+")]!", ex));
                     }
                 }
             });

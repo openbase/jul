@@ -20,12 +20,7 @@ public class ScopeTransformer {
         try {
             if (scope == null) {
                 throw new NotAvailableException("scope");
-            }
-
-            if (scope.getComponentList().isEmpty()) {
-                throw new NotAvailableException("element");
-            }
-            
+            }            
             return new Scope(ScopeGenerator.generateStringRep(scope.getComponentList()));
         } catch (Exception ex) {
             throw new CouldNotTransformException(scope, rsb.Scope.class, ex);

@@ -7,8 +7,10 @@ package de.citec.jul.storage.jp;
 
 import de.citec.jps.core.AbstractJavaProperty.ValueType;
 import de.citec.jps.core.JPService;
+import de.citec.jps.exception.ValidationException;
 import de.citec.jps.preset.AbstractJPBoolean;
 import de.citec.jps.preset.JPTestMode;
+import java.io.IOException;
 
 /**
  *
@@ -28,14 +30,18 @@ public class JPInitializeDB extends AbstractJPBoolean {
     }
 
     @Override
-    public void validate() throws Exception {
+    public void validate() throws ValidationException {
         super.validate();
         if (getValueType().equals((ValueType.CommandLine))) {
             logger.warn("WARNING: OVERWRITING CURRENT DATABASE!!!");
             if(!JPService.getProperty(JPTestMode.class).getValue()) {
                 logger.warn("=== Type y and press enter to contine ===");
-                if(!(System.in.read() == 'y')) {
-                    System.exit(1);
+                try {
+                    if(!(System.in.read() == 'y')) {
+                        throw new ValidationException("Execution aborted by user!");
+                    }
+                } catch (IOException ex) {
+                    throw new ValidationException("Validation failed because of invalid input state!", ex);
                 }
             }
         }

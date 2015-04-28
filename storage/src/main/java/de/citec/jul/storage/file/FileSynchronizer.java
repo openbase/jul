@@ -81,7 +81,8 @@ public class FileSynchronizer<D> extends Observable<D> {
 
     public final D load() throws CouldNotPerformException {
         logger.info("Load " + file);
-        return data = fileProcessor.deserialize(file);
+        data = fileProcessor.deserialize(file);
+        return data;
     }
 
     public final File save(final D data) throws CouldNotPerformException {
@@ -90,6 +91,8 @@ public class FileSynchronizer<D> extends Observable<D> {
             if (data == null) {
                 throw new NotAvailableException("data");
             }
+
+            this.data = data;
 
             if (!file.exists()) {
                 throw new NotAvailableException(file, "File not found!");
@@ -128,7 +131,7 @@ public class FileSynchronizer<D> extends Observable<D> {
             if (!file.delete()) {
                 throw new CouldNotPerformException("Could not delete File[" + file.getAbsolutePath() + "]!");
             }
-        } catch (Exception ex) {
+        } catch (FileNotFoundException | CouldNotPerformException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not delete database " + file + "!", ex);
         }
     }
