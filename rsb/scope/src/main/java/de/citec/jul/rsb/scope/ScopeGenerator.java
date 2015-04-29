@@ -67,8 +67,8 @@ public class ScopeGenerator {
             throw new NotAvailableException("deviceConfig");
         }
 
-        if (!deviceConfig.hasId()) {
-            throw new NotAvailableException("device id");
+        if (!deviceConfig.hasLabel()) {
+            throw new NotAvailableException("device label");
         }
 
         if (!deviceConfig.hasPlacementConfig()) {
@@ -83,7 +83,7 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = deviceConfig.getPlacementConfig().getLocationConfig().getScope().toBuilder();
 
         // add device scope
-        scope.addComponent(deviceConfig.getId().toLowerCase());
+        scope.addComponent(deviceConfig.getLabel().toLowerCase());
 
         return scope.build();
     }
@@ -96,6 +96,10 @@ public class ScopeGenerator {
 
         if (!unitConfig.hasLabel()) {
             throw new NotAvailableException("unitConfig.label");
+        }
+        
+        if (unitConfig.getLabel().isEmpty()) {
+            throw new NotAvailableException("Field unitConfig.label isEmpty");
         }
 
         if (!unitConfig.hasPlacementConfig()) {

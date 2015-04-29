@@ -66,14 +66,23 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             checkAccess();
             synchronized (SYNC) {
                 if (entryMap.containsKey(entry.getId())) {
-                    throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id["+entry.getId()+"] already registered!");
+                    throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
                 entryMap.put(entry.getId(), entry);
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
         }
-        notifyConsistencyHandler();
+        try {
+            notifyConsistencyHandler();
+        } catch (CouldNotPerformException ex) {
+            try {
+                superRemove(entry);
+            } catch (Exception exx) {
+                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not remove invalid entry!", exx));
+            }
+            throw ex;
+        }
         notifyObservers();
         return entry;
     }
@@ -100,6 +109,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
+        return superRemove(entry);
+    }
+    
+    public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
         logger.info("Remove " + entry + "...");
         try {
             checkAccess();
@@ -214,7 +227,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         synchronized (SYNC) {
             while (true) {
 
-                // handle handler interfereience
+                // handle handler interference
                 if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
                     try {
                         MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
@@ -222,6 +235,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     } catch (CouldNotPerformException ex) {
                         throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Consistency process aborted!", ex));
                     }
+                }
+
+                if (exceptionStack != null) {
+                    exceptionStack.clear();
                 }
 
                 iterationCounter++;
@@ -240,6 +257,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     modification = true;
                     continue;
                 }
+
+                if (exceptionStack != null && !exceptionStack.isEmpty()) {
+                    continue;
+                }
+
                 logger.info("Registry consistend.");
                 break;
             }
