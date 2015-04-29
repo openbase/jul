@@ -38,7 +38,7 @@ public class ScopeGenerator {
         return stringRep;
     }
 
-    public static ScopeType.Scope setupLocationScope(final LocationConfig locationConfig, final ProtoBufMessageMapInterface<String, LocationConfig, LocationConfig.Builder> registry) throws CouldNotPerformException {
+    public static ScopeType.Scope generateLocationScope(final LocationConfig locationConfig, final ProtoBufMessageMapInterface<String, LocationConfig, LocationConfig.Builder> registry) throws CouldNotPerformException {
 
         if (locationConfig == null) {
             throw new NotAvailableException("locationConfig");
@@ -61,7 +61,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope setupDeviceScope(final DeviceConfig deviceConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateDeviceScope(final DeviceConfig deviceConfig) throws CouldNotPerformException {
 
         if (deviceConfig == null) {
             throw new NotAvailableException("deviceConfig");
@@ -88,7 +88,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope setupUnitScope(final UnitConfig unitConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateUnitScope(final UnitConfig unitConfig) throws CouldNotPerformException {
 
         if (unitConfig == null) {
             throw new NotAvailableException("unitConfig");

@@ -71,7 +71,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             if (builder == null) {
                 throw new NotAvailableException("builder");
             }
-            
+
             if (scope == null) {
                 throw new NotAvailableException("scope");
             }
@@ -121,7 +121,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
                 @Override
                 public Event internalInvoke(Event request) throws Throwable {
-                    
+
                     return new Event(detectMessageClass(), requestStatus());
                 }
             });
@@ -196,10 +196,27 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     protected final void setField(String name, Object value) {
         try {
             synchronized (data) {
-                data.setField(data.getDescriptorForType().findFieldByName(name), value);
+                Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
+                if (findFieldByName == null) {
+                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
+                }
             }
         } catch (Exception ex) {
             logger.warn("Could not set field [" + name + "=" + value + "] for " + this, ex);
+        }
+    }
+
+    protected final Object getField(String name) throws CouldNotPerformException {
+        try {
+            synchronized (data) {
+                Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
+                if (findFieldByName == null) {
+                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
+                }
+                return data.getField(findFieldByName);
+            }
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
         }
     }
 
@@ -215,7 +232,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         try {
             notifyChange();
             return getMessage();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not request status update.", ex));
         }
     }

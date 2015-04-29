@@ -5,6 +5,7 @@
  */
 package de.citec.jul.rsb.com;
 
+import com.google.protobuf.Descriptors;
 import de.citec.jul.rsb.scope.ScopeProvider;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
@@ -20,8 +21,6 @@ import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Factory;
 import rsb.Handler;
@@ -253,6 +252,33 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    protected final void setField(String name, Object value) {
+        try {
+            synchronized (data) {
+                Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
+                if (findFieldByName == null) {
+                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
+                }
+            }
+        } catch (Exception ex) {
+            logger.warn("Could not set field [" + name + "=" + value + "] for " + this, ex);
+        }
+    }
+
+    protected final Object getField(String name) throws CouldNotPerformException {
+        try {
+            synchronized (data) {
+                Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
+                if (findFieldByName == null) {
+                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
+                }
+                return data.getField(findFieldByName);
+            }
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
+        }
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[scope:" + scope + "]";
@@ -276,7 +302,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 }
 
-// Config for test setup.
+// TODO mpohling: Config for test setup.
 //        ParticipantConfig config = rsb.Factory.getInstance().getDefaultParticipantConfig();
 //        
 //        for (Map.Entry<String,TransportConfig> transport : config.getTransports().entrySet()) {
