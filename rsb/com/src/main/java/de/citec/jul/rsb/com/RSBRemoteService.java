@@ -17,6 +17,7 @@ import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import static de.citec.jul.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
+import de.citec.jul.schedule.SyncObject;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.ExecutionException;
@@ -45,6 +46,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     protected Scope scope;
     private M data;
+    private final SyncObject DATA_LOCK = new SyncObject("DataLock");
     private boolean initialized;
 
     public RSBRemoteService() {
@@ -232,10 +234,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     public M getData() throws CouldNotPerformException {
-        if (data == null) {
-            return requestStatus();
+        try {
+            if (data == null) {
+                return requestStatus();
+            }
+            synchronized (DATA_LOCK) {
+                return data;
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("data", ex);
         }
-        return data;
     }
 
     public Class detectMessageClass() {
@@ -252,28 +260,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    protected final void setField(String name, Object value) {
-        try {
-            synchronized (data) {
-                Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
-                if (findFieldByName == null) {
-                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
-                }
-            }
-        } catch (Exception ex) {
-            logger.warn("Could not set field [" + name + "=" + value + "] for " + this, ex);
-        }
-    }
-
     protected final Object getField(String name) throws CouldNotPerformException {
         try {
-            synchronized (data) {
-                Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
-                if (findFieldByName == null) {
-                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
-                }
-                return data.getField(findFieldByName);
+            Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                throw new NotAvailableException("Field[" + name + "] does not exist for type " + getData().getClass().getName());
             }
+            return getData().getField(findFieldByName);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
         }
@@ -292,7 +285,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         public void internalNotify(Event event) {
             logger.debug("Internal notification: " + event.toString());
             try {
-                data = (M) event.getData();
+                synchronized (DATA_LOCK) {
+                    data = (M) event.getData();
+                }
                 notifyUpdated(data);
                 notifyObservers(data);
             } catch (Exception ex) {

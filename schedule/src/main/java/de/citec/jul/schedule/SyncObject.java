@@ -12,7 +12,7 @@ package de.citec.jul.schedule;
 public class SyncObject {
 
 	private final String name;
-
+    
 	public SyncObject(final Class clazz) {
 		this(clazz.getSimpleName() + SyncObject.class.getSimpleName());
 	}

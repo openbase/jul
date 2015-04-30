@@ -134,7 +134,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     private Class<? extends M> detectMessageClass() {
-        return (Class<? extends M>) ((M) data.clone().buildPartial()).getClass();
+        return (Class<? extends M>) getData().buildPartial().getClass();
+//        return (Class<? extends M>) ((M) data.clone().buildPartial()).getClass();
     }
 
     @Override
