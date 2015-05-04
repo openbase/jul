@@ -186,7 +186,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     public void notifyChange() {
-        logger.debug("Notify change of " + this);
+        logger.info("Notify change of " + this);
         try {
             informer.send(getMessage());
         } catch (Exception ex) {
