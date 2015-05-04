@@ -97,7 +97,7 @@ public class ScopeGenerator {
         if (!unitConfig.hasLabel()) {
             throw new NotAvailableException("unitConfig.label");
         }
-        
+
         if (unitConfig.getLabel().isEmpty()) {
             throw new NotAvailableException("Field unitConfig.label isEmpty");
         }
@@ -113,7 +113,10 @@ public class ScopeGenerator {
         // add location scope
         ScopeType.Scope.Builder scope = unitConfig.getPlacementConfig().getLocationConfig().getScope().toBuilder();
 
-        // add device scope
+        // add unit type
+        scope.addComponent(unitConfig.getTemplate().getType().name().replaceAll("_", "").toLowerCase());
+
+        // add unit label
         scope.addComponent(unitConfig.getLabel().toLowerCase());
 
         return scope.build();

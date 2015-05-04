@@ -17,7 +17,6 @@ import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import static de.citec.jul.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
-import de.citec.jul.schedule.SyncObject;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.concurrent.ExecutionException;
@@ -46,7 +45,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     protected Scope scope;
     private M data;
-    private final SyncObject DATA_LOCK = new SyncObject("DataLock");
     private boolean initialized;
 
     public RSBRemoteService() {
@@ -238,9 +236,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             if (data == null) {
                 return requestStatus();
             }
-            synchronized (DATA_LOCK) {
-                return data;
-            }
+            return data;
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("data", ex);
         }
@@ -285,9 +281,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         public void internalNotify(Event event) {
             logger.debug("Internal notification: " + event.toString());
             try {
-                synchronized (DATA_LOCK) {
-                    data = (M) event.getData();
-                }
+                data = (M) event.getData();
                 notifyUpdated(data);
                 notifyObservers(data);
             } catch (Exception ex) {

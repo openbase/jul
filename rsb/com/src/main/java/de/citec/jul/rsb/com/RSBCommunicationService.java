@@ -201,6 +201,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 if (findFieldByName == null) {
                     throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
                 }
+                data.setField(findFieldByName, value);
             }
         } catch (Exception ex) {
             logger.warn("Could not set field [" + name + "=" + value + "] for " + this, ex);
