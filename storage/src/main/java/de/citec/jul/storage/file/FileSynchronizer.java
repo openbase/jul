@@ -6,6 +6,7 @@
 package de.citec.jul.storage.file;
 
 import de.citec.jps.core.JPService;
+import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
@@ -87,6 +88,12 @@ public class FileSynchronizer<D> extends Observable<D> {
 
     public final File save(final D data) throws CouldNotPerformException {
         logger.info("Save " + data + " into " + file);
+        
+        if(JPService.getProperty(JPTestMode.class).getValue()) {
+            logger.warn("Skip data save because "+JPTestMode.class.getSimpleName()+" is enabled!");
+            return file;
+        }
+        
         try {
             if (data == null) {
                 throw new NotAvailableException("data");
@@ -110,6 +117,12 @@ public class FileSynchronizer<D> extends Observable<D> {
 
     private File create(D data) throws CouldNotPerformException {
         logger.info("Create " + file);
+        
+        if(JPService.getProperty(JPTestMode.class).getValue()) {
+            logger.warn("Skip file creation because "+JPTestMode.class.getSimpleName()+" is enabled!");
+            return file;
+        }
+        
         try {
             if (data == null) {
                 throw new NotAvailableException("data");
@@ -124,6 +137,12 @@ public class FileSynchronizer<D> extends Observable<D> {
     }
 
     public void delete() throws CouldNotPerformException {
+        
+        if(JPService.getProperty(JPTestMode.class).getValue()) {
+            logger.warn("Skip file deletion because "+JPTestMode.class.getSimpleName()+" is enabled!");
+            return;
+        }
+        
         try {
             if (!file.exists()) {
                 throw new FileNotFoundException(file.getAbsolutePath());
