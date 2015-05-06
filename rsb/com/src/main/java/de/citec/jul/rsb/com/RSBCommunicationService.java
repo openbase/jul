@@ -56,7 +56,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     protected WatchDog informerWatchDog;
     protected WatchDog serverWatchDog;
 
-    protected final MB data;
+    private final MB data;
     protected Scope scope;
     private ConnectionState state;
 
@@ -96,16 +96,19 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void init(final InformerType informerType) throws InitializationException {
         try {
             logger.info("Init " + informerType.name().toLowerCase() + " informer service...");
-            switch (informerType) {
-                case Single:
+
+            // activate only single informer because poolin is done by new rsb version.
+
+//            switch (informerType) {
+//                case Single:
                     this.informer = new RSBSingleInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
-                    break;
-                case Distributed:
-                    this.informer = new RSBDistributedInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
-                    break;
-                default:
-                    throw new AssertionError("Could not handle unknown " + informerType.getClass().getSimpleName() + "[" + informerType.name() + "].");
-            }
+//                    break;
+//                case Distributed:
+//                    this.informer = new RSBDistributedInformer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), detectMessageClass());
+//                    break;
+//                default:
+//                    throw new AssertionError("Could not handle unknown " + informerType.getClass().getSimpleName() + "[" + informerType.name() + "].");
+//            }
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
         } catch (InitializeException | InstantiationException ex) {
             throw new InitializationException(this, ex);
@@ -133,9 +136,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    private Class<? extends M> detectMessageClass() {
-        return (Class<? extends M>) getData().buildPartial().getClass();
-//        return (Class<? extends M>) ((M) data.clone().buildPartial()).getClass();
+    protected Class<? extends M> detectMessageClass() {
+        return (Class<? extends M>) ((M) data.clone().buildPartial()).getClass();
     }
 
     @Override
