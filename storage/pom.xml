@@ -47,12 +47,17 @@
         </dependency>
         <dependency>
             <groupId>de.citec</groupId>
-            <artifactId>jul.rsb.util</artifactId>
+            <artifactId>jul.extension.rsb.util</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>de.citec</groupId>
-            <artifactId>jul.rsb.container</artifactId>
+            <artifactId>jul.extension.rsb.container</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>de.citec</groupId>
+            <artifactId>jul.excension.protobuf</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>

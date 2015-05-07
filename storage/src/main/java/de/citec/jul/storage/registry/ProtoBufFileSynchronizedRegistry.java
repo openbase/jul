@@ -12,12 +12,12 @@ import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
-import de.citec.jul.rsb.util.IdGenerator;
-import de.citec.jul.rsb.container.IdentifiableMessage;
-import de.citec.jul.rsb.container.ProtoBufMessageMap;
-import de.citec.jul.rsb.container.ProtoBufMessageMapInterface;
-import de.citec.jul.rsb.container.transformer.MessageTransformer;
-import de.citec.jul.rsb.processing.ProtoBufFileProcessor;
+import de.citec.jul.extension.rsb.util.IdGenerator;
+import de.citec.jul.extension.rsb.container.IdentifiableMessage;
+import de.citec.jul.extension.rsb.container.ProtoBufMessageMap;
+import de.citec.jul.extension.rsb.container.ProtoBufMessageMapInterface;
+import de.citec.jul.extension.rsb.container.transformer.MessageTransformer;
+import de.citec.jul.extension.rsb.processing.ProtoBufFileProcessor;
 import de.citec.jul.storage.file.FileProvider;
 import java.io.File;
 import java.util.List;
@@ -36,7 +36,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     private final IdGenerator<KEY, M> idGenerator;
     private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
 
-    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final SIB builder, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builder, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
         this(messageClass, new ProtoBufMessageMap<KEY, M, MB, SIB>(builder, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
     }
 

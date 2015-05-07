@@ -7,8 +7,8 @@ package de.citec.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.rsb.util.IdGenerator;
-import de.citec.jul.rsb.container.IdentifiableMessage;
+import de.citec.jul.extension.rsb.util.IdGenerator;
+import de.citec.jul.extension.rsb.container.IdentifiableMessage;
 import java.util.List;
 
 /**
