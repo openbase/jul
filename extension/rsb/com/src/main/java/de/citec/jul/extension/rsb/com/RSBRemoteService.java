@@ -279,9 +279,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
         @Override
         public void internalNotify(Event event) {
-            logger.debug("Internal notification: " + event.toString());
+            logger.info("Internal notification: " + event.toString());
             try {
                 data = (M) event.getData();
+                logger.info("Data update: "+data);
                 notifyUpdated(data);
                 notifyObservers(data);
             } catch (Exception ex) {

@@ -138,11 +138,11 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
 
     @Override
     public void shutdown() {
+        super.shutdown();
         try {
             saveRegistry();
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Final save failed!", ex));
         }
-        super.shutdown();
     }
 }

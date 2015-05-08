@@ -124,7 +124,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void init() throws InitializationException {
         try {
             logger.debug("Init informer service...");
-            this.informer = new RSBSingleInformer<M>(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), messageClass);
+            this.informer = new RSBSynchronizedInformer<M>(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), messageClass);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
 
             logger.info("Init rpc server...");

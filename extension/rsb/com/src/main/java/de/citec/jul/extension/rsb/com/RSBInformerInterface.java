@@ -5,6 +5,8 @@
  */
 package de.citec.jul.extension.rsb.com;
 
+import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.NotAvailableException;
 import rsb.Activatable;
 import rsb.Event;
 import rsb.RSBException;
@@ -32,7 +34,7 @@ public interface RSBInformerInterface<DataType extends Object> extends Activatab
      * @throws IllegalArgumentException if the event is not complete or does not
      * match the type or scope settings of the informer
      */
-    public Event send(final Event event) throws RSBException;
+    public Event send(final Event event) throws CouldNotPerformException;
 
     /**
      * Send data (of type <T>) to all subscribed participants.
@@ -41,21 +43,21 @@ public interface RSBInformerInterface<DataType extends Object> extends Activatab
      * @return generated event
      * @throws RSBException error sending event
      */
-    public Event send(final DataType data) throws RSBException;
+    public Event send(final DataType data) throws CouldNotPerformException;
 
     /**
      * Returns the class describing the type of data sent by this informer.
      *
      * @return class
      */
-    public Class<?> getTypeInfo();
+    public Class<?> getTypeInfo() throws NotAvailableException;
 
     /**
      * Set the class object describing the type of data sent by this informer.
      *
      * @param typeInfo a {@link Class} instance describing the sent data
      */
-    public void setTypeInfo(final Class<DataType> typeInfo);
+    public void setTypeInfo(final Class<DataType> typeInfo) throws CouldNotPerformException;
 
     public Scope getScope();
 

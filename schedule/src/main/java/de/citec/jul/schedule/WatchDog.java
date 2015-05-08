@@ -166,10 +166,11 @@ public class WatchDog implements Activatable {
 						if (!service.isActive()) {
 							setServiceState(ServiceState.Initializing);
 							try {
+                                logger.info("service activate: "+service.hashCode()+ " : "+serviceName);
 								service.activate();
 								setServiceState(ServiceState.Running);
 							} catch (RSBException | NullPointerException ex) {
-								logger.error("Could not start Service[" + serviceName + "]!", ex);
+								logger.error("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex);
 								setServiceState(ServiceState.Failed);
 								logger.info("Try again in " + (DELAY / 1000) + " seconds...");
 							}
