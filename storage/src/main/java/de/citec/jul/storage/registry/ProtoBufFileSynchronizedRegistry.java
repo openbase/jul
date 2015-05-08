@@ -9,6 +9,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
@@ -30,14 +31,14 @@ import java.util.List;
  * @param <MB> Message Builder
  * @param <SIB> Synchronized internal builder
  */
-public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> implements ProtoBufRegistryInterface<KEY, M, MB> {
+public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> implements ProtoBufRegistryInterface<KEY, M, MB> {
 
     private final ProtoBufMessageMap<KEY, M, MB, SIB> protobufMessageMap;
     private final IdGenerator<KEY, M> idGenerator;
     private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
 
-    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builder, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        this(messageClass, new ProtoBufMessageMap<KEY, M, MB, SIB>(builder, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+        this(messageClass, new ProtoBufMessageMap<KEY, M, MB, SIB>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
     }
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {

@@ -25,7 +25,9 @@ public class WatchDog implements Activatable {
 	private final Object EXECUTION_LOCK = new Object();
 	private final Object activationLock;
 
-	private static final long DELAY = 10000;
+    // TODO mpohling: change back after rsb bug is fixed
+	private static final long DELAY = 1000;
+//	private static final long DELAY = 10000;
 
 	public enum ServiceState {
 

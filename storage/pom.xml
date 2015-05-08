@@ -57,7 +57,7 @@
         </dependency>
         <dependency>
             <groupId>de.citec</groupId>
-            <artifactId>jul.excension.protobuf</artifactId>
+            <artifactId>jul.extension.protobuf</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>

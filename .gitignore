@@ -1,7 +1,7 @@
 *~
 *.swp
 build
-*/target/
+**/target/
 /rsb/scope/target/
 /rsb/container/target/
 /rsb/com/target/
