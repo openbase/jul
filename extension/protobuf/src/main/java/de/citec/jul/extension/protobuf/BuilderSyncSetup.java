@@ -6,6 +6,8 @@
 package de.citec.jul.extension.protobuf;
 
 import com.google.protobuf.GeneratedMessage.Builder;
+import de.citec.jps.core.JPService;
+import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.iface.Changeable;
@@ -45,16 +47,20 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
-                unlockRead("TimeoutHandler");
+                if (!JPService.getProperty(JPTestMode.class).getValue()) {
+                    logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
+                    unlockRead("TimeoutHandler");
+                }
             }
         };
         this.writeLockTimeout = new Timeout(LOCK_TIMEOUT) {
 
             @Override
             public void expired() {
-                logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
-                unlockWrite();
+                if (!JPService.getProperty(JPTestMode.class).getValue()) {
+                    logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
+                    unlockWrite();
+                }
             }
         };
     }
@@ -70,11 +76,11 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     public void lockRead(final Object consumer) {
-        logger.info("order lockRead by "+consumer);
+        logger.debug("order lockRead by " + consumer);
         readLock.lock();
         readLockConsumer = consumer;
         readLockTimeout.restart();
-        logger.info("lockRead by "+consumer);
+        logger.debug("lockRead by " + consumer);
     }
 
     public boolean tryLockRead(final Object consumer) {
@@ -96,21 +102,21 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     public void unlockRead(final Object consumer) {
-        logger.info("order unlockRead by "+consumer);
+        logger.debug("order unlockRead by " + consumer);
         if (readLockConsumer == consumer) {
             readLockConsumer = "Unknown";
         }
         readLockTimeout.cancel();
         readLock.unlock();
-        logger.info("unlockRead by "+consumer);
+        logger.debug("unlockRead by " + consumer);
     }
 
     public void lockWrite(final Object consumer) {
-        logger.info("order lockWrite by "+consumer);
+        logger.debug("order lockWrite by " + consumer);
         writeLock.lock();
         writeLockConsumer = consumer;
         writeLockTimeout.start();
-        logger.info("lockWrite by "+consumer);
+        logger.debug("lockWrite by " + consumer);
     }
 
     public boolean tryLockWrite(final Object consumer) {
@@ -132,11 +138,11 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     public void unlockWrite() {
-        logger.info("order write unlock");
+        logger.debug("order write unlock");
         writeLockConsumer = "Unknown";
         writeLockTimeout.cancel();
         writeLock.unlock();
-        logger.info("write unlocked");
+        logger.debug("write unlocked");
         try {
             holder.notifyChange();
         } catch (CouldNotPerformException ex) {

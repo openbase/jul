@@ -166,7 +166,7 @@ public class WatchDog implements Activatable {
 						if (!service.isActive()) {
 							setServiceState(ServiceState.Initializing);
 							try {
-                                logger.info("service activate: "+service.hashCode()+ " : "+serviceName);
+                                logger.debug("service activate: "+service.hashCode()+ " : "+serviceName);
 								service.activate();
 								setServiceState(ServiceState.Running);
 							} catch (RSBException | NullPointerException ex) {

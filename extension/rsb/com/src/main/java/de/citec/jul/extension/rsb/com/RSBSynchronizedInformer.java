@@ -129,9 +129,9 @@ public class RSBSynchronizedInformer<DataType extends Object> implements RSBInfo
             if (internalInformer == null) {
                 initInformer();
             }
-            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activate");
+//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activate");
             internalInformer.activate();
-            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activated.");
+//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activated.");
         }
     }
 
@@ -144,9 +144,9 @@ public class RSBSynchronizedInformer<DataType extends Object> implements RSBInfo
                 return;
             }
 
-            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate.");
+//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate.");
             internalInformer.deactivate();
-            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate: " + internalInformer.isActive());
+//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate: " + internalInformer.isActive());
             internalInformer = null;
         }
     }

@@ -177,7 +177,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         remoteServerWatchDog.deactivate();
     }
 
-    public Object callMethod(String methodName) throws RSBException, ExecutionException, TimeoutException, CouldNotPerformException {
+    public Object callMethod(String methodName) throws CouldNotPerformException {
         return callMethod(methodName, null);
     }
 
@@ -185,7 +185,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return callMethodAsync(methodName, null);
     }
 
-    public <R, T extends Object> R callMethod(String methodName, T type) throws RSBException, ExecutionException, TimeoutException, CouldNotPerformException {
+    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
 
         if (!initialized) {
             throw new CouldNotPerformException("Skip invocation of Method[" + methodName + "] because " + this + " is not initialized!");
@@ -216,7 +216,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
             logger.debug("requestStatus updated.");
             return (M) callMethod(RPC_REQUEST_STATUS);
-        } catch (RSBException | ExecutionException | TimeoutException | CouldNotPerformException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not request the current status.", ex);
         }
     }
@@ -279,10 +279,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
         @Override
         public void internalNotify(Event event) {
-            logger.info("Internal notification: " + event.toString());
+            logger.debug("Internal notification: " + event.toString());
             try {
                 data = (M) event.getData();
-                logger.info("Data update: "+data);
+                logger.info("Data update for "+this);
                 notifyUpdated(data);
                 notifyObservers(data);
             } catch (Exception ex) {
