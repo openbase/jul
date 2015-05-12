@@ -105,11 +105,13 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
                 VALUE entry = fileSynchronizer.getData();
                 fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
                 super.register(entry);
-
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
         }
+        
+        logger.info(size()+" entries successfully loaded. "+MultiException.size(exceptionStack) + " skipped.");
+        
         notifyConsistencyHandler();
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
     }

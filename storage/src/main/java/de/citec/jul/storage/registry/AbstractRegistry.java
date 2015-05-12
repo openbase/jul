@@ -148,6 +148,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return new ArrayList<>(entryMap.values());
         }
     }
+    
+    public int size(){
+        synchronized (SYNC) {
+            return entryMap.size();
+        }
+    }
 
     @Override
     public boolean contains(final ENTRY entry) throws CouldNotPerformException {
