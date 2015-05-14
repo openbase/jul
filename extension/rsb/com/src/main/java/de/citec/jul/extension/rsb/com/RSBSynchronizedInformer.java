@@ -66,6 +66,9 @@ public class RSBSynchronizedInformer<DataType extends Object> implements RSBInfo
     public Event send(Event event) throws CouldNotPerformException {
         synchronized (internalInformerLock) {
             try {
+                if (event == null) {
+                    throw new NotAvailableException("event");
+                }
                 if (internalInformer == null) {
                     throw new NotAvailableException("internalInformer");
                 }
@@ -124,30 +127,38 @@ public class RSBSynchronizedInformer<DataType extends Object> implements RSBInfo
     }
 
     @Override
-    public void activate() throws RSBException {
-        synchronized (internalInformerLock) {
-            if (internalInformer == null) {
-                initInformer();
-            }
+    public void activate() throws CouldNotPerformException {
+        try {
+            synchronized (internalInformerLock) {
+                if (internalInformer == null) {
+                    initInformer();
+                }
 //            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activate");
-            internalInformer.activate();
+                internalInformer.activate();
 //            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activated.");
+            }
+        } catch (RSBException | NullPointerException ex) {
+            throw new CouldNotPerformException("Could not deactivate informer!", ex);
         }
     }
 
     @Override
-    public void deactivate() throws RSBException, InterruptedException {
-        synchronized (internalInformerLock) {
+    public void deactivate() throws CouldNotPerformException, InterruptedException {
+        try {
+            synchronized (internalInformerLock) {
 
-            if (internalInformer == null) {
-                logger.warn("Ignore informer deactivation because informer does not exist!");
-                return;
-            }
+                if (internalInformer == null) {
+                    logger.warn("Ignore informer deactivation because informer does not exist!");
+                    return;
+                }
 
 //            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate.");
-            internalInformer.deactivate();
+                internalInformer.deactivate();
 //            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate: " + internalInformer.isActive());
-            internalInformer = null;
+                internalInformer = null;
+            }
+        } catch (RSBException | InterruptedException | NullPointerException ex) {
+            throw new CouldNotPerformException("Could not deactivate informer!", ex);
         }
     }
 

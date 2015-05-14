@@ -5,7 +5,9 @@
  */
 package de.citec.jul.schedule;
 
+import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.iface.Activatable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.junit.After;
@@ -14,8 +16,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import rsb.Activatable;
-import rsb.RSBException;
 
 /**
  *
@@ -73,7 +73,7 @@ public class WatchDogTest {
 	 * Test of isActive method, of class WatchDog.
 	 */
 	@Test
-	public void testIsActive() throws RSBException, InterruptedException, InstantiationException {
+	public void testIsActive() throws CouldNotPerformException, InterruptedException, InstantiationException {
 		System.out.println("isActive");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
 		assertEquals(instance.isActive(), false);
@@ -87,7 +87,7 @@ public class WatchDogTest {
 	 * Test of service error handling.
 	 */
 	@Test
-	public void testServiceErrorHandling() throws RSBException, InterruptedException, InstantiationException {
+	public void testServiceErrorHandling() throws CouldNotPerformException, InterruptedException, InstantiationException {
 		System.out.println("serviceErrorHandling");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
 		assertEquals(instance.isActive(), false);
@@ -101,7 +101,7 @@ public class WatchDogTest {
 	 * Test of service deactivation if never active.
 	 */
 	@Test(timeout = 3000)
-	public void testDeactivationInNonActiveState() throws RSBException, InterruptedException, InstantiationException {
+	public void testDeactivationInNonActiveState() throws CouldNotPerformException, InterruptedException, InstantiationException {
 		System.out.println("testDeactivationInNonActiveState");
 		final WatchDog instance = new WatchDog(new TestBadService(), "TestBadService");
 		assertEquals(instance.isActive(), false);
@@ -129,12 +129,12 @@ public class WatchDogTest {
 		private boolean active;
 
 		@Override
-		public void activate() throws RSBException {
+		public void activate() throws CouldNotPerformException {
 			active = true;
 		}
 
 		@Override
-		public void deactivate() throws RSBException, InterruptedException {
+		public void deactivate() throws CouldNotPerformException, InterruptedException {
 			active = false;
 		}
 
@@ -149,12 +149,12 @@ public class WatchDogTest {
 		private boolean active;
 
 		@Override
-		public void activate() throws RSBException {
+		public void activate() throws CouldNotPerformException {
 			throw new NullPointerException("Could not activate, simulate internal Nullpointer...");
 		}
 
 		@Override
-		public void deactivate() throws RSBException, InterruptedException {
+		public void deactivate() throws CouldNotPerformException, InterruptedException {
 			active = false;
 		}
 

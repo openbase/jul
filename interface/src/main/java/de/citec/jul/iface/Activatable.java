@@ -13,7 +13,7 @@ import de.citec.jul.exception.CouldNotPerformException;
  */
 public interface Activatable {
 
-	public void activate() throws CouldNotPerformException;
+	public void activate() throws CouldNotPerformException, InterruptedException;
 
 	public void deactivate() throws CouldNotPerformException, InterruptedException;
 

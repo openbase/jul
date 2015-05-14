@@ -92,6 +92,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
             this.messageClass = detectMessageClass();
+            this.informer = new NotInitializedtInformer<>();
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -175,6 +176,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     @Override
     public void deactivate() throws InterruptedException {
+        if(informer ==)
+        
         try {
             informer.deactivate();
         } catch (RSBException ex) {

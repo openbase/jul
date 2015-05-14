@@ -7,7 +7,7 @@ package de.citec.jul.extension.rsb.com;
 
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotAvailableException;
-import rsb.Activatable;
+import de.citec.jul.iface.Activatable;
 import rsb.Event;
 import rsb.RSBException;
 import rsb.Scope;
@@ -59,6 +59,6 @@ public interface RSBInformerInterface<DataType extends Object> extends Activatab
      */
     public void setTypeInfo(final Class<DataType> typeInfo) throws CouldNotPerformException;
 
-    public Scope getScope();
+    public Scope getScope() throws NotAvailableException;
 
 }

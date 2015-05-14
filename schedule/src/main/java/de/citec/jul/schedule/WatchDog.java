@@ -11,10 +11,9 @@ import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Activatable;
-import rsb.RSBException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.iface.Activatable;
 
 /**
  *
@@ -169,7 +168,7 @@ public class WatchDog implements Activatable {
                                 logger.debug("service activate: "+service.hashCode()+ " : "+serviceName);
 								service.activate();
 								setServiceState(ServiceState.Running);
-							} catch (RSBException | NullPointerException ex) {
+							} catch (CouldNotPerformException | NullPointerException ex) {
 								logger.error("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex);
 								setServiceState(ServiceState.Failed);
 								logger.info("Try again in " + (DELAY / 1000) + " seconds...");
@@ -186,7 +185,7 @@ public class WatchDog implements Activatable {
 					try {
 						service.deactivate();
 						setServiceState(ServiceState.Finished);
-					} catch (RSBException | InterruptedException ex) {
+					} catch (CouldNotPerformException | InterruptedException ex) {
 						logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
 						try {
 							waitWithinDelay();
