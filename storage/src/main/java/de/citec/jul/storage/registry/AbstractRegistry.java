@@ -154,6 +154,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return entryMap.size();
         }
     }
+    
+    public boolean isEmpty(){
+        synchronized (SYNC) {
+            return entryMap.isEmpty();
+        }
+    }
 
     @Override
     public boolean contains(final ENTRY entry) throws CouldNotPerformException {
