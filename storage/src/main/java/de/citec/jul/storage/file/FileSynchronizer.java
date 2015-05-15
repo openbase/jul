@@ -13,7 +13,6 @@ import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.EnumNotSupportedException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.processing.FileProcessor;
-import de.citec.jul.storage.jp.JPInitializeDB;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

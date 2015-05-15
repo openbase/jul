@@ -33,9 +33,11 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
 
     protected final Logger logger = LoggerFactory.getLogger(ProtoBufMessageMap.class);
 
+    private boolean shudownDetected = false;
     private final BuilderSyncSetup<SIB> builderSetup;
     private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
     private final Observable<IdentifiableMessage<KEY, M, MB>> observable;
+
 
     private final Descriptors.FieldDescriptor fieldDescriptor;
 
@@ -108,6 +110,9 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
     }
 
     private void syncBuilder() {
+        if(shudownDetected) {
+            return;
+        }
         synchronized (builderSetup) {
             try {
                 builderSetup.lockWrite(this);
@@ -128,10 +133,6 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
 
     public void removeObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
         observable.removeObserver(observer);
-    }
-
-    public void shutdown() {
-        observable.shutdown();
     }
 
     @Override
@@ -168,5 +169,10 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
             messageList.add(messageContainer.getMessage());
         }
         return messageList;
+    }
+
+    public void shutdown() {
+        observable.shutdown();
+        shudownDetected = true;
     }
 }

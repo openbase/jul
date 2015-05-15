@@ -58,6 +58,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     @Override
     public void shutdown() {
         protobufMessageMap.removeObserver(observer);
+        protobufMessageMap.shutdown();
         super.shutdown();
     }
 

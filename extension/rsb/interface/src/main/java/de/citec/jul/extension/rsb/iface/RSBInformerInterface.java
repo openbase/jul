@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.extension.rsb.com;
+package de.citec.jul.extension.rsb.iface;
 
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotAvailableException;
@@ -11,19 +11,14 @@ import de.citec.jul.iface.Activatable;
 import rsb.Event;
 import rsb.RSBException;
 import rsb.Scope;
+import rsb.config.ParticipantConfig;
 
 /**
  *
  * @author Divine Threepwood
  * @param <DataType>
  */
-public interface RSBInformerInterface<DataType extends Object> extends Activatable {
-
-    @Deprecated
-	public enum InformerType {
-
-		Distributed, Single
-	}
+public interface RSBInformerInterface<DataType extends Object> extends RSBParticipantInterface {
 
     /**
      * Send an {@link Event} to all subscribed participants.
@@ -58,7 +53,5 @@ public interface RSBInformerInterface<DataType extends Object> extends Activatab
      * @param typeInfo a {@link Class} instance describing the sent data
      */
     public void setTypeInfo(final Class<DataType> typeInfo) throws CouldNotPerformException;
-
-    public Scope getScope() throws NotAvailableException;
 
 }

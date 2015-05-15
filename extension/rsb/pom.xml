@@ -40,6 +40,7 @@
         <module>processing</module>
         <module>scope</module>
         <module>util</module>
+        <module>interface</module>
     </modules>
     
     <dependencies>

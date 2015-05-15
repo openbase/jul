@@ -5,6 +5,8 @@
  */
 package de.citec.jul.extension.rsb.com;
 
+import de.citec.jul.extension.rsb.iface.RSBListenerInterface;
+import de.citec.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import com.google.protobuf.Descriptors;
 import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import com.google.protobuf.GeneratedMessage;
@@ -19,17 +21,10 @@ import de.citec.jul.pattern.Observer;
 import static de.citec.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import rsb.Event;
-import rsb.Factory;
 import rsb.Handler;
-import rsb.InitializeException;
-import rsb.Listener;
-import rsb.RSBException;
 import rsb.Scope;
 import rsb.patterns.Future;
-import rsb.patterns.RemoteServer;
 
 /**
  *
@@ -38,10 +33,10 @@ import rsb.patterns.RemoteServer;
  */
 public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> {
 
-    private Listener listener;
+    private RSBListenerInterface listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private final Handler mainHandler;
-    private RemoteServer remoteServer;
+    private RSBRemoteServerInterface remoteServer;
 
     protected Scope scope;
     private M data;
@@ -50,6 +45,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public RSBRemoteService() {
         this.mainHandler = new InternalUpdateHandler();
         this.initialized = false;
+        this.remoteServer = new NotInitializedRSBRemoteServer();
+        this.listener = new NotInitializedRSBListener();
     }
 
     public void init(final String label, final ScopeProvider location) throws InitializationException {
@@ -92,17 +89,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     private void initListener(final Scope scope) throws CouldNotPerformException {
         try {
-            this.listener = Factory.getInstance().createListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_INFORMER));
-            this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_INFORMER) + "]");
-        } catch (InitializeException | InstantiationException ex) {
+            this.listener = RSBFactory.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS));
+            this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
+        } catch (InstantiationException ex) {
             throw new CouldNotPerformException("Could not create Listener on scope [" + scope + "]!", ex);
         }
     }
 
     private void initRemoteServer(final Scope scope) throws CouldNotPerformException {
         try {
-            this.remoteServer = Factory.getInstance().createRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_RPC));
-            this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_RPC) + "]");
+            this.remoteServer = RSBFactory.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL));
+            this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
             this.listenerWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
 
                 @Override
@@ -194,7 +191,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
             logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
             return remoteServer.call(methodName, type);
-        } catch (RSBException | ExecutionException | TimeoutException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
@@ -207,7 +204,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
             logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
             return remoteServer.callAsync(methodName, type);
-        } catch (RSBException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }

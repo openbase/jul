@@ -5,6 +5,7 @@
  */
 package de.citec.jul.extension.rsb.com;
 
+import de.citec.jul.exception.InstantiationException;
 import rsb.InitializeException;
 import rsb.Scope;
 
@@ -15,11 +16,7 @@ import rsb.Scope;
  */
 public class RSBDistributedInformer<DataType extends Object> extends RSBSynchronizedInformer<DataType> {
 
-    public RSBDistributedInformer(String scope, Class<DataType> type) throws InitializeException {
-        super(scope, type);
-    }
-
-    public RSBDistributedInformer(Scope scope, Class<DataType> type) throws InitializeException {
+    public RSBDistributedInformer(Scope scope, Class<DataType> type) throws InitializeException, InstantiationException {
         super(scope, type);
     }
     

@@ -5,42 +5,39 @@
  */
 package de.citec.jul.extension.rsb.com;
 
+import de.citec.jul.extension.rsb.iface.RSBInformerInterface;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.NotAvailableException;
-import de.citec.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Factory;
 import rsb.Informer;
 import rsb.InitializeException;
-import rsb.RSBException;
 import rsb.Scope;
+import rsb.config.ParticipantConfig;
 
 /**
  *
  * @author Divine Threepwood
- * @param <DataType>
+ * @param <DT>
  */
-public class RSBSynchronizedInformer<DataType extends Object> implements RSBInformerInterface<DataType> {
+public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedParticipant<Informer<DT>> implements RSBInformerInterface<DT> {
 
     protected final Logger logger = LoggerFactory.getLogger(RSBSynchronizedInformer.class);
 
-    private Informer<DataType> internalInformer;
-    private final SyncObject internalInformerLock = new SyncObject("internalInformer");
-    private final Scope scope;
-    private final Class<DataType> type;
+    private final Class<DT> type;
+
 
     /**
-     * Creates an informer for a specific data type with a given scope and with
-     * a specified config.
+     * Creates an informer for a specific data type with a given scop..
      *
      * @param scope the scope
      * @param type the data type to send by this informer
-     * @throws InitializeException error initializing the informer
      */
-    public RSBSynchronizedInformer(final String scope, final Class<DataType> type) throws InitializeException {
-        this(new Scope(scope), type);
+    protected RSBSynchronizedInformer(final Scope scope, final Class<DT> type) throws InstantiationException {
+        this(scope, type, null);
     }
 
     /**
@@ -49,45 +46,47 @@ public class RSBSynchronizedInformer<DataType extends Object> implements RSBInfo
      *
      * @param scope the scope
      * @param type the data type to send by this informer
-     * @throws InitializeException error initializing the informer
+     * @param config
      */
-    public RSBSynchronizedInformer(final Scope scope, final Class<DataType> type) throws InitializeException {
-        this.scope = scope;
+    protected RSBSynchronizedInformer(final Scope scope, final Class<DT> type, final ParticipantConfig config) throws InstantiationException {
+        super(scope, config);
         this.type = type;
     }
 
-    private void initInformer() throws InitializeException {
-        synchronized (internalInformerLock) {
-            this.internalInformer = Factory.getInstance().createInformer(scope, type);
+    @Override
+    protected Informer<DT> init() throws InitializeException {
+        synchronized (participantLock) {
+            if (config == null) {
+                return Factory.getInstance().createInformer(scope, type);
+            } else {
+                return Factory.getInstance().createInformer(scope, type, config);
+            }
         }
     }
 
     @Override
-    public Event send(Event event) throws CouldNotPerformException {
-        synchronized (internalInformerLock) {
+    public Event send(final Event event) throws CouldNotPerformException {
+        synchronized (participantLock) {
             try {
                 if (event == null) {
                     throw new NotAvailableException("event");
                 }
-                if (internalInformer == null) {
-                    throw new NotAvailableException("internalInformer");
-                }
-                return internalInformer.send(event);
-            } catch (NotAvailableException | RSBException | NullPointerException ex) {
+                return getParticipant().send(event);
+            } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not send Event[" + event + "]!", ex);
             }
         }
     }
 
     @Override
-    public Event send(DataType data) throws CouldNotPerformException {
-        synchronized (internalInformerLock) {
+    public Event send(final DT data) throws CouldNotPerformException {
+        synchronized (participantLock) {
             try {
-                if (internalInformer == null) {
-                    throw new NotAvailableException("internalInformer");
+                if (data == null) {
+                    throw new NotAvailableException("data");
                 }
-                return internalInformer.send(data);
-            } catch (NotAvailableException | RSBException | NullPointerException ex) {
+                return getParticipant().send(data);
+            } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not send Data[" + data + "]!", ex);
             }
         }
@@ -95,12 +94,9 @@ public class RSBSynchronizedInformer<DataType extends Object> implements RSBInfo
 
     @Override
     public Class<?> getTypeInfo() throws NotAvailableException {
-        synchronized (internalInformerLock) {
+        synchronized (participantLock) {
             try {
-                if (internalInformer == null) {
-                    throw new NotAvailableException("internalInformer");
-                }
-                return internalInformer.getTypeInfo();
+                return getParticipant().getTypeInfo();
             } catch (Exception ex) {
                 throw new NotAvailableException("type info", ex);
             }
@@ -108,67 +104,16 @@ public class RSBSynchronizedInformer<DataType extends Object> implements RSBInfo
     }
 
     @Override
-    public void setTypeInfo(Class<DataType> typeInfo) throws CouldNotPerformException {
-        synchronized (internalInformerLock) {
+    public void setTypeInfo(final Class<DT> typeInfo) throws CouldNotPerformException {
+        synchronized (participantLock) {
             try {
-                if (internalInformer == null) {
-                    throw new NotAvailableException("internalInformer");
+                if (typeInfo == null) {
+                    throw new NotAvailableException("typeInfo");
                 }
-                internalInformer.setTypeInfo(typeInfo);
+                getParticipant().setTypeInfo(typeInfo);
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not set type info!", ex);
             }
-        }
-    }
-
-    @Override
-    public Scope getScope() {
-        return scope;
-    }
-
-    @Override
-    public void activate() throws CouldNotPerformException {
-        try {
-            synchronized (internalInformerLock) {
-                if (internalInformer == null) {
-                    initInformer();
-                }
-//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activate");
-                internalInformer.activate();
-//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] activated.");
-            }
-        } catch (RSBException | NullPointerException ex) {
-            throw new CouldNotPerformException("Could not deactivate informer!", ex);
-        }
-    }
-
-    @Override
-    public void deactivate() throws CouldNotPerformException, InterruptedException {
-        try {
-            synchronized (internalInformerLock) {
-
-                if (internalInformer == null) {
-                    logger.warn("Ignore informer deactivation because informer does not exist!");
-                    return;
-                }
-
-//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate.");
-                internalInformer.deactivate();
-//            System.out.println("service[" + this.hashCode() + ":" + internalInformer.isActive() + "] deactivate: " + internalInformer.isActive());
-                internalInformer = null;
-            }
-        } catch (RSBException | InterruptedException | NullPointerException ex) {
-            throw new CouldNotPerformException("Could not deactivate informer!", ex);
-        }
-    }
-
-    @Override
-    public boolean isActive() {
-        synchronized (internalInformerLock) {
-            if (internalInformer == null) {
-                return false;
-            }
-            return internalInformer.isActive();
         }
     }
 }

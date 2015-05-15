@@ -5,6 +5,8 @@
  */
 package de.citec.jul.extension.rsb.com;
 
+import de.citec.jul.extension.rsb.iface.RSBInformerInterface;
+import de.citec.jul.extension.rsb.iface.RSBLocalServerInterface;
 import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
@@ -17,7 +19,6 @@ import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import de.citec.jul.extension.protobuf.ClosableDataBuilder;
 import de.citec.jul.iface.Activatable;
-import de.citec.jul.extension.rsb.com.RSBInformerInterface.InformerType;
 import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Changeable;
 import de.citec.jul.schedule.WatchDog;
@@ -27,11 +28,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
-import rsb.Factory;
-import rsb.RSBException;
 import rsb.Scope;
 import rsb.patterns.Callback;
-import rsb.patterns.LocalServer;
 import rst.rsb.ScopeType;
 
 /**
@@ -47,8 +45,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         Online, Offline
     };
 
-    public final static Scope SCOPE_SUFFIX_RPC = new Scope("/ctrl");
-    public final static Scope SCOPE_SUFFIX_INFORMER = new Scope("/status");
+    public final static Scope SCOPE_SUFFIX_CONTROL = new Scope("/ctrl");
+    public final static Scope SCOPE_SUFFIX_STATUS = new Scope("/status");
 
     public final static String RPC_REQUEST_STATUS = "requestStatus";
     public final static Event RPC_SUCCESS = new Event(String.class, "Success");
@@ -56,7 +54,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected RSBInformerInterface<M> informer;
-    protected LocalServer server;
+    protected RSBLocalServerInterface server;
     protected WatchDog informerWatchDog;
     protected WatchDog serverWatchDog;
 
@@ -77,7 +75,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
         logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
         this.dataBuilder = builder;
-        
+
         try {
             if (builder == null) {
                 throw new NotAvailableException("builder");
@@ -92,7 +90,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
             this.messageClass = detectMessageClass();
-            this.informer = new NotInitializedtInformer<>();
+            this.server = new NotInitializedRSBLocalServer();
+            this.informer = new NotInitializedRSBInformer<>();
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -110,27 +109,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    /**
-     *
-     * @param informerType
-     * @throws InitializationException
-     * @deprecated not used anymore because informer pooling is done by rsb core
-     * since 0.12.
-     */
-    @Deprecated
-    public void init(final InformerType informerType) throws InitializationException {
-        init();
-    }
-
     public void init() throws InitializationException {
         try {
             logger.debug("Init informer service...");
-            this.informer = new RSBSynchronizedInformer<M>(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)), messageClass);
-            informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_INFORMER)) + "]");
+            this.informer = new RSBSynchronizedInformer<M>(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass);
+            informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
             logger.info("Init rpc server...");
             // Get local server object which allows to expose remotely callable methods.
-            server = Factory.getInstance().createLocalServer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)));
+            server = RSBFactory.getInstance().createSynchronizedLocalServer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)));
 
             // register rpc methods.
             server.addMethod(RPC_REQUEST_STATUS, new Callback() {
@@ -142,17 +129,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 }
             });
             registerMethods(server);
-            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_RPC)) + "]");
+            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
-        } catch (CouldNotPerformException | RSBException | NullPointerException ex) {
+        } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
     private Class<M> detectMessageClass() throws CouldNotPerformException {
         try {
-            Class<M> clazz = (Class<M>)dataBuilder.getClass().getEnclosingClass();
-            if(clazz == null) {
+            Class<M> clazz = (Class<M>) dataBuilder.getClass().getEnclosingClass();
+            if (clazz == null) {
                 throw new NotAvailableException("message class");
             }
             return clazz;
@@ -176,13 +163,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     @Override
     public void deactivate() throws InterruptedException {
-        if(informer ==)
-        
-        try {
-            informer.deactivate();
-        } catch (RSBException ex) {
-            throw new AssertionError(ex);
-        }
+        informerWatchDog.deactivate();
         serverWatchDog.deactivate();
         state = ConnectionState.Offline;
     }
@@ -303,7 +284,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    public abstract void registerMethods(final LocalServer server) throws RSBException;
+    public abstract void registerMethods(final RSBLocalServerInterface server) throws CouldNotPerformException;
 
     @Override
     public String toString() {
