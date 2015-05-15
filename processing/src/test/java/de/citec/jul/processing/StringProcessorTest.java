@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.extension.rsb.processing;
+package de.citec.jul.processing;
 
+import de.citec.jul.processing.StringProcessor;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
