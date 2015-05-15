@@ -229,6 +229,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public void notifyChange() throws CouldNotPerformException {
         logger.info("Notify change of " + this);
+        if (!informer.isActive()) {
+            logger.debug("Skip update notification because connection not established.");
+            return;
+        }
         try {
             informer.send(getData());
         } catch (Exception ex) {
