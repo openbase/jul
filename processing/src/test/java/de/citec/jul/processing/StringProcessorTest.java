@@ -5,7 +5,6 @@
  */
 package de.citec.jul.processing;
 
-import de.citec.jul.processing.StringProcessor;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

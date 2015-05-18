@@ -40,14 +40,14 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
     }
 
     @Override
-    public File serialize(final DT object, final File file) throws CouldNotPerformException {
+    public File serialize(final DT data, final File file) throws CouldNotPerformException {
         try {
             JsonGenerator generator = jsonFactory.createGenerator(file, JsonEncoding.UTF8);
             generator.setPrettyPrinter(new DefaultPrettyPrinter());
-            mapper.writeValue(generator, object);
+            mapper.writeValue(generator, data);
             return file;
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not serialize " + object.getClass().getSimpleName() + " into " + file + "!", ex);
+            throw new CouldNotPerformException("Could not serialize " + data.getClass().getSimpleName() + " into " + file + "!", ex);
         }
     }
     
