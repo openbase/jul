@@ -8,7 +8,6 @@ package de.citec.jul.exception;
 import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPVerbose;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -79,5 +78,5 @@ public class ExceptionPrinter {
             return "null";
         }
         return message.replaceAll("\n", "").trim();
-    }
+    }   
 }

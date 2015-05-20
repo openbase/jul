@@ -60,7 +60,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public synchronized void init(final Scope scope) throws InitializationException {
 
         try {
-
             if (scope == null) {
                 throw new NotAvailableException("scope");
             }
@@ -112,7 +111,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                             public void run() {
                                 try {
                                     remoteServerWatchDog.waitForActivation();
-                                    requestStatus();
+                                    sync();
                                 } catch (InterruptedException | CouldNotPerformException ex) {
                                     ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not trigger data sync!", ex));
                                 }
@@ -134,7 +133,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    public void activate() throws InvalidStateException {
+    public void activate() throws InterruptedException, CouldNotPerformException {
         if (!initialized) {
             throw new InvalidStateException("Skip activation because " + this + " is not initialized!");
         }
@@ -142,7 +141,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         activateRemoteServer();
     }
 
-    public void deactivate() throws InterruptedException, InvalidStateException, CouldNotPerformException {
+    public void deactivate() throws InterruptedException, CouldNotPerformException {
         try {
             if (!initialized) {
                 throw new InvalidStateException("Skip deactivation because " + this + " is not initialized!");
@@ -154,7 +153,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    private void activateListener() {
+    private void activateListener() throws InterruptedException {
         listenerWatchDog.activate();
     }
 
@@ -166,7 +165,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return listenerWatchDog.isActive() && listener.isActive() && remoteServerWatchDog.isActive() && remoteServer.isActive();
     }
 
-    private void activateRemoteServer() {
+    private void activateRemoteServer() throws InterruptedException {
         remoteServerWatchDog.activate();
     }
 
@@ -208,6 +207,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
+    
+    protected void sync() throws CouldNotPerformException {
+        callMethodAsync(RPC_REQUEST_STATUS);
+    }   
 
     public M requestStatus() throws CouldNotPerformException {
         try {
@@ -279,7 +282,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             logger.debug("Internal notification: " + event.toString());
             try {
                 data = (M) event.getData();
-                logger.info("Data update for "+this);
+                logger.info("Data update for " + this);
                 notifyUpdated(data);
                 notifyObservers(data);
             } catch (Exception ex) {

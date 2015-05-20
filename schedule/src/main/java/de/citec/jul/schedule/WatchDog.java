@@ -71,7 +71,7 @@ public class WatchDog implements Activatable {
 	}
 
 	@Override
-	public void activate() {
+	public void activate() throws InterruptedException {
 		logger.trace("Try to activate service: " + serviceName);
 		synchronized (EXECUTION_LOCK) {
 			logger.trace("Init activation of service: " + serviceName);
@@ -88,6 +88,7 @@ public class WatchDog implements Activatable {
 			waitForActivation();
 		} catch (InterruptedException ex) {
 			logger.warn("Could not wait for service activation!", ex);
+            throw ex;
 		}
 	}
 

@@ -86,4 +86,13 @@ public class StringProcessorTest {
         assertEquals("Final", StringProcessor.transformUpperCaseToCamelCase("final"));
     }
 
+    @Test
+    public void testTransformToUpperCase() {
+        System.out.println("insertSpaceBetweenCamelCase");
+        assertEquals("MY_FARM", StringProcessor.transformToUpperCase("MyFarm"));
+        assertEquals("I_AM_ON_THE_WAY_TO_HELL_MY_GOD", StringProcessor.transformToUpperCase("I am on the WayToHell my god"));
+        assertEquals("HALLO_MY_NAME_IS_NOTHING_TO_DO.", StringProcessor.transformToUpperCase("Hallo my name is nothing to do."));
+        assertEquals("I_AM_ON_THE_WAY_TO_HELL_MY_GOD!", StringProcessor.transformToUpperCase("I am on the WayToHell my god!"));
+        assertEquals("FINAL", StringProcessor.transformToUpperCase("final"));
+    }
 }

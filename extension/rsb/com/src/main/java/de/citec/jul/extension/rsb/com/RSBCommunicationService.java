@@ -143,7 +143,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 throw new NotAvailableException("message class");
             }
             return clazz;
-//            return (Class<M>) ((M) cloneDataBuilder().buildPartial()).getClass();
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not detect message class of builder " + dataBuilder.getClass().getName() + "!", ex);
         }
@@ -154,7 +153,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @Override
-    public void activate() {
+    public void activate() throws InterruptedException {
         logger.debug("Activate RSBCommunicationService for: " + this);
         informerWatchDog.activate();
         serverWatchDog.activate();

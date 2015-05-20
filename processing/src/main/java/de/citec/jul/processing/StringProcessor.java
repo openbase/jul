@@ -38,8 +38,26 @@ public class StringProcessor {
         }
         return output;
     }
-    
+
     public static String replaceHyphenWithUnderscore(String input) {
         return input.replaceAll("-", "_");
+    }
+
+    public static String transformToUpperCase(String input) {
+        input = removeDoubleWhiteSpaces(input.trim());
+        String output = input.replaceAll("([a-z])([A-Z])", "$1_$2");
+        output = output.replaceAll(" ", "_");
+        return output.replaceAll("__", "_").toUpperCase();
+    }
+    
+    public static String transformFirstCharToUpperCase(final String input) {
+        if(input.isEmpty()) {
+            return "";
+        }
+        
+        if(input.length() == 1) {
+            return input.toUpperCase();
+        }
+        return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
 }
