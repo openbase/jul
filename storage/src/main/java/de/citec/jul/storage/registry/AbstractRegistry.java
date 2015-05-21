@@ -44,7 +44,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             this.entryMap = entryMap;
             this.consistencyHandlerList = new ArrayList<>();
-            this.notifyConsistencyHandler();
+            this.checkConsistency();
             this.notifyObservers();
 
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
@@ -74,7 +74,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
         }
         try {
-            notifyConsistencyHandler();
+            checkConsistency();
         } catch (CouldNotPerformException ex) {
             try {
                 superRemove(entry);
@@ -102,7 +102,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + "!", ex);
         }
-        notifyConsistencyHandler();
+        checkConsistency();
         notifyObservers();
         return entry;
     }
@@ -125,7 +125,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + "!", ex);
         } finally {
-            notifyConsistencyHandler();
+            checkConsistency();
             notifyObservers();
         }
     }
@@ -218,12 +218,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
         consistencyHandlerList.add(consistencyHandler);
-        notifyConsistencyHandler();
+        checkConsistency();
     }
 
     private boolean consistencyCheckRunning = false;
 
-    protected synchronized boolean notifyConsistencyHandler() throws CouldNotPerformException {
+    public synchronized boolean checkConsistency() throws CouldNotPerformException {
 
         boolean modification = false;
 
