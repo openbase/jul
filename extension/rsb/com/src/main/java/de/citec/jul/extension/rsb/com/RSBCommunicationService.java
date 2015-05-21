@@ -49,7 +49,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public final static Scope SCOPE_SUFFIX_STATUS = new Scope("/status");
 
     public final static String RPC_REQUEST_STATUS = "requestStatus";
-    public final static Event RPC_SUCCESS = new Event(String.class, "Success");
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
