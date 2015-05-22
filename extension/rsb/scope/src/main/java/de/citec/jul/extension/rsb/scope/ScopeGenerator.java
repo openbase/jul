@@ -61,7 +61,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateDeviceScope(final DeviceConfig deviceConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateDeviceScope(final DeviceConfig deviceConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
 
         if (deviceConfig == null) {
             throw new NotAvailableException("deviceConfig");
@@ -75,12 +75,12 @@ public class ScopeGenerator {
             throw new NotAvailableException("placement config");
         }
 
-        if (!deviceConfig.getPlacementConfig().hasLocationConfig()) {
+        if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
 
         // add location scope
-        ScopeType.Scope.Builder scope = deviceConfig.getPlacementConfig().getLocationConfig().getScope().toBuilder();
+        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add device scope
         scope.addComponent(deviceConfig.getLabel().toLowerCase());
@@ -88,7 +88,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateUnitScope(final UnitConfig unitConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateUnitScope(final UnitConfig unitConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
 
         if (unitConfig == null) {
             throw new NotAvailableException("unitConfig");
@@ -106,12 +106,12 @@ public class ScopeGenerator {
             throw new NotAvailableException("placement config");
         }
 
-        if (!unitConfig.getPlacementConfig().hasLocationConfig()) {
+        if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
 
         // add location scope
-        ScopeType.Scope.Builder scope = unitConfig.getPlacementConfig().getLocationConfig().getScope().toBuilder();
+        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add unit type
         scope.addComponent(unitConfig.getTemplate().getType().name().replaceAll("_", "").toLowerCase());
