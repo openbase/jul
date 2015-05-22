@@ -32,4 +32,6 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP ex
      * @throws de.citec.jul.storage.registry.EntryModification in case of entry modification during consistency process.
      */
     public void processData(final KEY id, final VALUE entry, final MAP entryMap, final R registry) throws CouldNotPerformException, EntryModification;
+    
+    public void reset();
 }
