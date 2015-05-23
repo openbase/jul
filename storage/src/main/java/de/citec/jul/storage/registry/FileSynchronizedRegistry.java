@@ -110,7 +110,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
             }
         }
         
-        logger.info(size()+" entries successfully loaded. "+MultiException.size(exceptionStack) + " skipped.");
+        logger.info("====== "+ size()+" entries successfully loaded. "+MultiException.size(exceptionStack) + " skipped. ======");
         
         checkConsistency();
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);

@@ -16,11 +16,13 @@ import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.TimeoutException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import static de.citec.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
+import java.util.Random;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -181,6 +183,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return callMethodAsync(methodName, null);
     }
 
+    public final static double START_TIMEOUT = 1;
+    public final static double TIMEOUT_MULTIPLIER = 2;
+    public final static double MAX_TIMEOUT = 30;
+
     public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
 
         if (!initialized) {
@@ -189,10 +195,25 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
         try {
             logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
-            return remoteServer.call(methodName, type);
+
+            double timeout = START_TIMEOUT;
+            while (true) {
+                try {
+                    return remoteServer.call(methodName, type, timeout);
+                } catch (TimeoutException ex) {
+                    timeout = generateTimeout(timeout);
+                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + type + ")]. Next timeout in " + ((int) timeout) + " seconds.");
+                    Thread.yield();
+                }
+            }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
+    }
+    public final static Random jitterRandom = new Random();
+
+    public static double generateTimeout(double currentTimeout) {
+        return Math.min(MAX_TIMEOUT, currentTimeout * TIMEOUT_MULTIPLIER + jitterRandom.nextDouble());
     }
 
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
@@ -207,10 +228,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
-    
+
     protected void sync() throws CouldNotPerformException {
         callMethodAsync(RPC_REQUEST_STATUS);
-    }   
+    }
 
     public M requestStatus() throws CouldNotPerformException {
         try {

@@ -218,7 +218,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
         consistencyHandlerList.add(consistencyHandler);
-        checkConsistency();
     }
 
     private boolean consistencyCheckRunning = false;

@@ -114,7 +114,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.informer = new RSBSynchronizedInformer<M>(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
-            logger.info("Init rpc server...");
+            logger.debug("Init rpc server...");
             // Get local server object which allows to expose remotely callable methods.
             server = RSBFactory.getInstance().createSynchronizedLocalServer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)));
 
@@ -152,7 +152,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @Override
-    public void activate() throws InterruptedException {
+    public void activate() throws InterruptedException, CouldNotPerformException {
         logger.debug("Activate RSBCommunicationService for: " + this);
         informerWatchDog.activate();
         serverWatchDog.activate();
@@ -160,7 +160,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @Override
-    public void deactivate() throws InterruptedException {
+    public void deactivate() throws InterruptedException, CouldNotPerformException {
         informerWatchDog.deactivate();
         serverWatchDog.deactivate();
         state = ConnectionState.Offline;
@@ -226,7 +226,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     @Override
     public void notifyChange() throws CouldNotPerformException {
-        logger.info("Notify change of " + this);
+        logger.debug("Notify change of " + this);
         if (!informer.isActive()) {
             logger.debug("Skip update notification because connection not established.");
             return;
