@@ -18,6 +18,7 @@ import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.schedule.SyncObject;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -135,7 +136,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         verifyID(key);
         synchronized (SYNC) {
             if (!entryMap.containsKey(key)) {
-                TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>(entryMap);
+                TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>(new Comparator<KEY>() {                    
+                    @Override
+                    public int compare(KEY o1, KEY o2) {
+                        if(o1 instanceof String && o2 instanceof String) {
+                            return ((String)o1).toLowerCase().compareTo(((String)o2).toLowerCase());
+                        }
+                        return ((Comparable<KEY>) o1).compareTo(o2);
+                    }
+                });
+                sortedMap.putAll(entryMap);
                 throw new NotAvailableException("Entry[" + key + "]", "Nearest neighbor is [" + sortedMap.floorKey(key) + "] or [" + sortedMap.ceilingKey(key) + "].");
             }
             return entryMap.get(key);
@@ -255,6 +265,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 iterationCounter++;
                 try {
                     for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+                        consistencyHandler.reset();
                         for (ENTRY entry : entryMap.values()) {
                             try {
                                 consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);

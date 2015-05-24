@@ -60,7 +60,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
                 throw new NotAvailableException("messageOrBuilder");
             }
             if (!internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
-                throw new VerificationFailedException("Given message has no id value!");
+                throw new VerificationFailedException("Given message has no id field!");
             }
             KEY id = (KEY) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID));
 
