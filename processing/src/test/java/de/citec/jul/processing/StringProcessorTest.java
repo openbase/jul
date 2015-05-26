@@ -95,4 +95,12 @@ public class StringProcessorTest {
         assertEquals("I_AM_ON_THE_WAY_TO_HELL_MY_GOD!", StringProcessor.transformToUpperCase("I am on the WayToHell my god!"));
         assertEquals("FINAL", StringProcessor.transformToUpperCase("final"));
     }
+
+    @Test
+    public void testfillWithSpaces() {
+        assertEquals("MyFarm    ", StringProcessor.fillWithSpaces("MyFarm", 10));
+        assertEquals(" 1234 ", StringProcessor.fillWithSpaces(" 1234", 6));
+        assertEquals("nospaces", StringProcessor.fillWithSpaces("nospaces", 0));
+        assertEquals("   ", StringProcessor.fillWithSpaces("", 3));
+    }
 }

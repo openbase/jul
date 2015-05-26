@@ -11,6 +11,7 @@ import com.google.protobuf.Descriptors;
 import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.CouldNotTransformException;
 import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
@@ -20,6 +21,7 @@ import de.citec.jul.exception.TimeoutException;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import static de.citec.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
+import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.Random;
@@ -27,6 +29,7 @@ import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
 import rsb.patterns.Future;
+import rst.rsb.ScopeType;
 
 /**
  *
@@ -55,6 +58,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
             init(generateScope(label, detectMessageClass(), location));
         } catch (CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
+        }
+    }
+
+    public synchronized void init(final ScopeType.Scope scope) throws InitializationException {
+        try {
+            init(ScopeTransformer.transform(scope));
+        } catch (CouldNotTransformException ex) {
             throw new InitializationException(this, ex);
         }
     }
@@ -233,15 +244,31 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         callMethodAsync(RPC_REQUEST_STATUS);
     }
 
+    /**
+     * Triggers a server - remote data sync and returns the new acquired data.
+     * All server data changes are synchronized automatically to all remote instances.
+     * In case you have triggered many server changes, you can use this method to get instantly a data object with all applied changes.
+     *
+     * Note: This method blocks until the new data is acquired!
+     *
+     * @return fresh synchronized data object.
+     * @throws CouldNotPerformException
+     */
     public M requestStatus() throws CouldNotPerformException {
         try {
             logger.debug("requestStatus updated.");
-            return (M) callMethod(RPC_REQUEST_STATUS);
+            M dataUpdate = (M) callMethod(RPC_REQUEST_STATUS);
+            applyDataUpdate(dataUpdate);
+            return dataUpdate;
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not request the current status.", ex);
         }
     }
 
+
+    /**
+     * This method deactivates the remote and cleans all resources.
+     */
     @Override
     public void shutdown() {
         try {
@@ -268,9 +295,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return (Class) parameterizedType.getActualTypeArguments()[0];
     }
 
-    public static Scope generateScope(final String label, final Class typeClass, final ScopeProvider location) throws CouldNotPerformException {
+    public static Scope generateScope(final String label, final Class typeClass, final ScopeProvider scopeProvider) throws CouldNotPerformException {
         try {
-            return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + typeClass.getSimpleName())).concat(new Scope(Scope.COMPONENT_SEPARATOR + label));
+            return scopeProvider.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + typeClass.getSimpleName())).concat(new Scope(Scope.COMPONENT_SEPARATOR + label));
 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Coult not generate scope!", ex);
@@ -302,13 +329,26 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         public void internalNotify(Event event) {
             logger.debug("Internal notification: " + event.toString());
             try {
-                data = (M) event.getData();
-                logger.info("Data update for " + this);
-                notifyUpdated(data);
-                notifyObservers(data);
+                applyDataUpdate((M) event.getData());
             } catch (Exception ex) {
-                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify data update! Given Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + this.getClass().getName() + "]!", ex));
+                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not unpack data update! Received Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + getClass().getName() + "]!", ex));
             }
+        }
+    }
+
+    private synchronized void applyDataUpdate(final M data) {
+        logger.info("Data update for " + this);
+        this.data = data;
+
+        try {
+            notifyUpdated(data);
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify data update!", ex));
+        }
+        try {
+            notifyObservers(data);
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify data update to all observer!", ex));
         }
     }
 }

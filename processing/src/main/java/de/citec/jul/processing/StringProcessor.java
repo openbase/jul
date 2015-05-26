@@ -60,4 +60,13 @@ public class StringProcessor {
         }
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
+
+    public static String fillWithSpaces(String input, int size) {
+        String spaces = "";
+        for(int i = size - input.length() ; i>0 ; i--) {
+            spaces += " ";
+        }
+        return input + spaces;
+
+    }
 }

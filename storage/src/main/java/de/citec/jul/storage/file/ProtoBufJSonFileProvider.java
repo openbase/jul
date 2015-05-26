@@ -48,6 +48,6 @@ public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<Strin
     }
 
     public String convertIntoValidFileName(final String filename) {
-        return filename.replaceAll("[^0-9a-zA-Z\\-_]+", "_");
+        return filename.replaceAll("[^0-9a-zA-Z-äöüÄÖÜéàèÉÈßÄ\\.\\-\\_\\[\\]\\#\\$]+", "_");
     }
 }

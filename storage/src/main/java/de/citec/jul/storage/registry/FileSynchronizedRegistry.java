@@ -75,8 +75,8 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     }
 
     @Override
-    public void clean() {
-        super.clean();
+    public void clear() {
+        super.clear();
         fileSynchronizerMap.clear();
     }
 

@@ -112,7 +112,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
         return superRemove(entry);
     }
-    
+
     public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
         logger.info("Remove " + entry + "...");
         try {
@@ -136,11 +136,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         verifyID(key);
         synchronized (SYNC) {
             if (!entryMap.containsKey(key)) {
-                TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>(new Comparator<KEY>() {                    
+                TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>(new Comparator<KEY>() {
                     @Override
                     public int compare(KEY o1, KEY o2) {
-                        if(o1 instanceof String && o2 instanceof String) {
-                            return ((String)o1).toLowerCase().compareTo(((String)o2).toLowerCase());
+                        if (o1 instanceof String && o2 instanceof String) {
+                            return ((String) o1).toLowerCase().compareTo(((String) o2).toLowerCase());
                         }
                         return ((Comparable<KEY>) o1).compareTo(o2);
                     }
@@ -158,14 +158,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return new ArrayList<>(entryMap.values());
         }
     }
-    
-    public int size(){
+
+    public int size() {
         synchronized (SYNC) {
             return entryMap.size();
         }
     }
-    
-    public boolean isEmpty(){
+
+    public boolean isEmpty() {
         synchronized (SYNC) {
             return entryMap.isEmpty();
         }
@@ -182,7 +182,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void clean() {
+    public void clear() {
         synchronized (SYNC) {
             entryMap.clear();
         }
@@ -234,67 +234,84 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     public synchronized boolean checkConsistency() throws CouldNotPerformException {
 
-        boolean modification = false;
+        try {
 
-        // avoid dublicated consistency check
-        if (consistencyCheckRunning) {
-            return modification;
-        }
-        consistencyCheckRunning = true;
+            boolean modification = false;
 
-        int iterationCounter = 0;
-        MultiException.ExceptionStack exceptionStack = null;
+            // avoid dublicated consistency check
+            if (consistencyCheckRunning) {
+                return modification;
+            }
+            consistencyCheckRunning = true;
 
-        synchronized (SYNC) {
-            while (true) {
+            int iterationCounter = 0;
+            MultiException.ExceptionStack exceptionStack = null;
 
-                // handle handler interference
-                if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
-                    try {
+            ConsistencyHandler lastActiveConsistencyHandler = null;
+            Object lastModifieredEntry = null;
+
+            synchronized (SYNC) {
+                while (true) {
+
+                    // handle handler interference
+                    if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
                         MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
                         throw new InvalidStateException("ConsistencyHandler interference detected!");
-                    } catch (CouldNotPerformException ex) {
-                        throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Consistency process aborted!", ex));
                     }
-                }
 
-                if (exceptionStack != null) {
-                    exceptionStack.clear();
-                }
+                    if (exceptionStack != null) {
+                        exceptionStack.clear();
+                    }
 
-                iterationCounter++;
-                try {
-                    for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
-                        consistencyHandler.reset();
-                        for (ENTRY entry : entryMap.values()) {
-                            try {
-                                consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
-                            } catch (CouldNotPerformException | NullPointerException ex) {
-                                exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
+                    iterationCounter++;
+                    try {
+                        for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+                            consistencyHandler.reset();
+                            for (ENTRY entry : entryMap.values()) {
+                                try {
+                                    consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
+                                } catch (CouldNotPerformException | NullPointerException ex) {
+                                    exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
+                                }
                             }
                         }
+                    } catch (EntryModification ex) {
+
+                        // check if consistency handler is looping
+                        System.out.println("#e### ch:"+lastActiveConsistencyHandler+" = "+lastModifieredEntry);
+                        if (ex.getConsistencyHandler() == lastActiveConsistencyHandler && ex.getEntry().equals(lastModifieredEntry)) {
+                            throw new InvalidStateException("ConsistencyHandler[" + lastActiveConsistencyHandler + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
+                        }
+                        lastActiveConsistencyHandler = ex.getConsistencyHandler();
+                        lastModifieredEntry = ex.getEntry();
+
+                        // inform about modifivation
+                        logger.info("Consistency modification applied: " + ex.getMessage());
+                        modification = true;
+                        continue;
+                    } catch (Throwable ex) {
+                        logger.error("Fatal error occured during consistency check!", ex);
                     }
-                } catch (EntryModification ex) {
-                    logger.info("Consistency modification applied: " + ex.getMessage());
-                    modification = true;
-                    continue;
-                }
 
-                if (exceptionStack != null && !exceptionStack.isEmpty()) {
-                    continue;
-                }
+                    if (exceptionStack != null && !exceptionStack.isEmpty()) {
+                        continue;
+                    }
 
-                logger.info("Registry consistend.");
-                break;
+                    logger.info("Registry consistend.");
+                    break;
+                }
             }
+            consistencyCheckRunning = false;
+            return modification;
+
+        } catch (CouldNotPerformException ex) {
+            throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Consistency process aborted!", ex));
         }
-        consistencyCheckRunning = false;
-        return modification;
     }
 
     @Override
     public void shutdown() {
         super.shutdown();
-        clean();
+        clear();
     }
 }
