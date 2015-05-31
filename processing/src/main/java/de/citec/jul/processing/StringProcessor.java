@@ -69,4 +69,14 @@ public class StringProcessor {
         return input + spaces;
 
     }
+
+    public static String transformToIdString(String input) {
+        input = removeDoubleWhiteSpaces(input);
+        input = input.replaceAll("ä", "ae");
+        input = input.replaceAll("ö", "oe");
+        input = input.replaceAll("ü", "ue");
+        input = input.replaceAll("ß", "ss");
+        input = input.replaceAll("[^0-9a-zA-Z-_]+", "_");
+        return input;
+    }
 }

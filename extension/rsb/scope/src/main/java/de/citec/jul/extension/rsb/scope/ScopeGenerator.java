@@ -56,7 +56,7 @@ public class ScopeGenerator {
         if (!locationConfig.getRoot() && locationConfig.hasParentId()) {
             scope.addAllComponent(registry.get(locationConfig.getParentId()).getMessage().getScope().getComponentList());
         }
-        scope.addComponent(locationConfig.getId().toLowerCase());
+        scope.addComponent(convertIntoValidScopeComponent(locationConfig.getId()));
 
         return scope.build();
     }
@@ -83,7 +83,7 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add device scope
-        scope.addComponent(deviceConfig.getLabel().toLowerCase());
+        scope.addComponent(convertIntoValidScopeComponent(deviceConfig.getLabel()));
 
         return scope.build();
     }
@@ -114,11 +114,21 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add unit type
-        scope.addComponent(unitConfig.getTemplate().getType().name().replaceAll("_", "").toLowerCase());
+        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getTemplate().getType().name().replace("_","")));
 
         // add unit label
-        scope.addComponent(unitConfig.getLabel().toLowerCase());
+        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getLabel()));
 
         return scope.build();
+    }
+
+    public static String convertIntoValidScopeComponent(String scopeComponent) {
+        scopeComponent = scopeComponent.toLowerCase();
+        scopeComponent = scopeComponent.replaceAll("ä", "ae");
+        scopeComponent = scopeComponent.replaceAll("ö", "oe");
+        scopeComponent = scopeComponent.replaceAll("ü", "ue");
+        scopeComponent = scopeComponent.replaceAll("ß", "ss");
+        scopeComponent = scopeComponent.replaceAll("[^0-9a-z-_]+", "_");
+        return scopeComponent;
     }
 }

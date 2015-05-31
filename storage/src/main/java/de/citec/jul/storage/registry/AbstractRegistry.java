@@ -234,6 +234,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     public synchronized boolean checkConsistency() throws CouldNotPerformException {
 
+        if (consistencyHandlerList.isEmpty()) {
+            logger.debug("Skip consistency check because no handler are registered.");
+            return true;
+        }
+
         try {
 
             boolean modification = false;
@@ -278,7 +283,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     } catch (EntryModification ex) {
 
                         // check if consistency handler is looping
-                        System.out.println("#e### ch:"+lastActiveConsistencyHandler+" = "+lastModifieredEntry);
+                        System.out.println("#e### ch:" + lastActiveConsistencyHandler + " = " + lastModifieredEntry);
                         if (ex.getConsistencyHandler() == lastActiveConsistencyHandler && ex.getEntry().equals(lastModifieredEntry)) {
                             throw new InvalidStateException("ConsistencyHandler[" + lastActiveConsistencyHandler + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
                         }
