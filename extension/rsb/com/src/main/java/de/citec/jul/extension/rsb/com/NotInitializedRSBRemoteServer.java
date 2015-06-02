@@ -9,9 +9,9 @@ import de.citec.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
+import java.util.concurrent.Future;
 import rsb.Event;
 import rsb.Scope;
-import rsb.patterns.Future;
 
 /**
  *

@@ -8,8 +8,8 @@ package de.citec.jul.extension.rsb.iface;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.TimeoutException;
+import java.util.concurrent.Future;
 import rsb.Event;
-import rsb.patterns.Future;
 
 /**
  *

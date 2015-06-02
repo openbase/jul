@@ -9,6 +9,7 @@ import de.citec.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.NotAvailableException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import rsb.Factory;
 import rsb.InitializeException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
-import rsb.patterns.Future;
 import rsb.patterns.RemoteServer;
 
 /**

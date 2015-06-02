@@ -25,10 +25,10 @@ import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.Random;
+import java.util.concurrent.Future;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
-import rsb.patterns.Future;
 import rst.rsb.ScopeType;
 
 /**
@@ -38,6 +38,10 @@ import rst.rsb.ScopeType;
  */
 public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> {
 
+    static {
+        RSBSharedConnectionConfig.load();
+    }
+    
     private RSBListenerInterface listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private final Handler mainHandler;
@@ -241,7 +245,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     protected void sync() throws CouldNotPerformException {
-        callMethodAsync(RPC_REQUEST_STATUS);
+        Future<Object> initialSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
     }
 
     /**

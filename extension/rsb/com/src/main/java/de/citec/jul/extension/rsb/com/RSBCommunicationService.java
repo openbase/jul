@@ -40,6 +40,10 @@ import rst.rsb.ScopeType;
  */
 public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements ScopeProvider, Activatable, Changeable {
 
+    static {
+        RSBSharedConnectionConfig.load();
+    }
+    
     public enum ConnectionState {
 
         Online, Offline

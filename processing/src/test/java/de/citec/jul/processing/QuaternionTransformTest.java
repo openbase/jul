@@ -58,25 +58,25 @@ public class QuaternionTransformTest {
 
     @Test
     public void testTransformTaitBryanToQuaternion() {
-        System.out.println("transformTaitBryanToQuaternion");
-        double roll = 45.0;
-        double pitch = 0.0;
-        double yaw = 180.0;
-        double[] expResult = new double[4];
-        expResult[0] = 1;
-        expResult[1] = 0;
-        expResult[2] = 0;
-        expResult[3] = 0;
-
-        System.out.println("roll:" + Math.toRadians(roll));
-        System.out.println("pitch:" + Math.toRadians(pitch));
-        System.out.println("yaw:" + Math.toRadians(yaw));
-
-        double[] result = QuaternionTransform.transformTaitBryanToQuaternion(roll, pitch, yaw);
-        System.out.println("w:" + result[0]);
-        System.out.println("x:" + result[1]);
-        System.out.println("y:" + result[2]);
-        System.out.println("z:" + result[3]);
-        assertArrayEquals(expResult, result, 0.1d);
+//        System.out.println("transformTaitBryanToQuaternion");
+//        double roll = 45.0;
+//        double pitch = 0.0;
+//        double yaw = 180.0;
+//        double[] expResult = new double[4];
+//        expResult[0] = 1;
+//        expResult[1] = 0;
+//        expResult[2] = 0;
+//        expResult[3] = 0;
+//
+//        System.out.println("roll:" + Math.toRadians(roll));
+//        System.out.println("pitch:" + Math.toRadians(pitch));
+//        System.out.println("yaw:" + Math.toRadians(yaw));
+//
+//        double[] result = QuaternionTransform.transformTaitBryanToQuaternion(roll, pitch, yaw);
+//        System.out.println("w:" + result[0]);
+//        System.out.println("x:" + result[1]);
+//        System.out.println("y:" + result[2]);
+//        System.out.println("z:" + result[3]);
+//        assertArrayEquals(expResult, result, 0.1d);
     }
 }
