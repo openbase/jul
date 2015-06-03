@@ -127,6 +127,10 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                     participant = init();
                 }
                 logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activate");
+                if(participant.isActive()) {
+                    logger.warn("Skip activation because Participant["+this.hashCode()+"] is already activated!");
+                    return;
+                }
                 getParticipant().activate();
                 logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activated.");
             }
