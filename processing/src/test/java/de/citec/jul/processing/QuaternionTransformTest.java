@@ -89,13 +89,19 @@ public class QuaternionTransformTest {
     @Test
     public void testTransformation() throws Exception {
         System.out.println("Test transformations");
-        double roll = Math.toRadians(30);
-        double pitch = Math.toRadians(54);
-        double yaw = Math.toRadians(12);
+//        double roll = Math.toRadians(30);
+//        double pitch = Math.toRadians(54);
+//        double yaw = Math.toRadians(12);
+        double roll = Math.toRadians(45);
+        double pitch = Math.toRadians(89);
+        double yaw = Math.toRadians(78);
         double[] euler = new double[3];
         euler[0] = roll;
         euler[1] = pitch;
         euler[2] = yaw;
+        double[] result = QuaternionEulerTransform.transformQuaternionToEuler(QuaternionEulerTransform.transformEulerToQuaternion(euler));
+        System.out.println("Expected ["+Math.toDegrees(euler[0])+"]["+Math.toDegrees(euler[1])+"]["+Math.toDegrees(euler[2])+"]");
+        System.out.println("Result ["+Math.toDegrees(result[0])+"]["+Math.toDegrees(result[1])+"]["+Math.toDegrees(result[2])+"]");
         assertArrayEquals(euler, QuaternionEulerTransform.transformQuaternionToEuler(QuaternionEulerTransform.transformEulerToQuaternion(euler)), 0.1d);
     }
 }
