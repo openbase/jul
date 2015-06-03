@@ -52,7 +52,7 @@ public class QuaternionTransformTest {
         expResult[1] = 0;
         expResult[2] = 0;
         expResult[3] = 0;
-        double[] result = QuaternionTransform.transformTaitBryanToQuaternion(roll, pitch, yaw);
+        double[] result = QuaternionEulerTransform.transform(roll, pitch, yaw);
         assertArrayEquals(expResult, result, 0.1d);
     }
 
@@ -78,5 +78,24 @@ public class QuaternionTransformTest {
 //        System.out.println("y:" + result[2]);
 //        System.out.println("z:" + result[3]);
 //        assertArrayEquals(expResult, result, 0.1d);
+    }
+
+    /**
+     * Tests it the transformation forth and back again results in the same
+     * values.
+     *
+     * @throws Exception
+     */
+    @Test
+    public void testTransformation() throws Exception {
+        System.out.println("Test transformations");
+        double roll = Math.toRadians(30);
+        double pitch = Math.toRadians(54);
+        double yaw = Math.toRadians(12);
+        double[] euler = new double[3];
+        euler[0] = roll;
+        euler[1] = pitch;
+        euler[2] = yaw;
+        assertArrayEquals(euler, QuaternionEulerTransform.transformQuaternionToEuler(QuaternionEulerTransform.transformEulerToQuaternion(euler)), 0.1d);
     }
 }
