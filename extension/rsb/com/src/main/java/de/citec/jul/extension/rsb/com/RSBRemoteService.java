@@ -262,6 +262,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
             logger.debug("requestStatus updated.");
             M dataUpdate = (M) callMethod(RPC_REQUEST_STATUS);
+            
+            if(dataUpdate == null) {
+                throw new InvalidStateException("Server result invalid!");
+            }
+            
             applyDataUpdate(dataUpdate);
             return dataUpdate;
         } catch (CouldNotPerformException ex) {
@@ -287,7 +292,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
             if (data == null) {
                 return requestStatus();
-            }
+            }            
             return data;
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("data", ex);
