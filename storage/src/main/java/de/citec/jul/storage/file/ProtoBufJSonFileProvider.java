@@ -13,7 +13,7 @@ import org.apache.commons.io.filefilter.FileFileFilter;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<String>> {
 

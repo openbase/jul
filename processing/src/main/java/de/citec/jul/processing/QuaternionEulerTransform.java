@@ -42,22 +42,20 @@ public class QuaternionEulerTransform {
 //        // qZ
 //        quat[3] = Math.cos(halfRoll) * Math.sin(halfPitch) * Math.sin(halfYaw) - Math.sin(halfRoll) * Math.cos(halfPitch) * Math.cos(halfYaw);
 
-        double heading = yaw;
-        double attitude = pitch;
-        double bank = roll;
         // Assuming the angles are in radians.
-        double c1 = Math.cos(heading / 2);
-        double s1 = Math.sin(heading / 2);
-        double c2 = Math.cos(attitude / 2);
-        double s2 = Math.sin(attitude / 2);
-        double c3 = Math.cos(bank / 2);
-        double s3 = Math.sin(bank / 2);
-        double c1c2 = c1 * c2;
-        double s1s2 = s1 * s2;
-        quat[0] = c1c2 * c3 - s1s2 * s3;
-        quat[1] = c1c2 * s3 + s1s2 * c3;
-        quat[2] = s1 * c2 * c3 + c1 * s2 * s3;
-        quat[3] = c1 * s2 * c3 - s1 * c2 * s3;
+        double cosYawHalf = Math.cos(yaw / 2);
+        double sinYawHalf = Math.sin(yaw / 2);
+        double cosPitchHalf = Math.cos(pitch / 2);
+        double sinPitchHalf = Math.sin(pitch / 2);
+        double cosRollHalf = Math.cos(roll / 2);
+        double sinRollHalf = Math.sin(roll / 2);
+        double cosYawPitchHalf = cosYawHalf * cosPitchHalf;
+        double sinYawPitchHalf = sinYawHalf * sinPitchHalf;
+        
+        quat[0] = cosYawPitchHalf * cosRollHalf - sinYawPitchHalf * sinRollHalf;
+        quat[1] = cosYawPitchHalf * sinRollHalf + sinYawPitchHalf * cosRollHalf;
+        quat[2] = sinYawHalf * cosPitchHalf * cosRollHalf + cosYawHalf * sinPitchHalf * sinRollHalf;
+        quat[3] = cosYawHalf * sinPitchHalf * cosRollHalf - sinYawHalf * cosPitchHalf * sinRollHalf;
         return quat;
     }
 

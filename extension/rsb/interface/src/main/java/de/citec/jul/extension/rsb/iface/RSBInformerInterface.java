@@ -25,18 +25,16 @@ public interface RSBInformerInterface<DataType extends Object> extends RSBPartic
      *
      * @param event the event to send
      * @return modified event with set timing information
-     * @throws RSBException error sending event
-     * @throws IllegalArgumentException if the event is not complete or does not
-     * match the type or scope settings of the informer
+     * @throws CouldNotPerformException error sending event
      */
     public Event send(final Event event) throws CouldNotPerformException;
 
     /**
-     * Send data (of type <T>) to all subscribed participants.
+     * Send data (of type T) to all subscribed participants.
      *
      * @param data data to send with default setting from the informer
      * @return generated event
-     * @throws RSBException error sending event
+     * @throws CouldNotPerformException
      */
     public Event send(final DataType data) throws CouldNotPerformException;
 

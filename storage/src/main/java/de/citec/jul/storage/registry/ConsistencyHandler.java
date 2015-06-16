@@ -27,7 +27,6 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP ex
      * 
      * @param entryMap the entry map of the underlying registry.
      * @param registry the underlying registry.
-     * @return should return true if any data modifications are applied. Otherwise false.
      * @throws CouldNotPerformException thrown to handle errors.
      * @throws de.citec.jul.storage.registry.EntryModification in case of entry modification during consistency process.
      */

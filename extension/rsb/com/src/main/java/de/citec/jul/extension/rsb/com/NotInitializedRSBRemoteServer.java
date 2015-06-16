@@ -15,7 +15,7 @@ import rsb.Scope;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class NotInitializedRSBRemoteServer extends NotInitializedRSBServer implements RSBRemoteServerInterface {
 

@@ -18,7 +18,7 @@ import rst.rsb.ScopeType;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class ScopeTransformerTest {
 

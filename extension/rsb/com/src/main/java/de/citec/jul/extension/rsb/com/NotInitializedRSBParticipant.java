@@ -16,7 +16,7 @@ import rsb.config.ParticipantConfig;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public abstract class NotInitializedRSBParticipant implements RSBParticipantInterface {
 

@@ -15,11 +15,6 @@ public interface Observer<T> {
      * <code>notifyObservers</code> method to have all the object's
      * observers notified of the change.
      *
-     * @param source
-     * @param data
-     * @param   o     the observable object.
-     * @param   arg   an argument passed to the <code>notifyObservers</code>
-     *                 method.
      * @throws java.lang.Exception
      */
     public void update(final Observable<T> source, final T data ) throws Exception;

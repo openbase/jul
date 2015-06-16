@@ -18,7 +18,7 @@ import rsb.patterns.Server;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  * @param <P>
  */
 public abstract class RSBSynchronizedServer<P extends Server> extends RSBSynchronizedParticipant<P> implements RSBServerInterface {

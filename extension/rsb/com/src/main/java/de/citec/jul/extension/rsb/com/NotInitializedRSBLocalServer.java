@@ -13,7 +13,7 @@ import rsb.patterns.Callback;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class NotInitializedRSBLocalServer extends NotInitializedRSBServer implements RSBLocalServerInterface {
 

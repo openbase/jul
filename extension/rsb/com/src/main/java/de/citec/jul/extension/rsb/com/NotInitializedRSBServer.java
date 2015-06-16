@@ -14,7 +14,7 @@ import rsb.patterns.Method;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public abstract class NotInitializedRSBServer extends NotInitializedRSBParticipant implements RSBServerInterface {
 

@@ -17,7 +17,7 @@ import rsb.filter.Filter;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class NotInitializedRSBListener extends NotInitializedRSBParticipant implements RSBListenerInterface {
 

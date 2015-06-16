@@ -22,7 +22,7 @@ import rsb.config.ParticipantConfig;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  * @param <P>
  */
 public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipantInterface {
