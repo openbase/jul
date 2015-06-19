@@ -130,7 +130,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                                     remoteServerWatchDog.waitForActivation();
                                     sync();
                                 } catch (InterruptedException | CouldNotPerformException ex) {
-                                    ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not trigger data sync!", ex));
+                                    ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not trigger data sync!", ex));
                                 }
                             }
                         }.start();
@@ -340,7 +340,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             try {
                 applyDataUpdate((M) event.getData());
             } catch (Exception ex) {
-                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not unpack data update! Received Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + getClass().getName() + "]!", ex));
+                ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not unpack data update! Received Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + getClass().getName() + "]!", ex));
             }
         }
     }
@@ -352,12 +352,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
             notifyUpdated(data);
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify data update!", ex));
+            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not notify data update!", ex));
         }
         try {
             notifyObservers(data);
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify data update to all observer!", ex));
+            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not notify data update to all observer!", ex));
         }
     }
 }

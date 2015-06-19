@@ -38,7 +38,7 @@ public class RPCHelper {
                         }
                         return new Event(methode.getReturnType(), methode.invoke(instance, event.getData()));
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not invoke Method["+methode.getName()+"("+event.getData()+")]!", ex));
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method["+methode.getName()+"("+event.getData()+")]!", ex));
                     }
                 }
             });
@@ -60,7 +60,7 @@ public class RPCHelper {
                         }
                         return new Event(methode.getReturnType(), methode.invoke(instance, event.getData()));
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not invoke Method["+methode.getName()+"("+event.getData()+")]!", ex));
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method["+methode.getName()+"("+event.getData()+")]!", ex));
                     }
                 }
             });

@@ -117,7 +117,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         try {
             observable.notifyObservers(this);
         } catch (MultiException ex) {
-            ExceptionPrinter.printHistory(logger, ex);
+            ExceptionPrinter.printHistoryAndReturnThrowable(logger, ex);
         }
     }
 

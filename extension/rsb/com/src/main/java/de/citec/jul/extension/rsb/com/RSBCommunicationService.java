@@ -286,7 +286,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             notifyChange();
             return getData();
         } catch (Exception ex) {
-            throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not request status update.", ex));
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not request status update.", ex));
         }
     }
 

@@ -80,7 +80,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 superRemove(entry);
             } catch (Exception exx) {
-                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not remove invalid entry!", exx));
+                ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not remove invalid entry!", exx));
             }
             throw ex;
         }
@@ -207,7 +207,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify all observer!", ex));
+            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not notify all observer!", ex));
         }
     }
 
@@ -310,7 +310,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return modification;
 
         } catch (CouldNotPerformException ex) {
-            throw ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Consistency process aborted!", ex));
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Consistency process aborted!", ex));
         }
     }
 

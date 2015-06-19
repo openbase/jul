@@ -5,6 +5,8 @@
  */
 package de.citec.jul.processing;
 
+import javax.vecmath.Quat4d;
+import javax.vecmath.Vector3d;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -47,13 +49,56 @@ public class QuaternionTransformTest {
         double roll = 0.0;
         double pitch = 0.0;
         double yaw = 0.0;
-        double[] expResult = new double[4];
-        expResult[0] = 1;
-        expResult[1] = 0;
-        expResult[2] = 0;
-        expResult[3] = 0;
-        double[] result = QuaternionEulerTransform.transform(roll, pitch, yaw);
-        assertArrayEquals(expResult, result, 0.1d);
+        Quat4d result = QuaternionEulerTransform.transform(roll, pitch, yaw);
+        assertArrayEquals(toDoubleArray(new Quat4d(0, 0, 0, 1)), toDoubleArray(result), 0.1d);
+    }
+
+    /**
+     * Test of transformTaitBryanToQuaternion method, of class
+     * QuaternionTransform.
+     */
+    @Test
+    public void test90rTransformTaitBryanToQuaternion() {
+        System.out.println("testNeutralTransformTaitBryanToQuaternion");
+        double roll = Math.toRadians(90);
+        double pitch = Math.toRadians(0);
+        double yaw = Math.toRadians(0);
+
+        Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
+        System.out.println("90r Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+        assertArrayEquals(toDoubleArray(new Quat4d(0.7071, 0, 0, 0.7071)), toDoubleArray(result), 0.1d);
+    }
+
+    /**
+     * Test of transformTaitBryanToQuaternion method, of class
+     * QuaternionTransform.
+     */
+    @Test
+    public void test90pTransformTaitBryanToQuaternion() {
+        System.out.println("testNeutralTransformTaitBryanToQuaternion");
+        double roll = Math.toRadians(0);
+        double pitch = Math.toRadians(90);
+        double yaw = Math.toRadians(0);
+
+        Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
+        System.out.println("90p Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+        assertArrayEquals(toDoubleArray(new Quat4d(0, 0, 0.7071, 0.7071)), toDoubleArray(result), 0.1d);
+    }
+
+    /**
+     * Test of transformTaitBryanToQuaternion method, of class
+     * QuaternionTransform.
+     */
+    @Test
+    public void test90yTransformTaitBryanToQuaternion() {
+        System.out.println("testNeutralTransformTaitBryanToQuaternion");
+        double roll = Math.toRadians(0);
+        double pitch = Math.toRadians(0);
+        double yaw = Math.toRadians(90);
+
+        Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
+        System.out.println("90y Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+        assertArrayEquals(toDoubleArray(new Quat4d(0, 0.7071, 0, 0.7071)), toDoubleArray(result), 0.1d);
     }
 
     @Test
@@ -95,13 +140,28 @@ public class QuaternionTransformTest {
         double roll = Math.toRadians(45);
         double pitch = Math.toRadians(89);
         double yaw = Math.toRadians(78);
-        double[] euler = new double[3];
-        euler[0] = roll;
-        euler[1] = pitch;
-        euler[2] = yaw;
-        double[] result = QuaternionEulerTransform.transformQuaternionToEuler(QuaternionEulerTransform.transformEulerToQuaternion(euler));
-        System.out.println("Expected ["+Math.toDegrees(euler[0])+"]["+Math.toDegrees(euler[1])+"]["+Math.toDegrees(euler[2])+"]");
-        System.out.println("Result ["+Math.toDegrees(result[0])+"]["+Math.toDegrees(result[1])+"]["+Math.toDegrees(result[2])+"]");
-        assertArrayEquals(euler, QuaternionEulerTransform.transformQuaternionToEuler(QuaternionEulerTransform.transformEulerToQuaternion(euler)), 0.1d);
+        Vector3d input = new Vector3d(roll, pitch, yaw);
+        Vector3d result = QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw)));
+        System.out.println("Expected [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
+        System.out.println("Result [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
+        assertArrayEquals(toDoubleArray(input), toDoubleArray(QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(input))), 0.1d);
     }
+
+    private double[] toDoubleArray(Vector3d vec) {
+        double[] res = new double[3];
+        res[0] = vec.x;
+        res[1] = vec.y;
+        res[2] = vec.z;
+        return res;
+    }
+
+    private double[] toDoubleArray(Quat4d vec) {
+        double[] res = new double[4];
+        res[0] = vec.x;
+        res[1] = vec.y;
+        res[2] = vec.z;
+        res[3] = vec.w;
+        return res;
+    }
+
 }

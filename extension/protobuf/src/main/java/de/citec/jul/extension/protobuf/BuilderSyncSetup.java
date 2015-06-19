@@ -146,7 +146,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         try {
             holder.notifyChange();
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not inform builder holder about data update!", ex));
+            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not inform builder holder about data update!", ex));
         }
     }
 }

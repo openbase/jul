@@ -26,13 +26,28 @@ public class ExceptionPrinter {
      * @param th exception stack to print.
      * @return the related Throwable returned for further exception handling.
      */
-    public static <T extends Throwable>  T printHistory(final Logger logger, final T th) {
-        Throwable throwable = printHistory(logger, th, "");
+    public static <T extends Throwable>  T printHistoryAndReturnThrowable(final Logger logger, final T th) {
+        printHistoryAndReturnThrowable(logger, th, "");
         logger.error("=====================================");
         return th;
     }
+    
+    /**
+     * Print Exception messages without strack trace in non debug mode. Methode
+     * prints recusive all messages of the given exception stack to get a
+     * history overview of the causes. In verbose mode (app -v) the stacktrace
+     * is printed in the end of history.
+     *
+     * @param <T> Exception type
+     * @param logger logger which is used as message printer.
+     * @param th exception stack to print.
+     */
+    public static <T extends Throwable> void printHistory(final Logger logger, final T th) {
+        printHistoryAndReturnThrowable(logger, th, "");
+        logger.error("=====================================");
+    }
 
-    private static Throwable printHistory(final Logger logger, final Throwable th, final String prefix) {
+    private static Throwable printHistoryAndReturnThrowable(final Logger logger, final Throwable th, final String prefix) {
 
         // Recursive print of all related Exception message without stacktrace.
         logger.error(buildPrefix(prefix) + removeNewLines(th.getMessage()));
@@ -42,8 +57,8 @@ public class ExceptionPrinter {
                 logger.error(buildPrefix(prefix + ">") + internalThrowable.getClass().getSimpleName() + " [" + removeNewLines(internalThrowable.getMessage()) + "]");
                 MultiException.ExceptionStack exceptionStack = ((MultiException) internalThrowable).getExceptionStack();
                 for (MultiException.SourceExceptionEntry entry : exceptionStack) {
-//                    printHistory(LoggerFactory.getLogger(entry.getSource().getClass()), new Exception("Exception from " + entry.getSource().toString() + ":", entry.getException()), prefix + "|===");
-                    printHistory(logger, new Exception("Exception from " + entry.getSource().toString() + ":", entry.getException()), prefix + "  |===");
+//                    printHistoryAndReturnThrowable(LoggerFactory.getLogger(entry.getSource().getClass()), new Exception("Exception from " + entry.getSource().toString() + ":", entry.getException()), prefix + "|===");
+                    printHistoryAndReturnThrowable(logger, new Exception("Exception from " + entry.getSource().toString() + ":", entry.getException()), prefix + "  |===");
                     // Print normal stacktrace in verbose mode.
                     if (logger.isDebugEnabled() || JPService.getProperty(JPVerbose.class).getValue()) {
                         logger.error(removeNewLines(th.getMessage()), th);

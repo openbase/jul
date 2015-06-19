@@ -6,6 +6,7 @@ package de.citec.jul.pattern;
 
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
+import de.citec.jul.exception.NotAvailableException;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ public class Observable<T> {
 
     private final Object LOCK = new Object();
     private final List<Observer<T>> observers;
+    private T latestValue;
 
     public Observable() {
         this.observers = new ArrayList<>();
@@ -53,6 +55,7 @@ public class Observable<T> {
 
     public void notifyObservers(Observable<T> source, T observable) throws MultiException {
 		ExceptionStack exceptionStack = null;
+        latestValue = observable;
         synchronized (LOCK) {
             for (Observer<T> observer : observers) {
                 try {
@@ -67,5 +70,12 @@ public class Observable<T> {
 
     public void notifyObservers(T observable) throws MultiException {
 		notifyObservers(this, observable);
+    }
+
+    public T getLatestValue() throws NotAvailableException {
+        if(latestValue == null) {
+            throw new NotAvailableException("latestvalue");
+        }
+        return latestValue;
     }
 }

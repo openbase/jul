@@ -143,7 +143,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
         try {
             saveRegistry();
         } catch (MultiException ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Final save failed!", ex));
+            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Final save failed!", ex));
         }
 
         fileSynchronizerMap.clear();
