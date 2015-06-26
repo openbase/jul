@@ -37,6 +37,11 @@ public final class LayoutGenerator {
         panel.setLayout(listLayout);
         final GroupLayout.ParallelGroup parallelGroup = listLayout.createParallelGroup(Alignment.LEADING);
 
+        // return if list is components empty
+        if(componentCollection.isEmpty()) {
+            return listLayout;
+        }
+        
         for (JComponent component : componentCollection) {
             parallelGroup.addComponent(component, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
         }

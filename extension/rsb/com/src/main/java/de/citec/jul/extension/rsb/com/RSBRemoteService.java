@@ -22,6 +22,7 @@ import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import static de.citec.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import de.citec.jul.extension.rsb.scope.ScopeTransformer;
+import de.citec.jul.iface.Activatable;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.Random;
@@ -36,7 +37,7 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> {
+public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Activatable {
 
     static {
         RSBSharedConnectionConfig.load();
@@ -150,6 +151,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
         if (!initialized) {
             throw new InvalidStateException("Skip activation because " + this + " is not initialized!");
@@ -158,6 +160,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         activateRemoteServer();
     }
 
+    @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
         try {
             if (!initialized) {
@@ -177,8 +180,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     private void deactivateListener() throws InterruptedException {
         listenerWatchDog.deactivate();
     }
-
+    
     public boolean isConnected() {
+        //TODO mpohling implement connection server check.
+        return isActive();
+    }
+
+    @Override
+    public boolean isActive() {
         return listenerWatchDog.isActive() && listener.isActive() && remoteServerWatchDog.isActive() && remoteServer.isActive();
     }
 
