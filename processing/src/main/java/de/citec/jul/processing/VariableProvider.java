@@ -9,7 +9,7 @@ import de.citec.jul.exception.NotAvailableException;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public interface VariableProvider {
 

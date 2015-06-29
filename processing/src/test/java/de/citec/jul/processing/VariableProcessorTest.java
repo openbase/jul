@@ -8,7 +8,6 @@ package de.citec.jul.processing;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
 import java.util.HashMap;
-import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -18,7 +17,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public class VariableProcessorTest {
 
@@ -65,7 +64,7 @@ public class VariableProcessorTest {
         System.out.println("resolveVariables");
         String context = "${VAR_A} : Hey Mr ${VAR_D} is happy today because of Mrs ${VAR_C}. ${VAR_W}${VAR_Y}${VAR_W}";
         boolean throwOnError = true;
-        String expResult = "A : Hey Mr  is happy today because of Mrs . WOW";
+        String expResult = "A : Hey Mr  is happy today because of Mrs C. WW";
         try {
             VariableProcessor.resolveVariables(context, throwOnError, provider);
             fail("No exception is thrown in error case!");

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public class VariableProcessor {
 
@@ -36,6 +36,9 @@ public class VariableProcessor {
             for (VariableProvider provider : providers) {
                 try {
                     variableValue = provider.getValue(variableIdentifier);
+                    if(variableValue == null) {
+                        throw new NotAvailableException("Variable["+variableIdentifier+"]");
+                    }
                     logger.debug("Variable[" + variableIdentifier + "] = Value[" + variableValue + "] resolved by Provider[" + provider.getName() + "].");
                     break;
                 } catch (NotAvailableException ex) {
