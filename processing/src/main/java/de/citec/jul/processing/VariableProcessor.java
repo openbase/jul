@@ -8,6 +8,7 @@ package de.citec.jul.processing;
 import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
+import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,10 @@ public class VariableProcessor {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(VariableProcessor.class);
 
+    public static String resolveVariables(String context, final boolean throwOnError, final Collection<VariableProvider> providers) throws MultiException {
+        VariableProvider[] providerArray = new VariableProvider[providers.size()];
+        return resolveVariables(context, throwOnError, providers.toArray(providerArray));
+    }
     public static String resolveVariables(String context, final boolean throwOnError, final VariableProvider... providers) throws MultiException {
         String variableIdentifier, variableValue;
         MultiException.ExceptionStack exceptionStack = null;
