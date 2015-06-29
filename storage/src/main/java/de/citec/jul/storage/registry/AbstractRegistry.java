@@ -283,7 +283,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     } catch (EntryModification ex) {
 
                         // check if consistency handler is looping
-                        System.out.println("#e### ch:" + lastActiveConsistencyHandler + " = " + lastModifieredEntry);
+//                        System.out.println("#### ch:" + lastActiveConsistencyHandler + " = " + lastModifieredEntry);
                         if (ex.getConsistencyHandler() == lastActiveConsistencyHandler && ex.getEntry().equals(lastModifieredEntry)) {
                             throw new InvalidStateException("ConsistencyHandler[" + lastActiveConsistencyHandler + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
                         }
@@ -295,7 +295,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         modification = true;
                         continue;
                     } catch (Throwable ex) {
-                        logger.error("Fatal error occured during consistency check!", ex);
+                        exceptionStack = MultiException.push(this, new InvalidStateException("Fatal error occured during consistency check!", ex), exceptionStack);
                     }
 
                     if (exceptionStack != null && !exceptionStack.isEmpty()) {
