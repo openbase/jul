@@ -3,7 +3,7 @@
 
     <groupId>de.citec</groupId>
     <artifactId>jul.exception</artifactId>
-    <version>0.1.0</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>JUL Exception</name>
@@ -11,7 +11,7 @@
     <parent>
         <groupId>de.citec</groupId>
         <artifactId>jul</artifactId>
-        <version>0.1.0</version>
+        <version>0.2-SNAPSHOT</version>
     </parent>    
     
     <url>http://maven.apache.org</url>
