@@ -33,7 +33,7 @@ public class VariableProcessor {
             variableIdentifier = StringUtils.substringBetween(context, VariableProvider.VARIABLE_INITIATOR, VariableProvider.VARIABLE_TERMINATOR);
             if (variableIdentifier == null) {
                 // Context does not contain any variables.
-                break;
+                return context;
             }
 
             // Resolve detected variable.
@@ -54,7 +54,6 @@ public class VariableProcessor {
 
             // Replace detected variable by it's value in the given context.
             context = StringUtils.replace(context, VariableProvider.VARIABLE_INITIATOR + variableIdentifier + VariableProvider.VARIABLE_TERMINATOR, variableValue);
-
         }
 
         try {
