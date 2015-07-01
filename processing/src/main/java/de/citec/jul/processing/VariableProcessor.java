@@ -14,7 +14,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine
+ * Threepwood</a>
  */
 public class VariableProcessor {
 
@@ -24,6 +25,7 @@ public class VariableProcessor {
         VariableProvider[] providerArray = new VariableProvider[providers.size()];
         return resolveVariables(context, throwOnError, providers.toArray(providerArray));
     }
+
     public static String resolveVariables(String context, final boolean throwOnError, final VariableProvider... providers) throws MultiException {
         String variableIdentifier, variableValue;
         MultiException.ExceptionStack exceptionStack = null;
@@ -33,7 +35,7 @@ public class VariableProcessor {
             variableIdentifier = StringUtils.substringBetween(context, VariableProvider.VARIABLE_INITIATOR, VariableProvider.VARIABLE_TERMINATOR);
             if (variableIdentifier == null) {
                 // Context does not contain any variables.
-                return context;
+                break;
             }
 
             // Resolve detected variable.
@@ -41,15 +43,20 @@ public class VariableProcessor {
             for (VariableProvider provider : providers) {
                 try {
                     variableValue = provider.getValue(variableIdentifier);
-                    if(variableValue == null) {
-                        throw new NotAvailableException("Variable["+variableIdentifier+"]");
+                    if (variableValue == null) {
+                        continue;
                     }
                     logger.debug("Variable[" + variableIdentifier + "] = Value[" + variableValue + "] resolved by Provider[" + provider.getName() + "].");
                     break;
                 } catch (NotAvailableException ex) {
-                    exceptionStack = MultiException.push(logger, ex, exceptionStack);
-                    variableValue = "";
+                    continue;
                 }
+            }
+
+            // check if variable was resolved
+            if (variableValue == null) {
+                exceptionStack = MultiException.push(VariableProcessor.class, new NotAvailableException("Variable[" + variableIdentifier + "]"), exceptionStack);
+                variableValue = "";
             }
 
             // Replace detected variable by it's value in the given context.
