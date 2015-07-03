@@ -228,6 +228,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return scope;
     }
 
+    
+    /**
+     * Synchronize all registered remote instances about a data change.
+     * @throws CouldNotPerformException 
+     */
     @Override
     public void notifyChange() throws CouldNotPerformException {
         logger.debug("Notify change of " + this);
@@ -283,7 +288,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public M requestStatus() throws CouldNotPerformException {
         try {
-            notifyChange();
             return getData();
         } catch (Exception ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not request status update.", ex));
