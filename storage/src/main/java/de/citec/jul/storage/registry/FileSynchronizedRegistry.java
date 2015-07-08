@@ -5,6 +5,7 @@
  */
 package de.citec.jul.storage.registry;
 
+import de.citec.jul.storage.registry.plugin.FileRegistryPlugin;
 import de.citec.jps.core.JPService;
 import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.file.FileProvider;
@@ -30,7 +31,7 @@ import java.util.Map;
  * @param <MAP>
  * @param <R>
  */
-public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends AbstractRegistry<KEY, VALUE, MAP, R> implements FileSynchronizedRegistryInterface<KEY, VALUE, R> {
+public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends AbstractRegistry<KEY, VALUE, MAP, R, FileRegistryPlugin> implements FileSynchronizedRegistryInterface<KEY, VALUE, R> {
 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
@@ -48,7 +49,14 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     @Override
     public VALUE register(final VALUE entry) throws CouldNotPerformException {
         super.register(entry);
-        fileSynchronizerMap.put(entry.getId(), new FileSynchronizer<>(entry, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor));
+
+        FileSynchronizer<VALUE> fileSynchronizer = new FileSynchronizer<>(entry, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
+        fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.afterRegister(fileSynchronizer);
+        }
+
         return entry;
     }
 
@@ -62,39 +70,71 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
             return entry;
         }
 
-        fileSynchronizerMap.get(entry.getId()).save(entry);
+        FileSynchronizer<VALUE> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.beforeUpdate(fileSynchronizer);
+        }
+
+        fileSynchronizer.save(entry);
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.afterUpdate(fileSynchronizer);
+        }
+
         return entry;
     }
 
     @Override
     public VALUE remove(final VALUE entry) throws CouldNotPerformException {
         VALUE removedValue = super.remove(entry);
-        fileSynchronizerMap.get(entry.getId()).delete();
+
+        FileSynchronizer<VALUE> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.beforeRemove(fileSynchronizer);
+        }
+
+        fileSynchronizer.delete();
         fileSynchronizerMap.remove(entry.getId());
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.afterRemove(fileSynchronizer);
+        }
+
         return removedValue;
     }
 
     @Override
-    public void clear() {
+    public void clear() throws CouldNotPerformException {
         super.clear();
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.beforeClear();
+        }
+
         fileSynchronizerMap.clear();
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.afterClear();
+        }
     }
 
     @Override
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
-        
-        if(JPService.getProperty(JPInitializeDB.class).getValue()) {
+
+        if (JPService.getProperty(JPInitializeDB.class).getValue()) {
             return;
         }
-        
+
         logger.info("Load registry out of " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
         File[] listFiles;
 
         listFiles = databaseDirectory.listFiles(fileProvider.getFileFilter());
-        
+
         if (listFiles == null) {
             throw new NotAvailableException("Could not load registry because database directory[" + databaseDirectory.getAbsolutePath() + "] is empty!");
         }
@@ -109,9 +149,9 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
         }
-        
-        logger.info("====== "+ size()+" entries successfully loaded. "+MultiException.size(exceptionStack) + " skipped. ======");
-        
+
+        logger.info("====== " + size() + " entries successfully loaded. " + MultiException.size(exceptionStack) + " skipped. ======");
+
         checkConsistency();
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
     }
@@ -136,6 +176,10 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
         if (!databaseDirectory.canWrite()) {
             throw new InvalidStateException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
         }
+
+        for (FileRegistryPlugin plugin : pluginList) {
+            plugin.checkAccess();
+        }
     }
 
     @Override
@@ -148,5 +192,9 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
 
         fileSynchronizerMap.clear();
         super.shutdown();
+    }
+
+    public File getDatabaseDirectory() {
+        return databaseDirectory;
     }
 }

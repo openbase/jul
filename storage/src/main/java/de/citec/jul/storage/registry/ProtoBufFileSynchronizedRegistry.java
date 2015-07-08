@@ -5,8 +5,10 @@
  */
 package de.citec.jul.storage.registry;
 
+import de.citec.jul.storage.registry.plugin.GitRegistryPlugin;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import de.citec.jps.core.JPService;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
@@ -20,6 +22,7 @@ import de.citec.jul.extension.rsb.container.ProtoBufMessageMapInterface;
 import de.citec.jul.extension.rsb.container.transformer.MessageTransformer;
 import de.citec.jul.extension.rsb.processing.ProtoBufFileProcessor;
 import de.citec.jul.storage.file.FileProvider;
+import de.citec.jul.storage.registry.jp.JPGitRegistryPlugin;
 import java.io.File;
 import java.util.List;
 
@@ -53,6 +56,10 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             }
         };
         protobufMessageMap.addObserver(observer);
+        
+        if(JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
+            addPlugin(new GitRegistryPlugin(this));
+        }
     }
 
     @Override

@@ -5,6 +5,7 @@
  */
 package de.citec.jul.storage.registry;
 
+import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPReadOnly;
 import de.citec.jul.exception.CouldNotPerformException;
@@ -33,17 +34,19 @@ import org.slf4j.LoggerFactory;
  * @param <MAP>
  * @param <R>
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>> extends Observable<Map<KEY, ENTRY>> implements RegistryInterface<KEY, ENTRY, R> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>, P extends RegistryPlugin> extends Observable<Map<KEY, ENTRY>> implements RegistryInterface<KEY, ENTRY, R> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final SyncObject SYNC = new SyncObject(AbstractRegistry.class);
     protected final MAP entryMap;
+    protected final List<P> pluginList;
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         try {
             this.entryMap = entryMap;
+            this.pluginList = new ArrayList<>();
             this.consistencyHandlerList = new ArrayList<>();
             this.checkConsistency();
             this.notifyObservers();
@@ -80,7 +83,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 superRemove(entry);
             } catch (Exception exx) {
-                ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not remove invalid entry!", exx));
+                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not remove invalid entry!", exx));
             }
             throw ex;
         }
@@ -182,7 +185,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void clear() {
+    public void clear() throws CouldNotPerformException {
         synchronized (SYNC) {
             entryMap.clear();
         }
@@ -207,7 +210,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
-            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not notify all observer!", ex));
+            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not notify all observer!", ex));
         }
     }
 
@@ -232,7 +235,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private boolean consistencyCheckRunning = false;
 
-    public synchronized boolean checkConsistency() throws CouldNotPerformException {
+    public synchronized final boolean checkConsistency() throws CouldNotPerformException {
 
         if (consistencyHandlerList.isEmpty()) {
             logger.debug("Skip consistency check because no handler are registered.");
@@ -317,6 +320,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public void shutdown() {
         super.shutdown();
-        clear();
+        try {
+            clear();
+        } catch(CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(logger, ex);
+        }
+    }
+
+    public void addPlugin(P plugin) {
+        pluginList.add(plugin);
     }
 }

@@ -33,8 +33,8 @@ public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, R exten
 
     public boolean contains(final KEY key) throws CouldNotPerformException;
 
-    public void clear();
+    public void clear() throws CouldNotPerformException ;
 
     public void checkAccess() throws InvalidStateException;
-
+    
 }

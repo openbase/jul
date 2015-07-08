@@ -5,6 +5,7 @@
  */
 package de.citec.jul.storage.registry;
 
+import de.citec.jul.storage.registry.plugin.RemoteRegistryPlugin;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
@@ -25,7 +26,7 @@ import java.util.Map;
  * @param <MB>
  * @param <SIB>
  */
-public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistryInterface<KEY, M, MB>> implements ProtoBufRegistryInterface<KEY, M, MB> {
+public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistryInterface<KEY, M, MB>, RemoteRegistryPlugin> implements ProtoBufRegistryInterface<KEY, M, MB> {
 
 	private final IdGenerator<KEY, M> idGenerator;
 
