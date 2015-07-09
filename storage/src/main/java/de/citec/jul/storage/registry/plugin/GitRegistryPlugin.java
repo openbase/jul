@@ -36,7 +36,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
                 throw new InvalidStateException("Given repository is invalid!");
             }
 
-            if (!repositoryDir.exists() || !JPService.getProperty(JPInitializeDB.class).getValue()) {
+            if (!repositoryDir.exists() && !JPService.getProperty(JPInitializeDB.class).getValue()) {
                 throw new InvalidStateException("Repository does not exist!");
             }
 
