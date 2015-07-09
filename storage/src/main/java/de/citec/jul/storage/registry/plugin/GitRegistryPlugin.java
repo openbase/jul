@@ -5,9 +5,11 @@
  */
 package de.citec.jul.storage.registry.plugin;
 
+import de.citec.jps.core.JPService;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.storage.file.FileSynchronizer;
+import de.citec.jul.storage.jp.JPInitializeDB;
 import de.citec.jul.storage.registry.FileSynchronizedRegistry;
 import java.io.File;
 import java.io.IOException;
@@ -28,8 +30,24 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     public GitRegistryPlugin(FileSynchronizedRegistry registry) throws de.citec.jul.exception.InstantiationException {
         try {
             this.registry = registry;
-            this.repository = new FileRepository(new File(registry.getDatabaseDirectory(), ".git"));
-            this.git = new Git(repository);
+            File repositoryDir = new File(registry.getDatabaseDirectory(), ".git");
+
+            if (repositoryDir.isFile()) {
+                throw new InvalidStateException("Given repository is invalid!");
+            }
+
+            if (!repositoryDir.exists() || !JPService.getProperty(JPInitializeDB.class).getValue()) {
+                throw new InvalidStateException("Repository does not exist!");
+            }
+
+            this.repository = new FileRepository(repositoryDir);
+
+            if (JPService.getProperty(JPInitializeDB.class).getValue()) {
+                repository.create();
+            }
+
+            git = new Git(repository);
+
         } catch (Exception ex) {
             throw new de.citec.jul.exception.InstantiationException(this, ex);
         }
@@ -47,7 +65,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
 
     @Override
     public void afterRemove(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-        commitAllChanges(); 
+        commitAllChanges();
     }
 
     @Override
@@ -61,7 +79,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
             git.add().addFilepattern(".").call();
 
             // commit
-            git.commit().call();
+            git.commit().setMessage(JPService.getApplicationName() + " commited all changes.").call();
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not commit all database changes!", ex);
         }
@@ -70,7 +88,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     @Override
     public void checkAccess() throws InvalidStateException {
         try {
-            if (repository.getBranch() == "master") {
+            if (repository.getBranch().equals("master")) {
                 throw new InvalidStateException("Database tag can not be modifiered!");
             }
         } catch (IOException ex) {
