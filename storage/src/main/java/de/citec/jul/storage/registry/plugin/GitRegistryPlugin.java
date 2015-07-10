@@ -22,8 +22,8 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 /**
  *
- * @author mpohling
-// */
+ * @author mpohling //
+ */
 public class GitRegistryPlugin extends FileRegistryPluginAdapter {
 
     private final FileSynchronizedRegistry registry;
@@ -45,10 +45,12 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
         try {
             Repository repository;
             try {
-                repository = new FileRepositoryBuilder().setWorkTree(databaseDirectory).findGitDir().build();
-                if (repository == null) {
+                FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder().findGitDir(databaseDirectory);
+
+                if (repositoryBuilder.getGitDir() == null) {
                     throw new NotAvailableException("git repository");
                 }
+                repository = repositoryBuilder.build();
 
             } catch (IOException | CouldNotPerformException | NullPointerException ex) {
 
@@ -98,7 +100,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     @Override
     public void checkAccess() throws InvalidStateException {
         try {
-            if (!isTag(getHead(repository))) {
+            if (isTag(getHead(repository))) {
                 throw new InvalidStateException("Database based on tag revision and can not be modifiered!");
             }
         } catch (IOException ex) {
