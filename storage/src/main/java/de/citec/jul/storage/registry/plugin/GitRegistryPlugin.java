@@ -5,6 +5,7 @@
  */
 package de.citec.jul.storage.registry.plugin;
 
+import static com.sun.org.apache.bcel.internal.Repository.getRepository;
 import de.citec.jps.core.JPService;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
@@ -15,7 +16,11 @@ import java.io.File;
 import java.io.IOException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
 
 /**
  *
@@ -88,11 +93,19 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     @Override
     public void checkAccess() throws InvalidStateException {
         try {
-            if (repository.getBranch().equals("master")) {
-                throw new InvalidStateException("Database tag can not be modifiered!");
+            if(!isTag(getHead(repository))) {
+                throw new InvalidStateException("Database based on tag revision and can not be modifiered!");
             }
         } catch (IOException ex) {
             throw new InvalidStateException("Could not access database!", ex);
         }
+    }
+
+    private static Ref getHead(final Repository repository) throws IOException {
+        return repository.getRef(Constants.HEAD);
+    }
+
+    private static boolean isTag(final Ref ref) {
+        return !ref.getTarget().getName().contains("refs/heads");
     }
 }

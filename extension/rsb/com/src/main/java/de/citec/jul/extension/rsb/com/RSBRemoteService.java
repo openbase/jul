@@ -183,7 +183,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     
     public boolean isConnected() {
         //TODO mpohling implement connection server check.
-        return isActive();
+        return isActive() && data != null;
     }
 
     @Override
