@@ -24,10 +24,11 @@ import org.slf4j.LoggerFactory;
 /**
  *
  * @author mpohling
- * @param KEY
- * @param M extends GeneratedMessage, MB
- * @param MB
- * @param SIB Synchronized internal Builder
+ * @param <KEY>
+ * @param <M>
+ * @param <MB>
+ * @param <SIB> synchronized internal builder
+
  */
 public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends Builder<SIB>> extends HashMap<KEY, IdentifiableMessage<KEY, M, MB>> implements ProtoBufMessageMapInterface<KEY, M, MB> {
 
