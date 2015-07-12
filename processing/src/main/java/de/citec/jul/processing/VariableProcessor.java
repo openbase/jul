@@ -46,7 +46,7 @@ public class VariableProcessor {
                     if (variableValue == null) {
                         continue;
                     }
-                    logger.debug("Variable[" + variableIdentifier + "] = Value[" + variableValue + "] resolved by Provider[" + provider.getName() + "].");
+                    logger.info("Variable[" + variableIdentifier + "] = Value[" + variableValue + "] resolved by Provider[" + provider.getName() + "].");
                     break;
                 } catch (NotAvailableException ex) {
                     continue;
@@ -54,7 +54,7 @@ public class VariableProcessor {
             }
 
             // check if variable was resolved
-            if (variableValue == null) {
+            if (variableValue == null || variableValue.isEmpty()) {
                 exceptionStack = MultiException.push(VariableProcessor.class, new NotAvailableException("Variable[" + variableIdentifier + "]"), exceptionStack);
                 variableValue = "";
             }

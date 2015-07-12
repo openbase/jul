@@ -36,7 +36,9 @@ public class ProtobufVariableProvider implements VariableProvider {
 
         for (Map.Entry<Descriptors.FieldDescriptor, Object> fieldEntry : message.getAllFields().entrySet()) {
             if (StringProcessor.transformToUpperCase(fieldEntry.getKey().getName()).equals(variable)) {
-                return fieldEntry.getValue().toString();
+                if (!fieldEntry.getValue().toString().isEmpty()) {
+                    return fieldEntry.getValue().toString();
+                }
             }
         }
         throw new NotAvailableException("Value for Variable[" + variable + "]");
