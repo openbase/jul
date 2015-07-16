@@ -3,14 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.extension.rsb.container.transformer;
+package de.citec.jul.extension.protobuf.container.transformer;
 
-import de.citec.jul.extension.rsb.container.IdentifiableMessage;
+import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.CouldNotTransformException;
-import de.citec.jul.extension.rsb.processing.ProtoBufFileProcessor;
-import de.citec.jul.extension.rsb.util.IdGenerator;
+import de.citec.jul.extension.protobuf.IdGenerator;
+import de.citec.jul.extension.protobuf.processing.ProtoBufFileProcessor;
 import java.lang.reflect.InvocationTargetException;
 
 /**

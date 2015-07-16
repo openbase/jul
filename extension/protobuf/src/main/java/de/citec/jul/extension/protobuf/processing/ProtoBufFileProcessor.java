@@ -3,13 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.extension.rsb.processing;
+package de.citec.jul.extension.protobuf.processing;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message.Builder;
 import com.googlecode.protobuf.format.JsonFormat;

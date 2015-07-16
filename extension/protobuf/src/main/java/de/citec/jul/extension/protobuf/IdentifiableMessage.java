@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.extension.rsb.container;
+package de.citec.jul.extension.protobuf;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
@@ -16,7 +16,8 @@ import de.citec.jul.exception.VerificationFailedException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
-import de.citec.jul.extension.rsb.util.IdGenerator;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,17 +38,35 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 
     public IdentifiableMessage(final M message, final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
         try {
-            if(idGenerator == null) {
+            if (idGenerator == null) {
                 throw new NotAvailableException("idGenerator");
             }
-            
-            if(message == null) {
+
+            if (message == null) {
+                throw new NotAvailableException("message");
+            }
+
+            this.internalMessage = message;
+            this.observable = new Observable<>();
+            this.setupId(idGenerator);
+        } catch (CouldNotPerformException ex) {
+            throw new de.citec.jul.exception.InstantiationException(this, ex);
+        }
+    }
+    
+    public IdentifiableMessage(final M message) throws InstantiationException {
+        try {
+            if (message == null) {
                 throw new NotAvailableException("message");
             }
             
             this.internalMessage = message;
+            
+            if(!verifyId()) {
+                throw new InvalidStateException("message does not contain Field["+FIELD_ID+"]");
+            }
+
             this.observable = new Observable<>();
-            this.setupId(idGenerator);
         } catch (CouldNotPerformException ex) {
             throw new de.citec.jul.exception.InstantiationException(this, ex);
         }
@@ -77,18 +96,22 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 
     private void setupId(final IdGenerator<KEY, M> generator) throws CouldNotPerformException {
         try {
-            if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
+            if (verifyId()) {
                 return;
             }
             setId(generator.generateId(internalMessage));
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not setup id for message: "+internalMessage, ex);
+            throw new CouldNotPerformException("Could not setup id for message: " + internalMessage, ex);
         }
+    }
+    
+    private boolean verifyId() {
+        return internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID));
     }
 
     private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
         try {
-            if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
+            if (verifyId()) {
                 throw new InvalidStateException("ID already specified!");
             }
             setMessage((M) internalMessage.toBuilder().setField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID), id).build());
@@ -96,7 +119,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             throw new CouldNotPerformException("Could not setup id!", ex);
         }
     }
-    
+
     public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder) throws CouldNotPerformException {
         if (builder == null) {
             throw new NotAvailableException("message");
@@ -140,6 +163,37 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         } catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);
             return getClass().getSimpleName() + "[?]";
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        try {
+            return new HashCodeBuilder()
+                    .append(getId())
+                    .toHashCode();
+        } catch (CouldNotPerformException ex) {
+            return new HashCodeBuilder()
+                    .append(internalMessage)
+                    .toHashCode();
+        }
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof IdentifiableMessage) {
+            final IdentifiableMessage other = (IdentifiableMessage) obj;
+            try {
+                return new EqualsBuilder()
+                        .append(getId(), other.getId())
+                        .isEquals();
+            } catch (CouldNotPerformException ex) {
+                return new EqualsBuilder()
+                        .append(internalMessage, other.internalMessage)
+                        .isEquals();
+            }
+        } else {
+            return false;
         }
     }
 }

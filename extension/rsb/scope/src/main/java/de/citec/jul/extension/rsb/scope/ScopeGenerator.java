@@ -7,7 +7,7 @@ package de.citec.jul.extension.rsb.scope;
 
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotAvailableException;
-import de.citec.jul.extension.rsb.container.ProtoBufMessageMapInterface;
+import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import java.util.Collection;
 import rsb.Scope;
 import rst.homeautomation.device.DeviceConfigType.DeviceConfig;

@@ -3,17 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.extension.rsb.container;
+package de.citec.jul.extension.protobuf.container;
 
+import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
+import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
-import de.citec.jul.extension.rsb.util.IdGenerator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
