@@ -114,7 +114,7 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add unit type
-        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getTemplate().getType().name().replace("_","")));
+        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getType().name().replace("_","")));
 
         // add unit label
         scope.addComponent(convertIntoValidScopeComponent(unitConfig.getLabel()));
