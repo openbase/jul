@@ -10,8 +10,10 @@ import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.iface.Identifiable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,15 +81,15 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
         originalMessages = modifieredMap;
     }
 
-    public IdentifiableMessageMap<KEY, M , MB> getNewMessages() {
+    public IdentifiableMessageMap<KEY, M , MB> getNewMessageMap() {
         return newMessages;
     }
 
-    public IdentifiableMessageMap<KEY, M , MB> getUpdatedMessages() {
+    public IdentifiableMessageMap<KEY, M , MB> getUpdatedMessageMap() {
         return updatedMessages;
     }
 
-    public IdentifiableMessageMap<KEY, M , MB> getRemovedMessages() {
+    public IdentifiableMessageMap<KEY, M , MB> getRemovedMessageMap() {
         return removedMessages;
     }
 
@@ -123,6 +125,14 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
 
         public IdentifiableMessageMap(Map<? extends KEY, ? extends IdentifiableMessage<KEY, M, MB>> m) {
             super(m);
+        }
+        
+        public Set<M> getValueSet() {
+            Set<M> valueSet = new HashSet<>();
+            for(IdentifiableMessage<KEY, M, MB> identifiableMessage : values()) {
+                valueSet.add(identifiableMessage.getMessage());
+            }
+            return valueSet;
         }
     }
     
