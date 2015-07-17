@@ -221,7 +221,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
 
             double timeout = START_TIMEOUT;
-            while (true) {
+            while (true) {                
+                
+                if(!isActive()) {
+                    throw new InvalidStateException("remote service is not active!");
+                }
+                
                 try {
                     return remoteServer.call(methodName, type, timeout);
                 } catch (TimeoutException ex) {

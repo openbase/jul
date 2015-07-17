@@ -111,6 +111,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return entry;
     }
 
+    public ENTRY remove(final KEY key) throws CouldNotPerformException {
+        return remove(get(key));
+    }
+    
     @Override
     public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
         return superRemove(entry);
