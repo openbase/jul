@@ -36,5 +36,7 @@ public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, R exten
     public void clear() throws CouldNotPerformException ;
 
     public void checkAccess() throws InvalidStateException;
+
+    public boolean isReadOnly();
     
 }
