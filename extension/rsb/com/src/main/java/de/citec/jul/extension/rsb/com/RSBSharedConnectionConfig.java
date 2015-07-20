@@ -6,8 +6,10 @@
 package de.citec.jul.extension.rsb.com;
 
 import rsb.Factory;
+import rsb.config.ParticipantConfig;
 import rsb.transport.spread.InPushConnectorFactoryRegistry;
 import rsb.transport.spread.SharedInPushConnectorFactory;
+
 /**
  *
  * @author mpohling
@@ -15,13 +17,14 @@ import rsb.transport.spread.SharedInPushConnectorFactory;
 public class RSBSharedConnectionConfig {
 
     private static boolean init = false;
-    
+    private static ParticipantConfig participantConfig;
+
     public synchronized static void load() {
-        if(init) {
-           return; 
+        if (init) {
+            return;
         }
-        
-         final String inPushFactoryKey = "shareIfPossible";
+
+        final String inPushFactoryKey = "shareIfPossible";
         // register a (spread-specifc) factory to create the appropriate in push
         // connectors. In this case the factory tries to share all connections
         // except the converters differ. You can implement other strategies to
@@ -31,13 +34,15 @@ public class RSBSharedConnectionConfig {
 
         // instruct the spread transport to use your newly registered factory
         // for creating in push connector instances
-        Factory.getInstance().getDefaultParticipantConfig()
-                .getOrCreateTransport("spread")
+        participantConfig = Factory.getInstance().getDefaultParticipantConfig();
+        participantConfig.getOrCreateTransport("spread")
                 .getOptions()
-                .setProperty("transport.spread.java.infactory",
-                        inPushFactoryKey);
-        
-        
+                .setProperty("transport.spread.java.infactory", inPushFactoryKey);
+
         init = true;
+    }
+
+    public static ParticipantConfig getParticipantConfig() {
+        return participantConfig;
     }
 }
