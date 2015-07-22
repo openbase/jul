@@ -11,7 +11,6 @@ import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.CouldNotTransformException;
 import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
@@ -76,21 +75,27 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      *
      * @param scope
      * @param builder
-     * @throws CouldNotTransformException
      * @throws InstantiationException
      * @deprecated setup context via init method.
      */
     @Deprecated
-    public RSBCommunicationService(final Scope scope, final MB builder) throws CouldNotTransformException, InstantiationException {
+    public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
         this(builder);
-        this.scope = new Scope(scope.toString().toLowerCase());
+        try {
+            this.scope = new Scope(scope.toString().toLowerCase());
+        } catch (Exception ex) {
+            throw new InstantiationException(this, ex);
+        }
     }
 
     /**
+     * @param scope
+     * @param builder
+     * @throws de.citec.jul.exception.InstantiationException
      * @deprecated setup context via init method.
      */
     @Deprecated
-    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws CouldNotTransformException, InstantiationException {
+    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws InstantiationException {
         this(builder);
         try {
             this.scope = ScopeTransformer.transform(scope);
@@ -120,6 +125,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
+     * @param label
+     * @param type
+     * @param location
+     * @param builder
+     * @throws de.citec.jul.exception.InstantiationException
      * @deprecated setup context via init method.
      */
     @Deprecated
