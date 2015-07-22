@@ -35,11 +35,6 @@
     <dependencies>
         <dependency>
             <groupId>de.citec</groupId>
-            <artifactId>jul.extension.rsb.interface</artifactId>
-            <version>0.2-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>de.citec</groupId>
             <artifactId>jul.exception</artifactId>
             <version>0.2-SNAPSHOT</version>
         </dependency>
