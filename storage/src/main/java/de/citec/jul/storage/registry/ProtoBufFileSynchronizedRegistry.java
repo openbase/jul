@@ -19,6 +19,7 @@ import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMap;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
+import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 import de.citec.jul.extension.protobuf.container.transformer.MessageTransformer;
 import de.citec.jul.extension.protobuf.processing.ProtoBufFileProcessor;
 import de.citec.jul.storage.file.FileProvider;
@@ -45,7 +46,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     }
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
+        super(internalMap, new ProtoBufMessageMapWrapper<KEY, M, MB, SIB>(internalMap), databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
         this.idGenerator = idGenerator;
         this.protobufMessageMap = internalMap;
         this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {

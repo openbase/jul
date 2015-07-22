@@ -79,15 +79,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     public void init(final Scope scope) throws InitializationException {
+        ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig();
         if (JPService.getProperty(JPTestMode.class).getValue()) {
-            ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig().copy();
             participantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
             participantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
             participantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
-            init(scope, participantConfig);
-        } else {
-            init(scope, RSBSharedConnectionConfig.getParticipantConfig());
         }
+        init(scope, participantConfig);
     }
 
     public synchronized void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
@@ -352,7 +350,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     private void checkInitialization() throws InvalidStateException {
         if (!initialized) {
-            throw new InvalidStateException("Communication service not initialized!");
+            throw new InvalidStateException("Remote communication service not initialized!");
         }
     }
 

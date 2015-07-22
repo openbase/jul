@@ -45,8 +45,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private final SyncObject SYNC = new SyncObject(AbstractRegistry.class);
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
-    public AbstractRegistry(final MAP entryMap) throws InstantiationException {
-        this(entryMap, new RegistrySandbox<KEY, ENTRY, MAP, R, P>(entryMap));
+    public AbstractRegistry(final MAP entryMap, final MAP sandboxEntryMap) throws InstantiationException {
+        this(entryMap, new RegistrySandbox<KEY, ENTRY, MAP, R, P>(sandboxEntryMap));
     }
     public AbstractRegistry(final MAP entryMap, final RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox) throws InstantiationException {
         try {
@@ -349,7 +349,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             checkConsistency();
         } catch (CouldNotPerformException ex) {
-            throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("FATAL ERROR: Registry consistency check failed but sandbox check was sucessful!", ex));
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex));
         }
         sandbox.sync(entryMap);
         notifyObservers();

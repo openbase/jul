@@ -35,7 +35,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 	}
 
 	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
-		super(internalMap);
+		super(internalMap, new HashMap<KEY, IdentifiableMessage<KEY, M, MB>>());
 		this.idGenerator = idGenerator;
 	}
 

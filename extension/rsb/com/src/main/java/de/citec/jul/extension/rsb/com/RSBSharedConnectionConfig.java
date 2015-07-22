@@ -43,6 +43,6 @@ public class RSBSharedConnectionConfig {
     }
 
     public static ParticipantConfig getParticipantConfig() {
-        return participantConfig;
+        return participantConfig.copy();
     }
 }

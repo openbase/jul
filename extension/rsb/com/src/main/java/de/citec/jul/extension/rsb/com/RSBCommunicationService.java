@@ -119,15 +119,13 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     public void init() throws InitializationException {
+        ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig();
         if (JPService.getProperty(JPTestMode.class).getValue()) {
-            ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig().copy();
             participantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
             participantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
             participantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
-            init(participantConfig);
-        } else {
-            init(RSBSharedConnectionConfig.getParticipantConfig());
         }
+        init(participantConfig);
     }
 
     public synchronized void init(final ParticipantConfig participantConfig) throws InitializationException {

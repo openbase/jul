@@ -5,7 +5,6 @@
  */
 package de.citec.jul.storage.registry;
 
-import com.rits.cloning.Cloner;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.iface.Identifiable;
@@ -23,10 +22,8 @@ import java.util.Map;
  */
 public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>, P extends RegistryPlugin> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
 
-    private static final Cloner cloner = new Cloner();
-
     public RegistrySandbox(MAP entryMap) throws InstantiationException {
-        super(cloner.shallowClone(entryMap), new MockSandbox<KEY, ENTRY, MAP, R>());
+        super(entryMap, new MockSandbox<KEY, ENTRY, MAP, R>());
     }
 
     @Override
