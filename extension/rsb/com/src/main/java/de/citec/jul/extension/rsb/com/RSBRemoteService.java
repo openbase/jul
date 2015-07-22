@@ -75,6 +75,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    public synchronized void init(final String scope) throws InitializationException {
+        try {
+            init(new Scope(scope));
+        } catch (Exception ex) {
+            throw new InitializationException(this, ex);
+        }
+    }
+
     public synchronized void init(final Scope scope) throws InitializationException {
 
         try {
