@@ -25,6 +25,8 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP ex
      * Method for establishing a registry data consistency.
      * Method is called by the registry in case of entry changes. 
      * 
+     * @param id
+     * @param entry
      * @param entryMap the entry map of the underlying registry.
      * @param registry the underlying registry.
      * @throws CouldNotPerformException thrown to handle errors.

@@ -19,7 +19,6 @@ import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMap;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
-import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 import de.citec.jul.extension.protobuf.container.transformer.MessageTransformer;
 import de.citec.jul.extension.protobuf.processing.ProtoBufFileProcessor;
 import de.citec.jul.storage.file.FileProvider;
@@ -46,20 +45,26 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     }
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        super(internalMap, new ProtoBufMessageMapWrapper<KEY, M, MB, SIB>(internalMap), databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
-        this.idGenerator = idGenerator;
-        this.protobufMessageMap = internalMap;
-        this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
+        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
+        try {
+            this.idGenerator = idGenerator;
+            this.protobufMessageMap = internalMap;
+            this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
 
-            @Override
-            public void update(Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
-                ProtoBufFileSynchronizedRegistry.this.update(data);
+                @Override
+                public void update(Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
+                    ProtoBufFileSynchronizedRegistry.this.update(data);
+                }
+            };
+            protobufMessageMap.addObserver(observer);
+
+            if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
+                addPlugin(new GitRegistryPlugin(this));
             }
-        };
-        protobufMessageMap.addObserver(observer);
-        
-        if(JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
-            addPlugin(new GitRegistryPlugin(this));
+            // TODO how why some tests failed if sandbox is activated.
+//            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator));
+        } catch (CouldNotPerformException ex) {
+            throw new InstantiationException(this, ex);
         }
     }
 
@@ -97,7 +102,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public List<M> getMessages() throws CouldNotPerformException {
-        return protobufMessageMap.getMessages();
+        return entryMap.getMessages();
     }
 
     @Override

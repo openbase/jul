@@ -17,16 +17,12 @@ import java.util.Map;
  * @param <MAP>
  * @param <R>
  */
-public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>> {
-
-    public ENTRY register(final ENTRY entry) throws CouldNotPerformException;
-
-    public ENTRY update(final ENTRY entry) throws CouldNotPerformException;
-
-    public ENTRY remove(final KEY key) throws CouldNotPerformException;
+public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>> extends RegistryInterface<KEY, ENTRY, R> {
 
     public void sync(final MAP map);
     
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
+    
+    public void replaceInternalMap(Map<KEY, ENTRY> map);
 
 }

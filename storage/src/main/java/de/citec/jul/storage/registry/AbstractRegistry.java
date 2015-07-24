@@ -29,10 +29,12 @@ import org.slf4j.LoggerFactory;
 /**
  *
  * @author Divine Threepwood
- * @param <KEY>
- * @param <ENTRY>
- * @param <MAP>
- * @param <R>
+ *
+ * @param <KEY> EntryKey
+ * @param <ENTRY> EntryType
+ * @param <MAP> RegistryEntryMap
+ * @param <R> RegistryInterface
+ * @param <P> RegistryPluginType
  */
 public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>, P extends RegistryPlugin> extends Observable<Map<KEY, ENTRY>> implements RegistryInterface<KEY, ENTRY, R> {
 
@@ -40,31 +42,41 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     protected final MAP entryMap;
     protected final List<P> pluginList;
-    protected final RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
+    protected RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
 
     private final SyncObject SYNC = new SyncObject(AbstractRegistry.class);
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
-    public AbstractRegistry(final MAP entryMap, final MAP sandboxEntryMap) throws InstantiationException {
-        this(entryMap, new RegistrySandbox<KEY, ENTRY, MAP, R, P>(sandboxEntryMap));
-    }
-    public AbstractRegistry(final MAP entryMap, final RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox) throws InstantiationException {
+    public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         try {
             this.entryMap = entryMap;
             this.pluginList = new ArrayList<>();
-            this.sandbox = sandbox;
+            this.sandbox = new MockRegistrySandbox();
             this.consistencyHandlerList = new ArrayList<>();
-            this.finishTransaction();
-
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
                 @Override
                 public void run() {
                     shutdown();
                 }
             }));
-
+            finishTransaction();
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
+        }
+    }
+
+    public <S extends AbstractRegistry<KEY, ENTRY, MAP, R, P> & RegistrySandboxInterface<KEY, ENTRY, MAP, R>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
+        final RegistrySandboxInterface<KEY, ENTRY, MAP, R> oldSandbox = sandbox;
+        try {
+            this.sandbox = sandbox;
+            this.sandbox.sync(entryMap);
+
+            for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+                this.sandbox.registerConsistencyHandler(consistencyHandler);
+            }
+        } catch (CouldNotPerformException ex) {
+            this.sandbox = oldSandbox;
+            throw new CouldNotPerformException("Could not setup sandbox!", ex);
         }
     }
 
@@ -79,12 +91,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
                 sandbox.register(entry);
                 entryMap.put(entry.getId(), entry);
+                finishTransaction();
             }
-
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
         } finally {
-            finishTransaction();
+            syncSandbox();
         }
         return entry;
     }
@@ -101,11 +113,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 // replace
                 sandbox.update(entry);
                 entryMap.put(entry.getId(), entry);
+                finishTransaction();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + "!", ex);
         } finally {
-            finishTransaction();
+            syncSandbox();
         }
         return entry;
     }
@@ -127,13 +140,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
-                sandbox.remove(entry.getId());
-                return entryMap.remove(entry.getId());
+                sandbox.remove(entry);
+                try {
+                    return entryMap.remove(entry.getId());
+                } finally {
+                    finishTransaction();
+                }
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + "!", ex);
         } finally {
-            finishTransaction();
+            syncSandbox();
         }
     }
 
@@ -199,19 +216,23 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public void clear() throws CouldNotPerformException {
         synchronized (SYNC) {
+            sandbox.clear();
             entryMap.clear();
         }
         finishTransaction();
     }
 
-    protected void replaceInternalMap(final Map<KEY, ENTRY> map) {
+    public void replaceInternalMap(final Map<KEY, ENTRY> map) {
         synchronized (SYNC) {
             try {
+                sandbox.replaceInternalMap(map);
                 entryMap.clear();
                 entryMap.putAll(map);
                 finishTransaction();
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Internal map replaced by invalid data!", ex));
+            } finally {
+                syncSandbox();
             }
         }
     }
@@ -321,7 +342,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         lastActiveConsistencyHandler = ex.getConsistencyHandler();
                         lastModifieredEntry = ex.getEntry();
 
-                        // inform about modifivation
+                        // inform about modifications
                         logger.info("Consistency modification applied: " + ex.getMessage());
                         modification = true;
                         continue;
@@ -345,14 +366,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    private void finishTransaction() throws CouldNotPerformException {
+    protected void finishTransaction() throws CouldNotPerformException {
         try {
             checkConsistency();
         } catch (CouldNotPerformException ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex));
         }
-        sandbox.sync(entryMap);
         notifyObservers();
+    }
+
+    private void syncSandbox() {
+        synchronized (SYNC) {
+            sandbox.sync(entryMap);
+        }
     }
 
     @Override
@@ -360,7 +386,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         super.shutdown();
         try {
             clear();
-            sandbox.sync(entryMap);
+            sandbox.clear();
+            pluginList.clear();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(logger, ex);
         }
