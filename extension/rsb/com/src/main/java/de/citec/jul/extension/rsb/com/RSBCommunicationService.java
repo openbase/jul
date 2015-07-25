@@ -208,11 +208,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
 
         ParticipantConfig internalParticipantConfig = participantConfig;
-        if (JPService.getProperty(JPTestMode.class).getValue()) {
-            internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
-            internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
-            internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
-        }
+//        if (JPService.getProperty(JPTestMode.class).getValue()) {
+//            internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
+//            internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
+//            internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
+//        }
 
         try {
             if (scope == null) {
@@ -222,11 +222,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             Scope internalScope = new Scope(scope.toString().toLowerCase());
 
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-            this.informer = new RSBSynchronizedInformer<M>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass, internalParticipantConfig);
+            this.informer = new RSBSynchronizedInformer<M>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
             // Get local server object which allows to expose remotely callable methods.
-            server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
+            server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)));
 
             // register rpc methods.
             server.addMethod(RPC_REQUEST_STATUS, new Callback() {
