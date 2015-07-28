@@ -128,7 +128,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     private void initListener(final Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
-            this.listener = RSBFactory.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS));
+            this.listener = RSBFactory.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
         } catch (InstantiationException ex) {
             throw new CouldNotPerformException("Could not create Listener on scope [" + scope + "]!", ex);
@@ -137,7 +137,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     private void initRemoteServer(final Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
-            this.remoteServer = RSBFactory.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL));
+            this.remoteServer = RSBFactory.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
             this.listenerWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
 
@@ -153,7 +153,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                                     remoteServerWatchDog.waitForActivation();
                                     sync();
                                 } catch (InterruptedException | CouldNotPerformException ex) {
-                                    ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not trigger data sync!", ex));
+                                    ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not trigger data sync!", ex));
                                 }
                             }
                         }.start();
@@ -234,7 +234,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return callMethodAsync(methodName, null);
     }
 
-    public final static double START_TIMEOUT = 1;
+    public final static double START_TIMEOUT = 2;
     public final static double TIMEOUT_MULTIPLIER = 2;
     public final static double MAX_TIMEOUT = 30;
 

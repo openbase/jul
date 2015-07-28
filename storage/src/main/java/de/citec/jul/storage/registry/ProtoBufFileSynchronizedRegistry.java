@@ -61,7 +61,9 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
                 addPlugin(new GitRegistryPlugin(this));
             }
-            // TODO how why some tests failed if sandbox is activated.
+            
+            // got error: corrupted double-linked list: 0x00007f178c2a9200
+            // -> may clone each sandbox entry instead of cloning whole collection.
 //            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator));
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);

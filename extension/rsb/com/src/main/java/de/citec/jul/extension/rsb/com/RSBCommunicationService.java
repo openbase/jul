@@ -155,20 +155,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    /**
-     *
-     * @throws InitializationException
-     * @deprecated declare scope during init phrase.
-     */
-    @Deprecated
-    public synchronized void init() throws InitializationException {
-        try {
-            init(getScope(), RSBSharedConnectionConfig.getParticipantConfig());
-        } catch (CouldNotPerformException | NullPointerException ex) {
-            throw new InitializationException(this, ex);
-        }
-    }
-
     public void init(final String scope) throws InitializationException {
         try {
             init(new Scope(scope));
@@ -208,11 +194,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
 
         ParticipantConfig internalParticipantConfig = participantConfig;
-//        if (JPService.getProperty(JPTestMode.class).getValue()) {
-//            internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
-//            internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
-//            internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
-//        }
+        if (JPService.getProperty(JPTestMode.class).getValue()) {
+            internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
+            internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
+            internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
+        }
 
         try {
             if (scope == null) {
@@ -222,11 +208,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             Scope internalScope = new Scope(scope.toString().toLowerCase());
 
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-            this.informer = new RSBSynchronizedInformer<M>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass);
+            this.informer = new RSBSynchronizedInformer<M>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass, internalParticipantConfig);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
             // Get local server object which allows to expose remotely callable methods.
-            server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)));
+            server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
             server.addMethod(RPC_REQUEST_STATUS, new Callback() {
@@ -246,6 +232,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private Class<M> detectMessageClass() throws CouldNotPerformException {
         try {
+            @SuppressWarnings("unchecked")
             Class<M> clazz = (Class<M>) dataBuilder.getClass().getEnclosingClass();
             if (clazz == null) {
                 throw new NotAvailableException("message class");
@@ -287,6 +274,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return informerWatchDog.isActive() && serverWatchDog.isActive();
     }
 
+    @SuppressWarnings("unchecked")
     public M getData() throws CouldNotPerformException {
         try {
             return (M) cloneDataBuilder().build();

@@ -284,30 +284,31 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private boolean consistencyCheckRunning = false;
 
-    public synchronized final boolean checkConsistency() throws CouldNotPerformException {
+    public final boolean checkConsistency() throws CouldNotPerformException {
 
         if (consistencyHandlerList.isEmpty()) {
             logger.debug("Skip consistency check because no handler are registered.");
             return true;
         }
 
-        try {
+        synchronized (SYNC) {
 
-            boolean modification = false;
+            try {
 
-            // avoid dublicated consistency check
-            if (consistencyCheckRunning) {
-                return modification;
-            }
-            consistencyCheckRunning = true;
+                boolean modification = false;
 
-            int iterationCounter = 0;
-            MultiException.ExceptionStack exceptionStack = null;
+                // avoid dublicated consistency check
+                if (consistencyCheckRunning) {
+                    return modification;
+                }
+                consistencyCheckRunning = true;
 
-            ConsistencyHandler lastActiveConsistencyHandler = null;
-            Object lastModifieredEntry = null;
+                int iterationCounter = 0;
+                MultiException.ExceptionStack exceptionStack = null;
 
-            synchronized (SYNC) {
+                ConsistencyHandler lastActiveConsistencyHandler = null;
+                Object lastModifieredEntry = null;
+
                 while (true) {
 
                     // handle handler interference
@@ -357,12 +358,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     logger.info("Registry consistend.");
                     break;
                 }
-            }
-            consistencyCheckRunning = false;
-            return modification;
 
-        } catch (CouldNotPerformException ex) {
-            throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Consistency process aborted!", ex));
+                consistencyCheckRunning = false;
+                return modification;
+
+            } catch (CouldNotPerformException ex) {
+                throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Consistency process aborted!", ex));
+            }
         }
     }
 
