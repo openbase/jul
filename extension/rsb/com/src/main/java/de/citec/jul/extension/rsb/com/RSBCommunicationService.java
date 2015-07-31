@@ -10,11 +10,13 @@ import de.citec.jul.extension.rsb.iface.RSBLocalServerInterface;
 import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import de.citec.jps.core.JPService;
+import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.CouldNotTransformException;
 import de.citec.jul.exception.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import de.citec.jul.extension.protobuf.ClosableDataBuilder;
@@ -29,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Scope;
+import rsb.config.ParticipantConfig;
 import rsb.patterns.Callback;
 import rst.rsb.ScopeType;
 
@@ -43,7 +46,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     static {
         RSBSharedConnectionConfig.load();
     }
-    
+
     public enum ConnectionState {
 
         Online, Offline
@@ -70,13 +73,43 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     protected Scope scope;
     private ConnectionState state;
+    private boolean initialized;
 
-    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws CouldNotTransformException, InstantiationException {
-        this(ScopeTransformer.transform(scope), builder);
+    /**
+     *
+     * @param scope
+     * @param builder
+     * @throws InstantiationException
+     * @deprecated setup context via init method.
+     */
+    @Deprecated
+    public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
+        this(builder);
+        try {
+            this.scope = new Scope(scope.toString().toLowerCase());
+        } catch (Exception ex) {
+            throw new InstantiationException(this, ex);
+        }
     }
 
-    public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
-        logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + " on " + scope + ".");
+    /**
+     * @param scope
+     * @param builder
+     * @throws de.citec.jul.exception.InstantiationException
+     * @deprecated setup context via init method.
+     */
+    @Deprecated
+    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws InstantiationException {
+        this(builder);
+        try {
+            this.scope = ScopeTransformer.transform(scope);
+        } catch (CouldNotPerformException ex) {
+            throw new InstantiationException(this, ex);
+        }
+    }
+
+    public RSBCommunicationService(final MB builder) throws InstantiationException {
+        logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + ".");
         this.dataBuilder = builder;
 
         try {
@@ -84,56 +117,114 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 throw new NotAvailableException("builder");
             }
 
-            if (scope == null) {
-                throw new NotAvailableException("scope");
-            }
-
-            this.scope = new Scope(scope.toString().toLowerCase());
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
             this.messageClass = detectMessageClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
+            this.initialized = false;
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
     }
 
-    public RSBCommunicationService(final String name, final String lable, final ScopeProvider location, final MB builder) throws InstantiationException, CouldNotPerformException {
-        this(generateScope(name, lable, location), builder);
+    /**
+     * @param label
+     * @param type
+     * @param location
+     * @param builder
+     * @throws de.citec.jul.exception.InstantiationException
+     * @deprecated setup context via init method.
+     */
+    @Deprecated
+    public RSBCommunicationService(final String label, final String type, final ScopeProvider location, final MB builder) throws InstantiationException, CouldNotPerformException {
+        this(builder);
+        try {
+            this.scope = generateScope(label, type, location);
+        } catch (CouldNotPerformException ex) {
+            throw new InstantiationException(this, ex);
+        }
     }
 
-    public static Scope generateScope(final String name, final String label, final ScopeProvider location) throws CouldNotPerformException {
+    public static Scope generateScope(final String label, final String type, final ScopeProvider location) throws CouldNotPerformException {
         try {
-            return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + name).concat(new Scope(Scope.COMPONENT_SEPARATOR + label)));
+            return location.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + type).concat(new Scope(Scope.COMPONENT_SEPARATOR + label)));
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Coult not generate scope!", ex);
         }
     }
 
-    public void init() throws InitializationException {
+    public void init(final String scope) throws InitializationException {
         try {
-            logger.debug("Init informer service...");
-            this.informer = new RSBSynchronizedInformer<M>(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass);
-            informerWatchDog = new WatchDog(informer, "RSBInformer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
+            init(new Scope(scope));
+        } catch (CouldNotPerformException | NullPointerException ex) {
+            throw new InitializationException(this, ex);
+        }
+    }
 
-            logger.debug("Init rpc server...");
+    public void init(final ScopeType.Scope scope) throws InitializationException {
+        try {
+            init(ScopeTransformer.transform(scope));
+        } catch (CouldNotPerformException | NullPointerException ex) {
+            throw new InitializationException(this, ex);
+        }
+    }
+
+    public void init(final String label, final ScopeProvider location) throws InitializationException {
+        try {
+            init(generateScope(label, getClass().getSimpleName(), location));
+        } catch (CouldNotPerformException | NullPointerException ex) {
+            throw new InitializationException(this, ex);
+        }
+    }
+
+    public void init(final String label, final String type, final ScopeProvider location) throws InitializationException {
+        try {
+            init(generateScope(label, type, location));
+        } catch (CouldNotPerformException | NullPointerException ex) {
+            throw new InitializationException(this, ex);
+        }
+    }
+
+    public void init(final Scope scope) throws InitializationException {
+        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
+    }
+
+    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
+
+        ParticipantConfig internalParticipantConfig = participantConfig;
+        if (JPService.getProperty(JPTestMode.class).getValue()) {
+            internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
+            internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
+            internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
+        }
+
+        try {
+            if (scope == null) {
+                throw new NotAvailableException("scope");
+            }
+
+            Scope internalScope = new Scope(scope.toString().toLowerCase());
+
+            logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
+            this.informer = new RSBSynchronizedInformer<M>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass, internalParticipantConfig);
+            informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
+
             // Get local server object which allows to expose remotely callable methods.
-            server = RSBFactory.getInstance().createSynchronizedLocalServer(scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)));
+            server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
             server.addMethod(RPC_REQUEST_STATUS, new Callback() {
 
                 @Override
                 public Event internalInvoke(Event request) throws Throwable {
-
                     return new Event(messageClass, requestStatus());
                 }
             });
             registerMethods(server);
-            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + scope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
-
+            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
+            initialized = true;
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
@@ -141,6 +232,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private Class<M> detectMessageClass() throws CouldNotPerformException {
         try {
+            @SuppressWarnings("unchecked")
             Class<M> clazz = (Class<M>) dataBuilder.getClass().getEnclosingClass();
             if (clazz == null) {
                 throw new NotAvailableException("message class");
@@ -157,6 +249,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
+        checkInitialization();
         logger.debug("Activate RSBCommunicationService for: " + this);
         informerWatchDog.activate();
         serverWatchDog.activate();
@@ -165,6 +258,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
+        checkInitialization();
         informerWatchDog.deactivate();
         serverWatchDog.deactivate();
         state = ConnectionState.Offline;
@@ -172,9 +266,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     @Override
     public boolean isActive() {
+        try {
+            checkInitialization();
+        } catch (InvalidStateException ex) {
+            return false;
+        }
         return informerWatchDog.isActive() && serverWatchDog.isActive();
     }
 
+    @SuppressWarnings("unchecked")
     public M getData() throws CouldNotPerformException {
         try {
             return (M) cloneDataBuilder().build();
@@ -197,12 +297,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * This method generates a closable data builder wrapper including the
-     * internal builder instance. Be informed that the internal builder is
-     * directly locked and all internal builder operations are queued. In fact
-     * call the close method soon as possible to release the builder lock after
-     * you builder modifications, otherwise the overall processing pipeline is
-     * delayed.
+     * This method generates a closable data builder wrapper including the internal builder instance. Be informed that the internal builder is directly locked and all internal builder operations are
+     * queued. In fact call the close method soon as possible to release the builder lock after you builder modifications, otherwise the overall processing pipeline is delayed.
      *
      *
      * <pre>
@@ -214,8 +310,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      *         throw new CouldNotPerformException("Could not apply data change!", ex);
      *     }
      * }
-     * </pre> In this example the ClosableDataBuilder.close method is be called
-     * in background after leaving the try brackets.
+     * </pre> In this example the ClosableDataBuilder.close method is be called in background after leaving the try brackets.
      *
      * @return a new builder wrapper with a locked builder instance.
      */
@@ -224,18 +319,22 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @Override
-    public Scope getScope() {
+    public Scope getScope() throws NotAvailableException {
+        if (scope == null) {
+            throw new NotAvailableException("scope", new InvalidStateException("communication service not initialized yet!"));
+        }
         return scope;
     }
 
-    
     /**
      * Synchronize all registered remote instances about a data change.
-     * @throws CouldNotPerformException 
+     *
+     * @throws CouldNotPerformException
      */
     @Override
     public void notifyChange() throws CouldNotPerformException {
         logger.debug("Notify change of " + this);
+        checkInitialization();
         if (!informer.isActive()) {
             logger.debug("Skip update notification because connection not established.");
             return;
@@ -284,6 +383,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public ConnectionState getState() {
         return state;
+    }
+
+    private void checkInitialization() throws InvalidStateException {
+        if (!initialized) {
+            throw new InvalidStateException("Communication service not initialized!");
+        }
     }
 
     public M requestStatus() throws CouldNotPerformException {

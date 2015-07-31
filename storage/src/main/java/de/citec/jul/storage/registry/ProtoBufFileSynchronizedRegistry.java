@@ -46,19 +46,27 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
         super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
-        this.idGenerator = idGenerator;
-        this.protobufMessageMap = internalMap;
-        this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
+        try {
+            this.idGenerator = idGenerator;
+            this.protobufMessageMap = internalMap;
+            this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
 
-            @Override
-            public void update(Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
-                ProtoBufFileSynchronizedRegistry.this.update(data);
+                @Override
+                public void update(Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
+                    ProtoBufFileSynchronizedRegistry.this.update(data);
+                }
+            };
+            protobufMessageMap.addObserver(observer);
+
+            if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
+                addPlugin(new GitRegistryPlugin(this));
             }
-        };
-        protobufMessageMap.addObserver(observer);
-        
-        if(JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
-            addPlugin(new GitRegistryPlugin(this));
+            
+            // got error: corrupted double-linked list: 0x00007f178c2a9200
+            // -> may clone each sandbox entry instead of cloning whole collection.
+//            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator));
+        } catch (CouldNotPerformException ex) {
+            throw new InstantiationException(this, ex);
         }
     }
 
@@ -96,7 +104,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public List<M> getMessages() throws CouldNotPerformException {
-        return protobufMessageMap.getMessages();
+        return entryMap.getMessages();
     }
 
     @Override

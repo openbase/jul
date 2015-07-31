@@ -38,8 +38,8 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     private final FileProcessor<VALUE> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
 
-    public FileSynchronizedRegistry(final MAP registry, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        super(registry);
+    public FileSynchronizedRegistry(final MAP entryMap,  final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+        super(entryMap);
         this.databaseDirectory = databaseDirectory;
         this.fileSynchronizerMap = new HashMap<>();
         this.fileProcessor = fileProcessor;

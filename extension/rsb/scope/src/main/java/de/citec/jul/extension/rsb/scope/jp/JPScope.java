@@ -17,6 +17,7 @@ public class JPScope extends AbstractJavaProperty<Scope> {
 
 	public final static String[] COMMAND_IDENTIFIERS = {"-s", "--scope"};
 
+    
 	public JPScope(final String[] commandIdentifiers) {
 		super(commandIdentifiers, commandIdentifiers);
 	}
