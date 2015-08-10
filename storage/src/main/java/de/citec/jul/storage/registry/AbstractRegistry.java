@@ -311,6 +311,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                 while (true) {
 
+                    Thread.yield();
+
                     // handle handler interference
                     if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
                         MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);

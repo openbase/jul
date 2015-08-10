@@ -36,15 +36,15 @@ public class NotAvailableException extends InvalidStateException {
     }
 
     public NotAvailableException(String objectName, String message, Throwable cause) {
-        super(objectName + " is not availabe! " + message, cause);
+        super(objectName + " is not available! " + message, cause);
     }
 
     public NotAvailableException(String objectName, String message) {
-        super(objectName + " is not availabe! " + message);
+        super(objectName + " is not available! " + message);
     }
 
     public NotAvailableException(String objectName) {
-        super(objectName + " is not availabe!");
+        super(objectName + " is not available!");
     }
 
     public NotAvailableException(String message, Throwable cause) {
