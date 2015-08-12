@@ -18,11 +18,11 @@ import java.util.HashMap;
  */
 public class Registry<KEY, VALUE extends Identifiable<KEY>> extends AbstractRegistry<KEY, VALUE, HashMap<KEY, VALUE>, Registry<KEY, VALUE>, RegistryPlugin> {
 
-    public Registry() throws InstantiationException {
-        super(new HashMap<KEY, VALUE>());
+    public Registry(HashMap<KEY, VALUE> entryMap) throws InstantiationException {
+        super(entryMap);
     }
     
-    public Registry(final HashMap<KEY, VALUE> entryMap) throws InstantiationException {
-        super(entryMap);
+    public Registry() throws InstantiationException {
+        super(new HashMap<KEY, VALUE>());
     }
 }
