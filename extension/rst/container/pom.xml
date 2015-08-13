@@ -1,16 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>de.citec</groupId>
-    <artifactId>jul.extension</artifactId>
+    
+    <artifactId>jul.extension.rst.container</artifactId>
     <version>0.2-SNAPSHOT</version>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
-    <name>JUL Extension</name>
+    <name>JUL Extension RST Container</name>
     
     <parent>
         <groupId>de.citec</groupId>
-        <artifactId>jul</artifactId>
+        <artifactId>jul.extension.rst</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>    
     
@@ -33,17 +32,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <modules>
-        <module>protobuf</module>
-        <module>rsb</module>
-        <module>rst</module>
-    </modules>
-    
     <dependencies>
-        <dependency>
-            <groupId>de.citec</groupId>
-            <artifactId>jul.exception</artifactId>
-            <version>0.2-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 </project>

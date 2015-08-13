@@ -2,15 +2,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.citec</groupId>
-    <artifactId>jul.extension</artifactId>
+    <artifactId>jul.extension.rst</artifactId>
     <version>0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
-    <name>JUL Extension</name>
+    <name>JUL Extension RST</name>
     
     <parent>
         <groupId>de.citec</groupId>
-        <artifactId>jul</artifactId>
+        <artifactId>jul.extension</artifactId>
         <version>0.2-SNAPSHOT</version>
     </parent>    
     
@@ -31,15 +31,22 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <global.version.rst.sandbox>0.12-dr-rebuild-SNAPSHOT</global.version.rst.sandbox>
     </properties>
 
     <modules>
-        <module>protobuf</module>
-        <module>rsb</module>
-        <module>rst</module>
+        <module>container</module>
+        <module>processing</module>
+        <module>util</module>
+        <module>interface</module>
     </modules>
     
     <dependencies>
+        <dependency>
+            <groupId>rsb</groupId>
+            <artifactId>rst-sandbox-csra</artifactId>
+            <version>${global.version.rst.sandbox}</version>
+        </dependency>
         <dependency>
             <groupId>de.citec</groupId>
             <artifactId>jul.exception</artifactId>
