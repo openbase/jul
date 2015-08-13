@@ -73,4 +73,24 @@ public class VariableProcessor {
         }
         return context;
     }
+    
+    public static String resolveVariable(final String variable, final Collection<VariableProvider> providers) throws MultiException {
+        VariableProvider[] providerArray = new VariableProvider[providers.size()];
+        return resolveVariable(variable, providers.toArray(providerArray));
+    }
+
+    public static String resolveVariable(final String variable, final VariableProvider... providers) throws MultiException {
+        MultiException.ExceptionStack exceptionStack = null;
+        for (VariableProvider provider : providers) {
+
+            try {
+                return provider.getValue(variable);
+            } catch (NotAvailableException ex) {
+                exceptionStack = MultiException.push(VariableProcessor.class, ex, exceptionStack);
+                continue;
+            }
+        }
+        MultiException.checkAndThrow("Could not resolve Variable[" + variable + "]!", exceptionStack);
+        throw new AssertionError("Fatal error during variable resolving.");
+    }
 }
