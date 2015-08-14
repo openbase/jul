@@ -8,6 +8,7 @@ package de.citec.jul.extension.rst.processing;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotAvailableException;
 import rst.configuration.EntryType;
+import rst.configuration.EntryType.Entry;
 import rst.configuration.MetaConfigType.MetaConfig;
 
 /**
@@ -37,7 +38,21 @@ public class MetaConfigProcessor {
     
     
     public static MetaConfig setValue(final MetaConfig metaConfig, final String key, final String value) throws CouldNotPerformException {
-        //TODO mpohling!!!
-        return metaConfig;
+        return setValue(metaConfig.toBuilder(), key, value).build();
+    }
+    
+    public static MetaConfig.Builder setValue(final MetaConfig.Builder metaConfigBuilder, final String key, final String value) throws CouldNotPerformException {
+        
+        // remove entry if already exist.
+        for (int i = 0; i < metaConfigBuilder.getEntryCount(); i++) {
+            if(metaConfigBuilder.getEntry(i).getKey().equals(key)) {
+                metaConfigBuilder.removeEntry(i);
+                break;
+            }
+        }
+        
+        // add new entry
+        metaConfigBuilder.addEntry(Entry.newBuilder().setKey(key).setValue(value));
+        return metaConfigBuilder;
     }
 }
