@@ -66,5 +66,8 @@ public class FileRegistryPluginAdapter implements FileRegistryPlugin {
     @Override
     public void checkAccess() throws InvalidStateException {
     }
-    
+
+    @Override
+    public void init() throws CouldNotPerformException {
+    }
 }

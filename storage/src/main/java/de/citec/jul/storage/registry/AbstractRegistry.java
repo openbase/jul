@@ -23,6 +23,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -397,7 +398,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    public void addPlugin(P plugin) {
+    public void addPlugin(P plugin) throws CouldNotPerformException {
         pluginList.add(plugin);
+        try {
+            plugin.init();
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not add Plugin["+plugin.getClass().getName()+"] to Registry["+getClass().getSimpleName()+"]", ex);
+        }
     }
 }
