@@ -3,7 +3,6 @@
 
     <groupId>de.citec</groupId>
     <artifactId>jul.extension.rsb</artifactId>
-    <version>0.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>JUL Extension RSB</name>
@@ -11,7 +10,7 @@
     <parent>
         <groupId>de.citec</groupId>
         <artifactId>jul.extension</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.3-SNAPSHOT</version>
     </parent>    
     
     <url>http://maven.apache.org</url>
@@ -29,10 +28,6 @@
         </plugins>
     </build>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <modules>
         <module>com</module>
         <module>container</module>
@@ -46,12 +41,12 @@
         <dependency>
             <groupId>rsb</groupId>
             <artifactId>rsb</artifactId>
-            <version>[0.12,0.13-SNAPSHOT)</version>
+            <version>${global.rsb.version}</version>
         </dependency>
         <dependency>
             <groupId>de.citec</groupId>
             <artifactId>jul.exception</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>
