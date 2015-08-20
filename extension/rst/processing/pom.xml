@@ -2,7 +2,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jul.extension.rst.processing</artifactId>
-    <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>JUL Extension RST Processing</name>
@@ -10,7 +9,7 @@
     <parent>
         <groupId>de.citec</groupId>
         <artifactId>jul.extension.rst</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.3-SNAPSHOT</version>
     </parent>    
     
     <url>http://maven.apache.org</url>
@@ -27,16 +26,12 @@
             </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
     
     <dependencies>
         <dependency>
             <groupId>de.citec</groupId>
             <artifactId>jul.processing</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

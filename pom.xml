@@ -31,7 +31,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <global.version.jps>2.0.1</global.version.jps>
         <global.rst.artifact>rst-sandbox-csra</global.rst.artifact>
-        <global.rst.version>0.12-SNAPSHOT</global.rst.version>
+        <global.rst.sandbox.version>0.12-SNAPSHOT</global.rst.sandbox.version>
+        <global.rst.stable.version>[0.12,0.13-SNAPSHOT)</global.rst.stable.version>
         <global.rsb.version>[0.12,0.13-SNAPSHOT)</global.rsb.version>
     </properties>
 

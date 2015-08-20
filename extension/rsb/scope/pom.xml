@@ -26,17 +26,12 @@
             </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <global.rst.version>0.12-dr-rebuild-SNAPSHOT</global.rst.version>
-    </properties>
     
     <dependencies>
         <dependency>
             <groupId>rsb</groupId>
             <artifactId>rst-sandbox-csra</artifactId>
-            <version>${global.rst.version}</version>
+            <version>${global.rst.sandbox.version}</version>
         </dependency>
         <dependency>
             <groupId>de.citec</groupId>
