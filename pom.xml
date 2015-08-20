@@ -8,7 +8,7 @@
     
     <groupId>de.citec</groupId>
     <artifactId>jul</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <name>JUL</name>
     <description>Java Utility Lib</description>
     
