@@ -2,7 +2,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>jul.extension.rsb.scope</artifactId>
-    <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>JUL Extension RSB Scope</name>
@@ -10,7 +9,7 @@
     <parent>
         <groupId>de.citec</groupId>
         <artifactId>jul.extension.rsb</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.2.0</version>
     </parent>
     
     <url>http://maven.apache.org</url>
@@ -28,25 +27,21 @@
         </plugins>
     </build>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-    
     <dependencies>
         <dependency>
             <groupId>rsb</groupId>
             <artifactId>rst-sandbox-csra</artifactId>
-            <version>[0.12.33,0.13-SNAPSHOT)</version>
+            <version>${global.rst.version}</version>
         </dependency>
         <dependency>
             <groupId>de.citec</groupId>
             <artifactId>jul.exception</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>de.citec</groupId>
             <artifactId>jul.extension.rsb.container</artifactId>
-            <version>0.2-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

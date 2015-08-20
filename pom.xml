@@ -8,7 +8,7 @@
     
     <groupId>de.citec</groupId>
     <artifactId>jul</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2.0</version>
     <name>JUL</name>
     <description>Java Utility Lib</description>
     
@@ -16,12 +16,24 @@
         <name>DC</name>
         <url>https://www.cit-ec.de</url>
     </organization>
+    
     <scm>
         <developerConnection>scm:git:https://projects.cit-ec.uni-bielefeld.de/git/lsp-csra.jul.git</developerConnection>
         <url>https://projects.cit-ec.uni-bielefeld.de/git/lsp-csra.jul.git</url>
     </scm>
     
     <packaging>pom</packaging>
+   
+    <properties>
+        <skipTests>false</skipTests>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <global.version.jps>2.0.1</global.version.jps>
+        <global.rst.artifact>rst-sandbox-csra</global.rst.artifact>
+        <global.rst.version>[0.12.33,0.12.62]</global.rst.version>
+        <global.rsb.version>[0.12,0.13-SNAPSHOT)</global.rsb.version>
+    </properties>
 
     <build>
         <plugins>
