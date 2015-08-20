@@ -3,7 +3,6 @@
 
     <groupId>de.citec</groupId>
     <artifactId>jul.interface</artifactId>
-    <version>0.2-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>JUL Interface</name>
@@ -11,7 +10,7 @@
     <parent>
         <groupId>de.citec</groupId>
         <artifactId>jul</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.2.0</version>
     </parent>    
     
     <url>http://maven.apache.org</url>
@@ -29,15 +28,11 @@
         </plugins>
     </build>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-    
     <dependencies>
-		<dependency>
-			<groupId>de.citec</groupId>
-			<artifactId>jul.exception</artifactId>
-			<version>0.2-SNAPSHOT</version>
-		</dependency>
+        <dependency>
+            <groupId>de.citec</groupId>
+            <artifactId>jul.exception</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
