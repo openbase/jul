@@ -293,7 +293,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     protected BuilderSyncSetup<MB> getBuilderSetup() {
-        return new BuilderSyncSetup<MB>(dataBuilder, dataBuilderReadLock, dataBuilderWriteLock, this);
+        return new BuilderSyncSetup<>(dataBuilder, dataBuilderReadLock, dataBuilderWriteLock, this);
     }
 
     /**
@@ -312,10 +312,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * }
      * </pre> In this example the ClosableDataBuilder.close method is be called in background after leaving the try brackets.
      *
+     * @param consumer
      * @return a new builder wrapper with a locked builder instance.
      */
     public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
-        return new ClosableDataBuilder<MB>(getBuilderSetup(), consumer);
+        return new ClosableDataBuilder<>(getBuilderSetup(), consumer);
     }
 
     @Override

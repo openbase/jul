@@ -29,7 +29,7 @@
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <global.version.jps>2.0.1</global.version.jps>
+        <global.version.jps>2.2.0</global.version.jps>
         <global.rst.artifact>rst-sandbox-csra</global.rst.artifact>
         <global.rst.sandbox.version>0.12-SNAPSHOT</global.rst.sandbox.version>
         <global.rst.stable.version>[0.12,0.13-SNAPSHOT)</global.rst.stable.version>
