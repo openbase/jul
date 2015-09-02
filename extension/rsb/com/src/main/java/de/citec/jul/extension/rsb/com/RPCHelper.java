@@ -79,18 +79,18 @@ public class RPCHelper {
     }
 
     public static Future callRemoteMethod(final RSBRemoteService remote) throws CouldNotPerformException {
-        return callRemoteMethod(null, Object.class, remote);
+        return callRemoteMethod(null, remote, Object.class);
     }
 
     public static Future callRemoteMethod(final Object argument, final RSBRemoteService remote) throws CouldNotPerformException {
-        return callRemoteMethod(argument, Object.class, remote);
+        return callRemoteMethod(argument, remote, Object.class);
     }
 
-    public static <RETURN> Future<RETURN> callRemoteMethod(final Class<? extends RETURN> returnClass, final RSBRemoteService remote) throws CouldNotPerformException {
-        return callRemoteMethod(null, returnClass, remote);
+    public static <RETURN> Future<RETURN> callRemoteMethod(final RSBRemoteService remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
+        return callRemoteMethod(null, remote, returnClass);
     }
 
-    public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final Class<? extends RETURN> returnClass, final RSBRemoteService remote) throws CouldNotPerformException {
+    public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         try {
             StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
             if (stackTrace == null) {
