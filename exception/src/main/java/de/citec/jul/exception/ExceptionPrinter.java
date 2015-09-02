@@ -97,6 +97,6 @@ public class ExceptionPrinter {
 
     public static String getHistory(final Throwable th) {
         // TODO:mpohling implement!
-        throw new UnsupportedOperationException("not yet implemented");
+        return "Test";
     }
 }

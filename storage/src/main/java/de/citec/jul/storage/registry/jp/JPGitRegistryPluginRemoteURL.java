@@ -5,13 +5,13 @@
  */
 package de.citec.jul.storage.registry.jp;
 
-import de.citec.jps.preset.AbstractJPString;
+import de.citec.jps.preset.AbstractJPMapStringString;
 
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  */
-public class JPGitRegistryPluginRemoteURL extends AbstractJPString {
+public class JPGitRegistryPluginRemoteURL extends AbstractJPMapStringString {
 
     public static final String[] COMMAND_IDENTIFIERS = {"--git-remote-url"};
 
@@ -21,12 +21,6 @@ public class JPGitRegistryPluginRemoteURL extends AbstractJPString {
 
     @Override
     public String getDescription() {
-        return "Activates the git registry plugin to support database versioning and use the given repository url as origin.";
+        return "Activates the git registry plugin to support database versioning and use the given remote urls as origin repository.";
     }
-
-    @Override
-    protected String getPropertyDefaultValue() {
-        return "";
-    }
-
 }

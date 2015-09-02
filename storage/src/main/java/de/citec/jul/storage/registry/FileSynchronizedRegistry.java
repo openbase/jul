@@ -18,10 +18,12 @@ import de.citec.jul.exception.MultiException.ExceptionStack;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.processing.FileProcessor;
-import de.citec.jul.storage.jp.JPInitializeDB;
+import de.citec.jul.storage.registry.jp.JPInitializeDB;
+import de.citec.jul.storage.registry.jp.JPResetDB;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -38,12 +40,29 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     private final FileProcessor<VALUE> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
 
-    public FileSynchronizedRegistry(final MAP entryMap,  final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
         super(entryMap);
-        this.databaseDirectory = databaseDirectory;
-        this.fileSynchronizerMap = new HashMap<>();
-        this.fileProcessor = fileProcessor;
-        this.fileProvider = fileProvider;
+        try {
+            this.databaseDirectory = databaseDirectory;
+            this.fileSynchronizerMap = new HashMap<>();
+            this.fileProcessor = fileProcessor;
+            this.fileProvider = fileProvider;
+            this.prepareDB();
+        } catch (CouldNotPerformException ex) {
+            throw new InstantiationException(this, ex);
+        }
+    }
+
+    private void prepareDB() throws CouldNotPerformException {
+        // clear db if reset property is set.
+        if (JPService.getProperty(JPResetDB.class).getValue()) {
+            try {
+                FileUtils.deleteDirectory(databaseDirectory);
+                FileUtils.forceMkdir(databaseDirectory);
+            } catch (Exception ex) {
+                throw new CouldNotPerformException("Could not reset db!", ex);
+            }
+        }
     }
 
     @Override
@@ -187,7 +206,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
         try {
             saveRegistry();
         } catch (MultiException ex) {
-            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Final save failed!", ex));
+            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Final save failed!", ex));
         }
 
         fileSynchronizerMap.clear();

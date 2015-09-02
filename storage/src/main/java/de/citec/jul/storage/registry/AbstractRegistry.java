@@ -20,10 +20,10 @@ import de.citec.jul.pattern.Observable;
 import de.citec.jul.schedule.SyncObject;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -392,6 +392,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             clear();
             sandbox.clear();
+            for (P plugin : pluginList) {
+                plugin.shutdown();
+            }
             pluginList.clear();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(logger, ex);
@@ -405,5 +408,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not add Plugin["+plugin.getClass().getName()+"] to Registry["+getClass().getSimpleName()+"]", ex);
         }
+    }
+    
+    @Override
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }
