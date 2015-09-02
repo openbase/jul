@@ -79,18 +79,22 @@ public class RPCHelper {
     }
 
     public static Future callRemoteMethod(final RSBRemoteService remote) throws CouldNotPerformException {
-        return callRemoteMethod(null, remote, Object.class);
+        return callRemoteMethod(null, remote, Object.class, 3);
     }
 
     public static Future callRemoteMethod(final Object argument, final RSBRemoteService remote) throws CouldNotPerformException {
-        return callRemoteMethod(argument, remote, Object.class);
+        return callRemoteMethod(argument, remote, Object.class, 3);
     }
 
     public static <RETURN> Future<RETURN> callRemoteMethod(final RSBRemoteService remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
-        return callRemoteMethod(null, remote, returnClass);
+        return callRemoteMethod(null, remote, returnClass, 3);
     }
 
     public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
+        return callRemoteMethod(argument, remote, returnClass, 3);
+    }
+    
+    private static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass, int methodStackDepth) throws CouldNotPerformException {
         try {
             StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
             if (stackTrace == null) {
@@ -100,7 +104,7 @@ public class RPCHelper {
             }
             String methodName;
             try {
-                methodName = stackTrace[2].getMethodName();
+                methodName = stackTrace[methodStackDepth].getMethodName();
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not detect method name!");
             }

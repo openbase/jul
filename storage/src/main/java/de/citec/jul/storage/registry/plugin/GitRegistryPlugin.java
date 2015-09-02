@@ -15,6 +15,7 @@ import de.citec.jul.storage.registry.FileSynchronizedRegistry;
 import java.io.File;
 import java.io.IOException;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -35,31 +36,41 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
             this.registry = registry;
             this.repository = detectRepository(registry.getDatabaseDirectory());
             this.git = new Git(repository);
-
+            this.initialSync();
         } catch (Exception ex) {
             throw new de.citec.jul.exception.InstantiationException(this, ex);
+        }
+    }
+    
+    private void initialSync() throws CouldNotPerformException {
+        try {
+            this.git.pull().call().isSuccessful();
+        } catch (GitAPIException ex) {
+            throw new CouldNotPerformException("Initial sync failed!", ex);
         }
     }
 
     private Repository detectRepository(final File databaseDirectory) throws CouldNotPerformException {
         try {
-            Repository repository;
+            Repository repo;
             try {
                 FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder().findGitDir(databaseDirectory);
 
                 if (repositoryBuilder.getGitDir() == null) {
                     throw new NotAvailableException("git repository");
                 }
-                repository = repositoryBuilder.build();
+                repo = repositoryBuilder.build();
 
             } catch (IOException | CouldNotPerformException | NullPointerException ex) {
 
+                
+                
                 if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
                     throw ex;
                 }
-                repository = new FileRepositoryBuilder().create(databaseDirectory);
+                repo = FileRepositoryBuilder.create(databaseDirectory);
             }
-            return repository;
+            return repo;
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not detect git repo of Directory[" + databaseDirectory.getAbsolutePath() + "]!", ex);
         }
