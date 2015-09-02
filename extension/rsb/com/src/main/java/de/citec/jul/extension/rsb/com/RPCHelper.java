@@ -78,19 +78,19 @@ public class RPCHelper {
         }
     }
 
-    public static <RETURN> Future<RETURN> callRemoteMethod(final Class<? extends RETURN> returnClass, final RSBRemoteService remote) throws CouldNotPerformException {
-        return (Future<RETURN>) callRemoteMethod(remote);
-    }
-    
-    public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final Class<? extends RETURN> returnClass, final RSBRemoteService remote) throws CouldNotPerformException {
-        return (Future<RETURN>) callRemoteMethod(argument, remote);
-    }
-    
     public static Future callRemoteMethod(final RSBRemoteService remote) throws CouldNotPerformException {
-        return callRemoteMethod(null, remote);
+        return callRemoteMethod(null, Object.class, remote);
     }
-    
+
     public static Future callRemoteMethod(final Object argument, final RSBRemoteService remote) throws CouldNotPerformException {
+        return callRemoteMethod(argument, Object.class, remote);
+    }
+
+    public static <RETURN> Future<RETURN> callRemoteMethod(final Class<? extends RETURN> returnClass, final RSBRemoteService remote) throws CouldNotPerformException {
+        return callRemoteMethod(null, returnClass, remote);
+    }
+
+    public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final Class<? extends RETURN> returnClass, final RSBRemoteService remote) throws CouldNotPerformException {
         try {
             StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
             if (stackTrace == null) {
@@ -105,7 +105,7 @@ public class RPCHelper {
                 throw new CouldNotPerformException("Could not detect method name!");
             }
             System.out.println("Call " + stackTrace[2].getMethodName());
-            return remote.callMethodAsync(methodName, argument);
+            return (Future<RETURN>) remote.callMethodAsync(methodName, argument);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call remote Message[]", ex);
         }
