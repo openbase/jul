@@ -227,11 +227,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     public Object callMethod(String methodName) throws CouldNotPerformException {
-        return callMethod(methodName, null);
+        return callMethod(methodName, new Event(Void.class, null));
     }
 
     public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException {
-        return callMethodAsync(methodName, null);
+        return callMethodAsync(methodName, new Event(Void.class, null));
     }
 
     public final static double START_TIMEOUT = 2;
@@ -271,7 +271,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
         try {
             logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
-            checkInitialization();
+            checkInitialization();            
             return remoteServer.callAsync(methodName, type);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);

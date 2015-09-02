@@ -11,8 +11,6 @@ import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.extension.rsb.iface.RSBLocalServerInterface;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.TypeVariable;
 import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +24,8 @@ import rsb.patterns.LocalServer;
  * @author mpohling
  */
 public class RPCHelper {
+
+    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
 
     public static <T> void registerInterface(final Class<T> interfaceClass, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
@@ -93,8 +93,9 @@ public class RPCHelper {
     public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         return callRemoteMethod(argument, remote, returnClass, 3);
     }
-    
+
     private static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass, int methodStackDepth) throws CouldNotPerformException {
+
         try {
             StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
             if (stackTrace == null) {
@@ -108,7 +109,10 @@ public class RPCHelper {
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not detect method name!");
             }
-            System.out.println("Call " + stackTrace[2].getMethodName());
+            logger.debug("Call " + stackTrace[2].getMethodName());
+            if (argument == null) {
+                return (Future<RETURN>) remote.callMethodAsync(methodName);
+            }
             return (Future<RETURN>) remote.callMethodAsync(methodName, argument);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call remote Message[]", ex);
