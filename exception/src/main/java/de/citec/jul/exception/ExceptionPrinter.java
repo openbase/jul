@@ -26,12 +26,12 @@ public class ExceptionPrinter {
      * @param th exception stack to print.
      * @return the related Throwable returned for further exception handling.
      */
-    public static <T extends Throwable>  T printHistoryAndReturnThrowable(final Logger logger, final T th) {
+    public static <T extends Throwable> T printHistoryAndReturnThrowable(final Logger logger, final T th) {
         printHistoryAndReturnThrowable(logger, th, "");
         logger.error("=====================================");
         return th;
     }
-    
+
     /**
      * Print Exception messages without strack trace in non debug mode. Methode
      * prints recusive all messages of the given exception stack to get a
@@ -70,11 +70,11 @@ public class ExceptionPrinter {
             }
             internalThrowable = internalThrowable.getCause();
         }
-        
+
         // Print normal stacktrace in verbose mode.
         if (logger.isDebugEnabled() || JPService.getProperty(JPVerbose.class).getValue()) {
             logger.error(buildPrefix(prefix) + "=====================================");
-            logger.error(buildPrefix(prefix)+removeNewLines(th.getMessage()), th);
+            logger.error(buildPrefix(prefix) + removeNewLines(th.getMessage()), th);
             logger.error(buildPrefix(prefix) + "=====================================");
             return th;
         }
@@ -93,5 +93,10 @@ public class ExceptionPrinter {
             return "null";
         }
         return message.replaceAll("\n", "").trim();
-    }   
+    }
+
+    public static String getHistory(final Throwable th) {
+        // TODO:mpohling implement!
+        throw new UnsupportedOperationException("not yet implemented");
+    }
 }
