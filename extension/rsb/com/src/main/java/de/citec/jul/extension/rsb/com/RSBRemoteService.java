@@ -227,11 +227,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     public Object callMethod(String methodName) throws CouldNotPerformException {
-        return callMethod(methodName, new Event(Void.class, null));
+        return callMethod(methodName, null);
     }
 
     public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException {
-        return callMethodAsync(methodName, new Event(Void.class, null));
+        return callMethodAsync(methodName, null);
     }
 
     public final static double START_TIMEOUT = 2;
@@ -270,8 +270,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
         try {
-            logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
-            checkInitialization();            
+            logger.info("Calling method [" + methodName + "(" + (type != null ? type.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
+            checkInitialization();
             return remoteServer.callAsync(methodName, type);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
@@ -283,8 +283,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     /**
-     * Triggers a server - remote data sync and returns the new acquired data. All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
-     * changes, you can use this method to get instantly a data object with all applied changes.
+     * Triggers a server - remote data sync and returns the new acquired data.
+     * All server data changes are synchronized automatically to all remote
+     * instances. In case you have triggered many server changes, you can use
+     * this method to get instantly a data object with all applied changes.
      *
      * Note: This method blocks until the new data is acquired!
      *

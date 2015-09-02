@@ -47,9 +47,13 @@ public class RPCHelper {
                             returnType = Void.class;
                         }
 
-                        return new Event(returnType, methode.invoke(instance, event.getData()));
+                        if (event.getData() == null) {
+                            return new Event(returnType, methode.invoke(instance));
+                        } else {
+                            return new Event(returnType, methode.invoke(instance, event.getData()));
+                        }
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method[" + methode.getName() + "(" + event.getData() + ")]!", ex));
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method[" + methode.getName() + "(" + eventDataToString(event) + ")]!", ex));
                     }
                 }
             });
@@ -69,9 +73,14 @@ public class RPCHelper {
                         if (event == null) {
                             throw new NotAvailableException("event");
                         }
-                        return new Event(methode.getReturnType(), methode.invoke(instance, event.getData()));
+
+                        if (event.getData() == null) {
+                            return new Event(methode.getReturnType(), methode.invoke(instance));
+                        } else {
+                            return new Event(methode.getReturnType(), methode.invoke(instance, event.getData()));
+                        }
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method[" + methode.getName() + "(" + event.getData() + ")]!", ex));
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method[" + methode.getName() + "(" + eventDataToString(event) + ")]!", ex));
                     }
                 }
             });
@@ -117,5 +126,12 @@ public class RPCHelper {
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call remote Message[]", ex);
         }
+    }
+
+    private static String eventDataToString(Event event) {
+        if (event.getData() == null) {
+            return "";
+        }
+        return event.getData().toString();
     }
 }
