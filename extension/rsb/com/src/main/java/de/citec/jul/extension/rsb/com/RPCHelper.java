@@ -15,9 +15,7 @@ import java.util.concurrent.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
-import rsb.RSBException;
 import rsb.patterns.Callback;
-import rsb.patterns.LocalServer;
 
 /**
  *
@@ -30,9 +28,9 @@ public class RPCHelper {
     public static <T> void registerInterface(final Class<T> interfaceClass, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
 
-        for (final Method methode : interfaceClass.getMethods()) {
-            logger.info("Register Method[" + methode.getName() + "] on Scope[" + server.getScope() + "].");
-            server.addMethod(methode.getName(), new Callback() {
+        for (final Method method : interfaceClass.getMethods()) {
+            logger.info("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
+            server.addMethod(method.getName(), new Callback() {
 
                 @Override
                 public Event internalInvoke(final Event event) throws Throwable {
@@ -40,47 +38,24 @@ public class RPCHelper {
                         if (event == null) {
                             throw new NotAvailableException("event");
                         }
-
-                        Class<?> returnType = methode.getReturnType();
-
-                        if (returnType.isAssignableFrom(Future.class)) {
-                            returnType = Void.class;
-                        }
-
+                        
+                        Object result;
+                        
                         if (event.getData() == null) {
-                            return new Event(returnType, methode.invoke(instance));
+                            result = method.invoke(instance);
                         } else {
-                            return new Event(returnType, methode.invoke(instance, event.getData()));
+                            result = method.invoke(instance, event.getData());
                         }
+
+                        // Implementation of Future support by resolving result.
+                        if(result instanceof Future) {
+                            result = ((Future) result).get();
+                        }
+                        
+                        return new Event(result.getClass(), result);
+                        
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method[" + methode.getName() + "(" + eventDataToString(event) + ")]!", ex));
-                    }
-                }
-            });
-        }
-    }
-
-    public static <T> void registerInterface(final Class<T> interfaceClass, final T instance, final LocalServer server) throws RSBException {
-        final Logger logger = LoggerFactory.getLogger(instance.getClass());
-
-        for (final Method methode : interfaceClass.getMethods()) {
-            logger.info("Register Method[" + methode.getName() + "] on Scope[" + server.getScope() + "].");
-            server.addMethod(methode.getName(), new Callback() {
-
-                @Override
-                public Event internalInvoke(final Event event) throws Throwable {
-                    try {
-                        if (event == null) {
-                            throw new NotAvailableException("event");
-                        }
-
-                        if (event.getData() == null) {
-                            return new Event(methode.getReturnType(), methode.invoke(instance));
-                        } else {
-                            return new Event(methode.getReturnType(), methode.invoke(instance, event.getData()));
-                        }
-                    } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method[" + methode.getName() + "(" + eventDataToString(event) + ")]!", ex));
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not invoke Method[" + method.getName() + "(" + eventDataToString(event) + ")]!", ex));
                     }
                 }
             });
@@ -117,10 +92,6 @@ public class RPCHelper {
                 methodName = stackTrace[methodStackDepth].getMethodName();
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not detect method name!");
-            }
-            logger.debug("Call " + stackTrace[2].getMethodName());
-            if (argument == null) {
-                return (Future<RETURN>) remote.callMethodAsync(methodName);
             }
             return (Future<RETURN>) remote.callMethodAsync(methodName, argument);
         } catch (Exception ex) {

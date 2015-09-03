@@ -77,7 +77,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
                 // === load git out of remote url === //
                 Map<String, String> remoteRepositoryMap = JPService.getProperty(JPGitRegistryPluginRemoteURL.class).getValue();
 
-                if (remoteRepositoryMap.containsKey(registry.getName())) {
+                if (remoteRepositoryMap.containsKey(registry.getName()) && !remoteRepositoryMap.get(registry.getName()).isEmpty()) {
                     logger.info("Cloning git repository from " + remoteRepositoryMap.get(registry.getName()) + " into db Directory[" + databaseDirectory + "] ...");
                     return Git.cloneRepository().setURI(remoteRepositoryMap.get(registry.getName())).setDirectory(databaseDirectory).call();
                 }

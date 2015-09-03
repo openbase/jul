@@ -27,12 +27,14 @@ import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Activatable;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 import rst.rsb.ScopeType;
 
 /**
@@ -94,10 +96,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
 
             ParticipantConfig internalParticipantConfig = participantConfig;
+            
+            // activate inprocess communication for junit tests.
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
-                internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
-                internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
+                for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
+                    transport.getValue().setEnabled(false);
+                }
+                internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
             }
 
             if (scope == null) {
@@ -283,10 +288,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     /**
-     * Triggers a server - remote data sync and returns the new acquired data.
-     * All server data changes are synchronized automatically to all remote
-     * instances. In case you have triggered many server changes, you can use
-     * this method to get instantly a data object with all applied changes.
+     * Triggers a server - remote data sync and returns the new acquired data. All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
+     * changes, you can use this method to get instantly a data object with all applied changes.
      *
      * Note: This method blocks until the new data is acquired!
      *
@@ -401,12 +404,3 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 }
-
-// TODO mpohling: Config for test setup.
-//        ParticipantConfig config = rsb.Factory.getInstance().getDefaultParticipantConfig();
-//        
-//        for (Map.Entry<String,TransportConfig> transport : config.getTransports().entrySet()) {
-//            transport.getValue().setEnabled(false);
-//        }
-//        config.getTransports().get("inmemory").setEnabled(true);
-//        Informer informer = rsb.Factory.getInstance().createInformer(new Scope("/"), config);
