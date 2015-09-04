@@ -101,9 +101,4 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         }
         return messageList;
     }
-
-    @Override
-    public boolean isReadOnly() {
-        return true;
-    }
 }

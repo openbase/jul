@@ -5,6 +5,7 @@
  */
 package de.citec.jul.storage.registry.jp;
 
+import de.citec.jps.core.JPService;
 import de.citec.jps.preset.AbstractJPBoolean;
 
 /**
@@ -22,6 +23,11 @@ public class JPGitRegistryPlugin extends AbstractJPBoolean {
     @Override
     public String getDescription() {
         return "Activates the git registry plugin to support database versioning.";
+    }
+
+    @Override
+    public Boolean getDefaultValue() {
+        return !JPService.getProperty(JPGitRegistryPluginRemoteURL.class).getValue().isEmpty() || super.getDefaultValue();
     }
 
 }

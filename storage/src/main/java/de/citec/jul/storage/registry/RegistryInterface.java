@@ -19,6 +19,8 @@ import java.util.List;
  */
 public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, R extends RegistryInterface<KEY, VALUE, R>> {
 
+    public String getName();    
+    
     public VALUE register(final VALUE entry) throws CouldNotPerformException;
 
     public VALUE update(final VALUE entry) throws CouldNotPerformException;
@@ -40,5 +42,6 @@ public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, R exten
     public int size();
 
     public boolean isReadOnly();
+    
     
 }

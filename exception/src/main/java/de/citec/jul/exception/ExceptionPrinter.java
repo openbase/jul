@@ -272,4 +272,9 @@ public class ExceptionPrinter {
         }
         return message.replaceAll("\n", "").trim();
     }
+
+    public static String getHistory(final Throwable th) {
+        // TODO:mpohling implement!
+        return "Test";
+    }
 }

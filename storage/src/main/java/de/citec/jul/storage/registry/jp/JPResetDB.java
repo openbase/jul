@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.storage.jp;
+package de.citec.jul.storage.registry.jp;
 
 import de.citec.jps.core.AbstractJavaProperty.ValueType;
 import de.citec.jps.core.JPService;
-import de.citec.jps.exception.ValidationException;
+import de.citec.jps.exception.JPValidationException;
 import de.citec.jps.preset.AbstractJPBoolean;
 import de.citec.jps.preset.JPTestMode;
 import java.io.IOException;
@@ -16,11 +16,11 @@ import java.io.IOException;
  *
  * @author mpohling
  */
-public class JPInitializeDB extends AbstractJPBoolean {
+public class JPResetDB extends AbstractJPBoolean {
 
-    public final static String[] COMMAND_IDENTIFIERS = {"--init"};
+    public final static String[] COMMAND_IDENTIFIERS = {"--reset"};
 
-    public JPInitializeDB() {
+    public JPResetDB() {
         super(COMMAND_IDENTIFIERS);
     }
     
@@ -30,7 +30,7 @@ public class JPInitializeDB extends AbstractJPBoolean {
     }
 
     @Override
-    public void validate() throws ValidationException {
+    public void validate() throws JPValidationException {
         super.validate();
         if (getValueType().equals((ValueType.CommandLine))) {
             logger.warn("WARNING: OVERWRITING CURRENT DATABASE!!!");
@@ -38,10 +38,10 @@ public class JPInitializeDB extends AbstractJPBoolean {
                 logger.warn("=== Type y and press enter to contine ===");
                 try {
                     if(!(System.in.read() == 'y')) {
-                        throw new ValidationException("Execution aborted by user!");
+                        throw new JPValidationException("Execution aborted by user!");
                     }
                 } catch (IOException ex) {
-                    throw new ValidationException("Validation failed because of invalid input state!", ex);
+                    throw new JPValidationException("Validation failed because of invalid input state!", ex);
                 }
             }
         }
@@ -49,6 +49,6 @@ public class JPInitializeDB extends AbstractJPBoolean {
 
     @Override
     public String getDescription() {
-        return "Initialize a new instance of the interal database.";
+        return "Reset the internal database.";
     }
 }

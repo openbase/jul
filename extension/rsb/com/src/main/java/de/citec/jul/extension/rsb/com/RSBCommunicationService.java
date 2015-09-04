@@ -24,6 +24,7 @@ import de.citec.jul.iface.Activatable;
 import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Changeable;
 import de.citec.jul.schedule.WatchDog;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 import rsb.patterns.Callback;
 import rst.rsb.ScopeType;
 
@@ -194,10 +196,13 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
 
         ParticipantConfig internalParticipantConfig = participantConfig;
+        
+        // activate inprocess communication for junit tests.
         if (JPService.getProperty(JPTestMode.class).getValue()) {
-            internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
-            internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
-            internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
+            for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
+                transport.getValue().setEnabled(false);
+            }
+            internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
         }
 
         try {

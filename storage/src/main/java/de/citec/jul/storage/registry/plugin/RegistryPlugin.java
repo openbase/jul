@@ -14,4 +14,6 @@ import de.citec.jul.exception.CouldNotPerformException;
 public interface RegistryPlugin {
 
     public void init() throws CouldNotPerformException;
+    
+    public void shutdown();
 }

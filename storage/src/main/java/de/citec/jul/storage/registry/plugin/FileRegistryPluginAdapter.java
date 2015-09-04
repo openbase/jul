@@ -70,4 +70,8 @@ public class FileRegistryPluginAdapter implements FileRegistryPlugin {
     @Override
     public void init() throws CouldNotPerformException {
     }
+
+    @Override
+    public void shutdown() {
+    }
 }
