@@ -5,7 +5,7 @@
  */
 package de.citec.jul.processing;
 
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
 import java.util.Collection;

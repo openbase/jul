@@ -64,9 +64,9 @@ public class MultiException extends CouldNotPerformException {
     public static class SourceExceptionEntry {
 
         private final Object source;
-        private final Exception exception;
+        private final Throwable exception;
 
-        public SourceExceptionEntry(Object source, Exception exception) {
+        public SourceExceptionEntry(Object source, Throwable exception) {
             this.source = source;
             this.exception = exception;
         }
@@ -75,7 +75,7 @@ public class MultiException extends CouldNotPerformException {
             return source;
         }
 
-        public Exception getException() {
+        public Throwable getException() {
             return exception;
         }
     }

@@ -1,6 +1,8 @@
 package de.citec.jul.exception;
 
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.MultiException.ExceptionStack;
+import de.citec.jul.exception.printer.LogLevel;
 import java.util.logging.Level;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -42,8 +44,9 @@ public class ExceptionPrinterTest {
     public void testPrintHistory() {
         System.out.println("printHistory");
         Logger logger = LoggerFactory.getLogger(ExceptionPrinterTest.class);
-        
+
         ExceptionStack stack = null;
+        ExceptionStack stack2 = null;
 
         Exception ex1 = new CouldNotPerformException("No Way 1");
         Exception ex2 = new CouldNotPerformException("No Way 2", ex1);
@@ -53,7 +56,7 @@ public class ExceptionPrinterTest {
         Exception ex6 = new CouldNotPerformException("No Way 6", ex5);
         Exception ex7 = new CouldNotPerformException("No Way 7", ex6);
 
-
+        Exception baseException1 = new CouldNotPerformException("Base Exception", ex7);
         stack = MultiException.push(this, ex1, stack);
         stack = MultiException.push(this, ex2, stack);
         stack = MultiException.push(this, ex3, stack);
@@ -61,16 +64,34 @@ public class ExceptionPrinterTest {
         stack = MultiException.push(this, ex5, stack);
         stack = MultiException.push(this, ex6, stack);
         stack = MultiException.push(this, ex7, stack);
+        stack = MultiException.push(this, baseException1, stack);
+
+        ExceptionPrinter.printHistory(baseException1, logger, LogLevel.ERROR);
+
+        stack2 = MultiException.push(this, ex5, stack2);
+        stack2 = MultiException.push(this, ex6, stack2);
+        stack2 = MultiException.push(this, ex7, stack2);
+        stack2 = MultiException.push(this, baseException1, stack2);
 
         try {
-            MultiException.checkAndThrow("Multi Exception", stack);
+            MultiException.checkAndThrow("Multi Exception 1", stack);
         } catch (MultiException ex) {
-            ExceptionPrinter.printHistory(logger, ex);
+            stack2 = MultiException.push(this, ex, stack2);
+            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
         }
 
-        Throwable th1 = new CouldNotPerformException("No Way", ex7);
+        stack2 = MultiException.push(this, ex1, stack2);
+        stack2 = MultiException.push(this, ex2, stack2);
+        stack2 = MultiException.push(this, ex3, stack2);
+        stack2 = MultiException.push(this, ex4, stack2);
 
-        ExceptionPrinter.printHistory(logger, th1);
+        try {
+            MultiException.checkAndThrow("Multi Exception 2", stack2);
+        } catch (MultiException ex) {
+            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
+            System.out.println("Test getHistory:");
+            System.out.println(ExceptionPrinter.getHistory(ex));
+        }
     }
 
     @Override

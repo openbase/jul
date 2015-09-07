@@ -6,7 +6,7 @@
 package de.citec.jul.extension.rsb.com;
 
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.extension.rsb.iface.RSBLocalServerInterface;
