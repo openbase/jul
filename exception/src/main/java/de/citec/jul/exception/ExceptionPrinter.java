@@ -20,7 +20,7 @@ public class ExceptionPrinter {
      * @deprecated please use de.citec.jul.exception.printer.ExceptionPrinter instead!
      */
     @Deprecated
-    public static <T extends Throwable> T printHistoryAndReturnThrowableprintHistoryAndReturnThrowable(final Logger logger, final T th) {
+    public static <T extends Throwable> T printHistoryAndReturnThrowable(final Logger logger, final T th) {
         return de.citec.jul.exception.printer.ExceptionPrinter.printHistoryAndReturnThrowable(th, logger, LogLevel.ERROR);
     }
 
