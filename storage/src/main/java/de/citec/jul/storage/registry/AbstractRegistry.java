@@ -9,7 +9,7 @@ import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPReadOnly;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
@@ -20,6 +20,7 @@ import de.citec.jul.pattern.Observable;
 import de.citec.jul.schedule.SyncObject;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -391,13 +392,31 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             clear();
             sandbox.clear();
+            for (P plugin : pluginList) {
+                plugin.shutdown();
+            }
             pluginList.clear();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(logger, ex);
         }
     }
 
-    public void addPlugin(P plugin) {
+    public void addPlugin(P plugin) throws CouldNotPerformException {
         pluginList.add(plugin);
+        try {
+            plugin.init();
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not add Plugin["+plugin.getClass().getName()+"] to Registry["+getClass().getSimpleName()+"]", ex);
+        }
+    }
+    
+    @Override
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

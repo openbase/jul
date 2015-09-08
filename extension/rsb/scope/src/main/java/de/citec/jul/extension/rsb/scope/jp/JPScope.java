@@ -16,15 +16,14 @@ import rsb.Scope;
 public class JPScope extends AbstractJavaProperty<Scope> {
 
 	public final static String[] COMMAND_IDENTIFIERS = {"-s", "--scope"};
-
-    
-	public JPScope(final String[] commandIdentifiers) {
-		super(commandIdentifiers, commandIdentifiers);
-	}
     
 	public JPScope() {
 		super(COMMAND_IDENTIFIERS);
 	}
+    
+	public JPScope(String[] commandIdentifiers) {
+        super(commandIdentifiers);
+    }
     
     @Override
     protected Scope getPropertyDefaultValue() {
@@ -43,8 +42,7 @@ public class JPScope extends AbstractJavaProperty<Scope> {
 
     @Override
     protected String[] generateArgumentIdentifiers() {
-        String[] args = new String[1];
-        args[0] = "SCOPE";
+        String[] args = {"SCOPE"};
         return args;
     }
 }

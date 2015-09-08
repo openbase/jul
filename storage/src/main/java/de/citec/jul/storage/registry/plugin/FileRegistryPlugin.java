@@ -5,7 +5,6 @@
  */
 package de.citec.jul.storage.registry.plugin;
 
-import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.storage.file.FileSynchronizer;

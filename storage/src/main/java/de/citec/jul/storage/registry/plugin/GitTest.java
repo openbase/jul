@@ -13,8 +13,7 @@ import org.eclipse.jgit.lib.Repository;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
- * Threepwood</a>
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public class GitTest {
 
@@ -22,7 +21,7 @@ public class GitTest {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
-        System.out.println("is tag:"+isTag(getHead(new FileRepository("/home/divine/tmp/testgit/.git"))));
+        System.out.println("is tag:" + isTag(getHead(new FileRepository("/home/divine/tmp/testgit/.git"))));
     }
 
     private static Ref getHead(final Repository repository) throws IOException {

@@ -14,7 +14,7 @@ import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.CouldNotTransformException;
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
@@ -27,12 +27,14 @@ import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Activatable;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 import rst.rsb.ScopeType;
 
 /**
@@ -94,10 +96,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
 
             ParticipantConfig internalParticipantConfig = participantConfig;
+            
+            // activate inprocess communication for junit tests.
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
-                internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
-                internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
+                for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
+                    transport.getValue().setEnabled(false);
+                }
+                internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
             }
 
             if (scope == null) {
@@ -270,7 +275,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
         try {
-            logger.info("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
+            logger.info("Calling method [" + methodName + "(" + (type != null ? type.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
             checkInitialization();
             return remoteServer.callAsync(methodName, type);
         } catch (CouldNotPerformException ex) {
@@ -399,12 +404,3 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 }
-
-// TODO mpohling: Config for test setup.
-//        ParticipantConfig config = rsb.Factory.getInstance().getDefaultParticipantConfig();
-//        
-//        for (Map.Entry<String,TransportConfig> transport : config.getTransports().entrySet()) {
-//            transport.getValue().setEnabled(false);
-//        }
-//        config.getTransports().get("inmemory").setEnabled(true);
-//        Informer informer = rsb.Factory.getInstance().createInformer(new Scope("/"), config);

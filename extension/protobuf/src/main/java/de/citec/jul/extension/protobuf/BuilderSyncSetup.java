@@ -9,7 +9,7 @@ import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.iface.Changeable;
 import de.citec.jul.schedule.Timeout;
 import java.util.concurrent.TimeUnit;

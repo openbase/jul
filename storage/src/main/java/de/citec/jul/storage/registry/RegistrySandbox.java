@@ -7,7 +7,7 @@ package de.citec.jul.storage.registry;
 
 import com.rits.cloning.Cloner;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.storage.registry.plugin.RegistryPlugin;

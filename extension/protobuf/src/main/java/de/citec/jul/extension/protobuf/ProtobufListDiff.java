@@ -7,7 +7,7 @@ package de.citec.jul.extension.protobuf;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.iface.Identifiable;
 import java.util.HashMap;
 import java.util.HashSet;

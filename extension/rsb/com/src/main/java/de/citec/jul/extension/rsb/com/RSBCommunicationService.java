@@ -13,7 +13,7 @@ import com.google.protobuf.GeneratedMessage;
 import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
@@ -24,6 +24,7 @@ import de.citec.jul.iface.Activatable;
 import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Changeable;
 import de.citec.jul.schedule.WatchDog;
+import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -32,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 import rsb.patterns.Callback;
 import rst.rsb.ScopeType;
 
@@ -194,10 +196,13 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
 
         ParticipantConfig internalParticipantConfig = participantConfig;
+        
+        // activate inprocess communication for junit tests.
         if (JPService.getProperty(JPTestMode.class).getValue()) {
-            internalParticipantConfig.getOrCreateTransport("spread").getOptions().setProperty("enabled", "0");
-            internalParticipantConfig.getOrCreateTransport("socked").getOptions().setProperty("enabled", "0");
-            internalParticipantConfig.getOrCreateTransport("inprocess").getOptions().setProperty("enabled", "1");
+            for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
+                transport.getValue().setEnabled(false);
+            }
+            internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
         }
 
         try {
@@ -293,7 +298,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     protected BuilderSyncSetup<MB> getBuilderSetup() {
-        return new BuilderSyncSetup<MB>(dataBuilder, dataBuilderReadLock, dataBuilderWriteLock, this);
+        return new BuilderSyncSetup<>(dataBuilder, dataBuilderReadLock, dataBuilderWriteLock, this);
     }
 
     /**
@@ -312,10 +317,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * }
      * </pre> In this example the ClosableDataBuilder.close method is be called in background after leaving the try brackets.
      *
+     * @param consumer
      * @return a new builder wrapper with a locked builder instance.
      */
     public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
-        return new ClosableDataBuilder<MB>(getBuilderSetup(), consumer);
+        return new ClosableDataBuilder<>(getBuilderSetup(), consumer);
     }
 
     @Override

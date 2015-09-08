@@ -10,7 +10,7 @@
     <parent>
         <groupId>de.citec</groupId>
         <artifactId>jul.extension</artifactId>
-        <version>0.2.1</version>
+        <version>0.3.0</version>
     </parent>
     
     <url>http://maven.apache.org</url>
@@ -59,7 +59,7 @@
         <dependency>
             <groupId>rsb</groupId>
             <artifactId>rst-sandbox-csra</artifactId>
-            <version>${global.rst.version}</version>
+            <version>${global.rst.sandbox.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

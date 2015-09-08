@@ -81,4 +81,18 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     public void replaceInternalMap(Map<KEY, ENTRY> map) {
 
     }
+
+    @Override
+    public int size() {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
+    }
+
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 }

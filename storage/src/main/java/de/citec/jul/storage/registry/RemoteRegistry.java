@@ -60,20 +60,17 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
 	@Override
 	public M register(final M entry) throws CouldNotPerformException {
-		throw new NotSupportedException("loadRegistry", this, "Operation not permitted!");
-//        return super.register(new IdentifiableMessage<>(entry, idGenerator)).getMessage();
+		throw new NotSupportedException("register", this, "Operation not permitted!");
 	}
 
 	@Override
 	public M update(final M entry) throws CouldNotPerformException {
-//        return super.update(new IdentifiableMessage<>(entry, idGenerator)).getMessage();
-		throw new NotSupportedException("loadRegistry", this, "Operation not permitted!");
+		throw new NotSupportedException("update", this, "Operation not permitted!");
 	}
 
 	@Override
 	public M remove(final M entry) throws CouldNotPerformException {
-		throw new NotSupportedException("loadRegistry", this, "Operation not permitted!");
-//        return super.remove(new IdentifiableMessage<>(entry, idGenerator)).getMessage();
+		throw new NotSupportedException("remove", this, "Operation not permitted!");
 	}
 
 	@Override
@@ -103,10 +100,5 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
             messageList.add(messageContainer.getMessage());
         }
         return messageList;
-    }
-
-    @Override
-    public boolean isReadOnly() {
-        return true;
     }
 }

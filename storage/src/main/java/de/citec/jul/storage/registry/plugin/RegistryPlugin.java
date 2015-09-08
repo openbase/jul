@@ -5,12 +5,15 @@
  */
 package de.citec.jul.storage.registry.plugin;
 
-import de.citec.jul.pattern.Observer;
+import de.citec.jul.exception.CouldNotPerformException;
 
 /**
  *
  * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
  */
 public interface RegistryPlugin {
+
+    public void init() throws CouldNotPerformException;
     
+    public void shutdown();
 }

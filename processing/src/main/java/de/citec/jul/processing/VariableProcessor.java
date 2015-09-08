@@ -5,7 +5,7 @@
  */
 package de.citec.jul.processing;
 
-import de.citec.jul.exception.ExceptionPrinter;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
 import java.util.Collection;
@@ -14,8 +14,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine
- * Threepwood</a>
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public class VariableProcessor {
 
@@ -73,5 +72,25 @@ public class VariableProcessor {
             }
         }
         return context;
+    }
+    
+    public static String resolveVariable(final String variable, final Collection<VariableProvider> providers) throws MultiException {
+        VariableProvider[] providerArray = new VariableProvider[providers.size()];
+        return resolveVariable(variable, providers.toArray(providerArray));
+    }
+
+    public static String resolveVariable(final String variable, final VariableProvider... providers) throws MultiException {
+        MultiException.ExceptionStack exceptionStack = null;
+        for (VariableProvider provider : providers) {
+
+            try {
+                return provider.getValue(variable);
+            } catch (NotAvailableException ex) {
+                exceptionStack = MultiException.push(VariableProcessor.class, ex, exceptionStack);
+                continue;
+            }
+        }
+        MultiException.checkAndThrow("Could not resolve Variable[" + variable + "]!", exceptionStack);
+        throw new AssertionError("Fatal error during variable resolving.");
     }
 }
