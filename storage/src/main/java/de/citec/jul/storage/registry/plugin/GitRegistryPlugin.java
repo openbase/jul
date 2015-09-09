@@ -14,11 +14,9 @@ import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import de.citec.jul.storage.registry.FileSynchronizedRegistry;
 import de.citec.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
-import de.citec.jul.storage.registry.jp.JPResetDB;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
@@ -52,6 +50,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
 
     private void initialSync() throws CouldNotPerformException {
         try {
+            // TODO mpohling: handle deteched version.
             this.git.pull().call().isSuccessful();
         } catch (GitAPIException ex) {
             throw new CouldNotPerformException("Initial sync failed!", ex);
