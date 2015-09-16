@@ -7,6 +7,7 @@ package de.citec.jul.processing;
 
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -14,6 +15,8 @@ import javax.vecmath.Vector3d;
  */
 public class QuaternionEulerTransform {
 
+    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(QuaternionEulerTransform.class);
+    
     /**
      * Conversion: By combining the quaternion representations of the Euler
      * rotations we get for the Body 3-2-1 sequence, where the airplane first
@@ -48,6 +51,10 @@ public class QuaternionEulerTransform {
 //        // qZ
 //        quat[3] = Math.cos(halfRoll) * Math.sin(halfPitch) * Math.sin(halfYaw) - Math.sin(halfRoll) * Math.cos(halfPitch) * Math.cos(halfYaw);
 
+        logger.info("QuaternionEulerTransform roll: "+vector3d.x);
+        logger.info("QuaternionEulerTransform pitch: "+vector3d.y);
+        logger.info("QuaternionEulerTransform yaw: "+vector3d.z);
+        
         // Assuming the angles are in radians.
         double cosYawHalf = Math.cos(vector3d.z / 2);
         double sinYawHalf = Math.sin(vector3d.z / 2);
