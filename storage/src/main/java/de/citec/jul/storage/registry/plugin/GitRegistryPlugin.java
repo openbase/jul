@@ -6,10 +6,12 @@
 package de.citec.jul.storage.registry.plugin;
 
 import de.citec.jps.core.JPService;
+import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import de.citec.jul.storage.registry.FileSynchronizedRegistry;
@@ -18,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
@@ -36,9 +39,11 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
 
     private final FileSynchronizedRegistry registry;
     private final Git git;
+    private boolean detached;
 
     public GitRegistryPlugin(FileSynchronizedRegistry registry) throws de.citec.jul.exception.InstantiationException {
         try {
+            this.detached = false;
             this.registry = registry;
             this.git = detectGitRepository(registry.getDatabaseDirectory());
             this.initialSync();
@@ -50,8 +55,9 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
 
     private void initialSync() throws CouldNotPerformException {
         try {
-            // TODO mpohling: handle deteched version.
             this.git.pull().call().isSuccessful();
+        } catch (DetachedHeadException ex) {
+            detached = true;
         } catch (GitAPIException ex) {
             throw new CouldNotPerformException("Initial sync failed!", ex);
         }
@@ -59,7 +65,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
 
     private Git detectGitRepository(final File databaseDirectory) throws CouldNotPerformException {
         try {
-            
+
             Repository repo;
             try {
                 // === load git out of db folder === //
@@ -114,9 +120,21 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     }
 
     private void commitAllChanges() throws CouldNotPerformException {
+
+        // Avoid commit in test mode.
+        if (JPService.getProperty(JPTestMode.class).getValue()) {
+            logger.warn("Skip commit because test mode is enabled!");
+            return;
+        }
+
+        // Avoid commit if branch is detached.
+        if (detached) {
+            logger.info("Skip commit because branch detached!");
+            return;
+        }
+
         try {
             // add all changes
-            
             git.add().addFilepattern(".").call();
 
             // commit
@@ -154,7 +172,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
             git.getRepository().close();
             git.close();
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not shutdown", ex));
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown", ex), logger, LogLevel.ERROR);
         }
     }
 }

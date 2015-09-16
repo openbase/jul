@@ -7,6 +7,7 @@ package de.citec.jul.storage.registry;
 
 import de.citec.jul.storage.registry.plugin.FileRegistryPlugin;
 import de.citec.jps.core.JPService;
+import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
@@ -192,7 +193,8 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     @Override
     public void checkAccess() throws InvalidStateException {
         super.checkAccess();
-        if (!databaseDirectory.canWrite()) {
+
+        if (!databaseDirectory.canWrite() && !JPService.getProperty(JPTestMode.class).getValue()) {
             throw new InvalidStateException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
         }
 
