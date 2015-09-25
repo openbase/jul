@@ -26,6 +26,7 @@ public abstract class LastValueHandler<V> implements Runnable {
     private final Object exetcuterWaiter = new Object();
     private final Object EXECUTER_CONTROL_LOCK = new Object();
     private Thread executer;
+    private boolean valueChanged;
 
     private long delayUntilNext;
 
@@ -37,6 +38,7 @@ public abstract class LastValueHandler<V> implements Runnable {
         this.name = name;
         this.delayUntilNext = delayUntilNext;
         this.value = null;
+        this.valueChanged = true;
         this.oldValue = null;
         this.executer = null;
     }
@@ -77,6 +79,12 @@ public abstract class LastValueHandler<V> implements Runnable {
             oldValue = this.value;
             return true;
         }
+        
+        if(valueChanged) {
+            valueChanged = false;
+            return true;
+        }
+        
         return false;
     }
 
@@ -134,6 +142,13 @@ public abstract class LastValueHandler<V> implements Runnable {
         }
 
         this.value = value;
+        synchronized (exetcuterWaiter) {
+            exetcuterWaiter.notify();
+        }
+    }
+    
+    public void forceValueChange() {
+        valueChanged = true;
         synchronized (exetcuterWaiter) {
             exetcuterWaiter.notify();
         }
