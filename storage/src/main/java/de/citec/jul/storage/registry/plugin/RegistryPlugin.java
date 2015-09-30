@@ -11,8 +11,12 @@ import de.citec.jul.exception.CouldNotPerformException;
  *
  * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
  */
-public interface RegistryPlugin {
+public interface RegistryPlugin<ENTRY> {
 
+    public void beforeRegister(final ENTRY entry);
+    
+    public void afterRegister(final ENTRY entry);
+    
     public void init() throws CouldNotPerformException;
     
     public void shutdown();

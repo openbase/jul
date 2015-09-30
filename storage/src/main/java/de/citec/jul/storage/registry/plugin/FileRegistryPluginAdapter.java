@@ -74,4 +74,12 @@ public class FileRegistryPluginAdapter implements FileRegistryPlugin {
     @Override
     public void shutdown() {
     }
+
+    @Override
+    public void beforeRegister(Object entry) {
+    }
+
+    @Override
+    public void afterRegister(Object entry) {
+    }
 }

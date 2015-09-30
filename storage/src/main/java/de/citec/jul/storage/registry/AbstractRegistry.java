@@ -42,6 +42,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final MAP entryMap;
+    
+    // TODO mpohling: Implement as plugin pool.
     protected final List<P> pluginList;
     protected RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
 
@@ -84,6 +86,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
         logger.info("Register " + entry + "...");
+        pluginList.stream().forEach((plugin) -> {
+            plugin.beforeRegister(entry);
+        });
         try {
             checkAccess();
             synchronized (SYNC) {
@@ -99,6 +104,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             syncSandbox();
         }
+        pluginList.stream().forEach((plugin) -> {
+            plugin.afterRegister(entry);
+        });
         return entry;
     }
 
@@ -392,9 +400,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             clear();
             sandbox.clear();
-            for (P plugin : pluginList) {
+            pluginList.stream().forEach((plugin) -> {
                 plugin.shutdown();
-            }
+            });
             pluginList.clear();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(logger, ex);
@@ -406,10 +414,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             plugin.init();
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not add Plugin["+plugin.getClass().getName()+"] to Registry["+getClass().getSimpleName()+"]", ex);
+            throw new CouldNotPerformException("Could not add Plugin[" + plugin.getClass().getName() + "] to Registry[" + getClass().getSimpleName() + "]", ex);
         }
     }
-    
+
     @Override
     public String getName() {
         return getClass().getSimpleName();
