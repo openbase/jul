@@ -59,7 +59,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             protobufMessageMap.addObserver(observer);
 
             if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
-                addPlugin(new GitRegistryPlugin(this));
+                registerPlugin(new GitRegistryPlugin(this));
             }
             
             // got error: corrupted double-linked list: 0x00007f178c2a9200

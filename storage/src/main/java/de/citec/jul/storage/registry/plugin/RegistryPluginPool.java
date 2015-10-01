@@ -48,6 +48,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     public void addPlugin(P plugin) throws CouldNotPerformException {
         try {
             plugin.init(registry);
+            pluginList.add(plugin);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not add Plugin[" + plugin.getClass().getName() + "] to Registry[" + registry.getClass().getSimpleName() + "]", ex);
         }

@@ -420,7 +420,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    public void addPlugin(P plugin) throws CouldNotPerformException {
+    public void registerPlugin(P plugin) throws CouldNotPerformException {
         pluginPool.addPlugin(plugin);
     }
 

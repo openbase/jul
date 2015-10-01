@@ -2,16 +2,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.citec</groupId>
-    <artifactId>jul.extension</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>jul.extension.rct</artifactId>
+    <packaging>jar</packaging>
 
-    <name>JUL Extension</name>
+    <name>JUL Extension RCT</name>
     
     <parent>
         <groupId>de.citec</groupId>
-        <artifactId>jul</artifactId>
+        <artifactId>jul.extension</artifactId>
         <version>0.3-SNAPSHOT</version>
-    </parent>    
+    </parent>
     
     <url>http://maven.apache.org</url>
     <build>
@@ -28,18 +28,22 @@
         </plugins>
     </build>
 
-    <modules>
-        <module>protobuf</module>
-        <module>rsb</module>
-        <module>rst</module>
-        <module>rct</module>
-    </modules>
-    
     <dependencies>
         <dependency>
-            <groupId>de.citec</groupId>
-            <artifactId>jul.exception</artifactId>
-            <version>${project.version}</version>
+            <groupId>rsb</groupId>
+            <artifactId>rst</artifactId>
+            <version>${global.rst.stable.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>rsb</groupId>
+            <artifactId>rst-sandbox-csra</artifactId>
+            <version>${global.rst.sandbox.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>rct</groupId>
+            <artifactId>rct</artifactId>
+            <version>${global.rct.version}</version>
         </dependency>
     </dependencies>
 </project>
