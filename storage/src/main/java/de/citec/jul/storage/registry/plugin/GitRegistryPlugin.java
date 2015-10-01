@@ -9,12 +9,14 @@ import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
-import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.RejectedException;
 import de.citec.jul.exception.printer.LogLevel;
+import de.citec.jul.iface.Identifiable;
 import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import de.citec.jul.storage.registry.FileSynchronizedRegistry;
+import de.citec.jul.storage.registry.RegistryInterface;
 import de.citec.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +53,10 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
             shutdown();
             throw new de.citec.jul.exception.InstantiationException(this, ex);
         }
+    }
+
+    @Override
+    public void init(RegistryInterface reg) throws CouldNotPerformException {
     }
 
     private void initialSync() throws CouldNotPerformException {
@@ -100,24 +106,21 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     }
 
     @Override
-    public void afterRegister(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterRegister(Identifiable entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
         commitAllChanges();
     }
 
     @Override
-    public void afterUpdate(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterUpdate(Identifiable entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
         commitAllChanges();
     }
 
     @Override
-    public void afterRemove(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterRemove(Identifiable entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
         commitAllChanges();
     }
 
-    @Override
-    public void afterClear() throws CouldNotPerformException {
-        commitAllChanges();
-    }
+
 
     private void commitAllChanges() throws CouldNotPerformException {
 
@@ -145,13 +148,13 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     }
 
     @Override
-    public void checkAccess() throws InvalidStateException {
+    public void checkAccess() throws RejectedException {
         try {
             if (isTag(getHead(git.getRepository()))) {
-                throw new InvalidStateException("Database based on tag revision and can not be modifiered!");
+                throw new RejectedException("Database based on tag revision and can not be modifiered!");
             }
         } catch (IOException ex) {
-            throw new InvalidStateException("Could not access database!", ex);
+            throw new RejectedException("Could not access database!", ex);
         }
     }
 
@@ -176,3 +179,4 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
         }
     }
 }
+

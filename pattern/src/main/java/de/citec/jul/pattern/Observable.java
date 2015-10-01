@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Observable<T> {
 
-	// TODO mpohling: must be removed out of performance reasons!
+	// TODO mpohling: must be removed out of performance reasons in release paramide!
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Object LOCK = new Object();

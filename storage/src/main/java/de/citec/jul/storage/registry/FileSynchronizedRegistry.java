@@ -13,14 +13,15 @@ import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InstantiationException;
-import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
 import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.RejectedException;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.processing.FileProcessor;
 import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import de.citec.jul.storage.registry.jp.JPResetDB;
+import de.citec.jul.storage.registry.plugin.FileRegistryPluginPool;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,24 +31,30 @@ import org.apache.commons.io.FileUtils;
  *
  * @author mpohling
  * @param <KEY>
- * @param <VALUE>
+ * @param <ENTRY>
  * @param <MAP>
  * @param <R>
  */
-public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends AbstractRegistry<KEY, VALUE, MAP, R, FileRegistryPlugin> implements FileSynchronizedRegistryInterface<KEY, VALUE, R> {
+public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY, R>> extends AbstractRegistry<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY, R> {
 
     private final File databaseDirectory;
-    private final Map<KEY, FileSynchronizer<VALUE>> fileSynchronizerMap;
-    private final FileProcessor<VALUE> fileProcessor;
+    private final Map<KEY, FileSynchronizer<ENTRY>> fileSynchronizerMap;
+    private final FileProcessor<ENTRY> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
+    private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
 
-    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<VALUE> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        super(entryMap);
+    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+        this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>>());
+    }
+
+    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool) throws InstantiationException {
+        super(entryMap, new FileRegistryPluginPool<>());
         try {
             this.databaseDirectory = databaseDirectory;
             this.fileSynchronizerMap = new HashMap<>();
             this.fileProcessor = fileProcessor;
             this.fileProvider = fileProvider;
+            this.filePluginPool = filePluginPool;
             this.prepareDB();
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
@@ -67,21 +74,18 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     }
 
     @Override
-    public VALUE register(final VALUE entry) throws CouldNotPerformException {
+    public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
         super.register(entry);
 
-        FileSynchronizer<VALUE> fileSynchronizer = new FileSynchronizer<>(entry, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
+        FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(entry, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
         fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
-
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.afterRegister(fileSynchronizer);
-        }
-
+        filePluginPool.afterRegister(entry, fileSynchronizer);
+        
         return entry;
     }
 
     @Override
-    public VALUE update(final VALUE entry) throws CouldNotPerformException {
+    public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
         super.update(entry);
 
         // ignore update during registration process.
@@ -90,37 +94,25 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
             return entry;
         }
 
-        FileSynchronizer<VALUE> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
+        FileSynchronizer<ENTRY> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
 
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.beforeUpdate(fileSynchronizer);
-        }
-
+        filePluginPool.beforeUpdate(entry, fileSynchronizer);
         fileSynchronizer.save(entry);
-
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.afterUpdate(fileSynchronizer);
-        }
+        filePluginPool.afterUpdate(entry, fileSynchronizer);
 
         return entry;
     }
 
     @Override
-    public VALUE remove(final VALUE entry) throws CouldNotPerformException {
-        VALUE removedValue = super.remove(entry);
+    public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
+        ENTRY removedValue = super.remove(entry);
 
-        FileSynchronizer<VALUE> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
+        FileSynchronizer<ENTRY> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
 
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.beforeRemove(fileSynchronizer);
-        }
-
+        filePluginPool.beforeRemove(entry, fileSynchronizer);
         fileSynchronizer.delete();
         fileSynchronizerMap.remove(entry.getId());
-
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.afterRemove(fileSynchronizer);
-        }
+        filePluginPool.afterRemove(entry, fileSynchronizer);
 
         return removedValue;
     }
@@ -128,16 +120,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     @Override
     public void clear() throws CouldNotPerformException {
         super.clear();
-
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.beforeClear();
-        }
-
         fileSynchronizerMap.clear();
-
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.afterClear();
-        }
     }
 
     @Override
@@ -161,8 +144,8 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
 
         for (File file : listFiles) {
             try {
-                FileSynchronizer<VALUE> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
-                VALUE entry = fileSynchronizer.getData();
+                FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
+                ENTRY entry = fileSynchronizer.getData();
                 fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
                 super.register(entry);
             } catch (CouldNotPerformException ex) {
@@ -180,7 +163,7 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     public void saveRegistry() throws MultiException {
         logger.info("Save registry into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
-        for (FileSynchronizer<VALUE> fileSynchronizer : fileSynchronizerMap.values()) {
+        for (FileSynchronizer<ENTRY> fileSynchronizer : fileSynchronizerMap.values()) {
             try {
                 fileSynchronizer.save();
             } catch (CouldNotPerformException ex) {
@@ -191,15 +174,11 @@ public class FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>, MAP 
     }
 
     @Override
-    public void checkAccess() throws InvalidStateException {
+    public void checkAccess() throws RejectedException {
         super.checkAccess();
 
         if (!databaseDirectory.canWrite() && !JPService.getProperty(JPTestMode.class).getValue()) {
-            throw new InvalidStateException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
-        }
-
-        for (FileRegistryPlugin plugin : pluginList) {
-            plugin.checkAccess();
+            throw new RejectedException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
         }
     }
 

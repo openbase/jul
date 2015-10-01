@@ -5,10 +5,14 @@
  */
 package de.citec.jul.storage.registry.plugin;
 
+import de.citec.jul.iface.Identifiable;
+
 /**
  *
  * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
+ * @param <KEY>
+ * @param <ENTRY>
  */
-public interface RemoteRegistryPlugin extends RegistryPlugin {
+public interface RemoteRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends RegistryPlugin<KEY,ENTRY> {
     
 }

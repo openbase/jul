@@ -6,80 +6,43 @@
 package de.citec.jul.storage.registry.plugin;
 
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.InvalidStateException;
+import de.citec.jul.exception.RejectedException;
+import de.citec.jul.iface.Identifiable;
 import de.citec.jul.storage.file.FileSynchronizer;
 
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @param <KEY>
+ * @param <ENTRY>
  */
-public class FileRegistryPluginAdapter implements FileRegistryPlugin {
+public abstract class FileRegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>> extends RegistryPluginAdapter<KEY, ENTRY> implements FileRegistryPlugin<KEY, ENTRY> {
 
     @Override
-    public void beforeRegister(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void beforeRegister(ENTRY entry, FileSynchronizer fileSynchronizer) throws RejectedException {
     }
 
     @Override
-    public void beforeUpdate(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterRegister(ENTRY entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
     }
 
     @Override
-    public void beforeRemove(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void beforeRemove(ENTRY entry, FileSynchronizer fileSynchronizer) throws RejectedException {
     }
 
     @Override
-    public void beforeGet(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterRemove(ENTRY entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
     }
 
     @Override
-    public void beforeGetEntries() throws CouldNotPerformException{
+    public void beforeUpdate(ENTRY entry, FileSynchronizer fileSynchronizer) throws RejectedException {
     }
 
     @Override
-    public void beforeClear() throws CouldNotPerformException{
+    public void afterUpdate(ENTRY entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
     }
 
     @Override
-    public void afterRegister(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-    }
-
-    @Override
-    public void afterUpdate(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-    }
-
-    @Override
-    public void afterRemove(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-    }
-
-    @Override
-    public void afterGet(FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-    }
-
-    @Override
-    public void afterGetEntries() throws CouldNotPerformException{
-    }
-
-    @Override
-    public void afterClear() throws CouldNotPerformException{
-    }
-
-    @Override
-    public void checkAccess() throws InvalidStateException {
-    }
-
-    @Override
-    public void init() throws CouldNotPerformException {
-    }
-
-    @Override
-    public void shutdown() {
-    }
-
-    @Override
-    public void beforeRegister(Object entry) {
-    }
-
-    @Override
-    public void afterRegister(Object entry) {
+    public void beforeGet(KEY key, FileSynchronizer fileSynchronizer) throws RejectedException {
     }
 }
