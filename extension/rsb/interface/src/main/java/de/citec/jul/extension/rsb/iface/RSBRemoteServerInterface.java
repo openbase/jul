@@ -25,16 +25,16 @@ public interface RSBRemoteServerInterface extends RSBServerInterface {
 
     public <ReplyType extends Object, RequestType extends Object> Future<ReplyType> callAsync(String name, RequestType data) throws CouldNotPerformException;
 
-    public Event call(String name, Event event) throws CouldNotPerformException, TimeoutException;
+    public Event call(String name, Event event) throws CouldNotPerformException, TimeoutException, InterruptedException;
 
-    public Event call(String name, Event event, double timeout) throws CouldNotPerformException, TimeoutException;
+    public Event call(String name, Event event, double timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
 
-    public Event call(String name) throws CouldNotPerformException, TimeoutException;
+    public Event call(String name) throws CouldNotPerformException, TimeoutException, InterruptedException;
 
-    public Event call(String name, double timeout) throws CouldNotPerformException, TimeoutException;
+    public Event call(String name, double timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
 
-    public <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data) throws CouldNotPerformException, TimeoutException;
+    public <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data) throws CouldNotPerformException, TimeoutException, InterruptedException;
 
-    public <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data, double timeout) throws CouldNotPerformException, TimeoutException;
+    public <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data, double timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
 
 }

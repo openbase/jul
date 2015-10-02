@@ -19,7 +19,9 @@ import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.RejectedException;
 import de.citec.jul.exception.TimeoutException;
+import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import static de.citec.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
@@ -30,6 +32,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -231,7 +235,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         remoteServerWatchDog.deactivate();
     }
 
-    public Object callMethod(String methodName) throws CouldNotPerformException {
+    public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException {
         return callMethod(methodName, null);
     }
 
@@ -239,8 +243,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return callMethodAsync(methodName, null);
     }
 
-    public final static double START_TIMEOUT = 2;
-    public final static double TIMEOUT_MULTIPLIER = 2;
+    public final static double START_TIMEOUT = 5;
+    public final static double TIMEOUT_MULTIPLIER = 1.2;
     public final static double MAX_TIMEOUT = 30;
 
     public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
@@ -258,11 +262,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 try {
                     return remoteServer.call(methodName, type, timeout);
                 } catch (TimeoutException ex) {
+                    ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                     timeout = generateTimeout(timeout);
                     logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + type + ")]. Next timeout in " + ((int) timeout) + " seconds.");
                     Thread.yield();
                 }
             }
+        } catch (InterruptedException ex) {
+            //TODO mpohling: handle interrupted exception in paramite release
+            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
@@ -299,7 +307,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public M requestStatus() throws CouldNotPerformException {
         try {
             logger.debug("requestStatus updated.");
-            M dataUpdate = (M) callMethod(RPC_REQUEST_STATUS);
+            M dataUpdate;
+            try {
+                dataUpdate = (M) callMethod(RPC_REQUEST_STATUS);
+            } catch (InterruptedException ex) {
+                throw new RejectedException("Remote call was interrupted!", ex);
+            }
 
             if (dataUpdate == null) {
                 throw new InvalidStateException("Server result invalid!");

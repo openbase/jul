@@ -18,6 +18,7 @@ import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.NotInitializedException;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import de.citec.jul.extension.protobuf.ClosableDataBuilder;
 import de.citec.jul.iface.Activatable;
@@ -34,7 +35,6 @@ import rsb.Event;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
-import rsb.patterns.Callback;
 import rst.rsb.ScopeType;
 
 /**
@@ -213,20 +213,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             Scope internalScope = new Scope(scope.toString().toLowerCase());
 
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-            this.informer = new RSBSynchronizedInformer<M>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass, internalParticipantConfig);
+            this.informer = new RSBSynchronizedInformer<>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass, internalParticipantConfig);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
             // Get local server object which allows to expose remotely callable methods.
             server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
-            server.addMethod(RPC_REQUEST_STATUS, new Callback() {
-
-                @Override
-                public Event internalInvoke(Event request) throws Throwable {
-                    return new Event(messageClass, requestStatus());
-                }
-            });
+            server.addMethod(RPC_REQUEST_STATUS, (Event request) -> new Event(messageClass, requestStatus()));
             registerMethods(server);
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
             initialized = true;
@@ -391,9 +385,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return state;
     }
 
-    private void checkInitialization() throws InvalidStateException {
+    private void checkInitialization() throws NotInitializedException {
         if (!initialized) {
-            throw new InvalidStateException("Communication service not initialized!");
+            throw new NotInitializedException("communication service");
         }
     }
 
