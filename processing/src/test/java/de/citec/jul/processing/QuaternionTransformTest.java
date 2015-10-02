@@ -82,7 +82,7 @@ public class QuaternionTransformTest {
 
         Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
         System.out.println("90p Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
-        assertArrayEquals(toDoubleArray(new Quat4d(0, 0, 0.7071, 0.7071)), toDoubleArray(result), 0.1d);
+        assertArrayEquals(toDoubleArray(new Quat4d(0, 0.7071, 0, 0.7071)), toDoubleArray(result), 0.1d);
     }
 
     /**
@@ -98,7 +98,23 @@ public class QuaternionTransformTest {
 
         Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
         System.out.println("90y Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
-        assertArrayEquals(toDoubleArray(new Quat4d(0, 0.7071, 0, 0.7071)), toDoubleArray(result), 0.1d);
+        assertArrayEquals(toDoubleArray(new Quat4d(0, 0, 0.7071, 0.7071)), toDoubleArray(result), 0.1d);
+    }
+
+    /**
+     * Test of transformTaitBryanToQuaternion method, of class
+     * QuaternionTransform.
+     */
+    @Test
+    public void test() {
+        System.out.println("testNeutralTransformTaitBryanToQuaternion");
+        double roll = Math.toRadians(40);
+        double pitch = Math.toRadians(80);
+        double yaw = Math.toRadians(30);
+
+        Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
+        System.out.println("90y Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+        assertArrayEquals(toDoubleArray(new Quat4d(0.409, 0.516, 0.399, 0.638)), toDoubleArray(result), 0.1d);
     }
 
     @Test
@@ -146,22 +162,21 @@ public class QuaternionTransformTest {
         System.out.println("Result [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
         assertArrayEquals(toDoubleArray(input), toDoubleArray(QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(input))), 0.1d);
     }
-    
+
     @Test
     public void testTransformation180Yaw() throws Exception {
         System.out.println("Test transformations 180 yaw");
-        
+
         double yaw = Math.toRadians(180);
         double pitch = Math.toRadians(0);
         double roll = Math.toRadians(0);
-        
+
         Vector3d input = new Vector3d(roll, pitch, yaw);
         Vector3d result = QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw)));
         System.out.println("Expected [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
         System.out.println("Result [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
         assertArrayEquals(toDoubleArray(input), toDoubleArray(QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(input))), 0.1d);
     }
-    
 
     private double[] toDoubleArray(Vector3d vec) {
         double[] res = new double[3];
