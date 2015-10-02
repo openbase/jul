@@ -68,8 +68,8 @@ public class QuaternionEulerTransform {
         Quat4d quat4d = new Quat4d();
         quat4d.w = cosYawPitchHalf * cosRollHalf - sinYawPitchHalf * sinRollHalf;
         quat4d.x = cosYawPitchHalf * sinRollHalf + sinYawPitchHalf * cosRollHalf;
-        quat4d.y = sinYawHalf * cosPitchHalf * cosRollHalf + cosYawHalf * sinPitchHalf * sinRollHalf;
-        quat4d.z = cosYawHalf * sinPitchHalf * cosRollHalf - sinYawHalf * cosPitchHalf * sinRollHalf;
+        quat4d.y = cosYawHalf * sinPitchHalf * cosRollHalf - sinYawHalf * cosPitchHalf * sinRollHalf;
+        quat4d.z = sinYawHalf * cosPitchHalf * cosRollHalf + cosYawHalf * sinPitchHalf * sinRollHalf;
         return quat4d;
     }
 
