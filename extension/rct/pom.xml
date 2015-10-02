@@ -30,17 +30,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>rsb</groupId>
-            <artifactId>rst</artifactId>
-            <version>${global.rst.stable.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>rsb</groupId>
-            <artifactId>rst-sandbox-csra</artifactId>
-            <version>${global.rst.sandbox.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>rct</groupId>
             <artifactId>rct</artifactId>
             <version>${global.rct.version}</version>
