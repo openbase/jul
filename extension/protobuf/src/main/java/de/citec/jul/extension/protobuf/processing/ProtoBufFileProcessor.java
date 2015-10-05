@@ -7,7 +7,9 @@ package de.citec.jul.extension.protobuf.processing;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message.Builder;
@@ -54,7 +56,6 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
 
 //            System.out.println("### pre: " + jsonString);
 //            System.out.println("######################");
-
             // format
             JsonElement el = parser.parse(jsonString);
             jsonString = gson.toJson(el);
