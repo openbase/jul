@@ -99,6 +99,10 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
     public IdentifiableMessageMap<KEY, M, MB> getRemovedMessageMap() {
         return removedMessages;
     }
+    
+    public int getChangeCounter() {
+        return newMessages.size() + updatedMessages.size() + removedMessages.size();
+    }
 
     public class IdentifiableMessageMap<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends IdentifiableValueMap<KEY, IdentifiableMessage<KEY, M, MB>> {
 
