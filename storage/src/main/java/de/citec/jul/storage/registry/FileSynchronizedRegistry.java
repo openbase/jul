@@ -22,6 +22,7 @@ import de.citec.jul.processing.FileProcessor;
 import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import de.citec.jul.storage.registry.jp.JPResetDB;
 import de.citec.jul.storage.registry.plugin.FileRegistryPluginPool;
+import de.citec.jul.storage.registry.version.DBVersionControl;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,9 +43,10 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     private final FileProcessor<ENTRY> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
+    private DBVersionControl versionControl;
 
     public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>>());
+        this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
     }
 
     public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool) throws InstantiationException {
@@ -71,6 +73,37 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
                 throw new CouldNotPerformException("Could not reset db!", ex);
             }
         }
+    }
+
+    /**
+     * This method activate the version control unit of the underlying registry db.
+     * The version check and db upgrade is automatically performed during the registry db loading phrase.
+     * The db will be upgraded to the latest db format provided by the given converter package.
+     * The converter package should contain only classes implementing the DBVersionConverter interface.
+     * To fully support outdated db upgrade make sure that the converter pipeline covers the whole version range!
+     *
+     * Activate version control before loading the registry.
+     * Please provide within the converter package only converter with the naming structure [$(EntryType)_$(VersionN)_To_$(VersionN+1)_DBConverter].
+     *
+     * Example:
+     *
+     * converter package myproject.db.converter containing the converter pipeline
+     *
+     * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class
+     * myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class
+     * myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
+     *
+     * Would support the db upgrade from version 0 till the latest db version 3.
+     *
+     * @param entryType 
+     * @param converterPackage the package containing all converter which provides db entry updates from the first to the latest db version.
+     * @throws CouldNotPerformException in case of an invalid converter pipeline or initialization issues.
+     */
+    public void activateVersionControl(final String entryType, final Package converterPackage) throws CouldNotPerformException {
+        if(!isEmpty()) {
+            throw new CouldNotPerformException("Could not activate version control because registry already loaded! Please activate version control before loading the registry.");
+        }
+        versionControl = new DBVersionControl(entryType, fileProvider, converterPackage);
     }
 
     @Override
@@ -126,6 +159,11 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     @Override
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
+
+        // check db version
+        if(versionControl != null) {
+            versionControl.validateAndUpgradeDBVersion(databaseDirectory);
+        }
 
         if (JPService.getProperty(JPInitializeDB.class).getValue()) {
             return;

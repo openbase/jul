@@ -11,6 +11,7 @@ import com.google.protobuf.GeneratedMessage;
 import de.citec.jps.core.JPService;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
@@ -19,7 +20,7 @@ import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMap;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
-import de.citec.jul.extension.protobuf.container.transformer.MessageTransformer;
+import de.citec.jul.extension.protobuf.container.transformer.IdentifiableMessageTransformer;
 import de.citec.jul.extension.protobuf.processing.ProtoBufFileProcessor;
 import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.storage.registry.jp.JPGitRegistryPlugin;
@@ -39,30 +40,28 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     private final ProtoBufMessageMap<KEY, M, MB, SIB> protobufMessageMap;
     private final IdGenerator<KEY, M> idGenerator;
     private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
+    private final Class<M> messageClass;
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        this(messageClass, new ProtoBufMessageMap<KEY, M, MB, SIB>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
+        this(messageClass, new ProtoBufMessageMap<>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
     }
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
-        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new MessageTransformer<M, MB>(messageClass, idGenerator)), fileProvider);
+        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new IdentifiableMessageTransformer<>(messageClass, idGenerator)), fileProvider);
         try {
             this.idGenerator = idGenerator;
+            this.messageClass = messageClass;
             this.protobufMessageMap = internalMap;
-            this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
-
-                @Override
-                public void update(Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
-                    ProtoBufFileSynchronizedRegistry.this.update(data);
-                }
+            this.observer = (Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) -> {
+                ProtoBufFileSynchronizedRegistry.this.update(data);
             };
             protobufMessageMap.addObserver(observer);
 
             if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
                 registerPlugin(new GitRegistryPlugin(this));
             }
-            
-            // got error: corrupted double-linked list: 0x00007f178c2a9200
+
+            // TODO mpohling: got error: corrupted double-linked list: 0x00007f178c2a9200
             // -> may clone each sandbox entry instead of cloning whole collection.
 //            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator));
         } catch (CouldNotPerformException ex) {
@@ -77,9 +76,46 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
         super.shutdown();
     }
 
+    /**
+     * This method activate the version control unit of the underlying registry db. The version check and db upgrade is automatically performed during the registry db loading phrase. The db will be
+     * upgraded to the latest db format provided by the given converter package. The converter package should contain only classes implementing the DBVersionConverter interface. To fully support
+     * outdated db upgrade make sure that the converter pipeline covers the whole version range!
+     *
+     * Activate version control before loading the registry. Please provide within the converter package only converter with the naming structure
+     * [$(EntryType)_$(VersionN)_To_$(VersionN+1)_DBConverter].
+     *
+     * Example:
+     *
+     * converter package myproject.db.converter containing the converter pipeline
+     *
+     * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
+     *
+     * Would support the db upgrade from version 0 till the latest db version 3.
+     *
+     * @param converterPackage the package containing all converter which provides db entry updates from the first to the latest db version.
+     * @throws CouldNotPerformException in case of an invalid converter pipeline or initialization issues.
+     */
+    public void activateVersionControl(final Package converterPackage) throws CouldNotPerformException {
+        try {
+            String entryType;
+            try {
+                entryType = messageClass.getSimpleName().replace("Type", "");
+            } catch (Exception ex) {
+                throw new CouldNotPerformException("Could not detect entry type!", ex);
+            }
+            super.activateVersionControl(entryType, converterPackage);
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not activate version control!", ex);
+        }
+    }
+
+    public Class<M> getMessageClass() {
+        return messageClass;
+    }
+
     @Override
     public M register(final M message) throws CouldNotPerformException {
-        return super.register(new IdentifiableMessage<KEY, M, MB>(message, idGenerator)).getMessage();
+        return super.register(new IdentifiableMessage<>(message, idGenerator)).getMessage();
     }
 
     @Override
@@ -89,12 +125,12 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public M update(final M message) throws CouldNotPerformException {
-        return update(new IdentifiableMessage<KEY, M, MB>(message, idGenerator)).getMessage();
+        return update(new IdentifiableMessage<>(message, idGenerator)).getMessage();
     }
 
     @Override
     public M remove(M locationConfig) throws CouldNotPerformException {
-        return remove(new IdentifiableMessage<KEY, M, MB>(locationConfig, idGenerator)).getMessage();
+        return remove(new IdentifiableMessage<>(locationConfig, idGenerator)).getMessage();
     }
 
     @Override
