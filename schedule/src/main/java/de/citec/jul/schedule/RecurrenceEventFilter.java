@@ -6,6 +6,7 @@
 package de.citec.jul.schedule;
 
 import de.citec.jul.exception.printer.ExceptionPrinter;
+import de.citec.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -42,7 +43,7 @@ public abstract class RecurrenceEventFilter {
         };
     }
     
-    public void trigger() {
+    public synchronized void trigger() {
         if(timeout.isActive()) {
             changeDetected = true;
             return;
@@ -61,7 +62,7 @@ public abstract class RecurrenceEventFilter {
         try {
             relay();
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory(logger, ex);
+            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
         }
     }
     
