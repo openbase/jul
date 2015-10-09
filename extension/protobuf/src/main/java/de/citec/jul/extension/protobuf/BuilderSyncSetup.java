@@ -9,7 +9,9 @@ import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jps.core.JPService;
 import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.NotInitializedException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
+import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.iface.Changeable;
 import de.citec.jul.schedule.Timeout;
 import java.util.concurrent.TimeUnit;
@@ -145,8 +147,10 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         logger.debug("write unlocked");
         try {
             holder.notifyChange();
+        } catch (NotInitializedException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.DEBUG);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not inform builder holder about data update!", ex));
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
         }
     }
 }

@@ -15,11 +15,11 @@ import java.util.Map;
  *
  * @author mpohling
  * @param <KEY>
- * @param <VALUE>
+ * @param <ENTRY>
  * @param <MAP>
  * @param <R>
  */
-public class FileSynchronizedRegistrySandbox<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends RegistrySandbox<KEY, VALUE, MAP, R, FileRegistryPlugin> implements FileSynchronizedRegistryInterface<KEY, VALUE, R> {
+public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY, R>> extends RegistrySandbox<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY, R> {
 
     public FileSynchronizedRegistrySandbox(final MAP entryMap) throws InstantiationException {
         super(entryMap);

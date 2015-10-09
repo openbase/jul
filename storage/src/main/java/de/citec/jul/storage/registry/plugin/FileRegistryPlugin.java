@@ -6,39 +6,30 @@
 package de.citec.jul.storage.registry.plugin;
 
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.InvalidStateException;
+import de.citec.jul.exception.RejectedException;
+import de.citec.jul.iface.Identifiable;
 import de.citec.jul.storage.file.FileSynchronizer;
 
 /**
  *
  * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
+ * @param <KEY>
+ * @param <ENTRY>
  */
-public interface FileRegistryPlugin extends RegistryPlugin {
+public interface FileRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends RegistryPlugin<KEY, ENTRY> {
 
-    public void beforeRegister(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
+    public void beforeRegister(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
-    public void beforeUpdate(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
+    public void afterRegister(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
 
-    public void beforeRemove(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
+    public void beforeRemove(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
-    public void beforeGet(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
+    public void afterRemove(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
 
-    public void beforeGetEntries() throws CouldNotPerformException;
+    public void beforeUpdate(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
-    public void beforeClear() throws CouldNotPerformException;
+    public void afterUpdate(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
 
-    public void afterRegister(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
-
-    public void afterUpdate(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
-
-    public void afterRemove(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
-
-    public void afterGet(final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
-
-    public void afterGetEntries() throws CouldNotPerformException;
-
-    public void afterClear() throws CouldNotPerformException;
-
-    public void checkAccess() throws InvalidStateException;
+    public void beforeGet(final KEY key, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
 }

@@ -7,12 +7,15 @@ package de.citec.jul.processing;
 
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author mpohling
  */
 public class QuaternionEulerTransform {
+
+    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(QuaternionEulerTransform.class);
 
     /**
      * Conversion: By combining the quaternion representations of the Euler
@@ -48,6 +51,10 @@ public class QuaternionEulerTransform {
 //        // qZ
 //        quat[3] = Math.cos(halfRoll) * Math.sin(halfPitch) * Math.sin(halfYaw) - Math.sin(halfRoll) * Math.cos(halfPitch) * Math.cos(halfYaw);
 
+        logger.info("QuaternionEulerTransform roll: " + vector3d.x);
+        logger.info("QuaternionEulerTransform pitch: " + vector3d.y);
+        logger.info("QuaternionEulerTransform yaw: " + vector3d.z);
+
         // Assuming the angles are in radians.
         double cosYawHalf = Math.cos(vector3d.z / 2);
         double sinYawHalf = Math.sin(vector3d.z / 2);
@@ -61,8 +68,8 @@ public class QuaternionEulerTransform {
         Quat4d quat4d = new Quat4d();
         quat4d.w = cosYawPitchHalf * cosRollHalf - sinYawPitchHalf * sinRollHalf;
         quat4d.x = cosYawPitchHalf * sinRollHalf + sinYawPitchHalf * cosRollHalf;
-        quat4d.y = sinYawHalf * cosPitchHalf * cosRollHalf + cosYawHalf * sinPitchHalf * sinRollHalf;
-        quat4d.z = cosYawHalf * sinPitchHalf * cosRollHalf - sinYawHalf * cosPitchHalf * sinRollHalf;
+        quat4d.y = cosYawHalf * sinPitchHalf * cosRollHalf - sinYawHalf * cosPitchHalf * sinRollHalf;
+        quat4d.z = sinYawHalf * cosPitchHalf * cosRollHalf + cosYawHalf * sinPitchHalf * sinRollHalf;
         return quat4d;
     }
 
@@ -82,7 +89,7 @@ public class QuaternionEulerTransform {
         double[] euler = new double[3];
         Vector3d result = new Vector3d();
 
-        double test = quat4d.x * quat4d.y + quat4d.z * quat4d.w;
+        double test = quat4d.x * quat4d.z + quat4d.y * quat4d.w;
         if (test >= 0.5) { // singularity at north pole
             result.x = 0;
             result.y = Math.PI / 2;
@@ -96,12 +103,12 @@ public class QuaternionEulerTransform {
             return result;
         }
         double sqx = quat4d.x * quat4d.x;
-        double sqy = quat4d.y * quat4d.y;
-        double sqz = quat4d.z * quat4d.z;
+        double sqz = quat4d.y * quat4d.y;
+        double sqy = quat4d.z * quat4d.z;
 
-        result.x = Math.atan2(2 * quat4d.x * quat4d.w - 2 * quat4d.y * quat4d.z, 1 - 2 * sqx - 2 * sqz);
+        result.x = Math.atan2(2 * quat4d.x * quat4d.w - 2 * quat4d.z * quat4d.y, 1 - 2 * sqx - 2 * sqz);
         result.y = Math.asin(2 * test);
-        result.z = Math.atan2(2 * quat4d.y * quat4d.w - 2 * quat4d.x * quat4d.z, 1 - 2 * sqy - 2 * sqz);
+        result.z = Math.atan2(2 * quat4d.z * quat4d.w - 2 * quat4d.x * quat4d.y, 1 - 2 * sqy - 2 * sqz);
 
 //        euler[0] = Math.atan2(2 * (quat4d.w * quatX + quat4d.y * quat4d.z), 1 - 2 * (Math.pow(quatX, 2) + Math.pow(quat4d.y, 2)));
 //        euler[1] = Math.asin(2 * (quat4d.w * quat4d.y - quatX * quat4d.z));

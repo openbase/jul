@@ -10,6 +10,7 @@ import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.CouldNotTransformException;
 import de.citec.jul.extension.protobuf.IdGenerator;
+import de.citec.jul.extension.protobuf.container.MessageContainer;
 import de.citec.jul.extension.protobuf.processing.ProtoBufFileProcessor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -19,18 +20,16 @@ import java.lang.reflect.InvocationTargetException;
  * @param <M>
  * @param <MB>
  */
-public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder<MB>> implements ProtoBufFileProcessor.TypeToMessageTransformer<IdentifiableMessage<?, M, MB>, M, MB> {
+public abstract class MessageTransformer<T extends MessageContainer<M>, M extends GeneratedMessage, MB extends M.Builder<MB>> implements ProtoBufFileProcessor.TypeToMessageTransformer<T, M, MB> {
 
     private final Class<M> messageClass;
-    private final IdGenerator<?, M> idGenerator;
     
-    public MessageTransformer(final Class<M> messageClass, final IdGenerator<?, M> idGenerator) {
+    public MessageTransformer(final Class<M> messageClass) {
         this.messageClass = messageClass;
-        this.idGenerator = idGenerator;
     }
     
     @Override
-    public M transform(final IdentifiableMessage<?, M, MB> type) {
+    public M transform(final T type) {
         return type.getMessage();
     }
 
@@ -44,12 +43,7 @@ public class MessageTransformer<M extends GeneratedMessage, MB extends M.Builder
         }
     }
 
-    @Override
-    public IdentifiableMessage<?, M, MB> transform(final M message) throws CouldNotTransformException {
-        try {
-            return new IdentifiableMessage<>(message, idGenerator);
-        } catch(de.citec.jul.exception.InstantiationException ex) {
-            throw new CouldNotTransformException("Given message is invalid!" , ex);
-        }
+    public Class<M> getMessageClass() {
+        return messageClass;
     }
 }

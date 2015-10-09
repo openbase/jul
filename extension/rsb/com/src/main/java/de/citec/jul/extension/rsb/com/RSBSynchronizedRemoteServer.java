@@ -9,6 +9,7 @@ import de.citec.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.NotAvailableException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
@@ -122,14 +123,24 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
     }
 
     @Override
-    public Event call(final String name, final Event event) throws CouldNotPerformException {
+    public Event call(final String name, final Event event) throws CouldNotPerformException, InterruptedException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
-            synchronized (participantLock) {
-                return getParticipant().call(name, event);
+            try {
+                synchronized (participantLock) {
+                    return getParticipant().call(name, event);
+                }
+            } catch (ExecutionException ex) {
+                //rsb 0.12 hack
+                if (ex.getCause() instanceof InterruptedException) {
+                    throw (InterruptedException) ex.getCause();
+                }
+                throw ex;
             }
+        } catch (InterruptedException ex) {
+            throw ex;
         } catch (TimeoutException ex) {
             throw new de.citec.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
         } catch (Exception ex) {
@@ -138,14 +149,24 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
     }
 
     @Override
-    public Event call(final String name, final Event event, final double timeout) throws CouldNotPerformException {
+    public Event call(final String name, final Event event, final double timeout) throws CouldNotPerformException, InterruptedException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
-            synchronized (participantLock) {
-                return getParticipant().call(name, event, timeout);
+            try {
+                synchronized (participantLock) {
+                    return getParticipant().call(name, event, timeout);
+                }
+            } catch (ExecutionException ex) {
+                //rsb 0.12 hack
+                if (ex.getCause() instanceof InterruptedException) {
+                    throw (InterruptedException) ex.getCause();
+                }
+                throw ex;
             }
+        } catch (InterruptedException ex) {
+            throw ex;
         } catch (TimeoutException ex) {
             throw new de.citec.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
         } catch (Exception ex) {
@@ -154,14 +175,24 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
     }
 
     @Override
-    public Event call(final String name) throws CouldNotPerformException {
+    public Event call(final String name) throws CouldNotPerformException, InterruptedException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
-            synchronized (participantLock) {
-                return getParticipant().call(name);
+            try {
+                synchronized (participantLock) {
+                    return getParticipant().call(name);
+                }
+            } catch (ExecutionException ex) {
+                //rsb 0.12 hack
+                if (ex.getCause() instanceof InterruptedException) {
+                    throw (InterruptedException) ex.getCause();
+                }
+                throw ex;
             }
+        } catch (InterruptedException ex) {
+            throw ex;
         } catch (TimeoutException ex) {
             throw new de.citec.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
         } catch (Exception ex) {
@@ -170,14 +201,24 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
     }
 
     @Override
-    public Event call(final String name, final double timeout) throws CouldNotPerformException {
+    public Event call(final String name, final double timeout) throws CouldNotPerformException, InterruptedException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
-            synchronized (participantLock) {
-                return getParticipant().call(name, timeout);
+            try {
+                synchronized (participantLock) {
+                    return getParticipant().call(name, timeout);
+                }
+            } catch (ExecutionException ex) {
+                //rsb 0.12 hack
+                if (ex.getCause() instanceof InterruptedException) {
+                    throw (InterruptedException) ex.getCause();
+                }
+                throw ex;
             }
+        } catch (InterruptedException ex) {
+            throw ex;
         } catch (TimeoutException ex) {
             throw new de.citec.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
         } catch (Exception ex) {
@@ -186,14 +227,24 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
     }
 
     @Override
-    public <ReplyType, RequestType> ReplyType call(final String name, final RequestType data) throws CouldNotPerformException {
+    public <ReplyType, RequestType> ReplyType call(final String name, final RequestType data) throws CouldNotPerformException, InterruptedException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
-            synchronized (participantLock) {
-                return getParticipant().call(name, data);
+            try {
+                synchronized (participantLock) {
+                    return getParticipant().call(name, data);
+                }
+            } catch (ExecutionException ex) {
+                //rsb 0.12 hack
+                if (ex.getCause() instanceof InterruptedException) {
+                    throw (InterruptedException) ex.getCause();
+                }
+                throw ex;
             }
+        } catch (InterruptedException ex) {
+            throw ex;
         } catch (TimeoutException ex) {
             throw new de.citec.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
         } catch (Exception ex) {
@@ -202,14 +253,24 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
     }
 
     @Override
-    public <ReplyType, RequestType> ReplyType call(final String name, final RequestType data, final double timeout) throws CouldNotPerformException {
+    public <ReplyType, RequestType> ReplyType call(final String name, final RequestType data, final double timeout) throws CouldNotPerformException, InterruptedException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
-            synchronized (participantLock) {
-                return getParticipant().call(name, data, timeout);
+            try {
+                synchronized (participantLock) {
+                    return getParticipant().call(name, data, timeout);
+                }
+            } catch (ExecutionException ex) {
+                //rsb 0.12 hack
+                if (ex.getCause() instanceof InterruptedException) {
+                    throw (InterruptedException) ex.getCause();
+                }
+                throw ex;
             }
+        } catch (InterruptedException ex) {
+            throw ex;
         } catch (TimeoutException ex) {
             throw new de.citec.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
         } catch (Exception ex) {

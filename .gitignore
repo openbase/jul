@@ -24,3 +24,4 @@ build
 /extension/scope/target/
 /extension/protobuf/target/
 /extension/rsb/interface/target/
+/extension/rct/target/

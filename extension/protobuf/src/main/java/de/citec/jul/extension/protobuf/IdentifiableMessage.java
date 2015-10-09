@@ -13,6 +13,7 @@ import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.VerificationFailedException;
+import de.citec.jul.extension.protobuf.container.MessageContainer;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * @param <M> Internal Message
  * @param <MB>
  */
-public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> implements Identifiable<KEY> {
+public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> implements Identifiable<KEY>, MessageContainer<M> {
 
     protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
 
@@ -144,6 +145,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         }
     }
 
+    @Override
     public M getMessage() {
         return internalMessage;
     }

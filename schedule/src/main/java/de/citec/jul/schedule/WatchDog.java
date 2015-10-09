@@ -216,7 +216,7 @@ public class WatchDog implements Activatable {
 				}
 				this.serviceState = serviceState;
 			}
-			logger.info(this + " is now " + serviceState.name().toLowerCase() + ".");
+			logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
 			serviceStateObserable.notifyObservers(serviceState);
 		} catch (MultiException ex) {
 			logger.warn("Could not notify statechange to all instanzes!", ex);

@@ -14,15 +14,15 @@ import java.util.HashMap;
  *
  * @author mpohling
  * @param <KEY>
- * @param <VALUE>
+ * @param <ENTRY>
  */
-public class Registry<KEY, VALUE extends Identifiable<KEY>> extends AbstractRegistry<KEY, VALUE, HashMap<KEY, VALUE>, Registry<KEY, VALUE>, RegistryPlugin> {
+public class Registry<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, Registry<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY>> {
 
-    public Registry(HashMap<KEY, VALUE> entryMap) throws InstantiationException {
+    public Registry(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
         super(entryMap);
     }
     
     public Registry() throws InstantiationException {
-        super(new HashMap<KEY, VALUE>());
+        super(new HashMap<KEY, ENTRY>());
     }
 }

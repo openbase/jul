@@ -6,7 +6,7 @@
 package de.citec.jul.storage.registry;
 
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.InvalidStateException;
+import de.citec.jul.exception.RejectedException;
 import de.citec.jul.iface.Identifiable;
 import java.util.List;
 
@@ -14,34 +14,33 @@ import java.util.List;
  *
  * @author mpohling
  * @param <KEY>
- * @param <VALUE>
+ * @param <ENTRY>
  * @param <R>
  */
-public interface RegistryInterface<KEY, VALUE extends Identifiable<KEY>, R extends RegistryInterface<KEY, VALUE, R>> {
+public interface RegistryInterface<KEY, ENTRY extends Identifiable<KEY>, R extends RegistryInterface<KEY, ENTRY, R>> {
 
-    public String getName();    
-    
-    public VALUE register(final VALUE entry) throws CouldNotPerformException;
+    public String getName();
 
-    public VALUE update(final VALUE entry) throws CouldNotPerformException;
+    public ENTRY register(final ENTRY entry) throws CouldNotPerformException;
 
-    public VALUE remove(final VALUE entry) throws CouldNotPerformException;
+    public ENTRY update(final ENTRY entry) throws CouldNotPerformException;
 
-    public VALUE get(final KEY key) throws CouldNotPerformException;
+    public ENTRY remove(final ENTRY entry) throws CouldNotPerformException;
 
-    public List<VALUE> getEntries();
+    public ENTRY get(final KEY key) throws CouldNotPerformException;
 
-    public boolean contains(final VALUE entry) throws CouldNotPerformException;
+    public List<ENTRY> getEntries() throws CouldNotPerformException;
+
+    public boolean contains(final ENTRY entry) throws CouldNotPerformException;
 
     public boolean contains(final KEY key) throws CouldNotPerformException;
 
-    public void clear() throws CouldNotPerformException ;
+    public void clear() throws CouldNotPerformException;
 
-    public void checkAccess() throws InvalidStateException;
-    
+    public void checkAccess() throws RejectedException;
+
     public int size();
 
     public boolean isReadOnly();
-    
-    
+
 }

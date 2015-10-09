@@ -31,7 +31,7 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
     private final Gson gson;
     private final TypeToMessageTransformer<DT, M, MB> transformer;
 
-    public ProtoBufFileProcessor(final TypeToMessageTransformer transformer) {
+    public ProtoBufFileProcessor(final TypeToMessageTransformer<DT, M, MB> transformer) {
         this.transformer = transformer;
         this.parser = new JsonParser();
         this.gson = new GsonBuilder().setPrettyPrinting().create();
@@ -52,14 +52,10 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
         try {
             String jsonString = JsonFormat.printToString(transformer.transform(data));
 
-//            System.out.println("### pre: " + jsonString);
-//            System.out.println("######################");
-
             // format
             JsonElement el = parser.parse(jsonString);
             jsonString = gson.toJson(el);
-//            System.out.println("### after: " + jsonString);
-//            System.out.println("######################");
+            
             //write
             FileUtils.writeStringToFile(file, jsonString, "UTF-8");
             return file;

@@ -7,6 +7,7 @@ package de.citec.jul.storage.registry;
 
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InvalidStateException;
+import de.citec.jul.exception.RejectedException;
 import de.citec.jul.iface.Identifiable;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public void checkAccess() throws InvalidStateException {
+    public void checkAccess() throws RejectedException {
     }
 
     @Override

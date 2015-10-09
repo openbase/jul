@@ -9,6 +9,7 @@ import com.rits.cloning.Cloner;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import java.util.Map;
@@ -22,7 +23,7 @@ import java.util.Map;
  * @param <R>
  * @param <P>
  */
-public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>, P extends RegistryPlugin> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
+public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
 
     private final static Cloner cloner = new Cloner();
 
@@ -61,7 +62,7 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
         try {
             checkConsistency();
         } catch (CouldNotPerformException ex) {
-            throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex));
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex), logger, LogLevel.ERROR);
         }
     }
 }
