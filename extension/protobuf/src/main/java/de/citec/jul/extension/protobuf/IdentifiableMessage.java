@@ -37,6 +37,10 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 
     private Observable<IdentifiableMessage<KEY, M, MB>> observable;
 
+    public IdentifiableMessage(IdentifiableMessage<KEY, M, MB> identifiableMessage) throws InstantiationException {
+        this(identifiableMessage.getMessage());
+    }
+    
     public IdentifiableMessage(final M message, final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
         try {
             if (idGenerator == null) {

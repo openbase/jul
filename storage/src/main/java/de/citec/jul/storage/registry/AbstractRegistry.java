@@ -245,7 +245,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @param map
      */
-    public void replaceInternalMap(final Map<KEY, ENTRY> map) {
+    public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
         synchronized (SYNC) {
             try {
                 sandbox.replaceInternalMap(map);
@@ -402,7 +402,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         notifyObservers();
     }
 
-    private void syncSandbox() {
+    private void syncSandbox() throws CouldNotPerformException {
         synchronized (SYNC) {
             sandbox.sync(entryMap);
         }

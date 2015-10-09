@@ -63,7 +63,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
             // TODO mpohling: got error: corrupted double-linked list: 0x00007f178c2a9200
             // -> may clone each sandbox entry instead of cloning whole collection.
-//            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator));
+            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator));
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }

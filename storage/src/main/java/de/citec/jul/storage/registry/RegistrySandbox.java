@@ -8,7 +8,6 @@ package de.citec.jul.storage.registry;
 import com.rits.cloning.Cloner;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
-import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.storage.registry.plugin.RegistryPlugin;
@@ -27,12 +26,12 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
 
     private final static Cloner cloner = new Cloner();
 
-    public RegistrySandbox(MAP entryMap) throws InstantiationException {
+    public RegistrySandbox(MAP entryMap) throws CouldNotPerformException {
         super(cloner.deepClone(entryMap));
     }
 
     @Override
-    public void replaceInternalMap(Map<KEY, ENTRY> map) {
+    public void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException {
         super.replaceInternalMap(cloner.deepClone(map));
     }
 
@@ -43,7 +42,7 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
 
     @Override
     public ENTRY update(ENTRY entry) throws CouldNotPerformException {
-        return super.update(cloner.deepClone(entry)); 
+        return super.update(cloner.deepClone(entry));
     }
 
     @Override
@@ -52,9 +51,16 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
     }
 
     @Override
-    public void sync(MAP map) {
-        entryMap.clear();
-        entryMap.putAll(cloner.deepClone(map));
+    public void sync(MAP map) throws CouldNotPerformException {
+        try {
+            entryMap.clear();
+            for (Map.Entry<KEY, ENTRY> entry : map.entrySet()) {
+                ENTRY deepClone = cloner.deepClone(entry.getValue());
+                entryMap.put(deepClone.getId(), deepClone);
+            }
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("FATAL: Sandbox sync failed!", ex);
+        }
     }
 
     @Override

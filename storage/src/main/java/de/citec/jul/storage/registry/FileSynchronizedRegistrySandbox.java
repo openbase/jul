@@ -7,7 +7,6 @@ package de.citec.jul.storage.registry;
 
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.storage.registry.plugin.FileRegistryPlugin;
-import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.iface.Identifiable;
 import java.util.Map;
 
@@ -21,7 +20,7 @@ import java.util.Map;
  */
 public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY, R>> extends RegistrySandbox<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY, R> {
 
-    public FileSynchronizedRegistrySandbox(final MAP entryMap) throws InstantiationException {
+    public FileSynchronizedRegistrySandbox(final MAP entryMap) throws CouldNotPerformException {
         super(entryMap);
     }
 

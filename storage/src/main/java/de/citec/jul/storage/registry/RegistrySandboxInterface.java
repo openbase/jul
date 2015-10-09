@@ -19,10 +19,10 @@ import java.util.Map;
  */
 public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>> extends RegistryInterface<KEY, ENTRY, R> {
 
-    public void sync(final MAP map);
+    public void sync(final MAP map) throws CouldNotPerformException;
     
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
     
-    void replaceInternalMap(Map<KEY, ENTRY> map);
+    void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException;
 
 }

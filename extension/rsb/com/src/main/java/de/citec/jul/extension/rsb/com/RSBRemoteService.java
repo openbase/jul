@@ -32,8 +32,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -162,7 +160,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                                     remoteServerWatchDog.waitForActivation();
                                     sync();
                                 } catch (InterruptedException | CouldNotPerformException ex) {
-                                    ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not trigger data sync!", ex));
+                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
                                 }
                             }
                         }.start();
