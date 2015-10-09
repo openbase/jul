@@ -30,7 +30,7 @@
     <dependencies>
         <dependency>
             <groupId>rsb</groupId>
-            <artifactId>rst-sandbox-csra</artifactId>
+            <artifactId>${global.rst.sandbox.artifact}</artifactId>
             <version>${global.rst.sandbox.version}</version>
         </dependency>
         <dependency>
