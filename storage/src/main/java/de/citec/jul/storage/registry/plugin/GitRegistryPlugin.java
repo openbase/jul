@@ -61,9 +61,21 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
 
     private void initialSync() throws CouldNotPerformException {
         try {
-            this.git.pull().call().isSuccessful();
-        } catch (DetachedHeadException ex) {
-            detached = true;
+
+            // sync main git
+            try {
+                this.git.pull().call().isSuccessful();
+            } catch (DetachedHeadException ex) {
+                detached = true;
+            }
+
+            // sync submodules
+            try {
+                this.git.submoduleInit();
+                this.git.submoduleUpdate();
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not init db submodules!", ex), logger, LogLevel.WARN);
+            }
         } catch (GitAPIException ex) {
             throw new CouldNotPerformException("Initial sync failed!", ex);
         }
@@ -120,8 +132,6 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
         commitAllChanges();
     }
 
-
-
     private void commitAllChanges() throws CouldNotPerformException {
 
         // Avoid commit in test mode.
@@ -153,6 +163,10 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
             if (isTag(getHead(git.getRepository()))) {
                 throw new RejectedException("Database based on tag revision and can not be modifiered!");
             }
+
+            if (detached) {
+                throw new RejectedException("Database based on detached branch and can not be modifiered!");
+            }
         } catch (IOException ex) {
             throw new RejectedException("Could not access database!", ex);
         }
@@ -179,4 +193,3 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
         }
     }
 }
-
