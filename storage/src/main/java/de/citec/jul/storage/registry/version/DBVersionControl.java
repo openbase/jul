@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DBVersionControl {
 
-    public static final String VERSION_FILE_NAME = "db-version";
+    public static final String VERSION_FILE_NAME = ".db-version";
     public static final String VERSION_FIELD = "version";
     public static final String VERSION_FILE_WARNING = "### PLEASE DO NOT MODIFY ###\n";
 

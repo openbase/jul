@@ -88,7 +88,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Register " + entry + "...");
+        logger.debug("Register " + entry + "...");
         pluginPool.beforeRegister(entry);
         try {
             checkAccess();
@@ -111,7 +111,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Update " + entry + "...");
+        logger.debug("Update " + entry + "...");
         pluginPool.beforeUpdate(entry);
         try {
             checkAccess();
@@ -143,7 +143,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Remove " + entry + "...");
+        logger.debug("Remove " + entry + "...");
         pluginPool.beforeRemove(entry);
         ENTRY oldEntry;
         try {
@@ -380,7 +380,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         continue;
                     }
 
-                    logger.info("Registry consistend.");
+                    logger.debug("Registry consistend.");
                     break;
                 }
 
