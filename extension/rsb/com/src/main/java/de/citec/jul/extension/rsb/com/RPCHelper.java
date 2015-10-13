@@ -29,7 +29,7 @@ public class RPCHelper {
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
 
         for (final Method method : interfaceClass.getMethods()) {
-            logger.info("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
+            logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
             server.addMethod(method.getName(), new Callback() {
 
                 @Override
