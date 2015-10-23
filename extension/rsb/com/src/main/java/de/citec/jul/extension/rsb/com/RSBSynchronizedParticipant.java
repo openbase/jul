@@ -33,6 +33,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     protected final SyncObject participantLock = new SyncObject("participant");
     protected final Scope scope;
     protected final ParticipantConfig config;
+    private boolean active;
 
     protected RSBSynchronizedParticipant(final Scope scope, final ParticipantConfig config) throws InstantiationException {
         try {
@@ -41,6 +42,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             }
             this.scope = scope;
             this.config = config;
+            this.active = false;
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -123,15 +125,17 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     public void activate() throws CouldNotPerformException, InterruptedException {
         try {
             synchronized (participantLock) {
+
                 if (participant == null) {
                     participant = init();
                 }
                 logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activate");
-                if(participant.isActive()) {
-                    logger.warn("Skip activation because Participant["+this.hashCode()+"] is already activated!");
+                if (participant.isActive()) {
+                    logger.warn("Skip activation because Participant[" + this.hashCode() + "] is already activated!");
                     return;
                 }
                 getParticipant().activate();
+                active = true;
                 logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activated.");
             }
         } catch (Exception ex) {
@@ -143,7 +147,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         try {
             synchronized (participantLock) {
-
+                active = false;
                 if (participant == null) {
                     logger.warn("Ignore listener deactivation because listener was never activated!");
                     return;
@@ -161,10 +165,13 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
 
     @Override
     public boolean isActive() {
+        if (participant == null) {
+            return false;
+        }
+        if (!active) {
+            return false;
+        }
         synchronized (participantLock) {
-            if (participant == null) {
-                return false;
-            }
             return participant.isActive();
         }
     }
