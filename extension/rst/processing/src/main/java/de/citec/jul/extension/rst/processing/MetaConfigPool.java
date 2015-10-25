@@ -16,11 +16,11 @@ import java.util.Collection;
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  */
-public class MetaConfigPool {
+public class MetaConfigPool implements VariableProvider {
 
-    private Collection<VariableProvider> variableProviderPool;
+    private final Collection<VariableProvider> variableProviderPool;
 
-    public MetaConfigPool(Collection<VariableProvider> variableProviderPool) {
+    public MetaConfigPool(final Collection<VariableProvider> variableProviderPool) {
         this.variableProviderPool = new ArrayList<>(variableProviderPool);
     }
 
@@ -28,15 +28,28 @@ public class MetaConfigPool {
         this.variableProviderPool = new ArrayList<>();
     }
 
-    public void register(VariableProvider provider) {
+    public void register(final VariableProvider provider) {
         variableProviderPool.add(provider);
     }
 
-    public String getValue(String variable) throws NotAvailableException {
+    @Override
+    public String getValue(final String variable) throws NotAvailableException {
         try {
             return VariableProcessor.resolveVariables(VariableProcessor.resolveVariable(variable, variableProviderPool), true, variableProviderPool);
         } catch (MultiException ex) {
             throw new NotAvailableException("Variable[" + variable + "]", ex);
         }
+    }
+
+    @Override
+    public String getName() {
+        String provider = "";
+        for (VariableProvider variableProvider : variableProviderPool) {
+            if(!provider.isEmpty()) {
+                provider += ", ";
+            }
+            provider += variableProvider.getName();
+        }
+        return getClass().getSimpleName() + "["+provider+"]";
     }
 }
