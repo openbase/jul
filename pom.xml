@@ -32,6 +32,7 @@
         <global.version.jps>[2.2,2.3-SNAPSHOT)</global.version.jps>
         <global.rst.sandbox.artifact>rst-sandbox-csra-ha-paramite</global.rst.sandbox.artifact>
         <global.rst.sandbox.version>0.12-SNAPSHOT</global.rst.sandbox.version>
+        <global.rst.stable.artifact>rst-csra-ha-paramite</global.rst.stable.artifact>
         <global.rst.stable.version>[0.12,0.13-SNAPSHOT)</global.rst.stable.version>
         <global.rsb.version>[0.12,0.13-SNAPSHOT)</global.rsb.version>
         <global.rct.version>[1.0,1.1-SNAPSHOT)</global.rct.version>
