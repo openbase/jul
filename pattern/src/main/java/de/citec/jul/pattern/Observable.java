@@ -19,15 +19,23 @@ import org.slf4j.LoggerFactory;
  */
 public class Observable<T> {
 
-	// TODO mpohling: must be removed out of performance reasons in release paramide!
+    // TODO mpohling: must be removed out of performance reasons in release paramide!
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private static final boolean DEFAULT_UNCHANGED_DATA_FILTER = true;
+
+    private final boolean unchangedDataFilter;
     private final Object LOCK = new Object();
     private final List<Observer<T>> observers;
     private T latestValue;
 
     public Observable() {
+        this(DEFAULT_UNCHANGED_DATA_FILTER);
+    }
+
+    public Observable(final boolean unchangedDataFilter) {
         this.observers = new ArrayList<>();
+        this.unchangedDataFilter = unchangedDataFilter;
     }
 
     public void addObserver(Observer<T> observer) {
@@ -54,7 +62,18 @@ public class Observable<T> {
     }
 
     public void notifyObservers(Observable<T> source, T observable) throws MultiException {
-		ExceptionStack exceptionStack = null;
+        ExceptionStack exceptionStack = null;
+
+        if(observable == null) {
+            logger.debug("Skip notification because observable is null!");
+            return;
+        }
+        
+        if (unchangedDataFilter && latestValue != null && latestValue.equals(observable)) {
+            logger.debug("Skip notification because observable has not changed!");
+            return;
+        }
+
         latestValue = observable;
         synchronized (LOCK) {
             for (Observer<T> observer : observers) {
@@ -66,14 +85,14 @@ public class Observable<T> {
             }
         }
         MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
-	}
+    }
 
     public void notifyObservers(T observable) throws MultiException {
-		notifyObservers(this, observable);
+        notifyObservers(this, observable);
     }
 
     public T getLatestValue() throws NotAvailableException {
-        if(latestValue == null) {
+        if (latestValue == null) {
             throw new NotAvailableException("latestvalue");
         }
         return latestValue;
