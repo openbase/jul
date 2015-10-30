@@ -64,15 +64,15 @@ public class Observable<T> {
     public void notifyObservers(Observable<T> source, T observable) throws MultiException {
         ExceptionStack exceptionStack = null;
 
-        if(observable == null) {
-            logger.debug("Skip notification because observable is null!");
-            return;
-        }
-        
-        if (unchangedDataFilter && latestValue != null && latestValue.equals(observable)) {
-            logger.debug("Skip notification because observable has not changed!");
-            return;
-        }
+//        if(observable == null) {
+//            logger.debug("Skip notification because observable is null!");
+//            return;
+//        }
+//        
+//        if (unchangedDataFilter && latestValue != null && latestValue.equals(observable)) {
+//            logger.debug("Skip notification because observable has not changed!");
+//            return;
+//        }
 
         latestValue = observable;
         synchronized (LOCK) {
