@@ -394,7 +394,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             try {
                 applyDataUpdate((M) event.getData());
             } catch (Exception ex) {
-                ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not unpack data update! Received Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + getClass().getName() + "]!", ex));
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not unpack data update! Received Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + getClass().getName() + "]!", ex), logger, LogLevel.ERROR);
             }
         }
     }

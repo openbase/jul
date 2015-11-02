@@ -47,6 +47,10 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 		}
 		replaceInternalMap(newRegistryMap);
 	}
+    
+    public KEY getKey(final M entry) throws CouldNotPerformException {
+        return idGenerator.generateId(entry);
+    }
 
 	@Override
 	public M getMessage(final KEY key) throws CouldNotPerformException {
