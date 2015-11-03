@@ -32,6 +32,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;

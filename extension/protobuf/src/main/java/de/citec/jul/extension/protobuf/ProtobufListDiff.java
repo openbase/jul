@@ -28,16 +28,16 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(ProtobufListDiff.class);
 
-    private IdentifiableMessageMap<KEY, M, MB> newMessages, updatedMessages, removedMessages, originalMessages;
+    private IdentifiableMessageMap<KEY, M, MB> newMessages, updatedMessages, removedMessages, originMessages;
 
-    public ProtobufListDiff(final List<M> originalList) {
+    public ProtobufListDiff(final List<M> originMessages) {
         this();
-        this.originalMessages.putAll(new IdentifiableMessageMap(originalList));
+        this.originMessages.putAll(new IdentifiableMessageMap(originMessages));
     }
 
-    public ProtobufListDiff(IdentifiableMessageMap<KEY, M, MB> originalMap) {
+    public ProtobufListDiff(IdentifiableMessageMap<KEY, M, MB> originMessages) {
         this();
-        this.originalMessages.putAll(originalMap);
+        this.originMessages.putAll(originMessages);
 
     }
 
@@ -45,7 +45,7 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
         this.newMessages = new IdentifiableMessageMap();
         this.updatedMessages = new IdentifiableMessageMap();
         this.removedMessages = new IdentifiableMessageMap();
-        this.originalMessages = new IdentifiableMessageMap();
+        this.originMessages = new IdentifiableMessageMap();
     }
 
     public void diff(final List<M> modifieredList) {
@@ -57,7 +57,7 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
     }
 
     public void diff(final IdentifiableMessageMap<KEY, M, MB> modifieredMap) {
-        diff(originalMessages, modifieredMap);
+        diff(originMessages, modifieredMap);
     }
 
     public void diff(final IdentifiableMessageMap<KEY, M, MB> originalMap, final IdentifiableMessageMap<KEY, M, MB> modifieredMap) {
@@ -85,7 +85,7 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
         newMessages.putAll(modifieredListCopy);
         
         // update original messages.
-        originalMessages = modifieredMap;
+        originMessages = modifieredMap;
     }
 
     public IdentifiableMessageMap<KEY, M, MB> getNewMessageMap() {
@@ -102,6 +102,11 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
     
     public int getChangeCounter() {
         return newMessages.size() + updatedMessages.size() + removedMessages.size();
+    }
+    
+    public void replaceOriginMap(IdentifiableMessageMap<KEY, M, MB> originMap) {
+        originMessages.clear();
+        originMessages.putAll(originMap);
     }
 
     public class IdentifiableMessageMap<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends IdentifiableValueMap<KEY, IdentifiableMessage<KEY, M, MB>> {
