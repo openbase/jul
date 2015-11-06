@@ -19,6 +19,7 @@ public abstract class Timeout {
     private final Object lock = new Object();
     private Thread timerThread;
     private long waitTime;
+    private boolean expired;
 
     public Timeout(final long waitTime) {
         this.waitTime = waitTime;
@@ -39,6 +40,18 @@ public abstract class Timeout {
         start();
     }
 
+    /**
+     * Return true if the given timeout is expired.
+     * @return
+     */
+    public boolean isExpired() {
+        return expired;
+    }
+
+    /**
+     * Return true if the timeout is still running or the expire routine is still executing.
+     * @return
+     */
     public boolean isActive() {
         synchronized (lock) {
             return timerThread != null && timerThread.isAlive();
@@ -71,6 +84,7 @@ public abstract class Timeout {
                     }
                     try {
 						logger.debug("Expire...");
+                        expired = true;
                         expired();
                     } catch (Exception ex) {
                         logger.debug("Error during timeout handling!", ex);
@@ -81,6 +95,8 @@ public abstract class Timeout {
             timerThread.start();
         }
     }
+
+
 
     public void cancel() {
         synchronized (lock) {
