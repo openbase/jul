@@ -14,6 +14,7 @@ import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.VerificationFailedException;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
+import de.citec.jul.extension.protobuf.IdentifiableMessageMap;
 import de.citec.jul.extension.protobuf.ProtobufListDiff;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Factory;
@@ -108,6 +109,7 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
                         update(config);
                     } else {
                         remove(config);
+                        entryConfigDiff.getOriginMessages().remove(config);
                     }
                 } catch (Exception ex) {
                     updateExceptionStack = MultiException.push(this, ex, updateExceptionStack);
@@ -128,6 +130,8 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
             int errorCounter = MultiException.size(removeExceptionStack) + MultiException.size(updateExceptionStack) + MultiException.size(registerExceptionStack);
             logger.info(entryConfigDiff.getChangeCounter() + " registry changes applied. " + errorCounter + " are skipped.");
 
+            // sync origin list. //TODO: mpohling: sync list
+            
             // build exception cause chain.
             MultiException.ExceptionStack exceptionStack = null;
             try {
@@ -174,4 +178,4 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
     public boolean verifyConfig(final CONFIG_M config) throws VerificationFailedException {
         return true;
     }
-}   
+}

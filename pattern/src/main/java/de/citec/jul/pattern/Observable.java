@@ -4,15 +4,11 @@
  */
 package de.citec.jul.pattern;
 
-import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
 import de.citec.jul.exception.NotAvailableException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
-import de.citec.jul.exception.printer.LogLevel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

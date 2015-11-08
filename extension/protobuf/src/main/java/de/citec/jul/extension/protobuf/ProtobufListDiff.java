@@ -8,13 +8,8 @@ package de.citec.jul.extension.protobuf;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
-import de.citec.jul.iface.Identifiable;
-import java.util.HashMap;
-import java.util.HashSet;
+import de.citec.jul.exception.printer.LogLevel;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -32,7 +27,7 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
 
     public ProtobufListDiff(final List<M> originMessages) {
         this();
-        this.originMessages.putAll(new IdentifiableMessageMap(originMessages));
+        this.originMessages.putAll(new IdentifiableMessageMap<>(originMessages));
     }
 
     public ProtobufListDiff(IdentifiableMessageMap<KEY, M, MB> originMessages) {
@@ -42,18 +37,18 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
     }
 
     public ProtobufListDiff() {
-        this.newMessages = new IdentifiableMessageMap();
-        this.updatedMessages = new IdentifiableMessageMap();
-        this.removedMessages = new IdentifiableMessageMap();
-        this.originMessages = new IdentifiableMessageMap();
+        this.newMessages = new IdentifiableMessageMap<>();
+        this.updatedMessages = new IdentifiableMessageMap<>();
+        this.removedMessages = new IdentifiableMessageMap<>();
+        this.originMessages = new IdentifiableMessageMap<>();
     }
 
     public void diff(final List<M> modifieredList) {
-        diff(new IdentifiableMessageMap(modifieredList));
+        diff(new IdentifiableMessageMap<>(modifieredList));
     }
 
     public void diff(final List<M> originalList, final List<M> modifieredList) {
-        diff(new IdentifiableMessageMap(originalList), new IdentifiableMessageMap(modifieredList));
+        diff(new IdentifiableMessageMap<>(originalList), new IdentifiableMessageMap<>(modifieredList));
     }
 
     public void diff(final IdentifiableMessageMap<KEY, M, MB> modifieredMap) {
@@ -67,7 +62,7 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
 
         final IdentifiableMessageMap<KEY, M, MB> modifieredListCopy = new IdentifiableMessageMap<>(modifieredMap);
 
-        for (KEY id : originalMap.keySet()) {
+        originalMap.keySet().stream().forEach((id) -> {
             try {
                 if (modifieredMap.containsKey(id)) {
                     if (!originalMap.get(id).getMessage().equals(modifieredMap.get(id).getMessage())) {
@@ -78,12 +73,12 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
                     removedMessages.put(originalMap.get(id));
                 }
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Ignoring invalid Message[" + id + "]", ex));
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Ignoring invalid Message[" + id + "]", ex), logger, LogLevel.ERROR);
             }
-        }
+        });
         // add all messages which are not included in original list.
         newMessages.putAll(modifieredListCopy);
-        
+
         // update original messages.
         originMessages = modifieredMap;
     }
@@ -99,84 +94,17 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
     public IdentifiableMessageMap<KEY, M, MB> getRemovedMessageMap() {
         return removedMessages;
     }
-    
+
     public int getChangeCounter() {
         return newMessages.size() + updatedMessages.size() + removedMessages.size();
     }
-    
+
     public void replaceOriginMap(IdentifiableMessageMap<KEY, M, MB> originMap) {
         originMessages.clear();
         originMessages.putAll(originMap);
     }
 
-    public class IdentifiableMessageMap<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends IdentifiableValueMap<KEY, IdentifiableMessage<KEY, M, MB>> {
-
-        protected final Logger logger = LoggerFactory.getLogger(IdentifiableMessageMap.class);
-
-        public IdentifiableMessageMap(List<M> messageList) {
-
-            if (messageList == null) {
-                return;
-            }
-
-            for (M message : messageList) {
-                try {
-                    put(new IdentifiableMessage<KEY, M, MB>(message));
-                } catch (CouldNotPerformException ex) {
-                    ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Could not add Message[" + message + "] to message map!", ex));
-                }
-            }
-        }
-
-        public IdentifiableMessageMap(int initialCapacity, float loadFactor) {
-            super(initialCapacity, loadFactor);
-        }
-
-        public IdentifiableMessageMap(int initialCapacity) {
-            super(initialCapacity);
-        }
-
-        public IdentifiableMessageMap() {
-        }
-
-        public IdentifiableMessageMap(Map<? extends KEY, ? extends IdentifiableMessage<KEY, M, MB>> m) {
-            super(m);
-        }
-
-        public Set<M> getMessages() {
-            Set<M> messages = new HashSet<>();
-            for (IdentifiableMessage<KEY, M, MB> identifiableMessage : values()) {
-                messages.add(identifiableMessage.getMessage());
-            }
-            return messages;
-        }
-    }
-
-    public class IdentifiableValueMap<KEY, VALUE extends Identifiable<KEY>> extends HashMap<KEY, VALUE> {
-
-        protected final Logger logger = LoggerFactory.getLogger(IdentifiableValueMap.class);
-
-        public IdentifiableValueMap(int initialCapacity, float loadFactor) {
-            super(initialCapacity, loadFactor);
-        }
-
-        public IdentifiableValueMap(int initialCapacity) {
-            super(initialCapacity);
-        }
-
-        public IdentifiableValueMap() {
-        }
-
-        public IdentifiableValueMap(Map<? extends KEY, ? extends VALUE> m) {
-            super(m);
-        }
-
-        public void put(final VALUE value) throws CouldNotPerformException {
-            try {
-                put(value.getId(), value);
-            } catch (CouldNotPerformException ex) {
-                throw new CouldNotPerformException("Could not put value to list!", ex);
-            }
-        }
+    public IdentifiableMessageMap<KEY, M, MB> getOriginMessages() {
+        return originMessages;
     }
 }
