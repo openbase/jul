@@ -130,7 +130,12 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
             int errorCounter = MultiException.size(removeExceptionStack) + MultiException.size(updateExceptionStack) + MultiException.size(registerExceptionStack);
             logger.info(entryConfigDiff.getChangeCounter() + " registry changes applied. " + errorCounter + " are skipped.");
 
-            // sync origin list. //TODO: mpohling: sync list
+            // sync origin list.
+            IdentifiableMessageMap<KEY, CONFIG_M, CONFIG_MB> newOriginEntryMap = new IdentifiableMessageMap<>();
+            for (ENTRY entry : registry.getEntries()) {
+                newOriginEntryMap.put(remoteRegistry.get(entry.getId()));
+            }
+            entryConfigDiff.replaceOriginMap(newOriginEntryMap);
             
             // build exception cause chain.
             MultiException.ExceptionStack exceptionStack = null;
