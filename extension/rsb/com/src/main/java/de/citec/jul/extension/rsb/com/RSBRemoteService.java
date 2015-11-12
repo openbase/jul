@@ -32,8 +32,6 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -283,7 +281,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
         try {
-            logger.debug("Calling method [" + methodName + "(" + (type != null ? type.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
+            logger.info("Calling method [" + methodName + "(" + (type != null ? type.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
             checkInitialization();
             return remoteServer.callAsync(methodName, type);
         } catch (CouldNotPerformException ex) {
@@ -402,18 +400,18 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     private synchronized void applyDataUpdate(final M data) {
-        logger.debug("Data update for " + this);
+        logger.info("Data update for " + this);
         this.data = data;
 
         try {
             notifyUpdated(data);
         } catch (Exception ex) {
-            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not notify data update!", ex));
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger, LogLevel.ERROR);
         }
         try {
             notifyObservers(data);
         } catch (Exception ex) {
-            ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not notify data update to all observer!", ex));
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger, LogLevel.ERROR);
         }
     }
 }

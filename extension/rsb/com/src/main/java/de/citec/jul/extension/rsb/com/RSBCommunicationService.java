@@ -19,6 +19,7 @@ import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.NotInitializedException;
+import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import de.citec.jul.extension.protobuf.ClosableDataBuilder;
 import de.citec.jul.iface.Activatable;
@@ -333,10 +334,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public void notifyChange() throws CouldNotPerformException {
-        logger.debug("Notify change of " + this);
+        logger.info("Notify change of " + this);
         checkInitialization();
         if (!informer.isActive()) {
-            logger.debug("Skip update notification because connection not established.");
+            logger.info("Skip update notification because connection not established.");
             return;
         }
         try {
@@ -393,9 +394,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public M requestStatus() throws CouldNotPerformException {
         try {
+            logger.info("request status");
             return getData();
         } catch (Exception ex) {
-            throw ExceptionPrinter.printHistoryAndReturnThrowable(logger, new CouldNotPerformException("Could not request status update.", ex));
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not request status update.", ex), logger, LogLevel.ERROR);
         }
     }
 
