@@ -78,38 +78,38 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private ConnectionState state;
     private boolean initialized;
 
-    /**
-     *
-     * @param scope
-     * @param builder
-     * @throws InstantiationException
-     * @deprecated setup context via init method.
-     */
-    @Deprecated
-    public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
-        this(builder);
-        try {
-            this.scope = new Scope(scope.toString().toLowerCase());
-        } catch (Exception ex) {
-            throw new InstantiationException(this, ex);
-        }
-    }
+//    /**
+//     *
+//     * @param scope
+//     * @param builder
+//     * @throws InstantiationException
+//     * @deprecated setup context via init method.
+//     */
+//    @Deprecated
+//    public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
+//        this(builder);
+//        try {
+//            this.scope = new Scope(scope.toString().toLowerCase());
+//        } catch (Exception ex) {
+//            throw new InstantiationException(this, ex);
+//        }
+//    }
 
-    /**
-     * @param scope
-     * @param builder
-     * @throws de.citec.jul.exception.InstantiationException
-     * @deprecated setup context via init method.
-     */
-    @Deprecated
-    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws InstantiationException {
-        this(builder);
-        try {
-            this.scope = ScopeTransformer.transform(scope);
-        } catch (CouldNotPerformException ex) {
-            throw new InstantiationException(this, ex);
-        }
-    }
+//    /**
+//     * @param scope
+//     * @param builder
+//     * @throws de.citec.jul.exception.InstantiationException
+//     * @deprecated setup context via init method.
+//     */
+//    @Deprecated
+//    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws InstantiationException {
+//        this(builder);
+//        try {
+//            this.scope = ScopeTransformer.transform(scope);
+//        } catch (CouldNotPerformException ex) {
+//            throw new InstantiationException(this, ex);
+//        }
+//    }
 
     public RSBCommunicationService(final MB builder) throws InstantiationException {
         logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + ".");
@@ -132,23 +132,23 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    /**
-     * @param label
-     * @param type
-     * @param location
-     * @param builder
-     * @throws de.citec.jul.exception.InstantiationException
-     * @deprecated setup context via init method.
-     */
-    @Deprecated
-    public RSBCommunicationService(final String label, final String type, final ScopeProvider location, final MB builder) throws InstantiationException, CouldNotPerformException {
-        this(builder);
-        try {
-            this.scope = generateScope(label, type, location);
-        } catch (CouldNotPerformException ex) {
-            throw new InstantiationException(this, ex);
-        }
-    }
+//    /**
+//     * @param label
+//     * @param type
+//     * @param location
+//     * @param builder
+//     * @throws de.citec.jul.exception.InstantiationException
+//     * @deprecated setup context via init method.
+//     */
+//    @Deprecated
+//    public RSBCommunicationService(final String label, final String type, final ScopeProvider location, final MB builder) throws InstantiationException, CouldNotPerformException {
+//        this(builder);
+//        try {
+//            this.scope = generateScope(label, type, location);
+//        } catch (CouldNotPerformException ex) {
+//            throw new InstantiationException(this, ex);
+//        }
+//    }
 
     public static Scope generateScope(final String label, final String type, final ScopeProvider location) throws CouldNotPerformException {
         try {
@@ -221,7 +221,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
-            server.addMethod(RPC_REQUEST_STATUS, (Event request) -> new Event(messageClass, requestStatus()));
+            server.addMethod(RPC_REQUEST_STATUS, (Event request) -> {
+                return new Event(messageClass, requestStatus());
+            });
+            
             registerMethods(server);
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
             initialized = true;
@@ -334,7 +337,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public void notifyChange() throws CouldNotPerformException {
-        logger.info("Notify change of " + this);
+        logger.info("Notify data change of " + this);
         checkInitialization();
         if (!informer.isActive()) {
             logger.info("Skip update notification because connection not established.");
@@ -405,6 +408,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[" + scope + "]";
+        try {
+            return getClass().getSimpleName() + "[" + informer.getScope().toString() + "]";
+        } catch (NotAvailableException ex) {
+            return getClass().getSimpleName() + "[]";
+        }
     }
 }

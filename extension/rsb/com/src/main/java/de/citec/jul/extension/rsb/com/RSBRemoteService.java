@@ -32,6 +32,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -98,7 +99,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
 
             ParticipantConfig internalParticipantConfig = participantConfig;
-            
+
             // activate inprocess communication for junit tests.
             if (JPService.getProperty(JPTestMode.class).getValue()) {
                 for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
@@ -212,7 +213,20 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     public boolean isConnected() {
         //TODO mpohling implement connection server check.
-        return isActive() && data != null;
+
+        if (!isActive()) {
+            return false;
+        }
+
+        if (data == null) {
+            try {
+                sync().get(500, TimeUnit.SECONDS);
+            } catch (Exception ex) {
+                // ignore if sync failed.
+            }
+        }
+
+        return data != null;
     }
 
     @Override
@@ -289,8 +303,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    protected void sync() throws CouldNotPerformException {
-        Future<Object> initialSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
+    protected Future<Object> sync() throws CouldNotPerformException {
+        final Future<Object> dataSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
+
+        //TODO mpohling: switch to Future<M> return value by defining message class via construtor. 
+        
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    applyDataUpdate((M) dataSyncFuture.get(1, TimeUnit.MINUTES));
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.ERROR);
+                    dataSyncFuture.cancel(true);
+                }
+            }
+        }.start();
+        return dataSyncFuture;
     }
 
     /**

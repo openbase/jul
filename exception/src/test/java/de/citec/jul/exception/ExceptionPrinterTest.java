@@ -48,7 +48,7 @@ public class ExceptionPrinterTest {
         ExceptionStack stack = null;
         ExceptionStack stack2 = null;
 
-        Exception ex1 = new CouldNotPerformException("No Way 1");
+        Exception ex1 = new CouldNotPerformException("No Way 1", new NullPointerException());
         Exception ex2 = new CouldNotPerformException("No Way 2", ex1);
         Exception ex3 = new CouldNotPerformException("No Way 3", ex2);
         Exception ex4 = new CouldNotPerformException("No Way 4", ex3);

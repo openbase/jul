@@ -60,9 +60,8 @@ public class ExceptionPrinter {
     }
 
     /**
-     * Prints a human readable Exception cause chain of the given Exception.
-     * Builds a human readable Exception Print Exception messages without StackTrace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
-     * -v) the stacktrace is printed in the end of history.
+     * Prints a human readable Exception cause chain of the given Exception. Builds a human readable Exception Print Exception messages without StackTrace in non debug mode. Method prints recursive
+     * all messages of the given exception stack to get a history overview of the causes. In verbose mode (app -v) the stacktrace is printed in the end of history.
      *
      * @param <T> Exception type
      * @param printer the message printer to use.
@@ -74,7 +73,7 @@ public class ExceptionPrinter {
         // Print normal stacktrace in debug mode.
         if (printer.isDebugEnabled()) {
             printer.print(SEPARATOR);
-            printer.print(removeNewLines(th.getMessage()), th);
+            printer.print(removeNewLines(th), th);
         }
         printer.print(SEPARATOR);
     }
@@ -97,7 +96,7 @@ public class ExceptionPrinter {
 
             @Override
             public String generateRoot(final SourceExceptionEntry element) {
-                return removeNewLines(element.getException().getMessage());
+                return removeNewLines(element.getException());
             }
 
             @Override
@@ -115,7 +114,7 @@ public class ExceptionPrinter {
 
             @Override
             public String generateRoot(Throwable element) {
-                return removeNewLines(element.getMessage());
+                return removeNewLines(element);
             }
 
             @Override
@@ -208,11 +207,16 @@ public class ExceptionPrinter {
 
     }
 
-    private static String removeNewLines(final String message) {
-        if (message == null) {
-            return "null";
+    private static String removeNewLines(final Throwable throwable) {
+        if (throwable == null) {
+            return "";
         }
-        return message.replaceAll("\n", "").trim();
+
+        if (throwable.getMessage() == null || throwable.getMessage().isEmpty()) {
+            return throwable.getClass().getSimpleName();
+        }
+
+        return throwable.getMessage().replaceAll("\n", "").trim();
     }
 
     /**
