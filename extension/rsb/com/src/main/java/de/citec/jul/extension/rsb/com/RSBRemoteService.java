@@ -307,7 +307,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         final Future<Object> dataSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
 
         //TODO mpohling: switch to Future<M> return value by defining message class via construtor. 
-        
         new Thread() {
             @Override
             public void run() {
@@ -323,8 +322,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     /**
-     * Triggers a server - remote data sync and returns the new acquired data. All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
-     * changes, you can use this method to get instantly a data object with all applied changes.
+     * Triggers a server - remote data sync and returns the new acquired data.
+     * All server data changes are synchronized automatically to all remote
+     * instances. In case you have triggered many server changes, you can use
+     * this method to get instantly a data object with all applied changes.
      *
      * Note: This method blocks until the new data is acquired!
      *
@@ -429,7 +430,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     private synchronized void applyDataUpdate(final M data) {
-        logger.info("Data update for " + this);
         this.data = data;
 
         try {
