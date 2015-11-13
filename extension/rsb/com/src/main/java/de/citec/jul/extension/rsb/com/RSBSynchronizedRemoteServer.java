@@ -133,11 +133,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
                     return getParticipant().call(name, event);
                 }
             } catch (ExecutionException ex) {
-                //rsb 0.12 hack
-                if (ex.getCause() instanceof InterruptedException) {
-                    throw (InterruptedException) ex.getCause();
-                }
-                throw ex;
+                throw rsbInterruptedHack(ex);
             }
         } catch (InterruptedException ex) {
             throw ex;
@@ -146,6 +142,18 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "]!", ex);
         }
+    }
+
+    private Exception rsbInterruptedHack(Exception ex) throws InterruptedException {
+        //rsb 0.12 hack
+        Throwable cause = ex;
+        while (cause != null) {
+            if (cause instanceof InterruptedException) {
+                throw (InterruptedException) cause;
+            }
+            cause = cause.getCause();
+        }
+        return ex;
     }
 
     @Override
@@ -159,11 +167,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
                     return getParticipant().call(name, event, timeout);
                 }
             } catch (ExecutionException ex) {
-                //rsb 0.12 hack
-                if (ex.getCause() instanceof InterruptedException) {
-                    throw (InterruptedException) ex.getCause();
-                }
-                throw ex;
+                throw rsbInterruptedHack(ex);
             }
         } catch (InterruptedException ex) {
             throw ex;
@@ -185,11 +189,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
                     return getParticipant().call(name);
                 }
             } catch (ExecutionException ex) {
-                //rsb 0.12 hack
-                if (ex.getCause() instanceof InterruptedException) {
-                    throw (InterruptedException) ex.getCause();
-                }
-                throw ex;
+                throw rsbInterruptedHack(ex);
             }
         } catch (InterruptedException ex) {
             throw ex;
@@ -211,11 +211,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
                     return getParticipant().call(name, timeout);
                 }
             } catch (ExecutionException ex) {
-                //rsb 0.12 hack
-                if (ex.getCause() instanceof InterruptedException) {
-                    throw (InterruptedException) ex.getCause();
-                }
-                throw ex;
+                throw rsbInterruptedHack(ex);
             }
         } catch (InterruptedException ex) {
             throw ex;
@@ -237,11 +233,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
                     return getParticipant().call(name, data);
                 }
             } catch (ExecutionException ex) {
-                //rsb 0.12 hack
-                if (ex.getCause() instanceof InterruptedException) {
-                    throw (InterruptedException) ex.getCause();
-                }
-                throw ex;
+                throw rsbInterruptedHack(ex);
             }
         } catch (InterruptedException ex) {
             throw ex;
@@ -263,11 +255,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
                     return getParticipant().call(name, data, timeout);
                 }
             } catch (ExecutionException ex) {
-                //rsb 0.12 hack
-                if (ex.getCause() instanceof InterruptedException) {
-                    throw (InterruptedException) ex.getCause();
-                }
-                throw ex;
+                throw rsbInterruptedHack(ex);
             }
         } catch (InterruptedException ex) {
             throw ex;

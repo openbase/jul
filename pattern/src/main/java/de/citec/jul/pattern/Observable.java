@@ -19,8 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class Observable<T> {
 
-    // TODO mpohling: must be removed out of performance reasons in release paramide!
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(Observable.class);
 
     private static final boolean DEFAULT_UNCHANGED_DATA_FILTER = true;
 
@@ -41,7 +40,7 @@ public class Observable<T> {
     public void addObserver(Observer<T> observer) {
         synchronized (LOCK) {
             if (observers.contains(observer)) {
-                logger.warn("Skip observer registration. Observer[" + observer + "] is already registered!");
+                LOGGER.warn("Skip observer registration. Observer[" + observer + "] is already registered!");
                 return;
             }
 

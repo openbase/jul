@@ -33,6 +33,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -47,6 +49,8 @@ import rst.rsb.ScopeType;
  */
 public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Activatable {
 
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    
     static {
         RSBSharedConnectionConfig.load();
     }
@@ -268,7 +272,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             while (true) {
 
                 if (!isActive()) {
-                    throw new InvalidStateException("remote service is not active!");
+                    throw new InvalidStateException("Remote service is not active!");
                 }
 
                 try {

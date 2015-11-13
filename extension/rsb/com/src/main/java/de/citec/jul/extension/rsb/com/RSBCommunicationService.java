@@ -314,7 +314,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         logger.debug("Notify data change of " + this);
         checkInitialization();
         if (!informer.isActive()) {
-            logger.info("Skip update notification because connection not established.");
+            logger.debug("Skip update notification because connection not established.");
             return;
         }
         try {

@@ -76,7 +76,7 @@ public class WatchDog implements Activatable {
 		synchronized (EXECUTION_LOCK) {
 			logger.trace("Init activation of service: " + serviceName);
 			if (minder != null) {
-				logger.warn("Skip activation, Service[" + serviceName + "] already running!");
+				logger.debug("Skip activation, Service[" + serviceName + "] already running!");
 				return;
 			}
 			minder = new Minder(serviceName + "WatchDog");
@@ -98,7 +98,7 @@ public class WatchDog implements Activatable {
 		synchronized (EXECUTION_LOCK) {
 			logger.trace("Init deactivation of service: " + serviceName);
 			if (minder == null) {
-				logger.warn("Skip deactivation, Service[" + serviceName + "] not running!");
+				logger.debug("Skip deactivation, Service[" + serviceName + "] not running!");
 				return;
 			}
 
@@ -164,7 +164,7 @@ public class WatchDog implements Activatable {
 						if (!service.isActive()) {
 							setServiceState(ServiceState.Initializing);
 							try {
-                                logger.debug("service activate: "+service.hashCode()+ " : "+serviceName);
+                                logger.debug("Service activate: "+service.hashCode()+ " : "+serviceName);
 								service.activate();
 								setServiceState(ServiceState.Running);
 							} catch (CouldNotPerformException | NullPointerException ex) {
@@ -177,6 +177,7 @@ public class WatchDog implements Activatable {
 					}
 				} catch (InterruptedException ex) {
 					logger.debug("Catch Service[" + serviceName + "] interruption.");
+                    interrupt();
 				}
 
 				while (service.isActive()) {
@@ -184,12 +185,13 @@ public class WatchDog implements Activatable {
 					try {
 						service.deactivate();
 						setServiceState(ServiceState.Finished);
-					} catch (CouldNotPerformException | InterruptedException ex) {
+					} catch (CouldNotPerformException ex) {
 						logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
 						try {
 							waitWithinDelay();
 						} catch (InterruptedException exx) {
 							logger.debug("Catch Service[" + serviceName + "] interruption during shutdown!");
+                            interrupt();
 						}
 					}
 				}
@@ -203,6 +205,8 @@ public class WatchDog implements Activatable {
 			Thread.sleep(DELAY);
 		}
 	}
+    
+    
 
 	public Activatable getService() {
 		return service;
@@ -219,7 +223,7 @@ public class WatchDog implements Activatable {
 			logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
 			serviceStateObserable.notifyObservers(serviceState);
 		} catch (MultiException ex) {
-			logger.warn("Could not notify statechange to all instanzes!", ex);
+			logger.warn("Could not notify state change to all instances!", ex);
 			ex.printExceptionStack();
 		}
 	}

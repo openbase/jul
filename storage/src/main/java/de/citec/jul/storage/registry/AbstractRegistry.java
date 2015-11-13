@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
     protected RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
 
-    private final SyncObject SYNC = new SyncObject(AbstractRegistry.class);
+    private final SyncObject consistencyCheckLock = new SyncObject("ConsistencyCheckLock");
+    private final ReentrantReadWriteLock registryLock;
+
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
@@ -57,6 +60,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
         try {
+            this.registryLock = new ReentrantReadWriteLock();
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
             this.pluginPool.init(this);
@@ -92,13 +96,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         pluginPool.beforeRegister(entry);
         try {
             checkAccess();
-            synchronized (SYNC) {
+            try {
+//                registryLock.readLock().lock();
+                registryLock.writeLock().lock();
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
+//                registryLock.writeLock().lock();
                 sandbox.register(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
+            } finally {
+                registryLock.writeLock().unlock();
+//                registryLock.readLock().unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
@@ -115,14 +125,21 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         pluginPool.beforeUpdate(entry);
         try {
             checkAccess();
-            synchronized (SYNC) {
+            try {
+                // validate update
+                registryLock.writeLock().lock();
+//                registryLock.readLock().lock();
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
-                // replace
+                // perform update
+//                registryLock.writeLock().lock();
                 sandbox.update(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
+            } finally {
+                registryLock.writeLock().unlock();
+//                registryLock.readLock().unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + "!", ex);
@@ -148,16 +165,24 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         ENTRY oldEntry;
         try {
             checkAccess();
-            synchronized (SYNC) {
+            try {
+                // validate removal
+//                registryLock.readLock().lock();
+                registryLock.writeLock().lock();
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
+                // perform removal
+//                registryLock.writeLock().lock();
                 sandbox.remove(entry);
                 try {
                     oldEntry = entryMap.remove(entry.getId());
                 } finally {
                     finishTransaction();
                 }
+            } finally {
+                registryLock.writeLock().unlock();
+//                registryLock.readLock().unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + "!", ex);
@@ -171,7 +196,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public ENTRY get(final KEY key) throws CouldNotPerformException {
         verifyID(key);
-        synchronized (SYNC) {
+        try {
+            registryLock.readLock().lock();
             if (!entryMap.containsKey(key)) {
                 TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>(new Comparator<KEY>() {
                     @Override
@@ -196,27 +222,38 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
             pluginPool.beforeGet(key);
             return entryMap.get(key);
+        } finally {
+            registryLock.readLock().unlock();
         }
     }
 
     @Override
     public List<ENTRY> getEntries() throws CouldNotPerformException {
         pluginPool.beforeGetEntries();
-        synchronized (SYNC) {
+        try {
+            registryLock.readLock().lock();
             return new ArrayList<>(entryMap.values());
+        } finally {
+            registryLock.readLock().unlock();
         }
     }
 
     @Override
     public int size() {
-        synchronized (SYNC) {
+        try {
+            registryLock.readLock().lock();
             return entryMap.size();
+        } finally {
+            registryLock.readLock().unlock();
         }
     }
 
     public boolean isEmpty() {
-        synchronized (SYNC) {
+        try {
+            registryLock.readLock().lock();
             return entryMap.isEmpty();
+        } finally {
+            registryLock.readLock().unlock();
         }
     }
 
@@ -233,9 +270,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public void clear() throws CouldNotPerformException {
         pluginPool.beforeClear();
-        synchronized (SYNC) {
+        try {
+            registryLock.writeLock().lock();
             sandbox.clear();
             entryMap.clear();
+        } finally {
+            registryLock.writeLock().unlock();
         }
         finishTransaction();
     }
@@ -246,7 +286,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @param map
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
-        synchronized (SYNC) {
+        try {
+            registryLock.writeLock().lock();
             try {
                 sandbox.replaceInternalMap(map);
                 entryMap.clear();
@@ -257,6 +298,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             } finally {
                 syncSandbox();
             }
+        } finally {
+            registryLock.writeLock().unlock();
         }
     }
 
@@ -279,6 +322,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private void notifyObservers() {
         try {
+            if (consistencyCheckRunning) {
+                // skip notifications during consistency check to avoid deadlocks between global registries.
+                return;
+            }
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
@@ -314,17 +361,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return true;
         }
 
-        synchronized (SYNC) {
+        synchronized (consistencyCheckLock) {
+            // avoid dublicated consistency checks
+            if (consistencyCheckRunning) {
+                return false;
+            }
+            consistencyCheckRunning = true;
+        }
 
+        try {
+            registryLock.writeLock().lock();
             try {
 
                 boolean modification = false;
-
-                // avoid dublicated consistency check
-                if (consistencyCheckRunning) {
-                    return modification;
-                }
-                consistencyCheckRunning = true;
 
                 int iterationCounter = 0;
                 MultiException.ExceptionStack exceptionStack = null;
@@ -382,13 +431,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     logger.debug("Registry consistend.");
                     break;
                 }
-
-                consistencyCheckRunning = false;
+                synchronized (consistencyCheckLock) {
+                    consistencyCheckRunning = false;
+                }
                 return modification;
 
             } catch (CouldNotPerformException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Consistency process aborted!", ex), logger, LogLevel.ERROR);
             }
+        } finally {
+            registryLock.writeLock().unlock();
         }
     }
 
@@ -402,8 +454,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     private void syncSandbox() throws CouldNotPerformException {
-        synchronized (SYNC) {
+        try {
+            registryLock.readLock().lock();
             sandbox.sync(entryMap);
+        } finally {
+            registryLock.readLock().unlock();
         }
     }
 

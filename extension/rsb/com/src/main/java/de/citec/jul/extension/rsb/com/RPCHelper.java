@@ -60,7 +60,7 @@ public class RPCHelper {
 
                         return new Event(resultType, result);
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " +method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
                     }
                 }
             });
@@ -106,8 +106,12 @@ public class RPCHelper {
 
     private static String eventDataToString(Event event) {
         if (event.getData() == null) {
-            return "";
+            return "Void";
         }
-        return event.getData().toString();
+        String rep = event.getData().toString();
+        if(rep.length() > 10) {
+            return event.getData().getClass().getSimpleName();
+        }
+        return rep;
     }
 }

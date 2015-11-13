@@ -16,6 +16,8 @@ import de.citec.jul.processing.FileProcessor;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -28,6 +30,8 @@ public class FileSynchronizer<D> extends Observable<D> {
 
         AUTO, CREATE, LOAD, REPLACE
     };
+    
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final FileProcessor<D> fileProcessor;
     private D data;
