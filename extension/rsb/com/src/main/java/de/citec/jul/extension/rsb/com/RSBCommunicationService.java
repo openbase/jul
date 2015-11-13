@@ -78,39 +78,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private ConnectionState state;
     private boolean initialized;
 
-//    /**
-//     *
-//     * @param scope
-//     * @param builder
-//     * @throws InstantiationException
-//     * @deprecated setup context via init method.
-//     */
-//    @Deprecated
-//    public RSBCommunicationService(final Scope scope, final MB builder) throws InstantiationException {
-//        this(builder);
-//        try {
-//            this.scope = new Scope(scope.toString().toLowerCase());
-//        } catch (Exception ex) {
-//            throw new InstantiationException(this, ex);
-//        }
-//    }
-
-//    /**
-//     * @param scope
-//     * @param builder
-//     * @throws de.citec.jul.exception.InstantiationException
-//     * @deprecated setup context via init method.
-//     */
-//    @Deprecated
-//    public RSBCommunicationService(final ScopeType.Scope scope, final MB builder) throws InstantiationException {
-//        this(builder);
-//        try {
-//            this.scope = ScopeTransformer.transform(scope);
-//        } catch (CouldNotPerformException ex) {
-//            throw new InstantiationException(this, ex);
-//        }
-//    }
-
     public RSBCommunicationService(final MB builder) throws InstantiationException {
         logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + ".");
         this.dataBuilder = builder;
@@ -131,24 +98,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             throw new InstantiationException(this, ex);
         }
     }
-
-//    /**
-//     * @param label
-//     * @param type
-//     * @param location
-//     * @param builder
-//     * @throws de.citec.jul.exception.InstantiationException
-//     * @deprecated setup context via init method.
-//     */
-//    @Deprecated
-//    public RSBCommunicationService(final String label, final String type, final ScopeProvider location, final MB builder) throws InstantiationException, CouldNotPerformException {
-//        this(builder);
-//        try {
-//            this.scope = generateScope(label, type, location);
-//        } catch (CouldNotPerformException ex) {
-//            throw new InstantiationException(this, ex);
-//        }
-//    }
 
     public static Scope generateScope(final String label, final String type, final ScopeProvider location) throws CouldNotPerformException {
         try {
