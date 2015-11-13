@@ -68,7 +68,7 @@ public abstract class LastValueHandler<V> implements Runnable {
                 }
             }
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory(logger, new CouldNotPerformException("Handler thread crashed!", ex));
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Handler thread crashed!", ex), logger);
         }
 //		Logger.info(LastValueHandler.this, "Run finished");
 //		Logger.info(LastValueHandler.this, "Run finished");

@@ -25,6 +25,8 @@ import de.citec.jul.extension.protobuf.ClosableDataBuilder;
 import de.citec.jul.iface.Activatable;
 import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Changeable;
+import de.citec.jul.pattern.Observable;
+import de.citec.jul.pattern.Observer;
 import de.citec.jul.schedule.WatchDog;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -227,6 +229,29 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             
             registerMethods(server);
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
+            
+            this.serverWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
+
+                @Override
+                public void update(Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
+                    if (data == WatchDog.ServiceState.Running) {
+
+                        // Sync data after service start.
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    serverWatchDog.waitForActivation();
+                                    notifyChange();
+                                } catch (InterruptedException | CouldNotPerformException ex) {
+                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
+                                }
+                            }
+                        }.start();
+                    }
+                }
+            });
+            
             initialized = true;
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);

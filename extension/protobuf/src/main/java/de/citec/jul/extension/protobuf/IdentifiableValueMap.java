@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
  */
 public class IdentifiableValueMap<KEY, VALUE extends Identifiable<KEY>> extends HashMap<KEY, VALUE> {
 
-    protected final Logger logger = LoggerFactory.getLogger(IdentifiableValueMap.class);
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public IdentifiableValueMap(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor);

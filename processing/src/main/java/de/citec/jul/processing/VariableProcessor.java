@@ -68,7 +68,7 @@ public class VariableProcessor {
             if (throwOnError) {
                 throw ex;
             } else {
-                ExceptionPrinter.printHistory(logger, ex);
+                ExceptionPrinter.printHistory(ex, logger);
             }
         }
         return context;

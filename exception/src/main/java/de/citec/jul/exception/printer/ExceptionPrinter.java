@@ -20,12 +20,26 @@ public class ExceptionPrinter {
     private static final String SEPARATOR = "=====================================";
 
     /**
-     * Print Exception messages without strack trace in non debug mode. Methode prints recusive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
      * @param <T> Exception type
      * @param th exception stack to print.
      * @param logger the logger used as message printer.
+     * @return the related Throwable returned for further exception handling.
+     */
+    public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final Logger logger) {
+        return printHistoryAndReturnThrowable(th, logger, LogLevel.ERROR);
+    }
+    
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
+     *
+     * @param <T> Exception type
+     * @param th exception stack to print.
+     * @param logger the logger used as message printer.
+     * @param level
      * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final Logger logger, final LogLevel level) {
@@ -34,19 +48,33 @@ public class ExceptionPrinter {
     }
 
     /**
-     * Print Exception messages without strack trace in non debug mode. Methode prints recusive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
      * @param <T> Exception type
      * @param logger the logger used as message printer.
      * @param th exception stack to print.
+     * @param level
      */
     public static <T extends Throwable> void printHistory(final T th, final Logger logger, final LogLevel level) {
         printHistory(th, new LogPrinter(logger, level));
     }
 
+    
     /**
-     * Print Exception messages without strack trace in non debug mode. Methode prints recusive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
+     *
+     * @param <T> Exception type
+     * @param th exception stack to print.
+     * @param logger
+     */
+    public static <T extends Throwable> void printHistory(final T th, final Logger logger) {
+        printHistory(th, logger, LogLevel.ERROR);
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
      * @param <T> Exception type
@@ -81,7 +109,7 @@ public class ExceptionPrinter {
     /**
      * Generates a human readable Exception cause chain of the given Exception as String representation.
      *
-     * @param th the Throwable to proccess the StackTrace.
+     * @param th the Throwable to process the StackTrace.
      * @return A History description as String.
      */
     public static String getHistory(final Throwable th) {
@@ -217,30 +245,5 @@ public class ExceptionPrinter {
         }
 
         return throwable.getMessage().replaceAll("\n", "").trim();
-    }
-
-    /**
-     *
-     * @param <T>
-     * @param logger
-     * @param th
-     * @return
-     * @deprecated please use printHistoryAndReturnThrowable(th, logger, LogLevel.ERROR) instead!
-     */
-    @Deprecated
-    public static <T extends Throwable> T printHistoryAndReturnThrowable(final Logger logger, final T th) {
-        return printHistoryAndReturnThrowable(th, logger, LogLevel.ERROR);
-    }
-
-    /**
-     *
-     * @param <T>
-     * @param logger
-     * @param th
-     * @deprecated please use printHistory(th, logger, LogLevel.ERROR) instead!
-     */
-    @Deprecated
-    public static <T extends Throwable> void printHistory(final Logger logger, final T th) {
-        printHistory(th, logger, LogLevel.ERROR);
     }
 }
