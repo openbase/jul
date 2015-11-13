@@ -38,22 +38,27 @@ public class RPCHelper {
                         if (event == null) {
                             throw new NotAvailableException("event");
                         }
-                        
+
                         Object result;
-                        
+                        Class<?> resultType = method.getReturnType();
+
                         if (event.getData() == null) {
                             result = method.invoke(instance);
                         } else {
                             result = method.invoke(instance, event.getData());
                         }
 
-                        // Implementation of Future support by resolving result.
-                        if(result instanceof Future) {
+                        // Implementation of Future support by resolving result to reache inner future object.
+                        if (method.getReturnType().isAssignableFrom(Future.class)) {
                             result = ((Future) result).get();
+                            if (result == null) {
+                                resultType = Void.class;
+                            } else {
+                                resultType = result.getClass();
+                            }
                         }
-                        
-                        return new Event(result.getClass(), result);
-                        
+
+                        return new Event(resultType, result);
                     } catch (Exception ex) {
                         throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
                     }

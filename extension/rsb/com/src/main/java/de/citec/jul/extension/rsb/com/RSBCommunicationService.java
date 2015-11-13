@@ -311,7 +311,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public void notifyChange() throws CouldNotPerformException {
-        logger.info("Notify data change of " + this);
+        logger.debug("Notify data change of " + this);
         checkInitialization();
         if (!informer.isActive()) {
             logger.info("Skip update notification because connection not established.");
@@ -371,7 +371,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public M requestStatus() throws CouldNotPerformException {
         try {
-            logger.info("request status");
             return getData();
         } catch (Exception ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not request status update.", ex), logger, LogLevel.ERROR);
