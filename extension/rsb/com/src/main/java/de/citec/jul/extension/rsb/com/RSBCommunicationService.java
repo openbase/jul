@@ -323,14 +323,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
     }
-
-    protected final void setField(String name, Object value) {
+    
+    protected final void setField(int fieldNumber, Object value) {
         try {
             try {
                 dataBuilderWriteLock.lock();
-                Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByName(name);
+                Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByNumber(fieldNumber);
                 if (findFieldByName == null) {
-                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + dataBuilder.getClass().getName());
+                    throw new NotAvailableException("Field[" + fieldNumber + "] does not exist for type " + dataBuilder.getClass().getName());
                 }
 
                 dataBuilder.setField(findFieldByName, value);
@@ -338,7 +338,25 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 dataBuilderWriteLock.unlock();
             }
         } catch (Exception ex) {
-            logger.warn("Could not set field [" + name + "=" + value + "] for " + this, ex);
+            logger.warn("Could not set field [" + fieldNumber + "=" + value + "] for " + this, ex);
+        }
+    }
+
+    protected final void setField(String fieldName, Object value) {
+        try {
+            try {
+                dataBuilderWriteLock.lock();
+                Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByName(fieldName);
+                if (findFieldByName == null) {
+                    throw new NotAvailableException("Field[" + fieldName + "] does not exist for type " + dataBuilder.getClass().getName());
+                }
+
+                dataBuilder.setField(findFieldByName, value);
+            } finally {
+                dataBuilderWriteLock.unlock();
+            }
+        } catch (Exception ex) {
+            logger.warn("Could not set field [" + fieldName + "=" + value + "] for " + this, ex);
         }
     }
 

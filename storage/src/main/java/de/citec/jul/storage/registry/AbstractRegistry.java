@@ -50,6 +50,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
 
     private final SyncObject consistencyCheckLock = new SyncObject("ConsistencyCheckLock");
+    private boolean consistent;
     private final ReentrantReadWriteLock registryLock;
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
@@ -61,6 +62,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
         try {
             this.registryLock = new ReentrantReadWriteLock();
+            this.consistent = true;
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
             this.pluginPool.init(this);
@@ -98,19 +100,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             checkAccess();
             try {
-//                registryLock.readLock().lock();
                 registryLock.writeLock().lock();
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
-//                registryLock.writeLock().lock();
                 sandbox.register(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
 
             } finally {
                 registryLock.writeLock().unlock();
-//                registryLock.readLock().unlock();
             }
             notifyObservers();
         } catch (CouldNotPerformException ex) {
@@ -131,18 +130,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 // validate update
                 registryLock.writeLock().lock();
-//                registryLock.readLock().lock();
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
                 // perform update
-//                registryLock.writeLock().lock();
                 sandbox.update(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
             } finally {
                 registryLock.writeLock().unlock();
-//                registryLock.readLock().unlock();
             }
             notifyObservers();
         } catch (CouldNotPerformException ex) {
@@ -171,13 +167,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             checkAccess();
             try {
                 // validate removal
-//                registryLock.readLock().lock();
                 registryLock.writeLock().lock();
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
                 // perform removal
-//                registryLock.writeLock().lock();
                 sandbox.remove(entry);
                 try {
                     oldEntry = entryMap.remove(entry.getId());
@@ -186,7 +180,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             } finally {
                 registryLock.writeLock().unlock();
-//                registryLock.readLock().unlock();
             }
             notifyObservers();
         } catch (CouldNotPerformException ex) {
@@ -315,6 +308,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         if (JPService.getProperty(JPReadOnly.class).getValue()) {
             throw new RejectedException("ReadOnlyMode is detected!");
         }
+
+        if (!consistent) {
+            logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
+            throw new RejectedException("Registry is inconsistent!");
+        }
     }
 
     @Override
@@ -329,10 +327,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private void notifyObservers() {
         try {
-//            if (consistencyCheckRunning) {
-//                // skip notifications during consistency check to avoid deadlocks between global registries.
-//                return;
-//            }
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
@@ -441,9 +435,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 synchronized (consistencyCheckLock) {
                     consistencyCheckRunning = false;
                 }
+                consistent = true;
                 return modification;
 
             } catch (CouldNotPerformException ex) {
+                consistent = false;
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Consistency process aborted!", ex), logger, LogLevel.ERROR);
             }
         } finally {
