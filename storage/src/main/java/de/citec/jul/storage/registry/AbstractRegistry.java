@@ -70,6 +70,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 shutdown();
             }));
             finishTransaction();
+            notifyObservers();
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -106,10 +107,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 sandbox.register(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
+
             } finally {
                 registryLock.writeLock().unlock();
 //                registryLock.readLock().unlock();
             }
+            notifyObservers();
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
         } finally {
@@ -141,6 +144,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 registryLock.writeLock().unlock();
 //                registryLock.readLock().unlock();
             }
+            notifyObservers();
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + "!", ex);
         } finally {
@@ -184,6 +188,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 registryLock.writeLock().unlock();
 //                registryLock.readLock().unlock();
             }
+            notifyObservers();
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + "!", ex);
         } finally {
@@ -274,10 +279,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.writeLock().lock();
             sandbox.clear();
             entryMap.clear();
+            finishTransaction();
         } finally {
             registryLock.writeLock().unlock();
         }
-        finishTransaction();
+        notifyObservers();
     }
 
     /**
@@ -301,6 +307,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             registryLock.writeLock().unlock();
         }
+        notifyObservers();
     }
 
     @Override
@@ -322,10 +329,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private void notifyObservers() {
         try {
-            if (consistencyCheckRunning) {
-                // skip notifications during consistency check to avoid deadlocks between global registries.
-                return;
-            }
+//            if (consistencyCheckRunning) {
+//                // skip notifications during consistency check to avoid deadlocks between global registries.
+//                return;
+//            }
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
@@ -450,7 +457,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex), logger, LogLevel.ERROR);
         }
-        notifyObservers();
     }
 
     private void syncSandbox() throws CouldNotPerformException {
