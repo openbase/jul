@@ -316,6 +316,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             public void run() {
                 try {
                     applyDataUpdate((M) dataSyncFuture.get(1, TimeUnit.MINUTES));
+                } catch (InterruptedException ex) {
+                    logger.debug("Skip data sync!");
                 } catch (Exception ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.ERROR);
                     dataSyncFuture.cancel(true);
@@ -425,11 +427,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         @Override
         public void internalNotify(Event event) {
             logger.debug("Internal notification: " + event.toString());
-            try {
-                applyDataUpdate((M) event.getData());
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not unpack data update! Received Datatype[" + event.getData().getClass().getName() + "] is not compatible with " + getClass().getName() + "]!", ex), logger, LogLevel.ERROR);
-            }
+            applyDataUpdate((M) event.getData());
         }
     }
 
@@ -438,12 +436,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
         try {
             notifyUpdated(data);
-        } catch (Exception ex) {
+        } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger, LogLevel.ERROR);
         }
         try {
             notifyObservers(data);
-        } catch (Exception ex) {
+        } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger, LogLevel.ERROR);
         }
     }
