@@ -7,6 +7,7 @@ package de.citec.jul.storage.registry;
 
 import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import de.citec.jps.core.JPService;
+import de.citec.jps.preset.JPForce;
 import de.citec.jps.preset.JPReadOnly;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
@@ -126,18 +127,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         pluginPool.beforeRegister(entry);
         try {
             try {
-//                registryLock.readLock().lock();
                 registryLock.writeLock().lock();
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
-//                registryLock.writeLock().lock();
                 sandbox.load(entry);
                 entryMap.put(entry.getId(), entry);
 
             } finally {
                 registryLock.writeLock().unlock();
-//                registryLock.readLock().unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + "!", ex);
@@ -336,7 +334,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new RejectedException("ReadOnlyMode is detected!");
         }
 
-        if (!consistent) {
+        if (!consistent && !JPService.getProperty(JPForce.class).getValue()) {
             logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
             throw new RejectedException("Registry is inconsistent!");
         }
