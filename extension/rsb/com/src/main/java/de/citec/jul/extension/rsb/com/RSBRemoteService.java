@@ -29,8 +29,13 @@ import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Activatable;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
@@ -50,15 +55,17 @@ import rst.rsb.ScopeType;
 public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Activatable {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     static {
         RSBSharedConnectionConfig.load();
     }
 
     private RSBListenerInterface listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
-    private final Handler mainHandler;
     private RSBRemoteServerInterface remoteServer;
+    private final Handler mainHandler;
+    private final ExecutorService executorService;
+    private final List<Future<Void>> syncTasks;
 
     protected Scope scope;
     private M data;
@@ -69,6 +76,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         this.initialized = false;
         this.remoteServer = new NotInitializedRSBRemoteServer();
         this.listener = new NotInitializedRSBListener();
+        this.executorService = Executors.newCachedThreadPool();
+        this.syncTasks = new ArrayList<>();
     }
 
     public void init(final String label, final ScopeProvider location) throws InitializationException {
@@ -158,17 +167,19 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                     if (data == WatchDog.ServiceState.Running) {
 
                         // Sync data after service start.
-                        new Thread() {
+                        syncTasks.add(executorService.submit(new Callable<Void>() {
+
                             @Override
-                            public void run() {
+                            public Void call() throws Exception {
                                 try {
                                     remoteServerWatchDog.waitForActivation();
                                     sync();
                                 } catch (InterruptedException | CouldNotPerformException ex) {
                                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
                                 }
+                                return null;
                             }
-                        }.start();
+                        }));
                     }
                 }
             });
@@ -200,6 +211,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public void deactivate() throws InterruptedException, CouldNotPerformException {
         try {
             checkInitialization();
+            
+            // skip sync tasks
+            syncTasks.forEach((Future<Void> task) -> task.cancel(true));
+            
             deactivateListener();
             deactivateRemoteServer();
         } catch (InvalidStateException ex) {
@@ -326,10 +341,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     /**
-     * Triggers a server - remote data sync and returns the new acquired data.
-     * All server data changes are synchronized automatically to all remote
-     * instances. In case you have triggered many server changes, you can use
-     * this method to get instantly a data object with all applied changes.
+     * Triggers a server - remote data sync and returns the new acquired data. All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
+     * changes, you can use this method to get instantly a data object with all applied changes.
      *
      * Note: This method blocks until the new data is acquired!
      *
@@ -367,6 +380,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         } catch (CouldNotPerformException | InterruptedException ex) {
             logger.error("Could not deactivate remote service!", ex);
         }
+        executorService.shutdownNow();
         super.shutdown();
     }
 

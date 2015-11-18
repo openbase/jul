@@ -50,7 +50,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
 
     private final SyncObject consistencyCheckLock = new SyncObject("ConsistencyCheckLock");
-    private boolean consistent;
+    protected boolean consistent;
     private final ReentrantReadWriteLock registryLock;
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
@@ -489,6 +489,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             registryLock.readLock().unlock();
         }
+    }
+
+    public boolean isConsistent() {
+        return consistent;
     }
 
     @Override

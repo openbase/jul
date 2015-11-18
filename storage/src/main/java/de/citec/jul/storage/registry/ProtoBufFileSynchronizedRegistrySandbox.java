@@ -79,6 +79,7 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
                 IdentifiableMessage<KEY, M, MB> copy = new IdentifiableMessage<>(entry.getValue());
                 entryMap.put(copy.getId(), copy);
             }
+            consistent = true;
         } catch (Exception ex) {
             throw new CouldNotPerformException("FATAL: Sendbox sync failed!", ex);
         }

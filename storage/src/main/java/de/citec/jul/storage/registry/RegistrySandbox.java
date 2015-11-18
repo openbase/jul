@@ -58,6 +58,7 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
                 ENTRY deepClone = cloner.deepClone(entry.getValue());
                 entryMap.put(deepClone.getId(), deepClone);
             }
+            consistent = true;
         } catch (Exception ex) {
             throw new CouldNotPerformException("FATAL: Sandbox sync failed!", ex);
         }
