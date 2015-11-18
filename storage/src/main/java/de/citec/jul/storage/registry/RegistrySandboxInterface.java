@@ -25,4 +25,5 @@ public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, 
     
     void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException;
 
+    public ENTRY load(final ENTRY entry) throws CouldNotPerformException;
 }

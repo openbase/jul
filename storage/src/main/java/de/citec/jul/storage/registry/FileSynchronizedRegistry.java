@@ -185,7 +185,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
                 FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
                 ENTRY entry = fileSynchronizer.getData();
                 fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
-                super.register(entry);
+                super.load(entry);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
@@ -194,6 +194,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         logger.info("====== " + size() + " entries successfully loaded. " + MultiException.size(exceptionStack) + " skipped. ======");
 
         checkConsistency();
+        notifyObservers();
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
     }
 
