@@ -175,7 +175,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                                     remoteServerWatchDog.waitForActivation();
                                     sync();
                                 } catch (InterruptedException | CouldNotPerformException ex) {
-                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
+                                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
                                 }
                                 return null;
                             }
@@ -211,10 +211,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public void deactivate() throws InterruptedException, CouldNotPerformException {
         try {
             checkInitialization();
-            
+
             // skip sync tasks
             syncTasks.forEach((Future<Void> task) -> task.cancel(true));
-            
+
             deactivateListener();
             deactivateRemoteServer();
         } catch (InvalidStateException ex) {
@@ -326,19 +326,24 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         final Future<Object> dataSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
 
         //TODO mpohling: switch to Future<M> return value by defining message class via construtor. 
-        new Thread() {
+        // sumbit task for result processing
+        executorService.submit(new Callable<Void>() {
+
             @Override
-            public void run() {
+            public Void call() throws Exception {
                 try {
                     applyDataUpdate((M) dataSyncFuture.get(1, TimeUnit.MINUTES));
-                } catch (InterruptedException ex) {
-                    logger.debug("Skip data sync!");
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.ERROR);
                     dataSyncFuture.cancel(true);
+                    if (ex instanceof InterruptedException) {
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.DEBUG);
+                    } else {
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.ERROR);
+                    }
                 }
+                return null;
             }
-        }.start();
+        });
         return dataSyncFuture;
     }
 
