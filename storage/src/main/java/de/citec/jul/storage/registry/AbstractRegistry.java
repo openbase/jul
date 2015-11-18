@@ -122,6 +122,33 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return entry;
     }
 
+    public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
+        logger.debug("Load " + entry + "...");
+        pluginPool.beforeRegister(entry);
+        try {
+            try {
+//                registryLock.readLock().lock();
+                registryLock.writeLock().lock();
+                if (entryMap.containsKey(entry.getId())) {
+                    throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
+                }
+//                registryLock.writeLock().lock();
+                sandbox.load(entry);
+                entryMap.put(entry.getId(), entry);
+
+            } finally {
+                registryLock.writeLock().unlock();
+//                registryLock.readLock().unlock();
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not register " + entry + "!", ex);
+        } finally {
+            syncSandbox();
+        }
+        pluginPool.afterRegister(entry);
+        return entry;
+    }
+
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Update " + entry + "...");
@@ -327,7 +354,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return false;
     }
 
-    private void notifyObservers() {
+    protected void notifyObservers() {
         try {
 //            if (consistencyCheckRunning) {
 //                // skip notifications during consistency check to avoid deadlocks between global registries.

@@ -6,7 +6,6 @@
 package de.citec.jul.storage.registry;
 
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.RejectedException;
 import de.citec.jul.iface.Identifiable;
 import java.util.List;
@@ -95,5 +94,10 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     @Override
     public String toString() {
         return getName();
+    }
+
+    @Override
+    public ENTRY load(ENTRY entry) throws CouldNotPerformException {
+        return entry;
     }
 }
