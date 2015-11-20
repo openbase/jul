@@ -363,7 +363,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             try {
                 dataUpdate = (M) callMethod(RPC_REQUEST_STATUS);
             } catch (InterruptedException ex) {
+                // TODO mpohling: forward interupted exception in paramite release.
                 throw new RejectedException("Remote call was interrupted!", ex);
+//                throw ex;
             }
 
             if (dataUpdate == null) {
@@ -391,6 +393,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         super.shutdown();
     }
 
+    /**
+     * Returns the data object of the given remote.
+     * @return
+     * @throws CouldNotPerformException
+     */
     public M getData() throws CouldNotPerformException {
         try {
             if (data == null) {
