@@ -8,7 +8,7 @@
     
     <groupId>de.citec</groupId>
     <artifactId>jul</artifactId>
-    <version>0.4-SNAPSHOT</version>
+    <version>0.5-SNAPSHOT</version>
     <name>JUL</name>
     <description>Java Utility Lib</description>
     
@@ -33,7 +33,7 @@
         <global.rst.sandbox.artifact>rst-sandbox-csra-ha-paramite</global.rst.sandbox.artifact>
         <global.rst.sandbox.version>0.12-SNAPSHOT</global.rst.sandbox.version>
         <global.rst.stable.artifact>rst-csra-ha-paramite</global.rst.stable.artifact>
-        <global.rst.stable.version>[0.12,0.13-SNAPSHOT)</global.rst.stable.version>
+        <global.rst.stable.version>0.12-SNAPSHOT</global.rst.stable.version>
         <global.rsb.version>[0.12,0.13-SNAPSHOT)</global.rsb.version>
         <global.rct.version>[1.0,1.1-SNAPSHOT)</global.rct.version>
     </properties>
