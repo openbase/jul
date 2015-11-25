@@ -334,6 +334,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new RejectedException("ReadOnlyMode is detected!");
         }
 
+        pluginPool.checkAccess();
+        
         if (!consistent && !JPService.getProperty(JPForce.class).getValue()) {
             logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
             throw new RejectedException("Registry is inconsistent!");
