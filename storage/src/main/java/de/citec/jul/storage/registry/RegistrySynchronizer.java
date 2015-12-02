@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  * @param <CONFIG_M>
  * @param <CONFIG_MB>
  */
-public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
+public class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Registry<KEY, ENTRY> registry;
@@ -97,7 +97,7 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
             for (CONFIG_M config : entryConfigDiff.getRemovedMessageMap().getMessages()) {
                 try {
                     remove(config);
-                } catch (Exception ex) {
+                } catch (CouldNotPerformException ex) {
                     removeExceptionStack = MultiException.push(this, ex, removeExceptionStack);
                 }
             }
@@ -109,9 +109,9 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
                         update(config);
                     } else {
                         remove(config);
-                        entryConfigDiff.getOriginMessages().remove(config);
+                        entryConfigDiff.getOriginMessages().removeMessage(config);
                     }
-                } catch (Exception ex) {
+                } catch (CouldNotPerformException ex) {
                     updateExceptionStack = MultiException.push(this, ex, updateExceptionStack);
                 }
             }
@@ -122,7 +122,7 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
                     if (verifyConfig(config)) {
                         register(config);
                     }
-                } catch (Exception ex) {
+                } catch (CouldNotPerformException ex) {
                     registerExceptionStack = MultiException.push(this, ex, registerExceptionStack);
                 }
             }
@@ -179,6 +179,7 @@ public abstract class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>,
      *
      * @param config
      * @return
+     * @throws de.citec.jul.exception.VerificationFailedException
      */
     public boolean verifyConfig(final CONFIG_M config) throws VerificationFailedException {
         return true;

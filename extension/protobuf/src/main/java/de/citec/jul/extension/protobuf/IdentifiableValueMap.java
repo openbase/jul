@@ -40,7 +40,8 @@ public class IdentifiableValueMap<KEY, VALUE extends Identifiable<KEY>> extends 
         }
     }
 
-    public VALUE remove(Identifiable<KEY> value) throws CouldNotPerformException {
+    public VALUE removeValue(Identifiable<KEY> value) throws CouldNotPerformException {
         return super.remove(value.getId());
     }
+
 }

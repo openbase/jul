@@ -54,4 +54,8 @@ public class IdentifiableMessageMap<KEY, M extends GeneratedMessage, MB extends 
         }
         return messages;
     }
+
+    public M removeMessage(M message) throws CouldNotPerformException {
+        return super.removeValue(new IdentifiableMessage<>(message)).getMessage();
+    }
 }
