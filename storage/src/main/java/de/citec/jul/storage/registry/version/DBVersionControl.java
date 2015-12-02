@@ -54,17 +54,17 @@ public class DBVersionControl {
     }
 
     public void validateAndUpgradeDBVersion(final File db) throws CouldNotPerformException {
-        int currenVersion = detectCurrendDBVersion(db);
+        int currentVersion = detectCurrendDBVersion(db);
         int latestVersion = getLatestDBVersion();
 
-        if (currenVersion == latestVersion) {
+        if (currentVersion == latestVersion) {
             logger.info("Database["+db.getName()+"] is up-to-date.");
             return;
-        } else if (currenVersion > latestVersion) {
-            throw new InvalidStateException("DB Version[" + currenVersion + "] is newer than the latest supported version[" + latestVersion + "]!");
+        } else if (currentVersion > latestVersion) {
+            throw new InvalidStateException("DB Version[" + currentVersion + "] is newer than the latest supported version[" + latestVersion + "]!");
         }
 
-        upgradeDB(currenVersion, latestVersion, db);
+        upgradeDB(currentVersion, latestVersion, db);
     }
 
     public void upgradeDB(final int currentVersion, final int targetVersion, final File db) throws CouldNotPerformException {
@@ -74,7 +74,7 @@ public class DBVersionControl {
             for (File entry : db.listFiles(entryFileProvider.getFileFilter())) {
                 upgradeDBEntry(entry, currentVersion, targetVersion, currentToTargetConverterPipeline);
             }
-            upgrateCurrendDBVersion(db);
+            upgradeCurrentDBVersion(db);
         } catch (CouldNotPerformException ex) {
             if (targetVersion == latestDBVersion) {
                 throw new CouldNotPerformException("Could not upgrade Database[" + db.getAbsolutePath() + "] to latest version[" + targetVersion + "]!", ex);
@@ -154,7 +154,7 @@ public class DBVersionControl {
                 if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
                     throw new CouldNotPerformException("No version information available!");
                 }
-                upgrateCurrendDBVersion(db);
+                upgradeCurrentDBVersion(db);
             }
 
             // load db version
@@ -177,7 +177,7 @@ public class DBVersionControl {
      * @param db
      * @throws CouldNotPerformException
      */
-    public void upgrateCurrendDBVersion(final File db) throws CouldNotPerformException {
+    public void upgradeCurrentDBVersion(final File db) throws CouldNotPerformException {
         try {
 
             // detect or create version file
