@@ -2,6 +2,7 @@ package de.citec.jul.storage.registry.version;
 
 import com.google.gson.JsonObject;
 import de.citec.jul.exception.CouldNotPerformException;
+import java.util.Collection;
 
 /**
  *
@@ -11,5 +12,5 @@ import de.citec.jul.exception.CouldNotPerformException;
  */
 public interface DBVersionConverter {
 
-    public JsonObject upgrade(JsonObject outdatedDBEntry) throws CouldNotPerformException;
+    public JsonObject upgrade(final JsonObject outdatedDBEntry, final Collection<JsonObject> dbSnapshot) throws CouldNotPerformException;
 }

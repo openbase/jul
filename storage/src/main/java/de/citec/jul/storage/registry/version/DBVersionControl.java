@@ -3,19 +3,28 @@ package de.citec.jul.storage.registry.version;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import de.citec.jps.core.JPService;
+import de.citec.jps.exception.JPServiceRuntimeException;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +48,6 @@ public class DBVersionControl {
     private final FileProvider entryFileProvider;
     final String entryType;
 
-
     public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage) throws InstantiationException {
         try {
             this.entryType = entryType;
@@ -58,7 +66,7 @@ public class DBVersionControl {
         int latestVersion = getLatestDBVersion();
 
         if (currentVersion == latestVersion) {
-            logger.info("Database["+db.getName()+"] is up-to-date.");
+            logger.info("Database[" + db.getName() + "] is up-to-date.");
             return;
         } else if (currentVersion > latestVersion) {
             throw new InvalidStateException("DB Version[" + currentVersion + "] is newer than the latest supported version[" + latestVersion + "]!");
@@ -69,70 +77,92 @@ public class DBVersionControl {
 
     public void upgradeDB(final int currentVersion, final int targetVersion, final File db) throws CouldNotPerformException {
         try {
-            logger.info("Upgrade Database["+db.getName()+"] from current Version["+currentVersion+"] to target Version["+targetVersion+"]...");
+            logger.info("Upgrade Database[" + db.getName() + "] from current Version[" + currentVersion + "] to target Version[" + targetVersion + "]...");
+            
+            // init
+            Map<File, JsonObject> dbSnapshot;
             final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
-            for (File entry : db.listFiles(entryFileProvider.getFileFilter())) {
-                upgradeDBEntry(entry, currentVersion, targetVersion, currentToTargetConverterPipeline);
-            }
-            upgradeCurrentDBVersion(db);
-        } catch (CouldNotPerformException ex) {
-            if (targetVersion == latestDBVersion) {
-                throw new CouldNotPerformException("Could not upgrade Database[" + db.getAbsolutePath() + "] to latest version[" + targetVersion + "]!", ex);
-            } else {
-                throw new CouldNotPerformException("Could not upgrade Database[" + db.getAbsolutePath() + "] to version[" + targetVersion + "]!", ex);
-            }
-        }
 
+            // load db entries
+            final HashMap<File, JsonObject> dbFileEntryMap = new HashMap<>();
+            for (File entry : db.listFiles(entryFileProvider.getFileFilter())) {
+                dbFileEntryMap.put(entry, loadDBEntry(entry));
+            }
+            
+            // upgrade db entries
+            for (DBVersionConverter converter : currentToTargetConverterPipeline) {
+                dbSnapshot = new HashMap<>(dbFileEntryMap);
+                for (Entry<File, JsonObject> dbEntry : dbSnapshot.entrySet()) {
+                    // update converted entry
+                    dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, Collections.unmodifiableCollection(dbSnapshot.values())));
+                }
+            }
+
+            // format and store
+            for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
+                storeEntry(formatEntryToHumanReadableString(dbEntry.getValue()), dbEntry.getKey());
+            }
+            
+            // upgrade db version
+            upgradeCurrentDBVersion(db);
+            
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not upgrade Database[" + db.getAbsolutePath() + "] to" + (targetVersion == latestDBVersion ? " latest" : "") + " version[" + targetVersion + "]!", ex);
+        }
     }
 
-    public void upgradeDBEntry(final File entry, final int currentVersion, final int targetVersion, List<DBVersionConverter> converterPipeline) throws CouldNotPerformException {
+    public JsonObject upgradeDBEntry(final JsonObject entry, final DBVersionConverter converter, final Collection<JsonObject> dbSnapshot) throws CouldNotPerformException {
         try {
-
-            JsonObject jSonEntry;
-            String entryAsString;
-
-            // load entry
-            try {
-                entryAsString = FileUtils.readFileToString(entry, "UTF-8");
-
-                JsonReader jsonReader = new JsonReader(new StringReader(entryAsString));
-
-                // needed to handle protobuf generated malformed json code.
-                jsonReader.setLenient(true);
-
-                jSonEntry = new JsonParser().parse(jsonReader).getAsJsonObject();
-            } catch (Exception ex) {
-                throw new CouldNotPerformException("Could not load entry!", ex);
-            }
-
             // upgrade
-            for (DBVersionConverter converter : converterPipeline) {
-                try {
-                    jSonEntry = converter.upgrade(jSonEntry);
-                } catch (Exception ex) {
-                    throw new CouldNotPerformException("Could not upgrade entry with Converter[" + converter.getClass().getSimpleName() + "]!", ex);
-                }
-                entryAsString = jSonEntry.toString();
-            }
-
-            // format
-            try {
-                JsonElement el = parser.parse(entryAsString);
-                entryAsString = gson.toJson(el);
-            } catch (Exception ex) {
-                throw new CouldNotPerformException("Could not format entry!", ex);
-            }
-
-            // store
-            try {
-                FileUtils.writeStringToFile(entry, entryAsString, "UTF-8");
-            } catch (Exception ex) {
-                throw new CouldNotPerformException("Could not store entry!", ex);
-            }
-
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not upgrade db Entry[" + entry.getAbsolutePath() + "]", ex);
+            return converter.upgrade(entry, dbSnapshot);
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not upgrade entry with Converter[" + converter.getClass().getSimpleName() + "]!", ex);
         }
+    }
+
+    /**
+     *
+     * @param jsonEntry
+     * @return
+     * @throws CouldNotPerformException
+     */
+    public String formatEntryToHumanReadableString(final JsonObject jsonEntry) throws CouldNotPerformException {
+
+        String entryAsString;
+        try {
+            // format human readable
+            entryAsString = jsonEntry.toString();
+            JsonElement el = parser.parse(entryAsString);
+            entryAsString = gson.toJson(el);
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not format entry!", ex);
+        }
+        return entryAsString;
+    }
+
+    public void storeEntry(final String entryAsString, final File entryFile) throws CouldNotPerformException {
+        try {
+            FileUtils.writeStringToFile(entryFile, entryAsString, "UTF-8");
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not store entry!", ex);
+        }
+    }
+
+    private JsonObject loadDBEntry(final File entry) throws CouldNotPerformException {
+        JsonObject jSonEntry;
+
+        // load entry
+        try {
+            JsonReader jsonReader = new JsonReader(new StringReader(FileUtils.readFileToString(entry, "UTF-8")));
+
+            // needed to handle protobuf generated malformed json code.
+            jsonReader.setLenient(true);
+
+            jSonEntry = new JsonParser().parse(jsonReader).getAsJsonObject();
+        } catch (IOException | JsonIOException | JsonSyntaxException ex) {
+            throw new CouldNotPerformException("Could not load entry!", ex);
+        }
+        return jSonEntry;
     }
 
     public int getLatestDBVersion() {
@@ -163,10 +193,10 @@ public class DBVersionControl {
                 versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
                 JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
                 return versionJsonObject.get(VERSION_FIELD).getAsInt();
-            } catch (Exception ex) {
+            } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not load Field[" + VERSION_FIELD + "]!", ex);
             }
-        } catch (Exception ex) {
+        } catch (JPServiceRuntimeException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect db version of Database[" + db.getName() + "]!", ex);
         }
     }
@@ -197,7 +227,7 @@ public class DBVersionControl {
                 throw new CouldNotPerformException("Could not write Field[" + VERSION_FIELD + "]!", ex);
             }
 
-        } catch (Exception ex) {
+        } catch (IOException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not upgrade current db version of Database[" + db.getName() + "]!", ex);
         }
     }
@@ -223,7 +253,7 @@ public class DBVersionControl {
         try {
             while (true) {
                 try {
-                    converterClassName = converterPackage.getName() + "." +  entryType + "_" + version + "_To_" + (version + 1) + "_DBConverter";
+                    converterClassName = converterPackage.getName() + "." + entryType + "_" + version + "_To_" + (version + 1) + "_DBConverter";
                     converterClass = (Class<DBVersionConverter>) Class.forName(converterClassName);
                     version++;
                 } catch (ClassNotFoundException ex) {
@@ -234,7 +264,7 @@ public class DBVersionControl {
             }
             latestDBVersion = version;
             return converterList;
-        } catch (Exception ex) {
+        } catch (java.lang.InstantiationException | IllegalAccessException ex) {
             throw new CouldNotPerformException("Could not load converter db pipeline of Package[" + converterPackage.getName() + "]!", ex);
         }
     }
