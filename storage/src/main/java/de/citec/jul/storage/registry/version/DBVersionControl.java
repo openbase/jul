@@ -91,10 +91,10 @@ public class DBVersionControl {
             
             // upgrade db entries
             for (DBVersionConverter converter : currentToTargetConverterPipeline) {
-                dbSnapshot = new HashMap<>(dbFileEntryMap);
-                for (Entry<File, JsonObject> dbEntry : dbSnapshot.entrySet()) {
+//                dbSnapshot = new HashMap<>(dbFileEntryMap);
+                for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
                     // update converted entry
-                    dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, Collections.unmodifiableCollection(dbSnapshot.values())));
+                    dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, dbFileEntryMap));
                 }
             }
 
@@ -111,7 +111,7 @@ public class DBVersionControl {
         }
     }
 
-    public JsonObject upgradeDBEntry(final JsonObject entry, final DBVersionConverter converter, final Collection<JsonObject> dbSnapshot) throws CouldNotPerformException {
+    public JsonObject upgradeDBEntry(final JsonObject entry, final DBVersionConverter converter, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException {
         try {
             // upgrade
             return converter.upgrade(entry, dbSnapshot);
