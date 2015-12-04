@@ -13,6 +13,7 @@ import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
 import de.citec.jul.exception.NotAvailableException;
@@ -25,6 +26,7 @@ import de.citec.jul.storage.registry.plugin.FileRegistryPluginPool;
 import de.citec.jul.storage.registry.version.DBVersionControl;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.apache.commons.io.FileUtils;
@@ -77,7 +79,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     }
 
     /**
-     * This method activate the version control unit of the underlying registry db. The version check and db upgrade is automatically performed during the registry db loading phrase. The db will be
+     * This method activates the version control unit of the underlying registry db. The version check and db upgrade is automatically performed during the registry db loading phrase. The db will be
      * upgraded to the latest db format provided by the given converter package. The converter package should contain only classes implementing the DBVersionConverter interface. To fully support
      * outdated db upgrade make sure that the converter pipeline covers the whole version range!
      *
@@ -100,7 +102,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         if (!isEmpty()) {
             throw new CouldNotPerformException("Could not activate version control because registry already loaded! Please activate version control before loading the registry.");
         }
-        versionControl = new DBVersionControl(entryType, fileProvider, converterPackage);
+        versionControl = new DBVersionControl(entryType, fileProvider, converterPackage, databaseDirectory);
     }
 
     @Override
@@ -159,10 +161,10 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
 
         // check db version
         if (versionControl != null) {
-            versionControl.validateAndUpgradeDBVersion(databaseDirectory);
+            versionControl.validateAndUpgradeDBVersion();
         }
 
-        if (JPService.getProperty(JPInitializeDB.class).getValue()) {
+        if (JPService.getProperty(JPResetDB.class).getValue()) {
             return;
         }
 
@@ -189,17 +191,33 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         }
 
         logger.info("====== " + size() + " entries successfully loaded. " + MultiException.size(exceptionStack) + " skipped. ======");
-
-        checkConsistency();
-        notifyObservers();
+        
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
+
+        // register and apply db version specific consistency handler
+        if (versionControl != null) {
+
+
+            List<ConsistencyHandler> versionConsistencyHandlers = versionControl.loadDBVersionConsistencyHandlers();
+
+            for (ConsistencyHandler handler : versionConsistencyHandlers) {
+                try {
+                    registerConsistencyHandler(handler);
+                    versionControl.registerConsistencyHandlerExecution(handler);
+                } catch (CouldNotPerformException ex) {
+                    throw new CouldNotPerformException("FATAL ERROR: During VersionConsistencyHandler[" + handler.getClass().getSimpleName() + "] execution!", ex);
+                }
+            }
+        }
+
+        notifyObservers();
     }
 
     @Override
     public void saveRegistry() throws MultiException {
         logger.info("Save registry into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
-        
+
         // save all changes.
         for (FileSynchronizer<ENTRY> fileSynchronizer : fileSynchronizerMap.values()) {
             try {
@@ -263,5 +281,10 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
 
     public File getDatabaseDirectory() {
         return databaseDirectory;
+    }
+
+    @Override
+    public Integer getDBVersion() {
+        return versionControl.getLatestDBVersion();
     }
 }

@@ -379,6 +379,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         consistencyHandlerList.add(consistencyHandler);
         sandbox.registerConsistencyHandler(consistencyHandler);
     }
+    
+    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
+        consistencyHandlerList.remove(consistencyHandler);
+        sandbox.removeConsistencyHandler(consistencyHandler);
+    }
 
     private boolean consistencyCheckRunning = false;
 

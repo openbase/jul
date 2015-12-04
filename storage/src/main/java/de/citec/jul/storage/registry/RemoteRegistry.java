@@ -9,6 +9,7 @@ import de.citec.jul.storage.registry.plugin.RemoteRegistryPlugin;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.NotSupportedException;
 import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
@@ -104,5 +105,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
             messageList.add(messageContainer.getMessage());
         }
         return messageList;
+    }
+
+    @Override
+    public Integer getDBVersion() throws NotAvailableException {
+        //TODO mpohling: implement!
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

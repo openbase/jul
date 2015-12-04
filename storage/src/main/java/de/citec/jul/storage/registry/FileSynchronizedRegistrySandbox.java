@@ -6,6 +6,8 @@
 package de.citec.jul.storage.registry;
 
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.NotSupportedException;
 import de.citec.jul.storage.registry.plugin.FileRegistryPlugin;
 import de.citec.jul.iface.Identifiable;
 import java.util.Map;
@@ -30,5 +32,10 @@ public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY
 
     @Override
     public void saveRegistry() throws CouldNotPerformException {
+    }
+
+    @Override
+    public Integer getDBVersion() throws NotAvailableException {
+        throw new NotAvailableException("dbversion", new NotSupportedException("getDBVersion", this));
     }
 }

@@ -23,6 +23,8 @@ public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, 
     
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
     
+    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
+    
     void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException;
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException;

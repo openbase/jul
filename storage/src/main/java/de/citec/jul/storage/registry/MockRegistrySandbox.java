@@ -40,6 +40,10 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
+    public void removeConsistencyHandler(ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
+    }
+
+    @Override
     public ENTRY remove(ENTRY entry) throws CouldNotPerformException {
         return null;
     }

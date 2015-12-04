@@ -6,6 +6,7 @@
 package de.citec.jul.storage.registry;
 
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Identifiable;
 
 /**
@@ -20,4 +21,6 @@ public interface FileSynchronizedRegistryInterface<KEY, VALUE extends Identifiab
     public void loadRegistry() throws CouldNotPerformException;
 
     public void saveRegistry() throws CouldNotPerformException;
+    
+    public Integer getDBVersion() throws NotAvailableException;;
 }
