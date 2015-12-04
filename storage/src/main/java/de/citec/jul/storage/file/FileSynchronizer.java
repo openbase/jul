@@ -107,6 +107,7 @@ public class FileSynchronizer<D> extends Observable<D> {
             if (!file.exists()) {
                 throw new NotAvailableException(file, "File not found!");
             }
+            
             return fileProcessor.serialize(data, file);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not save " + data + "!", ex);
@@ -158,7 +159,10 @@ public class FileSynchronizer<D> extends Observable<D> {
         }
     }
 
-    public D getData() {
+    public D getData() throws NotAvailableException {
+        if(data == null) {
+            throw new NotAvailableException("data");
+        }
         return data;
     }
 

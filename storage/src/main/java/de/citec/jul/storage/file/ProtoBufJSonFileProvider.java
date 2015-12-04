@@ -6,6 +6,7 @@
 package de.citec.jul.storage.file;
 
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.iface.Identifiable;
 import java.io.File;
 import java.io.FileFilter;
@@ -23,6 +24,10 @@ public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<Strin
     @Override
     public String getFileName(Identifiable<String> context) throws CouldNotPerformException {
         try {
+            if(context == null) {
+                throw new NotAvailableException("context");
+            }
+            
             return convertIntoValidFileName(context.getId().replaceAll("/", "_")) + FILE_SUFFIX;
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not generate file name!", ex);

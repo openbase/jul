@@ -19,8 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -91,7 +89,6 @@ public class DBVersionControl {
             
             // upgrade db entries
             for (DBVersionConverter converter : currentToTargetConverterPipeline) {
-//                dbSnapshot = new HashMap<>(dbFileEntryMap);
                 for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
                     // update converted entry
                     dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, dbFileEntryMap));

@@ -12,7 +12,6 @@ import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
-import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
 import java.util.ArrayList;
@@ -155,11 +154,6 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
     }
 
     @Override
-    public IdentifiableMessage<KEY, M, MB> get(final M message, final IdGenerator<KEY, M> idGenerator) throws CouldNotPerformException {
-        return get(new IdentifiableMessage<KEY, M, MB>(message, idGenerator));
-    }
-
-    @Override
     public IdentifiableMessage<KEY, M, MB> get(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException {
         return get(value.getId());
     }
@@ -167,9 +161,9 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
     @Override
     public List<M> getMessages() throws CouldNotPerformException {
         List<M> messageList = new ArrayList<>();
-        for (IdentifiableMessage<KEY, M, MB> messageContainer : values()) {
+        values().stream().forEach((messageContainer) -> {
             messageList.add(messageContainer.getMessage());
-        }
+        });
         return messageList;
     }
 

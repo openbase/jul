@@ -26,6 +26,7 @@ import de.citec.jul.storage.registry.version.DBVersionControl;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -76,31 +77,27 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     }
 
     /**
-     * This method activate the version control unit of the underlying registry db.
-     * The version check and db upgrade is automatically performed during the registry db loading phrase.
-     * The db will be upgraded to the latest db format provided by the given converter package.
-     * The converter package should contain only classes implementing the DBVersionConverter interface.
-     * To fully support outdated db upgrade make sure that the converter pipeline covers the whole version range!
+     * This method activate the version control unit of the underlying registry db. The version check and db upgrade is automatically performed during the registry db loading phrase. The db will be
+     * upgraded to the latest db format provided by the given converter package. The converter package should contain only classes implementing the DBVersionConverter interface. To fully support
+     * outdated db upgrade make sure that the converter pipeline covers the whole version range!
      *
-     * Activate version control before loading the registry.
-     * Please provide within the converter package only converter with the naming structure [$(EntryType)_$(VersionN)_To_$(VersionN+1)_DBConverter].
+     * Activate version control before loading the registry. Please provide within the converter package only converter with the naming structure
+     * [$(EntryType)_$(VersionN)_To_$(VersionN+1)_DBConverter].
      *
      * Example:
      *
      * converter package myproject.db.converter containing the converter pipeline
      *
-     * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class
-     * myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class
-     * myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
+     * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
      *
      * Would support the db upgrade from version 0 till the latest db version 3.
      *
-     * @param entryType 
+     * @param entryType
      * @param converterPackage the package containing all converter which provides db entry updates from the first to the latest db version.
      * @throws CouldNotPerformException in case of an invalid converter pipeline or initialization issues.
      */
     public void activateVersionControl(final String entryType, final Package converterPackage) throws CouldNotPerformException {
-        if(!isEmpty()) {
+        if (!isEmpty()) {
             throw new CouldNotPerformException("Could not activate version control because registry already loaded! Please activate version control before loading the registry.");
         }
         versionControl = new DBVersionControl(entryType, fileProvider, converterPackage);
@@ -113,7 +110,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(entry, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
         fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
         filePluginPool.afterRegister(entry, fileSynchronizer);
-        
+
         return entry;
     }
 
@@ -161,7 +158,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         assert databaseDirectory != null;
 
         // check db version
-        if(versionControl != null) {
+        if (versionControl != null) {
             versionControl.validateAndUpgradeDBVersion(databaseDirectory);
         }
 
@@ -202,6 +199,8 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     public void saveRegistry() throws MultiException {
         logger.info("Save registry into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
+        
+        // save all changes.
         for (FileSynchronizer<ENTRY> fileSynchronizer : fileSynchronizerMap.values()) {
             try {
                 fileSynchronizer.save();
@@ -209,6 +208,35 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
         }
+
+        // verify and apply file name changes
+        String generatedFileName;
+        FileSynchronizer<ENTRY> fileSynchronizer;
+        FileSynchronizer<ENTRY> newFileSynchronizer;
+        File newFile;
+
+        for (Entry<KEY, FileSynchronizer<ENTRY>> entry : fileSynchronizerMap.entrySet()) {
+            fileSynchronizer = entry.getValue();
+            try {
+                generatedFileName = fileProvider.getFileName(fileSynchronizer.getData());
+                if (!fileSynchronizer.getFile().getName().equals(generatedFileName)) {
+                    try {
+                        // rename file
+                        newFile = new File(fileSynchronizer.getFile().getParent(), generatedFileName);
+                        if (!fileSynchronizer.getFile().renameTo(newFile)) {
+                            throw new CouldNotPerformException("Rename failed without explicit error code, please rename file manually after registry shutdown!");
+                        }
+                        newFileSynchronizer = new FileSynchronizer<>(fileSynchronizer.getData(), newFile, FileSynchronizer.InitMode.AUTO, fileProcessor);
+                        fileSynchronizerMap.replace(entry.getKey(), fileSynchronizer, newFileSynchronizer);
+                    } catch (CouldNotPerformException ex) {
+                        exceptionStack = MultiException.push(this, new CouldNotPerformException("Could not apply db Entry[" + fileSynchronizer.getFile().getName() + "] renaming to Entry[" + generatedFileName + "]!", ex), exceptionStack);
+                    }
+                }
+            } catch (CouldNotPerformException ex) {
+                exceptionStack = MultiException.push(this, new CouldNotPerformException("Could not reconstruct filename of db Entry[" + fileSynchronizer.getFile().getName() + "]!", ex), exceptionStack);
+            }
+        }
+
         MultiException.checkAndThrow("Could not save all registry entries!", exceptionStack);
     }
 

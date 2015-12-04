@@ -41,11 +41,6 @@ public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends Ge
     }
 
     @Override
-    public IdentifiableMessage<KEY, M, MB> get(M message, IdGenerator<KEY, M> idGenerator) throws CouldNotPerformException {
-        return super.get(idGenerator.generateId(message));
-    }
-
-    @Override
     public IdentifiableMessage<KEY, M, MB> get(IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException {
         return super.get(value.getId());
     }
