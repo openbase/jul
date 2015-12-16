@@ -7,11 +7,12 @@ package de.citec.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jps.core.JPService;
+import de.citec.jps.exception.JPServiceException;
 import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.VerificationFailedException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import de.citec.jul.extension.protobuf.IdentifiableMessageMap;
@@ -72,8 +73,12 @@ public class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>, CONFIG_M
             this.internalSync();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
-            if (JPService.getProperty(JPTestMode.class).getValue()) {
-                throw ex;
+            try {
+                if (JPService.getProperty(JPTestMode.class).getValue()) {
+                    throw ex;
+                }
+            } catch (JPServiceException exx) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", exx), logger);
             }
         }
     }
@@ -136,7 +141,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>, CONFIG_M
                 newOriginEntryMap.put(remoteRegistry.get(entry.getId()));
             }
             entryConfigDiff.replaceOriginMap(newOriginEntryMap);
-            
+
             // build exception cause chain.
             MultiException.ExceptionStack exceptionStack = null;
             try {

@@ -5,23 +5,22 @@
  */
 package de.citec.jul.storage.registry;
 
-import de.citec.jul.storage.registry.plugin.FileRegistryPlugin;
 import de.citec.jps.core.JPService;
+import de.citec.jps.exception.JPServiceException;
 import de.citec.jps.preset.JPTestMode;
-import de.citec.jul.storage.file.FileSynchronizer;
-import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InstantiationException;
-import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.MultiException.ExceptionStack;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.RejectedException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.processing.FileProcessor;
-import de.citec.jul.storage.registry.jp.JPInitializeDB;
+import de.citec.jul.storage.file.FileProvider;
+import de.citec.jul.storage.file.FileSynchronizer;
 import de.citec.jul.storage.registry.jp.JPResetDB;
+import de.citec.jul.storage.registry.plugin.FileRegistryPlugin;
 import de.citec.jul.storage.registry.plugin.FileRegistryPluginPool;
 import de.citec.jul.storage.registry.version.DBVersionControl;
 import java.io.File;
@@ -29,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -60,24 +58,24 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
             this.fileProcessor = fileProcessor;
             this.fileProvider = fileProvider;
             this.filePluginPool = filePluginPool;
-            this.prepareDB();
-        } catch (CouldNotPerformException ex) {
+//            this.prepareDB();
+        } catch (NullPointerException ex) {
             throw new InstantiationException(this, ex);
         }
     }
 
-    private void prepareDB() throws CouldNotPerformException {
-        // clear db if reset property is set.
-        if (JPService.getProperty(JPResetDB.class).getValue()) {
-            try {
-                FileUtils.deleteDirectory(databaseDirectory);
-                FileUtils.forceMkdir(databaseDirectory);
-            } catch (Exception ex) {
-                throw new CouldNotPerformException("Could not reset db!", ex);
-            }
-        }
-    }
-
+    // should be done by JPDatabaseDirectory.
+//    private void prepareDB() throws CouldNotPerformException {
+//        // clear db if reset property is set.
+//        if (JPService.getProperty(JPResetDB.class).getValue()) {
+//            try {
+//                FileUtils.deleteDirectory(databaseDirectory);
+//                FileUtils.forceMkdir(databaseDirectory);
+//            } catch (Exception ex) {
+//                throw new CouldNotPerformException("Could not reset db!", ex);
+//            }
+//        }
+//    }
     /**
      * This method activates the version control unit of the underlying registry db. The version check and db upgrade is automatically performed during the registry db loading phrase. The db will be
      * upgraded to the latest db format provided by the given converter package. The converter package should contain only classes implementing the DBVersionConverter interface. To fully support
@@ -164,8 +162,12 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
             versionControl.validateAndUpgradeDBVersion();
         }
 
-        if (JPService.getProperty(JPResetDB.class).getValue()) {
-            return;
+        try {
+            if (JPService.getProperty(JPResetDB.class).getValue()) {
+                return;
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
         logger.info("Load registry out of " + databaseDirectory + "...");
@@ -191,12 +193,11 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         }
 
         logger.info("====== " + size() + " entries successfully loaded. " + MultiException.size(exceptionStack) + " skipped. ======");
-        
+
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
 
         // register and apply db version specific consistency handler
         if (versionControl != null) {
-
 
             List<ConsistencyHandler> versionConsistencyHandlers = versionControl.loadDBVersionConsistencyHandlers();
 
@@ -262,8 +263,12 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     public void checkAccess() throws RejectedException {
         super.checkAccess();
 
-        if (!databaseDirectory.canWrite() && !JPService.getProperty(JPTestMode.class).getValue()) {
-            throw new RejectedException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
+        try {
+            if (!databaseDirectory.canWrite() && !JPService.getProperty(JPTestMode.class).getValue()) {
+                throw new RejectedException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
     }
 

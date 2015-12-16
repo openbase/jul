@@ -7,6 +7,7 @@ package de.citec.jul.extension.protobuf;
 
 import com.google.protobuf.GeneratedMessage.Builder;
 import de.citec.jps.core.JPService;
+import de.citec.jps.exception.JPServiceException;
 import de.citec.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.NotInitializedException;
@@ -49,27 +50,36 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                if (!JPService.getProperty(JPTestMode.class).getValue()) {
-                    logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
-                    unlockRead("TimeoutHandler");
+                try {
+                    if (JPService.getProperty(JPTestMode.class).getValue()) {
+                        return;
+                    }
+                } catch (JPServiceException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
+                logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
+                unlockRead("TimeoutHandler");
             }
         };
         this.writeLockTimeout = new Timeout(LOCK_TIMEOUT) {
 
             @Override
             public void expired() {
-                if (!JPService.getProperty(JPTestMode.class).getValue()) {
-                    logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
-                    unlockWrite();
+                try {
+                    if (JPService.getProperty(JPTestMode.class).getValue()) {
+                        return;
+                    }
+                } catch (JPServiceException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
+                logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
+                unlockWrite();
             }
         };
     }
 
     /**
-     * Returns the internal builder instance. Use builder with care of read and
-     * write locks.
+     * Returns the internal builder instance. Use builder with care of read and write locks.
      *
      * @return
      */

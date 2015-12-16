@@ -5,25 +5,26 @@
  */
 package de.citec.jul.storage.registry;
 
-import de.citec.jul.storage.registry.plugin.GitRegistryPlugin;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jps.core.JPService;
+import de.citec.jps.exception.JPServiceException;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
-import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
-import de.citec.jul.iface.Identifiable;
-import de.citec.jul.pattern.Observable;
-import de.citec.jul.pattern.Observer;
 import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMap;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import de.citec.jul.extension.protobuf.container.transformer.IdentifiableMessageTransformer;
 import de.citec.jul.extension.protobuf.processing.ProtoBufFileProcessor;
+import de.citec.jul.iface.Identifiable;
+import de.citec.jul.pattern.Observable;
+import de.citec.jul.pattern.Observer;
 import de.citec.jul.storage.file.FileProvider;
 import de.citec.jul.storage.registry.jp.JPGitRegistryPlugin;
+import de.citec.jul.storage.registry.plugin.GitRegistryPlugin;
 import java.io.File;
 import java.util.List;
 
@@ -57,8 +58,12 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             };
             protobufMessageMap.addObserver(observer);
 
-            if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
-                registerPlugin(new GitRegistryPlugin(this));
+            try {
+                if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
+                    registerPlugin(new GitRegistryPlugin(this));
+                }
+            } catch (JPServiceException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             }
 
             // TODO mpohling: got error: corrupted double-linked list: 0x00007f178c2a9200

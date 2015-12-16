@@ -5,22 +5,23 @@
  */
 package de.citec.jul.storage.registry;
 
-import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import de.citec.jps.core.JPService;
+import de.citec.jps.exception.JPServiceException;
 import de.citec.jps.preset.JPForce;
 import de.citec.jps.preset.JPReadOnly;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.RejectedException;
 import de.citec.jul.exception.VerificationFailedException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.schedule.SyncObject;
+import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import de.citec.jul.storage.registry.plugin.RegistryPluginPool;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -330,15 +331,23 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public void checkAccess() throws RejectedException {
-        if (JPService.getProperty(JPReadOnly.class).getValue()) {
-            throw new RejectedException("ReadOnlyMode is detected!");
+        try {
+            if (JPService.getProperty(JPReadOnly.class).getValue()) {
+                throw new RejectedException("ReadOnlyMode is detected!");
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
         pluginPool.checkAccess();
-        
-        if (!consistent && !JPService.getProperty(JPForce.class).getValue()) {
-            logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
-            throw new RejectedException("Registry is inconsistent!");
+
+        try {
+            if (!consistent && !JPService.getProperty(JPForce.class).getValue()) {
+                logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
+                throw new RejectedException("Registry is inconsistent!");
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
     }
 
@@ -379,7 +388,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         consistencyHandlerList.add(consistencyHandler);
         sandbox.registerConsistencyHandler(consistencyHandler);
     }
-    
+
     public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
         consistencyHandlerList.remove(consistencyHandler);
         sandbox.removeConsistencyHandler(consistencyHandler);
