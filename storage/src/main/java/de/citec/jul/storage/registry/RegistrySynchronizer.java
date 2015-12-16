@@ -6,9 +6,9 @@
 package de.citec.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPServiceException;
-import de.citec.jps.preset.JPTestMode;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.MultiException;
 import de.citec.jul.exception.VerificationFailedException;

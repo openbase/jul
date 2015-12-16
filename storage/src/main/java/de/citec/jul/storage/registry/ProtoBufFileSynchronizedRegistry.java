@@ -7,8 +7,8 @@ package de.citec.jul.storage.registry;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPServiceException;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.printer.ExceptionPrinter;

@@ -5,9 +5,9 @@
  */
 package de.citec.jul.schedule;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPServiceException;
-import de.citec.jps.preset.JPTestMode;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;

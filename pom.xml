@@ -29,8 +29,8 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <global.version.jps>2.3-SNAPSHOT</global.version.jps>
-        <!--<global.version.jps>[2.2,2.3-SNAPSHOT)</global.version.jps>-->
+        <!--<global.version.jps>3.1-SNAPSHOT</global.version.jps>-->
+        <global.version.jps>[3.0,3.1-SNAPSHOT)</global.version.jps>
         <global.rst.sandbox.artifact>rst-sandbox-csra-ha-paramite</global.rst.sandbox.artifact>
         <global.rst.sandbox.version>0.12-SNAPSHOT</global.rst.sandbox.version>
         <global.rst.stable.artifact>rst-csra-ha-paramite</global.rst.stable.artifact>
@@ -83,7 +83,7 @@
     
     <dependencies>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jps</artifactId>
             <version>${global.version.jps}</version>
         </dependency>

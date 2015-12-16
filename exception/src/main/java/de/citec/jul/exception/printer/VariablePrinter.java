@@ -1,8 +1,8 @@
 package de.citec.jul.exception.printer;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPServiceException;
-import de.citec.jps.preset.JPVerbose;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPVerbose;
 import de.citec.jul.exception.CouldNotPerformException;
 import java.io.IOException;
 import java.io.PrintWriter;

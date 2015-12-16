@@ -5,9 +5,9 @@
  */
 package de.citec.jul.storage.registry.jp;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPNotAvailableException;
-import de.citec.jps.preset.AbstractJPBoolean;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPNotAvailableException;
+import org.dc.jps.preset.AbstractJPBoolean;
 
 /**
  *

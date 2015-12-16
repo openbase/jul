@@ -5,13 +5,13 @@
  */
 package de.citec.jul.storage.registry.jp;
 
-import de.citec.jps.core.AbstractJavaProperty.ValueType;
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPBadArgumentException;
-import de.citec.jps.exception.JPServiceException;
-import de.citec.jps.exception.JPValidationException;
-import de.citec.jps.preset.AbstractJPBoolean;
-import de.citec.jps.preset.JPTestMode;
+import org.dc.jps.core.AbstractJavaProperty.ValueType;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPBadArgumentException;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.exception.JPValidationException;
+import org.dc.jps.preset.AbstractJPBoolean;
+import org.dc.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import java.io.IOException;

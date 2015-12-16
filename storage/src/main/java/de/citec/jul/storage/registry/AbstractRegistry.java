@@ -5,10 +5,10 @@
  */
 package de.citec.jul.storage.registry;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPServiceException;
-import de.citec.jps.preset.JPForce;
-import de.citec.jps.preset.JPReadOnly;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPForce;
+import org.dc.jps.preset.JPReadOnly;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
