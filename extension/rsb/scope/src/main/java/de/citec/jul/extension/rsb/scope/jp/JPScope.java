@@ -5,7 +5,7 @@
  */
 package de.citec.jul.extension.rsb.scope.jp;
 
-import de.citec.jps.core.AbstractJavaProperty;
+import org.dc.jps.core.AbstractJavaProperty;
 import java.util.List;
 import rsb.Scope;
 

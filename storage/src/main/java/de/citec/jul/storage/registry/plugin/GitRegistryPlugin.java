@@ -5,19 +5,20 @@
  */
 package de.citec.jul.storage.registry.plugin;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPTestMode;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.RejectedException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.storage.file.FileSynchronizer;
-import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import de.citec.jul.storage.registry.FileSynchronizedRegistry;
 import de.citec.jul.storage.registry.RegistryInterface;
 import de.citec.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
+import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -135,9 +136,13 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     private void commitAllChanges() throws CouldNotPerformException {
 
         // Avoid commit in test mode.
-        if (JPService.getProperty(JPTestMode.class).getValue()) {
-            logger.warn("Skip commit because test mode is enabled!");
-            return;
+        try {
+            if (JPService.getProperty(JPTestMode.class).getValue()) {
+                logger.warn("Skip commit because test mode is enabled!");
+                return;
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
         // Avoid commit if branch is detached.

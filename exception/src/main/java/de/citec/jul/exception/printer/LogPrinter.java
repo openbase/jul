@@ -1,7 +1,9 @@
 package de.citec.jul.exception.printer;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPVerbose;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPVerbose;
+import de.citec.jul.exception.CouldNotPerformException;
 import static de.citec.jul.exception.printer.LogLevel.DEBUG;
 import static de.citec.jul.exception.printer.LogLevel.ERROR;
 import static de.citec.jul.exception.printer.LogLevel.INFO;
@@ -26,47 +28,52 @@ public class LogPrinter implements Printer {
     @Override
     public void print(final String message) {
         switch (level) {
-        case TRACE:
-            logger.trace(message);
-            break;
-        case DEBUG:
-            logger.debug(message);
-            break;
-        case INFO:
-            logger.info(message);
-            break;
-        case WARN:
-            logger.warn(message);
-            break;
-        case ERROR:
-            logger.error(message);
-            break;
+            case TRACE:
+                logger.trace(message);
+                break;
+            case DEBUG:
+                logger.debug(message);
+                break;
+            case INFO:
+                logger.info(message);
+                break;
+            case WARN:
+                logger.warn(message);
+                break;
+            case ERROR:
+                logger.error(message);
+                break;
         }
     }
 
     @Override
     public void print(String message, Throwable throwable) {
         switch (level) {
-        case TRACE:
-            logger.trace(message, throwable);
-            break;
-        case DEBUG:
-            logger.debug(message, throwable);
-            break;
-        case INFO:
-            logger.info(message, throwable);
-            break;
-        case WARN:
-            logger.warn(message, throwable);
-            break;
-        case ERROR:
-            logger.error(message, throwable);
-            break;
+            case TRACE:
+                logger.trace(message, throwable);
+                break;
+            case DEBUG:
+                logger.debug(message, throwable);
+                break;
+            case INFO:
+                logger.info(message, throwable);
+                break;
+            case WARN:
+                logger.warn(message, throwable);
+                break;
+            case ERROR:
+                logger.error(message, throwable);
+                break;
         }
     }
 
     @Override
     public boolean isDebugEnabled() {
-        return logger.isDebugEnabled() || JPService.getProperty(JPVerbose.class).getValue();
+        try {
+            return logger.isDebugEnabled() || JPService.getProperty(JPVerbose.class).getValue();
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+            return true;
+        }
     }
 };

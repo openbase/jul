@@ -5,12 +5,14 @@
  */
 package de.citec.jul.storage.file;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPTestMode;
-import de.citec.jul.exception.NotAvailableException;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.EnumNotSupportedException;
+import de.citec.jul.exception.InstantiationException;
+import de.citec.jul.exception.NotAvailableException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.processing.FileProcessor;
 import java.io.File;
@@ -30,7 +32,7 @@ public class FileSynchronizer<D> extends Observable<D> {
 
         AUTO, CREATE, LOAD, REPLACE
     };
-    
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final FileProcessor<D> fileProcessor;
@@ -91,12 +93,16 @@ public class FileSynchronizer<D> extends Observable<D> {
 
     public final File save(final D data) throws CouldNotPerformException {
         logger.debug("Save " + data + " into " + file);
-        
-        if(JPService.getProperty(JPTestMode.class).getValue()) {
-            logger.warn("Skip data save because "+JPTestMode.class.getSimpleName()+" is enabled!");
-            return file;
+
+        try {
+            if (JPService.getProperty(JPTestMode.class).getValue()) {
+                logger.warn("Skip data save because " + JPTestMode.class.getSimpleName() + " is enabled!");
+                return file;
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
-        
+
         try {
             if (data == null) {
                 throw new NotAvailableException("data");
@@ -107,7 +113,7 @@ public class FileSynchronizer<D> extends Observable<D> {
             if (!file.exists()) {
                 throw new NotAvailableException(file, "File not found!");
             }
-            
+
             return fileProcessor.serialize(data, file);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not save " + data + "!", ex);
@@ -121,12 +127,16 @@ public class FileSynchronizer<D> extends Observable<D> {
 
     private File create(D data) throws CouldNotPerformException {
         logger.debug("Create " + file);
-        
-        if(JPService.getProperty(JPTestMode.class).getValue()) {
-            logger.warn("Skip file creation because "+JPTestMode.class.getSimpleName()+" is enabled!");
-            return file;
+
+        try {
+            if (JPService.getProperty(JPTestMode.class).getValue()) {
+                logger.warn("Skip file creation because " + JPTestMode.class.getSimpleName() + " is enabled!");
+                return file;
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
-        
+
         try {
             if (data == null) {
                 throw new NotAvailableException("data");
@@ -141,12 +151,16 @@ public class FileSynchronizer<D> extends Observable<D> {
     }
 
     public void delete() throws CouldNotPerformException {
-        
-        if(JPService.getProperty(JPTestMode.class).getValue()) {
-            logger.warn("Skip file deletion because "+JPTestMode.class.getSimpleName()+" is enabled!");
-            return;
+
+        try {
+            if (JPService.getProperty(JPTestMode.class).getValue()) {
+                logger.warn("Skip file deletion because " + JPTestMode.class.getSimpleName() + " is enabled!");
+                return;
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
-        
+
         try {
             if (!file.exists()) {
                 throw new FileNotFoundException(file.getAbsolutePath());
@@ -160,7 +174,7 @@ public class FileSynchronizer<D> extends Observable<D> {
     }
 
     public D getData() throws NotAvailableException {
-        if(data == null) {
+        if (data == null) {
             throw new NotAvailableException("data");
         }
         return data;

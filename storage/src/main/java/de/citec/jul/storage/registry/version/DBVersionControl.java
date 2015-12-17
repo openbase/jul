@@ -9,8 +9,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
-import de.citec.jps.core.JPService;
-import de.citec.jps.exception.JPServiceRuntimeException;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
@@ -204,7 +204,7 @@ public class DBVersionControl {
             } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not load Field[" + VERSION_FIELD + "]!", ex);
             }
-        } catch (JPServiceRuntimeException | CouldNotPerformException ex) {
+        } catch (JPServiceException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect db version of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
@@ -286,7 +286,7 @@ public class DBVersionControl {
     public List<ConsistencyHandler> loadDBVersionConsistencyHandlers(final FileSynchronizedRegistryInterface registry) throws CouldNotPerformException {
         List<ConsistencyHandler> consistencyHandlerList = new ArrayList<>();
         String consistencyHandlerPackage = converterPackage.getName() + ".consistency";
-        
+
         List<String> executedHandlerList = detectExecutedVersionConsistencyHandler();
 
         String consistencyHandlerName = null;
@@ -301,7 +301,7 @@ public class DBVersionControl {
                     if(executedHandlerList.contains(consistencyHandlerName)) {
                         continue;
                     }
-                    
+
                     // load handler
                     consistencyHandlerClass = (Class<? extends AbstractVersionConsistencyHandler>) Class.forName(consistencyHandlerPackage + "." + consistencyHandlerName);
                 } catch (ClassNotFoundException ex) {
@@ -346,13 +346,13 @@ public class DBVersionControl {
             // register handler
             try {
                 JsonArray consistencyHandlerJsonArray = versionJsonObject.getAsJsonArray(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD);
-                
+
                 // create if not exists.
                 if(consistencyHandlerJsonArray == null) {
                     consistencyHandlerJsonArray = new JsonArray();
                     versionJsonObject.add(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD, consistencyHandlerJsonArray);
                 }
-                
+
                 consistencyHandlerJsonArray.add(versionConsistencyHandler.getClass().getSimpleName());
                 FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
             } catch (CouldNotPerformException | IOException ex) {
@@ -393,7 +393,7 @@ public class DBVersionControl {
             } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not load Field[" + APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD + "]!", ex);
             }
-        } catch (JPServiceRuntimeException | CouldNotPerformException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect db version of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }

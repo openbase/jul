@@ -1,7 +1,9 @@
 package de.citec.jul.exception.printer;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPVerbose;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPVerbose;
+import de.citec.jul.exception.CouldNotPerformException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -40,7 +42,12 @@ public class VariablePrinter implements Printer {
 
     @Override
     public boolean isDebugEnabled() {
-        return JPService.getProperty(JPVerbose.class).getValue();
+        try {
+            return JPService.getProperty(JPVerbose.class).getValue();
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+            return true;
+        }
     }
 
     public String getMessages() {

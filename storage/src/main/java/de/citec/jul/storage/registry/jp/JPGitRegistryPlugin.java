@@ -5,8 +5,9 @@
  */
 package de.citec.jul.storage.registry.jp;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.AbstractJPBoolean;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPNotAvailableException;
+import org.dc.jps.preset.AbstractJPBoolean;
 
 /**
  *
@@ -26,7 +27,7 @@ public class JPGitRegistryPlugin extends AbstractJPBoolean {
     }
 
     @Override
-    public Boolean getDefaultValue() {
+    public Boolean getDefaultValue() throws JPNotAvailableException {
         return !JPService.getProperty(JPGitRegistryPluginRemoteURL.class).getValue().isEmpty() || super.getDefaultValue();
     }
 

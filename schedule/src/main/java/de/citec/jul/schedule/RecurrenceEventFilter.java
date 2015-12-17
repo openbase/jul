@@ -5,20 +5,20 @@
  */
 package de.citec.jul.schedule;
 
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPTestMode;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPTestMode;
+import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
- * Threepwood</a>
+ * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  *
- * RecurrenceEventFilter helps to filter high frequency events. After a new
- * incoming event is processed, all further incoming events are skipped except
- * of the last event which is executed after the defined timeout is reached.
+ * RecurrenceEventFilter helps to filter high frequency events. After a new incoming event is processed, all further incoming events are skipped except of the last event which is executed after the
+ * defined timeout is reached.
  */
 public abstract class RecurrenceEventFilter {
 
@@ -38,8 +38,12 @@ public abstract class RecurrenceEventFilter {
     public RecurrenceEventFilter(long timeout) {
         this.changeDetected = false;
 
-        if (JPService.getProperty(JPTestMode.class).getValue()) {
-            timeout = Math.min(timeout, DEFAULT_TEST_TIMEOUT);
+        try {
+            if (JPService.getProperty(JPTestMode.class).getValue()) {
+                timeout = Math.min(timeout, DEFAULT_TEST_TIMEOUT);
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
         this.timeout = new Timeout(timeout) {

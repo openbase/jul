@@ -5,25 +5,26 @@
  */
 package de.citec.jul.extension.rsb.com;
 
-import de.citec.jul.extension.rsb.iface.RSBInformerInterface;
-import de.citec.jul.extension.rsb.iface.RSBLocalServerInterface;
-import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPTestMode;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.NotInitializedException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import de.citec.jul.extension.protobuf.ClosableDataBuilder;
-import de.citec.jul.iface.Activatable;
+import de.citec.jul.extension.rsb.iface.RSBInformerInterface;
+import de.citec.jul.extension.rsb.iface.RSBLocalServerInterface;
+import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import de.citec.jul.extension.rsb.scope.ScopeTransformer;
+import de.citec.jul.iface.Activatable;
 import de.citec.jul.iface.Changeable;
 import de.citec.jul.pattern.Observable;
 import de.citec.jul.pattern.Observer;
@@ -148,13 +149,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
 
         ParticipantConfig internalParticipantConfig = participantConfig;
-        
-        // activate inprocess communication for junit tests.
-        if (JPService.getProperty(JPTestMode.class).getValue()) {
-            for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
-                transport.getValue().setEnabled(false);
+
+        try {
+            // activate inprocess communication for junit tests.
+            if (JPService.getProperty(JPTestMode.class).getValue()) {
+                for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
+                    transport.getValue().setEnabled(false);
+                }
+                internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
             }
-            internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
         try {
@@ -175,10 +180,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             server.addMethod(RPC_REQUEST_STATUS, (Event request) -> {
                 return new Event(messageClass, requestStatus());
             });
-            
+
             registerMethods(server);
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
-            
+
             this.serverWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
 
                 @Override
@@ -200,7 +205,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     }
                 }
             });
-            
+
             initialized = true;
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
@@ -323,7 +328,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
     }
-    
+
     protected final void setField(int fieldNumber, Object value) {
         try {
             try {

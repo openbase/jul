@@ -5,7 +5,7 @@
  */
 package de.citec.jul.storage.registry.jp;
 
-import de.citec.jps.preset.AbstractJPMapStringString;
+import org.dc.jps.preset.AbstractJPMapStringString;
 
 /**
  *

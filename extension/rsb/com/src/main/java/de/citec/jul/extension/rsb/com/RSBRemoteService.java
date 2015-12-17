@@ -5,28 +5,29 @@
  */
 package de.citec.jul.extension.rsb.com;
 
-import de.citec.jul.extension.rsb.iface.RSBListenerInterface;
-import de.citec.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import com.google.protobuf.Descriptors;
-import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import com.google.protobuf.GeneratedMessage;
-import de.citec.jps.core.JPService;
-import de.citec.jps.preset.JPTestMode;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPTestMode;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.CouldNotTransformException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.InitializationException;
 import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.RejectedException;
 import de.citec.jul.exception.TimeoutException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
-import de.citec.jul.pattern.Observable;
-import de.citec.jul.pattern.Observer;
 import static de.citec.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
+import de.citec.jul.extension.rsb.iface.RSBListenerInterface;
+import de.citec.jul.extension.rsb.iface.RSBRemoteServerInterface;
+import de.citec.jul.extension.rsb.scope.ScopeProvider;
 import de.citec.jul.extension.rsb.scope.ScopeTransformer;
 import de.citec.jul.iface.Activatable;
+import de.citec.jul.pattern.Observable;
+import de.citec.jul.pattern.Observer;
 import de.citec.jul.schedule.WatchDog;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
@@ -112,13 +113,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         try {
 
             ParticipantConfig internalParticipantConfig = participantConfig;
-
-            // activate inprocess communication for junit tests.
-            if (JPService.getProperty(JPTestMode.class).getValue()) {
-                for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
-                    transport.getValue().setEnabled(false);
+            try {
+                // activate inprocess communication for junit tests.
+                if (JPService.getProperty(JPTestMode.class).getValue()) {
+                    for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
+                        transport.getValue().setEnabled(false);
+                    }
+                    internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
                 }
-                internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
+            } catch (JPServiceException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             }
 
             if (scope == null) {
@@ -325,7 +329,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     protected Future<Object> sync() throws CouldNotPerformException {
         final Future<Object> dataSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
 
-        //TODO mpohling: switch to Future<M> return value by defining message class via construtor. 
+        //TODO mpohling: switch to Future<M> return value by defining message class via construtor.
         // sumbit task for result processing
         executorService.submit(new Callable<Void>() {
 
@@ -395,6 +399,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     /**
      * Returns the data object of the given remote.
+     *
      * @return
      * @throws CouldNotPerformException
      */
