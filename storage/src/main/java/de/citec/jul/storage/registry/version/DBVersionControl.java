@@ -16,11 +16,16 @@ import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.exception.InvalidStateException;
 import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.storage.file.FileProvider;
+import de.citec.jul.storage.registry.AbstractVersionConsistencyHandler;
 import de.citec.jul.storage.registry.ConsistencyHandler;
+import de.citec.jul.storage.registry.FileSynchronizedRegistry;
+import de.citec.jul.storage.registry.FileSynchronizedRegistryInterface;
 import de.citec.jul.storage.registry.jp.JPInitializeDB;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -274,17 +279,19 @@ public class DBVersionControl {
     /**
      * Loads a consistency handler list which is used for consistency reconstruction after a db upgrade.
      *
+     * @param registry
      * @return the consistency handler list.
      * @throws CouldNotPerformException
      */
-    public List<ConsistencyHandler> loadDBVersionConsistencyHandlers() throws CouldNotPerformException {
+    public List<ConsistencyHandler> loadDBVersionConsistencyHandlers(final FileSynchronizedRegistryInterface registry) throws CouldNotPerformException {
         List<ConsistencyHandler> consistencyHandlerList = new ArrayList<>();
         String consistencyHandlerPackage = converterPackage.getName() + ".consistency";
         
         List<String> executedHandlerList = detectExecutedVersionConsistencyHandler();
 
         String consistencyHandlerName = null;
-        Class<? extends ConsistencyHandler> consistencyHandlerClass;
+        Class<? extends AbstractVersionConsistencyHandler> consistencyHandlerClass;
+        Constructor<? extends ConsistencyHandler> constructor;
         try {
             for (int version = 0; version <= latestDBVersion; version++) {
                 try {
@@ -296,16 +303,17 @@ public class DBVersionControl {
                     }
                     
                     // load handler
-                    consistencyHandlerClass = (Class<? extends ConsistencyHandler>) Class.forName(consistencyHandlerPackage + "." + consistencyHandlerName);
+                    consistencyHandlerClass = (Class<? extends AbstractVersionConsistencyHandler>) Class.forName(consistencyHandlerPackage + "." + consistencyHandlerName);
                 } catch (ClassNotFoundException ex) {
                     logger.debug("No ConsistencyHandler[" + consistencyHandlerName + "] implemented for Version[" + version + "].", ex);
                     continue;
                 }
-                ConsistencyHandler newInstance = consistencyHandlerClass.newInstance();
+                constructor = consistencyHandlerClass.getConstructor(getClass(), FileSynchronizedRegistryInterface.class);
+                ConsistencyHandler newInstance = constructor.newInstance(this, registry);
                 consistencyHandlerList.add(newInstance);
             }
             return consistencyHandlerList;
-        } catch (java.lang.InstantiationException | IllegalAccessException ex) {
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException |java.lang.InstantiationException | IllegalArgumentException ex) {
             throw new CouldNotPerformException("Could not load consistencyHandler of Package[" + consistencyHandlerPackage + "]!", ex);
         }
     }
@@ -347,12 +355,12 @@ public class DBVersionControl {
                 
                 consistencyHandlerJsonArray.add(versionConsistencyHandler.getClass().getSimpleName());
                 FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
-            } catch (Exception ex) {
+            } catch (CouldNotPerformException | IOException ex) {
                 throw new CouldNotPerformException("Could not write Field[" + APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD + "]!", ex);
             }
 
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not upgrade current db version of Database[" + databaseDirectory.getName() + "]!", ex);
+            throw new CouldNotPerformException("Could not register ConsistencyHandler["+versionConsistencyHandler.getClass().getSimpleName()+"] in current db version config of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
 

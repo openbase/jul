@@ -197,13 +197,11 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         // register and apply db version specific consistency handler
         if (versionControl != null) {
 
-
-            List<ConsistencyHandler> versionConsistencyHandlers = versionControl.loadDBVersionConsistencyHandlers();
+            List<ConsistencyHandler> versionConsistencyHandlers = versionControl.loadDBVersionConsistencyHandlers(this);
 
             for (ConsistencyHandler handler : versionConsistencyHandlers) {
                 try {
                     registerConsistencyHandler(handler);
-                    versionControl.registerConsistencyHandlerExecution(handler);
                 } catch (CouldNotPerformException ex) {
                     throw new CouldNotPerformException("FATAL ERROR: During VersionConsistencyHandler[" + handler.getClass().getSimpleName() + "] execution!", ex);
                 }

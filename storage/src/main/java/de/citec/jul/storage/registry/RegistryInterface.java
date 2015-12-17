@@ -43,4 +43,6 @@ public interface RegistryInterface<KEY, ENTRY extends Identifiable<KEY>, R exten
 
     public boolean isReadOnly();
 
+    public boolean isConsistent();
+
 }

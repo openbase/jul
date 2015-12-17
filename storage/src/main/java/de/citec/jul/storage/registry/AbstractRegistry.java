@@ -335,7 +335,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
 
         pluginPool.checkAccess();
-        
+
         if (!consistent && !JPService.getProperty(JPForce.class).getValue()) {
             logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
             throw new RejectedException("Registry is inconsistent!");
@@ -379,7 +379,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         consistencyHandlerList.add(consistencyHandler);
         sandbox.registerConsistencyHandler(consistencyHandler);
     }
-    
+
     public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
         consistencyHandlerList.remove(consistencyHandler);
         sandbox.removeConsistencyHandler(consistencyHandler);
@@ -496,6 +496,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    @Override
     public boolean isConsistent() {
         return consistent;
     }
@@ -505,6 +506,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         super.shutdown();
         try {
             pluginPool.shutdown();
+
+            consistencyHandlerList.stream().forEach((consistencyHandler) -> {
+                consistencyHandler.shutdown();
+            });
+
             clear();
             sandbox.clear();
         } catch (CouldNotPerformException ex) {
