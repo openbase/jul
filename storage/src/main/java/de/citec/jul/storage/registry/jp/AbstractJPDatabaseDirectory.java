@@ -5,14 +5,14 @@
  */
 package de.citec.jul.storage.registry.jp;
 
+import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.exception.printer.ExceptionPrinter;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jps.exception.JPValidationException;
 import org.dc.jps.preset.AbstractJPDirectory;
 import org.dc.jps.preset.JPHelp;
 import org.dc.jps.tools.FileHandler;
-import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.exception.printer.ExceptionPrinter;
 
 /**
  *
@@ -53,7 +53,7 @@ public abstract class AbstractJPDatabaseDirectory extends AbstractJPDirectory {
         }
 
         if (!getValue().exists() && !reinitDetected) {
-            throw new JPValidationException("Could not detect database! You can use the argument " + JPInitializeDB.COMMAND_IDENTIFIERS[0] + " to initialize a new db enviroment. Use " + JPHelp.COMMAND_IDENTIFIERS[0] + " to get more options.");
+            throw new JPValidationException("Could not detect Database["+getValue().getAbsolutePath()+"]! You can use the argument " + JPInitializeDB.COMMAND_IDENTIFIERS[0] + " to initialize a new db enviroment. Use " + JPHelp.COMMAND_IDENTIFIERS[0] + " to get more options.");
         }
 
         super.validate();
