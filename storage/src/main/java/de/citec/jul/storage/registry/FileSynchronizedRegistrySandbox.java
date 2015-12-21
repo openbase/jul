@@ -10,6 +10,7 @@ import de.citec.jul.exception.NotAvailableException;
 import de.citec.jul.exception.NotSupportedException;
 import de.citec.jul.storage.registry.plugin.FileRegistryPlugin;
 import de.citec.jul.iface.Identifiable;
+import de.citec.jul.storage.registry.clone.RegistryCloner;
 import java.util.Map;
 
 /**
@@ -21,6 +22,10 @@ import java.util.Map;
  * @param <R>
  */
 public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY, R>> extends RegistrySandbox<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY, R> {
+
+    public FileSynchronizedRegistrySandbox(MAP entryMap, RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException {
+        super(entryMap, cloner);
+    }
 
     public FileSynchronizedRegistrySandbox(final MAP entryMap) throws CouldNotPerformException {
         super(entryMap);

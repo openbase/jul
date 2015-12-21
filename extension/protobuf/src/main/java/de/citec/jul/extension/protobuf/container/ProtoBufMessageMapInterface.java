@@ -5,9 +5,11 @@
  */
 package de.citec.jul.extension.protobuf.container;
 
+import com.google.protobuf.Descriptors;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
+import de.citec.jul.extension.protobuf.BuilderSyncSetup;
 import java.util.List;
 import java.util.Map;
 

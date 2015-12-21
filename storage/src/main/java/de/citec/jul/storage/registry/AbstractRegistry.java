@@ -20,11 +20,9 @@ import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Observable;
-import de.citec.jul.schedule.SyncObject;
 import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import de.citec.jul.storage.registry.plugin.RegistryPluginPool;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -51,9 +49,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
     protected RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
 
-    private final SyncObject consistencyCheckLock = new SyncObject("ConsistencyCheckLock");
     protected boolean consistent;
-    private final ReentrantReadWriteLock registryLock;
+    private final ReentrantReadWriteLock registryLock, consistencyCheckLock;
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
@@ -64,6 +61,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
         try {
             this.registryLock = new ReentrantReadWriteLock();
+            this.consistencyCheckLock = new ReentrantReadWriteLock();
             this.consistent = true;
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
@@ -223,14 +221,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             registryLock.readLock().lock();
             if (!entryMap.containsKey(key)) {
-                TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>(new Comparator<KEY>() {
-                    @Override
-                    public int compare(KEY o1, KEY o2) {
-                        if (o1 instanceof String && o2 instanceof String) {
-                            return ((String) o1).toLowerCase().compareTo(((String) o2).toLowerCase());
-                        }
-                        return ((Comparable<KEY>) o1).compareTo(o2);
+                TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>((KEY o1, KEY o2) -> {
+                    if (o1 instanceof String && o2 instanceof String) {
+                        return ((String) o1).toLowerCase().compareTo(((String) o2).toLowerCase());
+                    } else if (o1 instanceof Comparable && o2 instanceof Comparable) {
+                        return ((Comparable) o1).compareTo(((Comparable) o2));
                     }
+                    return (o1).toString().compareTo(o2.toString());
                 });
                 sortedMap.putAll(entryMap);
 
@@ -309,6 +306,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Replaces the internal registry map by the given one. Use with care!
      *
      * @param map
+     * @throws de.citec.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
         try {
@@ -394,94 +392,90 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         sandbox.removeConsistencyHandler(consistencyHandler);
     }
 
-    private boolean consistencyCheckRunning = false;
+    public final int checkConsistency() throws CouldNotPerformException {
 
-    public final boolean checkConsistency() throws CouldNotPerformException {
+        int modificationCounter = 0;
 
         if (consistencyHandlerList.isEmpty()) {
             logger.debug("Skip consistency check because no handler are registered.");
-            return true;
+            return modificationCounter;
         }
 
-        synchronized (consistencyCheckLock) {
-            // avoid dublicated consistency checks
-            if (consistencyCheckRunning) {
-                return false;
-            }
-            consistencyCheckRunning = true;
+        if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
+            // Avoid triggering recursive consistency checks.
+            return modificationCounter;
         }
 
         try {
             registryLock.writeLock().lock();
             try {
+                consistencyCheckLock.writeLock().lock();
+                try {
+                    int iterationCounter = 0;
+                    MultiException.ExceptionStack exceptionStack = null;
 
-                boolean modification = false;
+                    ConsistencyHandler lastActiveConsistencyHandler = null;
+                    Object lastModifieredEntry = null;
 
-                int iterationCounter = 0;
-                MultiException.ExceptionStack exceptionStack = null;
+                    while (true) {
 
-                ConsistencyHandler lastActiveConsistencyHandler = null;
-                Object lastModifieredEntry = null;
+                        Thread.yield();
 
-                while (true) {
+                        // handle handler interference
+                        if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
+                            MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
+                            throw new InvalidStateException("ConsistencyHandler interference detected!");
+                        }
 
-                    Thread.yield();
+                        if (exceptionStack != null) {
+                            exceptionStack.clear();
+                        }
 
-                    // handle handler interference
-                    if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
-                        MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
-                        throw new InvalidStateException("ConsistencyHandler interference detected!");
-                    }
-
-                    if (exceptionStack != null) {
-                        exceptionStack.clear();
-                    }
-
-                    iterationCounter++;
-                    try {
-                        for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
-                            consistencyHandler.reset();
-                            for (ENTRY entry : entryMap.values()) {
-                                try {
-                                    consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
-                                } catch (CouldNotPerformException | NullPointerException ex) {
-                                    exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
+                        iterationCounter++;
+                        try {
+                            for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+                                consistencyHandler.reset();
+                                for (ENTRY entry : entryMap.values()) {
+                                    try {
+                                        consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
+                                    } catch (CouldNotPerformException | NullPointerException ex) {
+                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
+                                    }
                                 }
                             }
+                        } catch (EntryModification ex) {
+
+                            // check if consistency handler is looping
+                            if (ex.getConsistencyHandler() == lastActiveConsistencyHandler && ex.getEntry().equals(lastModifieredEntry)) {
+                                throw new InvalidStateException("ConsistencyHandler[" + lastActiveConsistencyHandler + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
+                            }
+                            lastActiveConsistencyHandler = ex.getConsistencyHandler();
+                            lastModifieredEntry = ex.getEntry();
+
+                            // inform about modifications
+                            logger.info("Consistency modification applied: " + ex.getMessage());
+                            modificationCounter++;
+                            continue;
+                        } catch (Throwable ex) {
+                            throw new InvalidStateException("Fatal error occured during consistency check!", ex);
                         }
-                    } catch (EntryModification ex) {
 
-                        // check if consistency handler is looping
-                        if (ex.getConsistencyHandler() == lastActiveConsistencyHandler && ex.getEntry().equals(lastModifieredEntry)) {
-                            throw new InvalidStateException("ConsistencyHandler[" + lastActiveConsistencyHandler + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
+                        if (exceptionStack != null && !exceptionStack.isEmpty()) {
+                            continue;
                         }
-                        lastActiveConsistencyHandler = ex.getConsistencyHandler();
-                        lastModifieredEntry = ex.getEntry();
 
-                        // inform about modifications
-                        logger.info("Consistency modification applied: " + ex.getMessage());
-                        modification = true;
-                        continue;
-                    } catch (Throwable ex) {
-                        exceptionStack = MultiException.push(this, new InvalidStateException("Fatal error occured during consistency check!", ex), exceptionStack);
+                        logger.debug("Registry consistend.");
+                        break;
                     }
+                    consistent = true;
+                    return modificationCounter;
 
-                    if (exceptionStack != null && !exceptionStack.isEmpty()) {
-                        continue;
-                    }
-
-                    logger.debug("Registry consistend.");
-                    break;
+                } catch (CouldNotPerformException ex) {
+                    consistent = false;
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Consistency process aborted!", ex), logger, LogLevel.ERROR);
                 }
-                synchronized (consistencyCheckLock) {
-                    consistencyCheckRunning = false;
-                }
-                consistent = true;
-                return modification;
-
-            } catch (CouldNotPerformException ex) {
-                consistent = false;
-                throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Consistency process aborted!", ex), logger, LogLevel.ERROR);
+            } finally {
+                consistencyCheckLock.writeLock().unlock();
             }
         } finally {
             registryLock.writeLock().unlock();
