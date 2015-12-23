@@ -5,11 +5,12 @@
  */
 package de.citec.jul.storage.registry;
 
-import com.rits.cloning.Cloner;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.exception.printer.ExceptionPrinter;
 import de.citec.jul.exception.printer.LogLevel;
 import de.citec.jul.iface.Identifiable;
+import de.citec.jul.storage.registry.clone.RITSCloner;
+import de.citec.jul.storage.registry.clone.RegistryCloner;
 import de.citec.jul.storage.registry.plugin.RegistryPlugin;
 import java.util.Map;
 
@@ -24,30 +25,35 @@ import java.util.Map;
  */
 public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
 
-    private final static Cloner cloner = new Cloner();
+    private RegistryCloner<KEY, ENTRY, MAP> cloner;
 
-    public RegistrySandbox(MAP entryMap) throws CouldNotPerformException {
-        super(cloner.deepClone(entryMap));
+    public RegistrySandbox(final MAP entryMap) throws CouldNotPerformException {
+        this(entryMap, new RITSCloner<>());
+    }
+
+    public RegistrySandbox(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException {
+        super(cloner.deepCloneRegistryMap(entryMap));
+        this.cloner = cloner;
     }
 
     @Override
     public void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException {
-        super.replaceInternalMap(cloner.deepClone(map));
+        super.replaceInternalMap(cloner.deepCloneMap(map));
     }
 
     @Override
     public ENTRY superRemove(ENTRY entry) throws CouldNotPerformException {
-        return super.superRemove(cloner.deepClone(entry));
+        return super.superRemove(cloner.deepCloneEntry(entry));
     }
 
     @Override
     public ENTRY update(ENTRY entry) throws CouldNotPerformException {
-        return super.update(cloner.deepClone(entry));
+        return super.update(cloner.deepCloneEntry(entry));
     }
 
     @Override
     public ENTRY register(ENTRY entry) throws CouldNotPerformException {
-        return super.register(cloner.deepClone(entry));
+        return super.register(cloner.deepCloneEntry(entry));
     }
 
     @Override
@@ -55,7 +61,7 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
         try {
             entryMap.clear();
             for (Map.Entry<KEY, ENTRY> entry : map.entrySet()) {
-                ENTRY deepClone = cloner.deepClone(entry.getValue());
+                ENTRY deepClone = cloner.deepCloneEntry(entry.getValue());
                 entryMap.put(deepClone.getId(), deepClone);
             }
             consistent = true;

@@ -7,7 +7,6 @@ package de.citec.jul.extension.protobuf.container;
 
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
-import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import java.util.ArrayList;
 import java.util.HashMap;

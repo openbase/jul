@@ -35,4 +35,6 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP ex
     public void processData(final KEY id, final VALUE entry, final MAP entryMap, final R registry) throws CouldNotPerformException, EntryModification;
     
     public void reset();
+
+    public boolean shutdown();
 }

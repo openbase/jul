@@ -91,6 +91,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 
+    @Override
     public String getName() {
         return getClass().getSimpleName();
     }
@@ -103,5 +104,10 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     @Override
     public ENTRY load(ENTRY entry) throws CouldNotPerformException {
         return entry;
+    }
+
+    @Override
+    public boolean isConsistent() {
+        return true;
     }
 }

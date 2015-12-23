@@ -39,7 +39,6 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
     private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
     private final Observable<IdentifiableMessage<KEY, M, MB>> observable;
 
-
     private final Descriptors.FieldDescriptor fieldDescriptor;
 
     public ProtoBufMessageMap(final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor) {
@@ -54,6 +53,14 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
                 observable.notifyObservers(source, data);
             }
         };
+    }
+
+    public BuilderSyncSetup<SIB> getBuilderSetup() {
+        return builderSetup;
+    }
+
+    public Descriptors.FieldDescriptor getFieldDescriptor() {
+        return fieldDescriptor;
     }
 
     @Override

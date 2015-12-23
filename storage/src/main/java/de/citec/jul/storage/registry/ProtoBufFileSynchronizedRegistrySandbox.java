@@ -5,12 +5,14 @@
  */
 package de.citec.jul.storage.registry;
 
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import de.citec.jul.exception.CouldNotPerformException;
 import de.citec.jul.extension.protobuf.IdGenerator;
 import de.citec.jul.extension.protobuf.IdentifiableMessage;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import de.citec.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
+import de.citec.jul.storage.registry.clone.ProtoBufCloner;
 import java.util.List;
 import java.util.Map;
 
@@ -26,8 +28,8 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
 
     private final IdGenerator<KEY, M> idGenerator;
 
-    public ProtoBufFileSynchronizedRegistrySandbox(final IdGenerator<KEY, M> idGenerator) throws CouldNotPerformException {
-        super(new ProtoBufMessageMapWrapper<>());
+    public ProtoBufFileSynchronizedRegistrySandbox(final IdGenerator<KEY, M> idGenerator, final Descriptors.FieldDescriptor fieldDescriptor) throws CouldNotPerformException {
+        super(new ProtoBufMessageMapWrapper<>(), new ProtoBufCloner<>(idGenerator));
         this.idGenerator = idGenerator;
     }
 

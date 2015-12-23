@@ -54,7 +54,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             this.messageClass = messageClass;
             this.protobufMessageMap = internalMap;
             this.observer = (Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) -> {
-                ProtoBufFileSynchronizedRegistry.this.update(data);
+                    ProtoBufFileSynchronizedRegistry.this.update(data);
             };
             protobufMessageMap.addObserver(observer);
 
@@ -66,9 +66,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             }
 
-            // TODO mpohling: got error: corrupted double-linked list: 0x00007f178c2a9200
-            // -> may clone each sandbox entry instead of cloning whole collection.
-            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator));
+            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator, protobufMessageMap.getFieldDescriptor()));
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
