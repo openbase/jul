@@ -131,4 +131,24 @@ public class ScopeGenerator {
         scopeComponent = scopeComponent.replaceAll("[^0-9a-z-_]+", "_");
         return scopeComponent;
     }
+
+    public static String generateStringRepWithDelimiter(final ScopeType.Scope scope, final String delimiter) throws CouldNotPerformException {
+
+        if (scope == null) {
+            throw new NotAvailableException("scope");
+        }
+
+        String stringRep = "";
+
+        boolean firstEntry = true;
+        for (String component : scope.getComponentList()) {
+            if (firstEntry) {
+                firstEntry = false;
+            } else {
+                stringRep += delimiter;
+            }
+            stringRep += component;
+        }
+        return stringRep;
+    }
 }
