@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.citec</groupId>
+    <groupId>org.dc</groupId>
     <artifactId>jul.processing</artifactId>
     <packaging>jar</packaging>
 
     <name>JUL Processing</name>
     
     <parent>
-        <groupId>de.citec</groupId>
+        <groupId>org.dc</groupId>
         <artifactId>jul</artifactId>
         <version>0.5-SNAPSHOT</version>
     </parent>    
@@ -45,7 +45,7 @@
         
         <!-- Json protobuf processor-->
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.exception</artifactId>
             <version>${project.version}</version>
         </dependency>

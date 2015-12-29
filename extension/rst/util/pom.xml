@@ -7,7 +7,7 @@
     <name>JUL Extension RST Util</name>
     
     <parent>
-        <groupId>de.citec</groupId>
+        <groupId>org.dc</groupId>
         <artifactId>jul.extension.rst</artifactId>
         <version>0.5-SNAPSHOT</version>
     </parent>    

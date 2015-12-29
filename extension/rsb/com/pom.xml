@@ -7,7 +7,7 @@
     <name>JUL Extension RSB Communication</name>
     
     <parent>
-        <groupId>de.citec</groupId>
+        <groupId>org.dc</groupId>
         <artifactId>jul.extension.rsb</artifactId>
         <version>0.5-SNAPSHOT</version>
     </parent>    
@@ -29,32 +29,32 @@
 
     <dependencies>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.extension.rsb.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.exception</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.extension.rsb.scope</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.extension.protobuf</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.schedule</artifactId>
             <version>${project.version}</version>
         </dependency>

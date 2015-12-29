@@ -1,14 +1,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.citec</groupId>
+    <groupId>org.dc</groupId>
     <artifactId>jul.extension.protobuf</artifactId>
     <packaging>jar</packaging>
 
     <name>JUL Extension Protobuf</name>
     
     <parent>
-        <groupId>de.citec</groupId>
+        <groupId>org.dc</groupId>
         <artifactId>jul.extension</artifactId>
         <version>0.5-SNAPSHOT</version>
     </parent>
@@ -30,12 +30,12 @@
 
     <dependencies>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.schedule</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -46,7 +46,7 @@
         </dependency>
         <dependency>
             <!-- processing package -->
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.processing</artifactId>
             <version>${project.version}</version>
         </dependency>

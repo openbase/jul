@@ -7,7 +7,7 @@
     <name>JUL Extension RSB Processing</name>
     
     <parent>
-        <groupId>de.citec</groupId>
+        <groupId>org.dc</groupId>
         <artifactId>jul.extension.rsb</artifactId>
         <version>0.5-SNAPSHOT</version>
     </parent>    

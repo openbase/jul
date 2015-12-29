@@ -7,7 +7,7 @@
     <name>JUL Extension RST Processing</name>
     
     <parent>
-        <groupId>de.citec</groupId>
+        <groupId>org.dc</groupId>
         <artifactId>jul.extension.rst</artifactId>
         <version>0.5-SNAPSHOT</version>
     </parent>    
@@ -29,7 +29,7 @@
     
     <dependencies>
         <dependency>
-            <groupId>de.citec</groupId>
+            <groupId>org.dc</groupId>
             <artifactId>jul.processing</artifactId>
             <version>${project.version}</version>
         </dependency>
