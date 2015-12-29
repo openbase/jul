@@ -11,8 +11,6 @@ import de.citec.jul.exception.InstantiationException;
 import de.citec.jul.iface.Activatable;
 import de.citec.jul.iface.Identifiable;
 import de.citec.jul.pattern.Factory;
-import de.citec.jul.storage.registry.Registry;
-import de.citec.jul.storage.registry.RemoteRegistry;
 
 /**
  *
