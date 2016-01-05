@@ -30,8 +30,8 @@
     <dependencies>
         <dependency>
             <groupId>rsb</groupId>
-            <artifactId>${global.rst.sandbox.artifact}</artifactId>
-            <version>${global.rst.sandbox.version}</version>
+            <artifactId>${dependency.rst.sandbox.artifact}</artifactId>
+            <version>${dependency.rst.sandbox.version}</version>
         </dependency>
         <dependency>
             <groupId>org.dc</groupId>

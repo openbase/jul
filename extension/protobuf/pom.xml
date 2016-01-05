@@ -42,7 +42,7 @@
         <dependency>
             <groupId>rsb</groupId>
             <artifactId>rsb</artifactId>
-            <version>${global.rsb.version}</version>
+            <version>${dependency.rsb.version}</version>
         </dependency>
         <dependency>
             <!-- processing package -->
@@ -58,8 +58,8 @@
         </dependency>
         <dependency>
             <groupId>rsb</groupId>
-            <artifactId>${global.rst.sandbox.artifact}</artifactId>
-            <version>${global.rst.sandbox.version}</version>
+            <artifactId>${dependency.rst.sandbox.artifact}</artifactId>
+            <version>${dependency.rst.sandbox.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

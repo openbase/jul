@@ -32,7 +32,7 @@
         <dependency>
             <groupId>rct</groupId>
             <artifactId>rct</artifactId>
-            <version>${global.rct.version}</version>
+            <version>${dependency.rct.version}</version>
         </dependency>
     </dependencies>
 </project>
