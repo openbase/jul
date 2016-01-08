@@ -246,6 +246,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         state = ConnectionState.Offline;
     }
 
+    public void shutdown() throws InterruptedException {
+        try {
+            deactivate();
+        } catch(CouldNotPerformException ex){
+            ExceptionPrinter.printHistory(ex, logger);
+        }
+    }
+
     @Override
     public boolean isActive() {
         try {

@@ -16,7 +16,7 @@ import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.storage.file.FileSynchronizer;
 import org.dc.jul.storage.registry.FileSynchronizedRegistry;
-import org.dc.jul.storage.registry.RegistryInterface;
+import org.dc.jul.storage.registry.Registry;
 import org.dc.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
 import org.dc.jul.storage.registry.jp.JPInitializeDB;
 import java.io.File;
@@ -57,7 +57,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     }
 
     @Override
-    public void init(RegistryInterface reg) throws CouldNotPerformException {
+    public void init(Registry reg) throws CouldNotPerformException {
     }
 
     private void initialSync() throws CouldNotPerformException {

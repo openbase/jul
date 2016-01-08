@@ -19,7 +19,7 @@ import java.util.Map;
  * @param <MAP>
  * @param <R>
  */
-public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
+public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
 
     @Override
     public ENTRY register(ENTRY entry) throws CouldNotPerformException {
@@ -45,6 +45,11 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     @Override
     public ENTRY remove(ENTRY entry) throws CouldNotPerformException {
+        return null;
+    }
+
+    @Override
+    public ENTRY remove(KEY entry) throws CouldNotPerformException {
         return null;
     }
 

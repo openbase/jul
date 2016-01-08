@@ -22,7 +22,7 @@ import org.dc.jul.pattern.Factory;
  */
 public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY> & Activatable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
 
-    public ActivatableEntryRegistrySynchronizer(Registry<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, Factory<ENTRY, CONFIG_M> factory) throws InstantiationException {
+    public ActivatableEntryRegistrySynchronizer(RegistryImpl<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, Factory<ENTRY, CONFIG_M> factory) throws InstantiationException {
         super(registry, remoteRegistry, factory);
     }
 

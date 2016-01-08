@@ -21,10 +21,14 @@ public class JPInitializeDB extends AbstractJPBoolean {
         super(COMMAND_IDENTIFIERS);
     }
 
+    /**
+     * returns true if JPS is in test mode or JPResetDB is enabled.
+     * @return
+     */
     @Override
     protected Boolean getPropertyDefaultValue() {
         try {
-            return JPService.getProperty(JPResetDB.class).getValue();
+            return JPService.testMode() || JPService.getProperty(JPResetDB.class).getValue();
         } catch (JPNotAvailableException ex) {
             JPService.printError("Could not load default value!", ex);
             return false;

@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  * @param <MAP>
  * @param <R>
  */
-public abstract class AbstractConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends RegistryInterface<KEY, VALUE, R>> implements ConsistencyHandler<KEY, VALUE, MAP, R> {
+public abstract class AbstractConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE, R>> implements ConsistencyHandler<KEY, VALUE, MAP, R> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

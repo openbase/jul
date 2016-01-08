@@ -16,7 +16,7 @@ import org.dc.jul.iface.Identifiable;
  * @param <VALUE>
  * @param <R>
  */
-public interface FileSynchronizedRegistryInterface<KEY, VALUE extends Identifiable<KEY>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends RegistryInterface<KEY, VALUE, R> {
+public interface FileSynchronizedRegistryInterface<KEY, VALUE extends Identifiable<KEY>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends Registry<KEY, VALUE, R> {
 
     public void loadRegistry() throws CouldNotPerformException;
 

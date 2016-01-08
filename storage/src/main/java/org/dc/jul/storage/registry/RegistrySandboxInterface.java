@@ -17,7 +17,7 @@ import java.util.Map;
  * @param <MAP>
  * @param <R>
  */
-public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>> extends RegistryInterface<KEY, ENTRY, R> {
+public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>> extends Registry<KEY, ENTRY, R> {
 
     public void sync(final MAP map) throws CouldNotPerformException;
     

@@ -5,7 +5,7 @@ import org.dc.jul.exception.RejectedException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.iface.Identifiable;
-import org.dc.jul.storage.registry.RegistryInterface;
+import org.dc.jul.storage.registry.Registry;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -23,14 +23,14 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     protected final Logger logger = LoggerFactory.getLogger(RegistryPluginPool.class);
 
     protected final List<P> pluginList;
-    protected RegistryInterface<KEY, ENTRY, ?> registry;
+    protected Registry<KEY, ENTRY, ?> registry;
 
     public RegistryPluginPool() {
         this.pluginList = new ArrayList<>();
     }
 
     @Override
-    public void init(RegistryInterface<KEY, ENTRY, ?> registry) throws CouldNotPerformException {
+    public void init(Registry<KEY, ENTRY, ?> registry) throws CouldNotPerformException {
         this.registry = registry;
     }
 

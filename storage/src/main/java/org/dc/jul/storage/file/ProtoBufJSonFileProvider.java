@@ -28,7 +28,7 @@ public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<Strin
                 throw new NotAvailableException("context");
             }
             
-            return convertIntoValidFileName(context.getId().replaceAll("/", "_")) + FILE_SUFFIX;
+            return FileNameConverter.convertIntoValidFileName(context.getId().replaceAll("/", "_")) + FILE_SUFFIX;
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not generate file name!", ex);
         }
@@ -50,9 +50,5 @@ public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<Strin
                 return (!file.isHidden()) && file.isFile() && file.getName().toLowerCase().endsWith(FILE_SUFFIX);
             }
         };
-    }
-
-    public String convertIntoValidFileName(final String filename) {
-        return filename.replaceAll("[^0-9a-zA-Z-äöüÄÖÜéàèÉÈßÄ\\.\\-\\_\\[\\]\\#\\$]+", "_");
     }
 }

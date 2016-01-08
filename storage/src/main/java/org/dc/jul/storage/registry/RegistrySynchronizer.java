@@ -37,14 +37,14 @@ import org.slf4j.LoggerFactory;
 public class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Registry<KEY, ENTRY> registry;
+    private final Registry<KEY, ENTRY, ?> registry;
     private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
     private final Factory<ENTRY, CONFIG_M> factory;
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry;
 
-    public RegistrySynchronizer(final Registry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.dc.jul.exception.InstantiationException {
+    public RegistrySynchronizer(final Registry<KEY, ENTRY, ?> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.dc.jul.exception.InstantiationException {
         try {
             this.registry = registry;
             this.remoteRegistry = remoteRegistry;

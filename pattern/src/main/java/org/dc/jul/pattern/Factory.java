@@ -5,7 +5,7 @@
  */
 package org.dc.jul.pattern;
 
-import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InstantiationException;
 
 /**
  *
@@ -22,7 +22,7 @@ public interface Factory<INSTANCE, CONFIG> {
      * Creates a new instance with the given configuration.
      * @param config
      * @return 
-     * @throws org.dc.jul.exception.CouldNotPerformException 
+     * @throws org.dc.jul.exception.InstantiationException
      */
-    public INSTANCE newInstance(final CONFIG config) throws CouldNotPerformException;
+    public INSTANCE newInstance(final CONFIG config) throws InstantiationException;
 }

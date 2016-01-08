@@ -5,24 +5,46 @@
  */
 package org.dc.jul.storage.registry;
 
-import org.dc.jul.storage.registry.plugin.RegistryPlugin;
-import org.dc.jul.exception.InstantiationException;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.RejectedException;
 import org.dc.jul.iface.Identifiable;
-import java.util.HashMap;
+import java.util.List;
 
 /**
  *
  * @author mpohling
  * @param <KEY>
  * @param <ENTRY>
+ * @param <R>
  */
-public class Registry<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, Registry<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY>> {
+public interface Registry<KEY, ENTRY extends Identifiable<KEY>, R extends Registry<KEY, ENTRY, R>> {
 
-    public Registry(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
-        super(entryMap);
-    }
-    
-    public Registry() throws InstantiationException {
-        super(new HashMap<KEY, ENTRY>());
-    }
+    public String getName();
+
+    public ENTRY register(final ENTRY entry) throws CouldNotPerformException;
+
+    public ENTRY update(final ENTRY entry) throws CouldNotPerformException;
+
+    public ENTRY remove(final KEY key) throws CouldNotPerformException;
+
+    public ENTRY remove(final ENTRY entry) throws CouldNotPerformException;
+
+    public ENTRY get(final KEY key) throws CouldNotPerformException;
+
+    public List<ENTRY> getEntries() throws CouldNotPerformException;
+
+    public boolean contains(final ENTRY entry) throws CouldNotPerformException;
+
+    public boolean contains(final KEY key) throws CouldNotPerformException;
+
+    public void clear() throws CouldNotPerformException;
+
+    public void checkAccess() throws RejectedException;
+
+    public int size();
+
+    public boolean isReadOnly();
+
+    public boolean isConsistent();
+
 }

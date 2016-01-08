@@ -10,23 +10,20 @@ package org.dc.jul.exception;
  */
 public class InstantiationException extends CouldNotPerformException {
 
-	public InstantiationException(String message, Class clazz) {
-		super("Could not create "+clazz.getSimpleName()+" instance: " +message);
+
+	public InstantiationException(final Class clazz, final Throwable cause) {
+		super("Could not instantiate "+clazz.getSimpleName()+"!", cause);
 	}
 
-	public InstantiationException(String message, Class clazz, Throwable cause) {
-		super("Could not create "+clazz.getSimpleName()+" instance: " +message, cause);
+	public InstantiationException(final Class clazz, final String identifiere, final Throwable cause) {
+		super("Could not instantiate "+clazz.getSimpleName()+"["+identifiere+"]!", cause);
 	}
 
-	public InstantiationException(Class clazz, Throwable cause) {
-		super("Could not create "+clazz.getSimpleName()+" instance!", cause);
-	}
+    public InstantiationException(final Object instance, final String identifiere, final Throwable cause) {
+        this(instance.getClass(), identifiere, cause);
+    }
 
-	public InstantiationException(String message, Object instance, Throwable cause) {
-		this(message, instance.getClass(), cause);
-	}
-
-	public InstantiationException(Object instance, Throwable cause) {
+	public InstantiationException(final Object instance, final Throwable cause) {
 		this(instance.getClass(), cause);
 	}
 }

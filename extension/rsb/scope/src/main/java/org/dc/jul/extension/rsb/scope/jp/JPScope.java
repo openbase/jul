@@ -7,6 +7,8 @@ package org.dc.jul.extension.rsb.scope.jp;
 
 import org.dc.jps.core.AbstractJavaProperty;
 import java.util.List;
+import org.dc.jps.core.JPService;
+import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import rsb.Scope;
 
 /**
@@ -27,6 +29,10 @@ public class JPScope extends AbstractJavaProperty<Scope> {
     
     @Override
     protected Scope getPropertyDefaultValue() {
+        if(JPService.testMode()) {
+            String user = ScopeGenerator.convertIntoValidScopeComponent(System.getProperty("user.name"));
+            return new Scope("/test/"+user);
+        }
         return new Scope("/");
     }
 

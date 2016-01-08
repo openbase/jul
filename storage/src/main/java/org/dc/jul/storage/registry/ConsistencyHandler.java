@@ -19,7 +19,7 @@ import java.util.Map;
  * @param <MAP>
  * @param <R>
  */
-public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends RegistryInterface<KEY, VALUE, R>> {
+public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE, R>> {
     
     /**
      * Method for establishing a registry data consistency.

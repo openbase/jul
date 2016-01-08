@@ -37,10 +37,10 @@ import org.slf4j.LoggerFactory;
  * @param <KEY> EntryKey
  * @param <ENTRY> EntryType
  * @param <MAP> RegistryEntryMap
- * @param <R> RegistryInterface
+ * @param <R> Registry
  * @param <P> RegistryPluginType
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends RegistryInterface<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends Observable<Map<KEY, ENTRY>> implements RegistryInterface<KEY, ENTRY, R> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends Observable<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY, R> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -174,6 +174,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return entry;
     }
 
+    @Override
     public ENTRY remove(final KEY key) throws CouldNotPerformException {
         return remove(get(key));
     }
