@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.dc</groupId>
         <artifactId>jul.extension.rsb</artifactId>
-        <version>0.5-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
     
     <url>http://maven.apache.org</url>
