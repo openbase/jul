@@ -10,9 +10,13 @@ import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import java.util.Collection;
 import rsb.Scope;
+import rst.homeautomation.control.agent.AgentConfigType.AgentConfig;
+import rst.homeautomation.control.app.AppConfigType.AppConfig;
+import rst.homeautomation.control.scene.SceneConfigType.SceneConfig;
 import rst.homeautomation.device.DeviceConfigType.DeviceConfig;
 import rst.homeautomation.unit.UnitConfigType.UnitConfig;
 import rst.rsb.ScopeType;
+import rst.spatial.ConnectionConfigType.ConnectionConfig;
 import rst.spatial.LocationConfigType.LocationConfig;
 
 /**
@@ -48,8 +52,8 @@ public class ScopeGenerator {
             throw new NotAvailableException("registry");
         }
 
-        if (!locationConfig.hasId()) {
-            throw new NotAvailableException("location id");
+        if (!locationConfig.hasLabel()) {
+            throw new NotAvailableException("location.label");
         }
 
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder();
@@ -57,6 +61,36 @@ public class ScopeGenerator {
             scope.addAllComponent(registry.get(locationConfig.getParentId()).getMessage().getScope().getComponentList());
         }
         scope.addComponent(convertIntoValidScopeComponent(locationConfig.getLabel()));
+
+        return scope.build();
+    }
+
+    public static ScopeType.Scope generateConnectionScope(final ConnectionConfig connectionConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+
+        if (connectionConfig == null) {
+            throw new NotAvailableException("connectionConfig");
+        }
+
+        if (!connectionConfig.hasLabel()) {
+            throw new NotAvailableException("connectionConfig.label");
+        }
+
+        if (connectionConfig.getLabel().isEmpty()) {
+            throw new NotAvailableException("Field connectionConfig.label isEmpty");
+        }
+
+        if (locationConfig == null) {
+            throw new NotAvailableException("location");
+        }
+
+        // add location scope
+        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
+
+        // add unit type
+        scope.addComponent(convertIntoValidScopeComponent(connectionConfig.getType().name().replace("_", "")));
+
+        // add unit label
+        scope.addComponent(convertIntoValidScopeComponent(connectionConfig.getLabel()));
 
         return scope.build();
     }
@@ -118,6 +152,96 @@ public class ScopeGenerator {
 
         // add unit label
         scope.addComponent(convertIntoValidScopeComponent(unitConfig.getLabel()));
+
+        return scope.build();
+    }
+
+    public static ScopeType.Scope generateAgentScope(final AgentConfig agentConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+
+        if (agentConfig == null) {
+            throw new NotAvailableException("agentConfig");
+        }
+
+        if (!agentConfig.hasLabel()) {
+            throw new NotAvailableException("agentConfig.label");
+        }
+
+        if (agentConfig.getLabel().isEmpty()) {
+            throw new NotAvailableException("Field agentConfig.label isEmpty");
+        }
+
+        if (locationConfig == null) {
+            throw new NotAvailableException("location");
+        }
+
+        // add location scope
+        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
+
+        // add agent type
+        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getType().name().replace("_", "")));
+
+        // add unit label
+        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getLabel()));
+
+        return scope.build();
+    }
+
+    public static ScopeType.Scope generateAppScope(final AppConfig appConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+
+        if (appConfig == null) {
+            throw new NotAvailableException("appConfig");
+        }
+
+        if (!appConfig.hasLabel()) {
+            throw new NotAvailableException("appConfig.label");
+        }
+
+        if (appConfig.getLabel().isEmpty()) {
+            throw new NotAvailableException("Field appConfig.label isEmpty");
+        }
+
+        if (locationConfig == null) {
+            throw new NotAvailableException("location");
+        }
+
+        // add location scope
+        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
+
+        // add unit app
+        scope.addComponent(convertIntoValidScopeComponent("app"));
+
+        // add unit label
+        scope.addComponent(convertIntoValidScopeComponent(appConfig.getLabel()));
+
+        return scope.build();
+    }
+
+    public static ScopeType.Scope generateSceneScope(final SceneConfig sceneConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+
+        if (sceneConfig == null) {
+            throw new NotAvailableException("sceneConfig");
+        }
+
+        if (!sceneConfig.hasLabel()) {
+            throw new NotAvailableException("sceneConfig.label");
+        }
+
+        if (sceneConfig.getLabel().isEmpty()) {
+            throw new NotAvailableException("Field sceneConfig.label isEmpty");
+        }
+
+        if (locationConfig == null) {
+            throw new NotAvailableException("location");
+        }
+
+        // add location scope
+        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
+
+        // add unit app
+        scope.addComponent(convertIntoValidScopeComponent("scene"));
+
+        // add unit label
+        scope.addComponent(convertIntoValidScopeComponent(sceneConfig.getLabel()));
 
         return scope.build();
     }
