@@ -17,12 +17,12 @@ import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.extension.protobuf.IdentifiableMessage;
 import org.dc.jul.extension.protobuf.IdentifiableMessageMap;
 import org.dc.jul.extension.protobuf.ProtobufListDiff;
-import org.dc.jul.iface.Identifiable;
 import org.dc.jul.pattern.Factory;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.schedule.RecurrenceEventFilter;
 import java.util.Map;
+import org.dc.jul.iface.Configurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * @param <CONFIG_M>
  * @param <CONFIG_MB>
  */
-public class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
+public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M, ENTRY>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Registry<KEY, ENTRY, ?> registry;
@@ -171,7 +171,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Identifiable<KEY>, CONFIG_M
     }
 
     public ENTRY update(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
-        return registry.update(factory.newInstance(config));
+        return registry.update(registry.get(remoteRegistry.getKey(config)).update(config));
     }
 
     public ENTRY remove(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
