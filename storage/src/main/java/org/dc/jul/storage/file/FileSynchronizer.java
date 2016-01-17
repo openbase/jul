@@ -18,6 +18,7 @@ import org.dc.jul.processing.FileProcessor;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import org.dc.jul.exception.InvalidStateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +112,7 @@ public class FileSynchronizer<D> extends Observable<D> {
             this.data = data;
 
             if (!file.exists()) {
-                throw new NotAvailableException(file, "File not found!");
+                throw new NotAvailableException(File.class, file, new InvalidStateException("File does not exist!"));
             }
 
             return fileProcessor.serialize(data, file);

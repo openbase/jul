@@ -233,13 +233,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 sortedMap.putAll(entryMap);
 
                 if (sortedMap.floorKey(key) != null && sortedMap.ceilingKey(key) != null) {
-                    throw new NotAvailableException("Entry[" + key + "]", "Nearest neighbor is [" + sortedMap.floorKey(key) + "] or [" + sortedMap.ceilingKey(key) + "].");
+                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is [" + sortedMap.floorKey(key) + "] or [" + sortedMap.ceilingKey(key) + "].");
                 } else if (sortedMap.floorKey(key) != null) {
-                    throw new NotAvailableException("Entry[" + key + "]", "Nearest neighbor is Empty[" + sortedMap.floorKey(key) + "].");
+                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is Entry[" + sortedMap.floorKey(key) + "].");
                 } else if (sortedMap.ceilingKey(key) != null) {
-                    throw new NotAvailableException("Entry[" + key + "]", "Nearest neighbor is Empty[" + sortedMap.ceilingKey(key) + "].");
+                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is Entry[" + sortedMap.ceilingKey(key) + "].");
                 } else {
-                    throw new NotAvailableException("Entry[" + key + "]", "Registry is empty!");
+                    throw new NotAvailableException("Entry", key.toString(), new InvalidStateException("Registry is empty!"));
                 }
             }
             pluginPool.beforeGet(key);

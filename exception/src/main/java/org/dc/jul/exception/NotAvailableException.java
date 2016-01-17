@@ -47,38 +47,69 @@ public class NotAvailableException extends InvalidStateException {
 
     /**
      *
-     * @param objectName
-     */
-    public NotAvailableException(String objectName) {
-        super("Context[" + objectName + "] is not available!");
-    }
-
-    /**
-     *
-     * @param objectName
-     * @param cause
-     */
-    public NotAvailableException(String objectName, Throwable cause) {
-        super("Context[" + objectName + "] is not available!", cause);
-    }
-
-    /**
-     *
-     * @param objectName
      * @param identifiere
      */
-    public NotAvailableException(final Class objectName, final String identifiere) {
-        super(objectName+"["+identifiere+"]] is not available!");
+    public NotAvailableException(final String identifiere) {
+        super("Context[" + identifiere + "] is not available!");
     }
 
     /**
      *
-     * @param objectName
      * @param identifiere
      * @param cause
      */
-    public NotAvailableException(final Class objectName, final String identifiere, final Throwable cause) {
-        super(objectName+"["+identifiere+"]] is not available!", cause);
+    public NotAvailableException(final String identifiere, final Throwable cause) {
+        super("Context[" + identifiere + "] is not available!", cause);
+    }
+
+    /**
+     *
+     * @param clazz
+     * @param identifiere
+     */
+    public NotAvailableException(final Class clazz, final String identifiere) {
+        this(clazz.getSimpleName(), identifiere);
+    }
+
+    /**
+     *
+     * @param context
+     * @param identifiere
+     */
+    public NotAvailableException(final String context, final String identifiere) {
+        super(context + "[" + identifiere + "]] is not available!");
+    }
+
+    /**
+     *
+     * @param context
+     * @param identifiere
+     * @param cause
+     */
+    public NotAvailableException(final String context, final String identifiere, final Throwable cause) {
+        super(context + "[" + identifiere + "]] is not available!", cause);
+    }
+
+    public NotAvailableException(final String context, final Object identifiere, final Throwable cause) {
+        this(context, identifiere.toString(), cause);
+    }
+
+    public NotAvailableException(final Class context, final Object identifiere, final Throwable cause) {
+        this(context, identifiere.toString(), cause);
+    }
+
+    public NotAvailableException(final String context, final String identifiere, final String message) {
+        super(context + "[" + identifiere + "]] is not available! " + message);
+    }
+
+    /**
+     *
+     * @param context
+     * @param identifiere
+     * @param cause
+     */
+    public NotAvailableException(final Class context, final String identifiere, final Throwable cause) {
+        this(context.getSimpleName(), identifiere, cause);
     }
 
     /**
@@ -89,13 +120,13 @@ public class NotAvailableException extends InvalidStateException {
         super(cause);
     }
 
-   /**
-    * 
-    * @param message
-    * @param cause
-    * @param enableSuppression
-    * @param writableStackTrace
-    */
+    /**
+     *
+     * @param message
+     * @param cause
+     * @param enableSuppression
+     * @param writableStackTrace
+     */
     public NotAvailableException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
