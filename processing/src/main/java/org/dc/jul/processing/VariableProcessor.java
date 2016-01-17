@@ -16,13 +16,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
-public final class VariableProcessor {
+public class VariableProcessor {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(VariableProcessor.class);
-
-    private VariableProcessor() {
-
-    }
 
     public static String resolveVariables(String context, final boolean throwOnError, final Collection<VariableProvider> providers) throws MultiException {
         VariableProvider[] providerArray = new VariableProvider[providers.size()];
