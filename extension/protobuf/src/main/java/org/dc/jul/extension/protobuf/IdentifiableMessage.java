@@ -6,19 +6,19 @@
 package org.dc.jul.extension.protobuf;
 
 import com.google.protobuf.GeneratedMessage;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.MultiException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.VerificationFailedException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.extension.protobuf.container.MessageContainer;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     public IdentifiableMessage(IdentifiableMessage<KEY, M, MB> identifiableMessage) throws InstantiationException {
         this(identifiableMessage.getMessage());
     }
-    
+
     public IdentifiableMessage(final M message, final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
         try {
             if (idGenerator == null) {
@@ -58,15 +58,15 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             throw new org.dc.jul.exception.InstantiationException(this, ex);
         }
     }
-    
+
     public IdentifiableMessage(final M message) throws InstantiationException {
         try {
             if (message == null) {
                 throw new NotAvailableException("message");
             }
-            
+
             this.internalMessage = message;
-            
+
             if(!verifyId()) {
                 throw new InvalidStateException("message does not contain Field["+FIELD_ID+"]");
             }
@@ -109,7 +109,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             throw new CouldNotPerformException("Could not setup id for message: " + internalMessage, ex);
         }
     }
-    
+
     private boolean verifyId() {
         return internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID));
     }
