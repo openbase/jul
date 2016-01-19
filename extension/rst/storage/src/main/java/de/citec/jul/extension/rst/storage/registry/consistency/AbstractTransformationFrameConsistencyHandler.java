@@ -9,12 +9,12 @@ import com.google.protobuf.GeneratedMessage;
 import java.util.ArrayList;
 import java.util.List;
 import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.processing.StringProcessor;
 import org.dc.jul.storage.registry.AbstractProtoBufRegistryConsistencyHandler;
 import org.dc.jul.storage.registry.EntryModification;
 import org.dc.jul.storage.registry.ProtoBufRegistryInterface;
 import rst.spatial.LocationConfigType;
-import rst.spatial.PlacementConfigType;
 import rst.spatial.PlacementConfigType.PlacementConfig;
 
 /**
@@ -37,6 +37,7 @@ public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends 
     /**
      * Methods verifies and updates the transformation frame id for the given placement configuration.
      * If the given placement configuration is up to date this the method returns null.
+     *
      * @param label
      * @param placementConfig
      * @return
@@ -44,14 +45,26 @@ public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends 
      * @throws EntryModification
      */
     protected PlacementConfig verifyAndUpdatePlacement(final String label, final PlacementConfig placementConfig) throws CouldNotPerformException, EntryModification {
-        String frameId = generateFrameId(label, placementConfig);
+        try {
+            if (label == null || label.isEmpty()) {
+                throw new NotAvailableException("label");
+            }
 
-        // verify and update frame id
-        if (placementConfig.getTransformationFrameId().equals(frameId)) {
-            return null;
+            if (placementConfig == null) {
+                throw new NotAvailableException("placementconfig");
+            }
 
+            String frameId = generateFrameId(label, placementConfig);
+
+            // verify and update frame id
+            if (placementConfig.getTransformationFrameId().equals(frameId)) {
+                return null;
+
+            }
+            return placementConfig.toBuilder().setTransformationFrameId(frameId).build();
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not verify and update placement!", ex);
         }
-        return PlacementConfigType.PlacementConfig.newBuilder(placementConfig).setTransformationFrameId(frameId).build();
     }
 
     protected String generateFrameId(final String label, final PlacementConfig placementConfig) throws CouldNotPerformException {
