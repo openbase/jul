@@ -69,12 +69,12 @@ public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends 
 
     protected String generateFrameId(final String label, final PlacementConfig placementConfig) throws CouldNotPerformException {
         try {
-            String frameId = StringProcessor.transformToIdString(label.toLowerCase());
+            String frameId = StringProcessor.transformToIdString(label);
 
-            if (labelCollisionList.contains(frameId)) {
+            if (labelCollisionList.contains(frameId.toLowerCase())) {
                 return locationRegistry.get(placementConfig.getLocationId()).getMessage().getPlacementConfig().getTransformationFrameId() + "_" + frameId;
             }
-            labelCollisionList.add(frameId);
+            labelCollisionList.add(frameId.toLowerCase());
             return frameId;
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not generate frame id!", ex);
