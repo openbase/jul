@@ -33,20 +33,27 @@ import rst.spatial.PlacementConfigType.PlacementConfig;
  */
 public class AbstractTransformationFrameConsistencyHandlerTest {
 
-    private static LocationConfig locationA = LocationConfig.newBuilder()
-            .setId("locationA")
+    public static final String DEVICE_A = "DeviceA";
+    public static final String DEVICE_B = "DeviceB";
+    public static final String DEVICE_AE = "DeviceAE";
+    public static final String LOCATION_A = "LocationA";
+    public static final String LOCATION_B = "LocationB";
+    public static final String LOCATION_AE = "LocationÄ";
+
+    private static final LocationConfig locationA = LocationConfig.newBuilder()
+            .setId(LOCATION_A)
             .setPlacementConfig(PlacementConfigType.PlacementConfig.newBuilder()
-                    .setLocationId("locationA")
-                    .setTransformationFrameId("locationa")
+                    .setLocationId(LOCATION_A)
+                    .setTransformationFrameId(LOCATION_A)
                     .build())
             .setRoot(true)
             .build();
 
-    private static LocationConfig locationB = LocationConfig.newBuilder()
-            .setId("locationB")
+    private static final LocationConfig locationB = LocationConfig.newBuilder()
+            .setId(LOCATION_B)
             .setPlacementConfig(PlacementConfigType.PlacementConfig.newBuilder()
-                    .setLocationId("locationA")
-                    .setTransformationFrameId("locationb")
+                    .setLocationId(LOCATION_A)
+                    .setTransformationFrameId(LOCATION_B)
                     .build())
             .setRoot(false)
             .build();
@@ -75,16 +82,16 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
     public void testVerifyAndUpdatePlacement() throws Exception {
         System.out.println("verifyAndUpdatePlacement");
         PlacementConfig.Builder placementConfigA = PlacementConfigType.PlacementConfig.newBuilder()
-                .setLocationId("locationA");
+                .setLocationId(LOCATION_A);
         PlacementConfig.Builder placementConfigB = PlacementConfigType.PlacementConfig.newBuilder()
-                .setLocationId("locationB");
+                .setLocationId(LOCATION_B);
         AbstractTransformationFrameConsistencyHandler instance = new AbstractTransformationFrameConsistencyHandlerImpl();
-        assertEquals("devicea", placementConfigA.setTransformationFrameId(instance.verifyAndUpdatePlacement("DeviceA", placementConfigA.build()).getTransformationFrameId()).getTransformationFrameId());
-        assertEquals("deviceb", placementConfigB.setTransformationFrameId(instance.verifyAndUpdatePlacement("DeviceB", placementConfigB.build()).getTransformationFrameId()).getTransformationFrameId());
-        assertEquals("locationa_devicea", placementConfigA.setTransformationFrameId(instance.verifyAndUpdatePlacement("DeviceA", placementConfigA.build()).getTransformationFrameId()).getTransformationFrameId());
-        assertEquals("locationb_deviceb", placementConfigB.setTransformationFrameId(instance.verifyAndUpdatePlacement("DeviceB", placementConfigB.build()).getTransformationFrameId()).getTransformationFrameId());
-        assertEquals(null, instance.verifyAndUpdatePlacement("DeviceA", placementConfigA.build()));
-        assertEquals(null, instance.verifyAndUpdatePlacement("DeviceB", placementConfigB.build()));
+        assertEquals(DEVICE_A, placementConfigA.setTransformationFrameId(instance.verifyAndUpdatePlacement(DEVICE_A, placementConfigA.build()).getTransformationFrameId()).getTransformationFrameId());
+        assertEquals(DEVICE_B, placementConfigB.setTransformationFrameId(instance.verifyAndUpdatePlacement(DEVICE_B, placementConfigB.build()).getTransformationFrameId()).getTransformationFrameId());
+        assertEquals(LOCATION_A + "_" + DEVICE_A, placementConfigA.setTransformationFrameId(instance.verifyAndUpdatePlacement(DEVICE_A, placementConfigA.build()).getTransformationFrameId()).getTransformationFrameId());
+        assertEquals(LOCATION_B + "_" + DEVICE_B, placementConfigB.setTransformationFrameId(instance.verifyAndUpdatePlacement(DEVICE_B, placementConfigB.build()).getTransformationFrameId()).getTransformationFrameId());
+        assertEquals(null, instance.verifyAndUpdatePlacement(DEVICE_A, placementConfigA.build()));
+        assertEquals(null, instance.verifyAndUpdatePlacement(DEVICE_B, placementConfigB.build()));
     }
 
     /**
@@ -94,16 +101,16 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
     public void testGenerateFrameId() throws Exception {
         System.out.println("generateFrameId");
         PlacementConfig placementConfigA = PlacementConfigType.PlacementConfig.newBuilder()
-                .setLocationId("locationA")
+                .setLocationId(LOCATION_A)
                 .build();
         PlacementConfig placementConfigB = PlacementConfigType.PlacementConfig.newBuilder()
-                .setLocationId("locationB")
+                .setLocationId(LOCATION_B)
                 .build();
         AbstractTransformationFrameConsistencyHandler instance = new AbstractTransformationFrameConsistencyHandlerImpl();
-        assertEquals("devicea", instance.generateFrameId("DeviceA", placementConfigA));
-        assertEquals("deviceb", instance.generateFrameId("DeviceB", placementConfigA));
-        assertEquals("locationb_deviceb", instance.generateFrameId("DeviceB", placementConfigB));
-        assertEquals("locationa_deviceb", instance.generateFrameId("DeviceB", placementConfigA));
+        assertEquals(DEVICE_A, instance.generateFrameId(DEVICE_A, placementConfigA));
+        assertEquals(DEVICE_B, instance.generateFrameId(DEVICE_B, placementConfigA));
+        assertEquals(LOCATION_B + "_" + DEVICE_B, instance.generateFrameId(DEVICE_B, placementConfigB));
+        assertEquals(LOCATION_A + "_" + DEVICE_B, instance.generateFrameId(DEVICE_B, placementConfigA));
 
     }
 
