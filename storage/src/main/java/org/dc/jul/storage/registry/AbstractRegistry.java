@@ -5,6 +5,11 @@
  */
 package org.dc.jul.storage.registry;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jps.preset.JPForce;
@@ -22,11 +27,6 @@ import org.dc.jul.iface.Identifiable;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.storage.registry.plugin.RegistryPlugin;
 import org.dc.jul.storage.registry.plugin.RegistryPluginPool;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -440,7 +440,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
-                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not verify registry data consistency!", ex), exceptionStack);
+                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not process Entry["+entry.getId()+"] with "+consistencyHandler+" to verify "+this+"!", ex), exceptionStack);
                                     }
                                 }
                             }

@@ -1,7 +1,7 @@
 package org.dc.jul.storage.registry;
 
-import org.dc.jul.iface.Identifiable;
 import java.util.Map;
+import org.dc.jul.iface.Identifiable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,5 +24,10 @@ public abstract class AbstractConsistencyHandler<KEY, VALUE extends Identifiable
     @Override
     public boolean shutdown() {
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
     }
 }

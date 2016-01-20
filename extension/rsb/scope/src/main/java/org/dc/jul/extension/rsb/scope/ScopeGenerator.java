@@ -5,10 +5,10 @@
  */
 package org.dc.jul.extension.rsb.scope;
 
+import java.util.Collection;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
-import java.util.Collection;
 import rsb.Scope;
 import rst.homeautomation.control.agent.AgentConfigType.AgentConfig;
 import rst.homeautomation.control.app.AppConfigType.AppConfig;
@@ -56,9 +56,17 @@ public class ScopeGenerator {
             throw new NotAvailableException("location.label");
         }
 
+        if (!locationConfig.hasPlacementConfig()) {
+            throw new NotAvailableException("location.placementconfig");
+        }
+
+        if (!locationConfig.getPlacementConfig().hasLocationId() || locationConfig.getPlacementConfig().getLocationId().isEmpty()) {
+            throw new NotAvailableException("location.placementconfig.locationid");
+        }
+
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder();
-        if (!locationConfig.getRoot() && locationConfig.hasParentId()) {
-            scope.addAllComponent(registry.get(locationConfig.getParentId()).getMessage().getScope().getComponentList());
+        if (!locationConfig.getRoot() && locationConfig.hasPlacementConfig() || locationConfig.getPlacementConfig().hasLocationId()) {
+            scope.addAllComponent(registry.get(locationConfig.getPlacementConfig().getLocationId()).getMessage().getScope().getComponentList());
         }
         scope.addComponent(convertIntoValidScopeComponent(locationConfig.getLabel()));
 
