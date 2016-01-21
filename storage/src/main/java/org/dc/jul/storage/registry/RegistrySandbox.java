@@ -5,14 +5,12 @@
  */
 package org.dc.jul.storage.registry;
 
+import java.util.Map;
 import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.printer.ExceptionPrinter;
-import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.storage.registry.clone.RITSCloner;
 import org.dc.jul.storage.registry.clone.RegistryCloner;
 import org.dc.jul.storage.registry.plugin.RegistryPlugin;
-import java.util.Map;
 
 /**
  *
@@ -75,7 +73,7 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
         try {
             checkConsistency();
         } catch (CouldNotPerformException ex) {
-            throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex), logger, LogLevel.ERROR);
+            throw new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex);
         }
     }
 }

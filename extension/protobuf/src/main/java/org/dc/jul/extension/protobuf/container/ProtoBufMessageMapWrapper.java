@@ -6,11 +6,11 @@
 package org.dc.jul.extension.protobuf.container;
 
 import com.google.protobuf.GeneratedMessage;
-import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.extension.protobuf.IdentifiableMessage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.extension.protobuf.IdentifiableMessage;
 
 /**
  *
@@ -24,11 +24,11 @@ public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends Ge
 
     public ProtoBufMessageMapWrapper() {
     }
-    
+
     public ProtoBufMessageMapWrapper(final ProtoBufMessageMapInterface<KEY, M, MB> entryMap) {
         putAll(entryMap);
     }
-    
+
     @Override
     public IdentifiableMessage<KEY, M, MB> put(IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException {
         return super.put(value.getId(), value);
@@ -46,7 +46,11 @@ public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends Ge
 
     @Override
     public List<M> getMessages() throws CouldNotPerformException {
-        return new ArrayList(values());
+        ArrayList<M> list = new ArrayList<>();
+        values().stream().forEach((identifiableMessage) -> {
+            list.add(identifiableMessage.getMessage());
+        });
+        return list;
     }
 
     @Override

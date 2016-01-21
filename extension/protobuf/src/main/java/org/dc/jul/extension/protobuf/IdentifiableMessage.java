@@ -165,6 +165,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     @Override
     public String toString() {
         try {
+//            return getClass().getSimpleName() + "[" + getId().toString() + "] = [" + internalMessage + "]";
             return getClass().getSimpleName() + "[" + getId().toString() + "]";
         } catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);

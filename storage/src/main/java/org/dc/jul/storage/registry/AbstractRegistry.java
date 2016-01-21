@@ -5,7 +5,9 @@
  */
 package org.dc.jul.storage.registry;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -113,7 +115,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
             notifyObservers();
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not register " + entry + "!", ex);
+            throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
         } finally {
             syncSandbox();
         }
@@ -137,7 +139,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 registryLock.writeLock().unlock();
             }
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not register " + entry + "!", ex);
+            throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
         } finally {
             syncSandbox();
         }
@@ -166,7 +168,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
             notifyObservers();
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not update " + entry + "!", ex);
+            throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
         } finally {
             syncSandbox();
         }
@@ -208,7 +210,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
             notifyObservers();
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not remove " + entry + "!", ex);
+            throw new CouldNotPerformException("Could not remove " + entry + " in " + this + "!", ex);
         } finally {
             syncSandbox();
         }
@@ -415,7 +417,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     int iterationCounter = 0;
                     MultiException.ExceptionStack exceptionStack = null;
 
-                    ConsistencyHandler lastActiveConsistencyHandler = null;
+                    final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
+//                    ConsistencyHandler lastActiveConsistencyHandler = null;
                     Object lastModifieredEntry = null;
 
                     while (true) {
@@ -425,12 +428,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         // handle handler interference
                         if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
                             MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
-                            throw new InvalidStateException("ConsistencyHandler interference detected!");
+                            throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
                         if (exceptionStack != null) {
                             exceptionStack.clear();
                         }
+
+                        consistencyHandlerQueue.clear();
 
                         iterationCounter++;
                         try {
@@ -440,17 +445,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
-                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Could not process Entry["+entry.getId()+"] with "+consistencyHandler+" to verify "+this+"!", ex), exceptionStack);
+                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry.getId() + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
                                     }
                                 }
                             }
                         } catch (EntryModification ex) {
 
                             // check if consistency handler is looping
-                            if (ex.getConsistencyHandler() == lastActiveConsistencyHandler && ex.getEntry().equals(lastModifieredEntry)) {
-                                throw new InvalidStateException("ConsistencyHandler[" + lastActiveConsistencyHandler + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
+                            if (ex.getConsistencyHandler() == consistencyHandlerQueue.peekLast() && ex.getEntry().equals(lastModifieredEntry)) {
+                                throw new InvalidStateException("ConsistencyHandler[" + consistencyHandlerQueue.peekLast() + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
                             }
-                            lastActiveConsistencyHandler = ex.getConsistencyHandler();
+
+                            consistencyHandlerQueue.remove(ex.getConsistencyHandler());
+                            consistencyHandlerQueue.offer(ex.getConsistencyHandler());
                             lastModifieredEntry = ex.getEntry();
 
                             // inform about modifications
@@ -473,7 +480,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Consistency process aborted!", ex), logger, LogLevel.ERROR);
+                    throw new CouldNotPerformException("Consistency process aborted!", ex);
                 }
             } finally {
                 consistencyCheckLock.writeLock().unlock();

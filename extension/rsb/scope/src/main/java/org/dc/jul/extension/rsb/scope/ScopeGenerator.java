@@ -65,7 +65,7 @@ public class ScopeGenerator {
         }
 
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder();
-        if (!locationConfig.getRoot() && locationConfig.hasPlacementConfig() || locationConfig.getPlacementConfig().hasLocationId()) {
+        if (!locationConfig.getRoot()) {
             scope.addAllComponent(registry.get(locationConfig.getPlacementConfig().getLocationId()).getMessage().getScope().getComponentList());
         }
         scope.addComponent(convertIntoValidScopeComponent(locationConfig.getLabel()));
