@@ -145,17 +145,17 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M,
             // build exception cause chain.
             MultiException.ExceptionStack exceptionStack = null;
             try {
-                MultiException.checkAndThrow("Could not remove all entries!", removeExceptionStack);
+                MultiException.checkAndThrow("Could not remove "+removeExceptionStack.size()+" entries!", removeExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
             try {
-                MultiException.checkAndThrow("Could not update all entries!", updateExceptionStack);
+                MultiException.checkAndThrow("Could not update "+updateExceptionStack.size()+" entries!", updateExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
             try {
-                MultiException.checkAndThrow("Could not register all entries!", registerExceptionStack);
+                MultiException.checkAndThrow("Could not register "+registerExceptionStack.size()+" entries!", registerExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
