@@ -126,6 +126,11 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
         try {
             synchronized (participantLock) {
 
+                // ignore request if participant is already active.
+                if(isActive()) {
+                    return;
+                }
+
                 if (participant == null) {
                     participant = init();
                 }
@@ -147,6 +152,12 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         try {
             synchronized (participantLock) {
+
+                // ignore request if participant is already inactive.
+                if(!isActive()) {
+                    return;
+                }
+
                 active = false;
                 if (participant == null) {
                     logger.warn("Ignore listener deactivation because listener was never activated!");
@@ -175,5 +186,4 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             return participant.isActive();
         }
     }
-
 }
