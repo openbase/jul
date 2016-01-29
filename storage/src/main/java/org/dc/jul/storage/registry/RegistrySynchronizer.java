@@ -144,18 +144,34 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M,
 
             // build exception cause chain.
             MultiException.ExceptionStack exceptionStack = null;
+            int counter;
             try {
-                MultiException.checkAndThrow("Could not remove "+removeExceptionStack.size()+" entries!", removeExceptionStack);
+                if(removeExceptionStack != null) {
+                    counter = removeExceptionStack.size();
+                } else {
+                    counter = 0;
+                }
+                MultiException.checkAndThrow("Could not remove "+counter+" entries!", removeExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
             try {
-                MultiException.checkAndThrow("Could not update "+updateExceptionStack.size()+" entries!", updateExceptionStack);
+                if(updateExceptionStack != null) {
+                    counter = updateExceptionStack.size();
+                } else {
+                    counter = 0;
+                }
+                MultiException.checkAndThrow("Could not update "+counter+" entries!", updateExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
             try {
-                MultiException.checkAndThrow("Could not register "+registerExceptionStack.size()+" entries!", registerExceptionStack);
+                if(registerExceptionStack != null) {
+                    counter = registerExceptionStack.size();
+                } else {
+                    counter = 0;
+                }
+                MultiException.checkAndThrow("Could not register "+counter+" entries!", registerExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }

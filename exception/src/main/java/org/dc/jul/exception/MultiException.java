@@ -66,7 +66,7 @@ public class MultiException extends CouldNotPerformException {
         private final Object source;
         private final Throwable exception;
 
-        public SourceExceptionEntry(Object source, Throwable exception) {
+        public SourceExceptionEntry(final Object source, final Throwable exception) {
             this.source = source;
             this.exception = exception;
         }
