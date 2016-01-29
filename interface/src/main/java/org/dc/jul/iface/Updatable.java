@@ -11,8 +11,7 @@ import org.dc.jul.exception.CouldNotPerformException;
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  * @param <UPDATE> The value type to update.
- * @param <INSTANCE> The type of instance which can be updated.
  */
-public interface Updatable<UPDATE, INSTANCE extends Updatable<UPDATE, INSTANCE>>{
-    public INSTANCE update(UPDATE update) throws CouldNotPerformException;
+public interface Updatable<UPDATE>{
+    public UPDATE update(UPDATE update) throws CouldNotPerformException;
 }
