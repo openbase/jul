@@ -10,6 +10,8 @@ import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import rsb.Scope;
+import rst.authorization.UserConfigType.UserConfig;
+import rst.authorization.UserGroupConfigType.UserGroupConfig;
 import rst.homeautomation.control.agent.AgentConfigType.AgentConfig;
 import rst.homeautomation.control.app.AppConfigType.AppConfig;
 import rst.homeautomation.control.scene.SceneConfigType.SceneConfig;
@@ -250,6 +252,56 @@ public class ScopeGenerator {
 
         // add unit label
         scope.addComponent(convertIntoValidScopeComponent(sceneConfig.getLabel()));
+
+        return scope.build();
+    }
+
+    public static ScopeType.Scope generateSceneScope(final UserConfig userConfig) throws CouldNotPerformException {
+
+        if (userConfig == null) {
+            throw new NotAvailableException("userConfig");
+        }
+
+        if (!userConfig.hasUserName()) {
+            throw new NotAvailableException("userConfig.userName");
+        }
+
+        if (userConfig.getUserName().isEmpty()) {
+            throw new NotAvailableException("Field userConfig.userName isEmpty");
+        }
+
+        // add manager
+        ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
+        // add user
+        scope.addComponent(convertIntoValidScopeComponent("user"));
+        // add user name
+        scope.addComponent(convertIntoValidScopeComponent(userConfig.getUserName()));
+
+        return scope.build();
+    }
+
+    public static ScopeType.Scope generateSceneScope(final UserGroupConfig userGroupConfig) throws CouldNotPerformException {
+
+        if (userGroupConfig == null) {
+            throw new NotAvailableException("userGroupConfig");
+        }
+
+        if (!userGroupConfig.hasLabel()) {
+            throw new NotAvailableException("userGroupConfig.label");
+        }
+
+        if (userGroupConfig.getLabel().isEmpty()) {
+            throw new NotAvailableException("Field userGroupConfig.label isEmpty");
+        }
+
+        // add manager
+        ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
+        // add user
+        scope.addComponent(convertIntoValidScopeComponent("user"));
+        // add group
+        scope.addComponent(convertIntoValidScopeComponent("group"));
+        // add user name
+        scope.addComponent(convertIntoValidScopeComponent(userGroupConfig.getLabel()));
 
         return scope.build();
     }
