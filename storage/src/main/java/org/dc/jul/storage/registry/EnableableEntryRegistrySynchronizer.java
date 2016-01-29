@@ -21,7 +21,7 @@ import org.dc.jul.pattern.Factory;
  * @param <CONFIG_M>
  * @param <CONFIG_MB>
  */
-public abstract class EnableableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M, ENTRY> & Enableable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
+public abstract class EnableableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Enableable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
 
     public EnableableEntryRegistrySynchronizer(RegistryImpl<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, Factory<ENTRY, CONFIG_M> factory) throws InstantiationException {
         super(registry, remoteRegistry, factory);
