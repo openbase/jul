@@ -96,7 +96,6 @@
                 <version>1.8</version>
                 <configuration>
                     <verbose>false</verbose>
-                    <addSvnKeyWords>true</addSvnKeyWords>
                 </configuration>
                 <executions>
                     <execution>
@@ -112,6 +111,12 @@
                                 <root>src/test</root>
                             </roots>
                         </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-licenses</id>
+                        <goals>
+                            <goal>download-licenses</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
