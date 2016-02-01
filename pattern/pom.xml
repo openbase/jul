@@ -31,7 +31,7 @@
     <dependencies>
         <dependency>
             <groupId>org.dc</groupId>
-            <artifactId>jul.exception</artifactId>
+            <artifactId>jul.interface</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>

@@ -1,7 +1,7 @@
 package org.dc.jul.iface;
 
 import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.iface.provider.ConfigProvider;
 
 /**
  *
@@ -10,9 +10,7 @@ import org.dc.jul.exception.NotAvailableException;
  * @param <ID> The id type of the configurable instance.
  * @param <CONFIG> The configuration type.
  */
-public interface Configurable<ID, CONFIG> extends Identifiable<ID> {
-
-    public CONFIG getConfig() throws NotAvailableException;
+public interface Configurable<ID, CONFIG> extends Identifiable<ID>, ConfigProvider<CONFIG> {
 
     public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException;
 

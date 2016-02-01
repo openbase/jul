@@ -53,6 +53,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         RSBSharedConnectionConfig.load();
     }
 
+    // TODO mpohling: Should be move to rst and reimplement for rsb 13.
     public enum ConnectionState {
 
         Online, Offline
@@ -249,7 +250,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void shutdown() throws InterruptedException {
         try {
             deactivate();
-        } catch(CouldNotPerformException ex){
+        } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
     }
@@ -337,7 +338,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final void setField(int fieldNumber, Object value) {
+    protected final void setField(int fieldNumber, Object value) throws CouldNotPerformException {
         try {
             try {
                 dataBuilderWriteLock.lock();
@@ -351,11 +352,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 dataBuilderWriteLock.unlock();
             }
         } catch (Exception ex) {
-            logger.warn("Could not set field [" + fieldNumber + "=" + value + "] for " + this, ex);
+            throw new CouldNotPerformException("Could not set field [" + fieldNumber + "=" + value + "] for " + this, ex);
         }
     }
 
-    protected final void setField(String fieldName, Object value) {
+    protected final void setField(String fieldName, Object value) throws CouldNotPerformException {
         try {
             try {
                 dataBuilderWriteLock.lock();
@@ -368,12 +369,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             } finally {
                 dataBuilderWriteLock.unlock();
             }
-        } catch (Exception ex) {
-            logger.warn("Could not set field [" + fieldName + "=" + value + "] for " + this, ex);
+        } catch (CouldNotPerformException | NullPointerException ex) {
+            throw new CouldNotPerformException("Could not set field [" + fieldName + "=" + value + "] for " + this, ex);
         }
     }
 
-    protected final Object getField(String name) throws CouldNotPerformException {
+    protected final Object getField(String name) throws NotAvailableException {
         try {
             MB dataClone = cloneDataBuilder();
             Descriptors.FieldDescriptor findFieldByName = dataClone.getDescriptorForType().findFieldByName(name);
@@ -382,7 +383,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             }
             return dataClone.getField(findFieldByName);
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
+            throw new NotAvailableException(name, this, ex);
         }
     }
 
