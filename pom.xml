@@ -3,19 +3,21 @@
     <modelVersion>4.0.0</modelVersion>
     
     <prerequisites>
-        <maven>3.0</maven>
+        <maven>3.1.1</maven>
     </prerequisites>
     
     <groupId>org.dc</groupId>
     <artifactId>jul</artifactId>
     <version>1.1-SNAPSHOT</version>
     <name>JUL</name>
+    <inceptionYear>2015</inceptionYear>
     <description>Java Utility Lib</description>
     
     <organization>
         <name>DivineCooperation</name>
         <url>https://github.com/divinecooperation</url>
     </organization>
+    
     <developers>
         <developer>
             <id>DivineThreepwood</id>
@@ -47,31 +49,19 @@
     </developers>
     
     <scm>
-        <developerConnection>scm:git:https://projects.cit-ec.uni-bielefeld.de/git/lsp-csra.jul.git</developerConnection>
-        <url>https://projects.cit-ec.uni-bielefeld.de/git/lsp-csra.jul.git</url>
+        <developerConnection>scm:git:https://github.com/divinecooperation/jul.git</developerConnection>
+        <url>https://github.com/DivineCooperation/jul/wiki</url>
     </scm>
     
     <packaging>pom</packaging>
    
-    <properties>
-        <skipTests>false</skipTests>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--<dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>-->
-        <dependency.jps.version>[3.0,3.1-SNAPSHOT)</dependency.jps.version>
-        <dependency.rst.sandbox.artifact>rst-sandbox-csra</dependency.rst.sandbox.artifact>
-        <!--dependency.rst.sandbox.version>[0.12,0.13-SNAPSHOT)</dependency.rst.sandbox.version-->
-        <!--<dependency.rst.sandbox.artifact>rst-sandbox-csra-ha-paramite</dependency.rst.sandbox.artifact>-->
-        <dependency.rst.sandbox.version>0.12-SNAPSHOT</dependency.rst.sandbox.version>
-        <dependency.rst.stable.artifact>rst-csra</dependency.rst.stable.artifact>
-        <dependency.rst.stable.version>[0.12,0.13-SNAPSHOT)</dependency.rst.stable.version>
-        <!--<dependency.rst.stable.artifact>rst-csra-ha-paramite</dependency.rst.stable.artifact>-->
-        <!--<dependency.rst.stable.version>0.12-SNAPSHOT</dependency.rst.stable.version>-->
-        <dependency.rsb.version>[0.12,0.13-SNAPSHOT)</dependency.rsb.version>
-        <dependency.rct.version>[1.0,1.1-SNAPSHOT)</dependency.rct.version>
-    </properties>
-
+    <licenses>
+        <license>
+            <name>LGPLv3</name>
+            <url>http://www.gnu.org/licenses/lgpl.html</url>
+        </license>
+    </licenses>
+   
     <build>
         <plugins>
             <plugin>
@@ -100,6 +90,36 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>1.8</version>
+                <configuration>
+                    <verbose>false</verbose>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>first</id>
+                        <goals>
+                            <goal>update-file-header</goal>
+                        </goals>
+                        <phase>process-sources</phase>
+                        <configuration>
+                            <licenseName>lgpl_v3</licenseName>
+                            <roots>
+                                <root>src/main/java</root>
+                                <root>src/test</root>
+                            </roots>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>download-licenses</id>
+                        <goals>
+                            <goal>download-licenses</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     
@@ -113,6 +133,25 @@
         <module>storage</module>
         <module>extension</module>
     </modules>
+    
+    <properties>
+        <skipTests>false</skipTests>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--<dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>-->
+        <dependency.jps.version>[3.0,3.1-SNAPSHOT)</dependency.jps.version>
+        <dependency.rst.sandbox.artifact>rst-sandbox-csra</dependency.rst.sandbox.artifact>
+        <!--dependency.rst.sandbox.version>[0.12,0.13-SNAPSHOT)</dependency.rst.sandbox.version-->
+        <!--<dependency.rst.sandbox.artifact>rst-sandbox-csra-ha-paramite</dependency.rst.sandbox.artifact>-->
+        <dependency.rst.sandbox.version>0.12-SNAPSHOT</dependency.rst.sandbox.version>
+        <dependency.rst.stable.artifact>rst-csra</dependency.rst.stable.artifact>
+        <dependency.rst.stable.version>[0.12,0.13-SNAPSHOT)</dependency.rst.stable.version>
+        <!--<dependency.rst.stable.artifact>rst-csra-ha-paramite</dependency.rst.stable.artifact>-->
+        <!--<dependency.rst.stable.version>0.12-SNAPSHOT</dependency.rst.stable.version>-->
+        <dependency.rsb.version>[0.12,0.13-SNAPSHOT)</dependency.rsb.version>
+        <dependency.rct.version>[1.0,1.1-SNAPSHOT)</dependency.rct.version>
+    </properties>
     
     <dependencies>
         <dependency>
