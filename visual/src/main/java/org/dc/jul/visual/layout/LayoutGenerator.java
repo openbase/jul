@@ -1,7 +1,3 @@
-    /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.visual.layout;
 
 /*
@@ -16,20 +12,18 @@ package org.dc.jul.visual.layout;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import org.dc.jul.exception.printer.ExceptionPrinter;
-import org.dc.jul.exception.printer.LogLevel;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import javax.swing.GroupLayout;
@@ -40,6 +34,8 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
+import org.dc.jul.exception.printer.ExceptionPrinter;
+import org.dc.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -68,20 +64,20 @@ public final class LayoutGenerator {
                     assert panel != null;
                     assert componentCollection != null;
                     panel.removeAll();
-                    
+
                     panel.setLayout(listLayout);
                     final GroupLayout.ParallelGroup parallelGroup = listLayout.createParallelGroup(Alignment.LEADING);
-                    
+
                     // return if list is components empty
                     if (componentCollection.isEmpty()) {
                         return;
                     }
-                    
+
                     componentCollection.stream().forEach((component) -> {
                         parallelGroup.addComponent(component, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
                     });
                     listLayout.setHorizontalGroup(parallelGroup);
-                    
+
                     final GroupLayout.SequentialGroup sequentialGroup = listLayout.createSequentialGroup();
                     for (JComponent component : componentCollection) {
                         sequentialGroup.addComponent(component);
