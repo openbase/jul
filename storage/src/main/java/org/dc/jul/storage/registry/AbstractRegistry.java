@@ -80,11 +80,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
-    public AbstractRegistry(final MAP entryMap) throws InstantiationException {
+    public AbstractRegistry(final MAP entryMap) throws InstantiationException, InterruptedException {
         this(entryMap, new RegistryPluginPool<>());
     }
 
-    public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
+    public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException, InterruptedException {
         try {
             this.registryLock = new ReentrantReadWriteLock();
             this.consistencyCheckLock = new ReentrantReadWriteLock();
@@ -553,7 +553,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    public void registerPlugin(P plugin) throws CouldNotPerformException {
+    public void registerPlugin(P plugin) throws CouldNotPerformException, InterruptedException {
         pluginPool.addPlugin(plugin);
     }
 

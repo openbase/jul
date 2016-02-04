@@ -21,7 +21,6 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -29,6 +28,7 @@ import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Configurable;
+import org.dc.jul.iface.Manageable;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -38,7 +38,7 @@ import rst.rsb.ScopeType.Scope;
  * @param <MB>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements Configurable<String, CONFIG> {
+public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements Configurable<String, CONFIG>, Manageable<CONFIG> {
 
     public static final String FIELD_SCOPE = "scope";
 
@@ -48,7 +48,13 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
         super(builder);
     }
 
-    public void init(final CONFIG config) throws InitializationException {
+    /**
+     *
+     * @param config
+     * @throws InitializationException
+     */
+    @Override
+    public void init(final CONFIG config) throws InitializationException, InterruptedException {
         try {
             updateConfig(config);
             super.init(detectScope());
@@ -86,7 +92,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     @Override
     public CONFIG getConfig() throws NotAvailableException {
-        if(config == null) {
+        if (config == null) {
             throw new NotAvailableException("config");
         }
         return config;

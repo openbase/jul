@@ -28,11 +28,14 @@ package org.dc.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jps.preset.JPTestMode;
 import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.RejectedException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
@@ -43,9 +46,6 @@ import org.dc.jul.storage.registry.FileSynchronizedRegistry;
 import org.dc.jul.storage.registry.Registry;
 import org.dc.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
 import org.dc.jul.storage.registry.jp.JPInitializeDB;
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -59,8 +59,10 @@ import org.slf4j.LoggerFactory;
 /**
  *
  * @author mpohling //
+ * @param <KEY>
+ * @param <ENTRY>
  */
-public class GitRegistryPlugin extends FileRegistryPluginAdapter {
+public class GitRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends FileRegistryPluginAdapter<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -81,7 +83,7 @@ public class GitRegistryPlugin extends FileRegistryPluginAdapter {
     }
 
     @Override
-    public void init(Registry reg) throws CouldNotPerformException {
+    public void init(Registry<KEY, ENTRY, ?> config) throws InitializationException, InterruptedException {
     }
 
     private void initialSync() throws CouldNotPerformException {

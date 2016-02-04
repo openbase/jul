@@ -31,6 +31,10 @@ package org.dc.jul.extension.rsb.com;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jps.preset.JPTestMode;
@@ -50,13 +54,10 @@ import org.dc.jul.extension.rsb.scope.ScopeProvider;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
 import org.dc.jul.iface.Activatable;
 import org.dc.jul.iface.Changeable;
+import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.schedule.WatchDog;
-import java.util.Map;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -71,7 +72,7 @@ import rst.rsb.ScopeType;
  * @param <M>
  * @param <MB>
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements ScopeProvider, Activatable, Changeable {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements ScopeProvider, Activatable, Changeable, Shutdownable {
 
     static {
         RSBSharedConnectionConfig.load();
@@ -135,7 +136,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    public void init(final String scope) throws InitializationException {
+    public void init(final String scope) throws InitializationException, InterruptedException {
         try {
             init(new Scope(scope));
         } catch (CouldNotPerformException | NullPointerException ex) {
@@ -143,7 +144,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    public void init(final ScopeType.Scope scope) throws InitializationException {
+    public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
         try {
             init(ScopeTransformer.transform(scope));
         } catch (CouldNotPerformException | NullPointerException ex) {
@@ -151,7 +152,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    public void init(final String label, final ScopeProvider location) throws InitializationException {
+    public void init(final String label, final ScopeProvider location) throws InitializationException, InterruptedException {
         try {
             init(generateScope(label, getClass().getSimpleName(), location));
         } catch (CouldNotPerformException | NullPointerException ex) {
@@ -159,7 +160,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    public void init(final String label, final String type, final ScopeProvider location) throws InitializationException {
+    public void init(final String label, final String type, final ScopeProvider location) throws InitializationException, InterruptedException {
         try {
             init(generateScope(label, type, location));
         } catch (CouldNotPerformException | NullPointerException ex) {
@@ -167,11 +168,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    public void init(final Scope scope) throws InitializationException {
+
+    public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
-    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
+    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
 
         ParticipantConfig internalParticipantConfig = participantConfig;
 
@@ -271,6 +273,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         state = ConnectionState.Offline;
     }
 
+    @Override
     public void shutdown() throws InterruptedException {
         try {
             deactivate();
@@ -408,6 +411,19 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             return dataClone.getField(findFieldByName);
         } catch (Exception ex) {
             throw new NotAvailableException(name, this, ex);
+        }
+    }
+
+    protected final boolean hasField(final String name) throws CouldNotPerformException {
+        try {
+            MB dataClone = cloneDataBuilder();
+            Descriptors.FieldDescriptor findFieldByName = dataClone.getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                return false;
+            }
+            return dataClone.hasField(findFieldByName);
+        } catch (Exception ex) {
+            return false;
         }
     }
 

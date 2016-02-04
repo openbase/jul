@@ -29,10 +29,10 @@ package org.dc.jul.storage.registry;
  * #L%
  */
 
-import org.dc.jul.storage.registry.plugin.RegistryPlugin;
+import java.util.HashMap;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.iface.Identifiable;
-import java.util.HashMap;
+import org.dc.jul.storage.registry.plugin.RegistryPlugin;
 
 /**
  *
@@ -42,11 +42,11 @@ import java.util.HashMap;
  */
 public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, RegistryImpl<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY>> {
 
-    public RegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
+    public RegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException, InterruptedException {
         super(entryMap);
     }
-    
-    public RegistryImpl() throws InstantiationException {
-        super(new HashMap<KEY, ENTRY>());
+
+    public RegistryImpl() throws InstantiationException, InterruptedException {
+        super(new HashMap<>());
     }
 }

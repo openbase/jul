@@ -49,11 +49,11 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
 
     private RegistryCloner<KEY, ENTRY, MAP> cloner;
 
-    public RegistrySandbox(final MAP entryMap) throws CouldNotPerformException {
+    public RegistrySandbox(final MAP entryMap) throws CouldNotPerformException, InterruptedException {
         this(entryMap, new RITSCloner<>());
     }
 
-    public RegistrySandbox(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException {
+    public RegistrySandbox(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException, InterruptedException {
         super(cloner.deepCloneRegistryMap(entryMap));
         this.cloner = cloner;
     }

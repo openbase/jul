@@ -29,19 +29,19 @@ package org.dc.jul.storage.registry;
  * #L%
  */
 
-import org.dc.jul.storage.registry.plugin.RemoteRegistryPlugin;
 import com.google.protobuf.GeneratedMessage;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.NotSupportedException;
 import org.dc.jul.extension.protobuf.IdGenerator;
 import org.dc.jul.extension.protobuf.IdentifiableMessage;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.dc.jul.storage.registry.plugin.RemoteRegistryPlugin;
 
 /**
  *
@@ -55,11 +55,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
 	private final IdGenerator<KEY, M> idGenerator;
 
-	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
+	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator) throws InstantiationException, InterruptedException {
 		this(idGenerator, new HashMap<KEY, IdentifiableMessage<KEY, M, MB>>());
 	}
 
-	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
+	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException, InterruptedException {
 		super(internalMap);
 		this.idGenerator = idGenerator;
 	}
@@ -72,7 +72,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 		}
 		replaceInternalMap(newRegistryMap);
 	}
-    
+
     public KEY getKey(final M entry) throws CouldNotPerformException {
         return idGenerator.generateId(entry);
     }

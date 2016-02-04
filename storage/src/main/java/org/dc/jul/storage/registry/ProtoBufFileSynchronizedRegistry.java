@@ -31,6 +31,8 @@ package org.dc.jul.storage.registry;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.io.File;
+import java.util.List;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -49,8 +51,6 @@ import org.dc.jul.pattern.Observer;
 import org.dc.jul.storage.file.FileProvider;
 import org.dc.jul.storage.registry.jp.JPGitRegistryPlugin;
 import org.dc.jul.storage.registry.plugin.GitRegistryPlugin;
-import java.io.File;
-import java.util.List;
 
 /**
  *
@@ -67,11 +67,11 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
     private final Class<M> messageClass;
 
-    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         this(messageClass, new ProtoBufMessageMap<>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
     }
 
-    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new IdentifiableMessageTransformer<>(messageClass, idGenerator)), fileProvider);
         try {
             this.idGenerator = idGenerator;
@@ -84,7 +84,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
             try {
                 if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
-                    registerPlugin(new GitRegistryPlugin(this));
+                    registerPlugin(new GitRegistryPlugin<>(this));
                 }
             } catch (JPServiceException ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);

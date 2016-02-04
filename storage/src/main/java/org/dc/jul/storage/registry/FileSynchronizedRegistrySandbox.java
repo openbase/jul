@@ -29,13 +29,13 @@ package org.dc.jul.storage.registry;
  * #L%
  */
 
+import java.util.Map;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.NotSupportedException;
-import org.dc.jul.storage.registry.plugin.FileRegistryPlugin;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.storage.registry.clone.RegistryCloner;
-import java.util.Map;
+import org.dc.jul.storage.registry.plugin.FileRegistryPlugin;
 
 /**
  *
@@ -47,11 +47,11 @@ import java.util.Map;
  */
 public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY, R>> extends RegistrySandbox<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY, R> {
 
-    public FileSynchronizedRegistrySandbox(MAP entryMap, RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException {
+    public FileSynchronizedRegistrySandbox(MAP entryMap, RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException, InterruptedException {
         super(entryMap, cloner);
     }
 
-    public FileSynchronizedRegistrySandbox(final MAP entryMap) throws CouldNotPerformException {
+    public FileSynchronizedRegistrySandbox(final MAP entryMap) throws CouldNotPerformException, InterruptedException {
         super(entryMap);
     }
 

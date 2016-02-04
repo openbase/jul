@@ -21,8 +21,6 @@ package org.dc.jul.extension.rsb.scope;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-
 import java.util.Collection;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
@@ -60,6 +58,15 @@ public class ScopeGenerator {
             stringRep += Scope.COMPONENT_SEPARATOR;
         }
         return stringRep;
+    }
+
+    public static ScopeType.Scope generateScope(final String scope) throws CouldNotPerformException {
+
+        ScopeType.Scope.Builder generatedScope = ScopeType.Scope.newBuilder();
+        for (String component : scope.split("/")) {
+            generatedScope.addComponent(convertIntoValidScopeComponent(component));
+        }
+        return generatedScope.build();
     }
 
     public static ScopeType.Scope generateLocationScope(final LocationConfig locationConfig, final ProtoBufMessageMapInterface<String, LocationConfig, LocationConfig.Builder> registry) throws CouldNotPerformException {

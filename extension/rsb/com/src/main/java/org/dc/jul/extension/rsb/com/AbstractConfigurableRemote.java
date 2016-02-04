@@ -34,6 +34,7 @@ import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
 import static org.dc.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
 import org.dc.jul.iface.Configurable;
+import org.dc.jul.iface.Manageable;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import rst.rsb.ScopeType;
@@ -44,7 +45,7 @@ import rst.rsb.ScopeType;
  * @param <M>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements Configurable<String, CONFIG> {
+public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements Configurable<String, CONFIG>, Manageable<CONFIG>{
 
     protected CONFIG config;
     private final Observable<CONFIG> configObservable;
@@ -53,7 +54,8 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         this.configObservable = new Observable<>(true);
     }
 
-    public void init(final CONFIG config) throws InitializationException {
+    @Override
+    public void init(final CONFIG config) throws InitializationException, InterruptedException {
         try {
             this.config = config;
             super.init(detectScope());
