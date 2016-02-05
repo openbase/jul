@@ -31,14 +31,14 @@ package org.dc.jul.storage.registry;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.util.List;
+import java.util.Map;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.extension.protobuf.IdGenerator;
 import org.dc.jul.extension.protobuf.IdentifiableMessage;
 import org.dc.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import org.dc.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 import org.dc.jul.storage.registry.clone.ProtoBufCloner;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -52,7 +52,7 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
 
     private final IdGenerator<KEY, M> idGenerator;
 
-    public ProtoBufFileSynchronizedRegistrySandbox(final IdGenerator<KEY, M> idGenerator, final Descriptors.FieldDescriptor fieldDescriptor) throws CouldNotPerformException {
+    public ProtoBufFileSynchronizedRegistrySandbox(final IdGenerator<KEY, M> idGenerator, final Descriptors.FieldDescriptor fieldDescriptor) throws CouldNotPerformException, InterruptedException {
         super(new ProtoBufMessageMapWrapper<>(), new ProtoBufCloner<>(idGenerator));
         this.idGenerator = idGenerator;
     }

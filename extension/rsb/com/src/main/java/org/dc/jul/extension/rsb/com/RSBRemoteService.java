@@ -28,9 +28,18 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jps.preset.JPTestMode;
@@ -47,22 +56,14 @@ import org.dc.jul.exception.printer.LogLevel;
 import static org.dc.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import org.dc.jul.extension.rsb.iface.RSBListenerInterface;
 import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
-import org.dc.jul.extension.rsb.scope.ScopeProvider;
+import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
+import org.dc.jul.extension.rst.iface.ScopeProvider;
 import org.dc.jul.iface.Activatable;
+import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.schedule.WatchDog;
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -77,7 +78,7 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Activatable {
+public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Shutdownable, Activatable {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -105,35 +106,31 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         this.syncTasks = new ArrayList<>();
     }
 
-    public void init(final String label, final ScopeProvider location) throws InitializationException {
+    public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
+        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
+    }
+
+    public void init(final Scope scope) throws InitializationException, InterruptedException {
+        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
+    }
+
+    public void init(final String scope) throws InitializationException, InterruptedException {
         try {
-            init(generateScope(label, detectMessageClass(), location));
-        } catch (CouldNotPerformException ex) {
+            init(new Scope(scope));
+        } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
-    public synchronized void init(final ScopeType.Scope scope) throws InitializationException {
+    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
-            init(ScopeTransformer.transform(scope));
+            init(ScopeTransformer.transform(scope), participantConfig);
         } catch (CouldNotTransformException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
-    public void init(final Scope scope) throws InitializationException {
-        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
-    }
-
-    public synchronized void init(final String scope) throws InitializationException {
-        try {
-            init(new Scope(scope));
-        } catch (Exception ex) {
-            throw new InitializationException(this, ex);
-        }
-    }
-
-    public synchronized void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException {
+    public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
 
             ParticipantConfig internalParticipantConfig = participantConfig;
@@ -158,7 +155,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 return;
             }
 
-            this.scope = new Scope(scope.toString().toLowerCase());
+            this.scope = new Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
 
             initListener(this.scope, internalParticipantConfig);
@@ -441,16 +438,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public Class detectMessageClass() {
         ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
         return (Class) parameterizedType.getActualTypeArguments()[0];
-    }
-
-    public static Scope generateScope(final String label, final Class typeClass, final ScopeProvider scopeProvider) throws CouldNotPerformException {
-        try {
-            return scopeProvider.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + typeClass.getSimpleName())).concat(new Scope(Scope.COMPONENT_SEPARATOR + label));
-
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Coult not generate scope!", ex);
-        }
-    }
+    }   
 
     protected final Object getField(String name) throws CouldNotPerformException {
         try {
@@ -469,6 +457,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             throw new InvalidStateException("Remote communication service not initialized!");
         }
     }
+//
+//    public ScopeType.Scope getScope() {
+//        return scope;
+//    }
 
     @Override
     public String toString() {

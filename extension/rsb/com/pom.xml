@@ -30,6 +30,11 @@
     <dependencies>
         <dependency>
             <groupId>org.dc</groupId>
+            <artifactId>jul.extension.rst.interface</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dc</groupId>
             <artifactId>jul.extension.rsb.interface</artifactId>
             <version>${project.version}</version>
         </dependency>

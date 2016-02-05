@@ -1,15 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package org.dc.jul.iface;
+package org.dc.jul.extension.rst.iface;
 
 /*
  * #%L
- * JUL Interface
- * $Id:$
- * $HeadURL:$
+ * JUL Extension RST Interface
  * %%
  * Copyright (C) 2015 - 2016 DivineCooperation
  * %%
@@ -30,15 +23,13 @@ package org.dc.jul.iface;
  */
 
 import org.dc.jul.exception.NotAvailableException;
+import rst.rsb.ScopeType.Scope;
 
 /**
  *
- * @author Divine Threepwood
- * @param <ID>
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
-public interface Identifiable<ID> {
+public interface ScopeProvider {
 
-    public String FIELD_ID = "id";
-
-    public ID getId() throws NotAvailableException;
+    public Scope getScope() throws NotAvailableException;
 }

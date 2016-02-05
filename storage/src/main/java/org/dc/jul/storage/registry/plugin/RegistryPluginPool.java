@@ -24,14 +24,15 @@ package org.dc.jul.storage.registry.plugin;
  * #L%
  */
 
+import java.util.ArrayList;
+import java.util.List;
 import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.RejectedException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.storage.registry.Registry;
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +55,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     }
 
     @Override
-    public void init(Registry<KEY, ENTRY, ?> registry) throws CouldNotPerformException {
+    public void init(Registry<KEY, ENTRY, ?> registry) throws InitializationException {
         this.registry = registry;
     }
 
@@ -69,12 +70,12 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         });
     }
 
-    public void addPlugin(P plugin) throws CouldNotPerformException {
+    public void addPlugin(P plugin) throws InitializationException, InterruptedException {
         try {
             plugin.init(registry);
             pluginList.add(plugin);
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not add Plugin[" + plugin.getClass().getName() + "] to Registry[" + registry.getClass().getSimpleName() + "]", ex);
+            throw new InitializationException("Could not add Plugin[" + plugin.getClass().getName() + "] to Registry[" + registry.getClass().getSimpleName() + "]", ex);
         }
     }
 

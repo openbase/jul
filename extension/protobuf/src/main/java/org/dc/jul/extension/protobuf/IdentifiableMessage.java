@@ -102,7 +102,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     }
 
     @Override
-    public KEY getId() throws CouldNotPerformException {
+    public KEY getId() throws NotAvailableException {
         try {
             if (internalMessage == null) {
                 throw new NotAvailableException("messageOrBuilder");
@@ -118,8 +118,8 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 
             return id;
 
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not detect id.", ex);
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("id", ex);
         }
     }
 

@@ -32,6 +32,8 @@ package org.dc.jul.storage.registry.plugin;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.RejectedException;
 import org.dc.jul.iface.Identifiable;
+import org.dc.jul.iface.Initializable;
+import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.storage.registry.Registry;
 
 /**
@@ -40,11 +42,7 @@ import org.dc.jul.storage.registry.Registry;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> {
-
-    public void init(final Registry<KEY, ENTRY, ?> registry) throws CouldNotPerformException;
-
-    public void shutdown();
+public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Initializable<Registry<KEY, ENTRY, ?>>, Shutdownable {
 
     public void beforeRegister(final ENTRY entry) throws RejectedException;
 

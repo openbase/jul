@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.citec.jul.extension.rst.storage.registry.consistency;
+package org.dc.jul.extension.rst.storage.registry.consistency;
 
 /*
  * #%L

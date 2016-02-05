@@ -3,13 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.dc.jul.storage.registry;
+package org.dc.jul.extension.rsb.com;
 
 /*
  * #%L
- * JUL Storage
- * $Id:$
- * $HeadURL:$
+ * JUL Extension RSB Communication
  * %%
  * Copyright (C) 2015 - 2016 DivineCooperation
  * %%
@@ -29,24 +27,30 @@ package org.dc.jul.storage.registry;
  * #L%
  */
 
-import java.util.HashMap;
-import org.dc.jul.exception.InstantiationException;
+import com.google.protobuf.GeneratedMessage;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InvalidStateException;
+import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Identifiable;
-import org.dc.jul.storage.registry.plugin.RegistryPlugin;
+import static org.dc.jul.iface.Identifiable.FIELD_ID;
 
 /**
  *
- * @author mpohling
- * @param <KEY>
- * @param <ENTRY>
+ * @author Divine Threepwood
+ * @param <M>
  */
-public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, RegistryImpl<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY>> {
+public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements Identifiable<String> {
 
-    public RegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
-        super(entryMap);
-    }
-
-    public RegistryImpl() throws InstantiationException {
-        super(new HashMap<>());
+    @Override
+    public String getId() throws NotAvailableException {
+        try {
+            String id = (String) getField(FIELD_ID);
+            if (id.isEmpty()) {
+                throw new InvalidStateException("data.id is empty!");
+            }
+            return id;
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("data.id", ex);
+        }
     }
 }

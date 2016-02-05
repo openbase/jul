@@ -29,6 +29,11 @@ package org.dc.jul.storage.registry;
  * #L%
  */
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jps.preset.JPTestMode;
@@ -47,11 +52,6 @@ import org.dc.jul.storage.registry.jp.JPResetDB;
 import org.dc.jul.storage.registry.plugin.FileRegistryPlugin;
 import org.dc.jul.storage.registry.plugin.FileRegistryPluginPool;
 import org.dc.jul.storage.registry.version.DBVersionControl;
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  *
@@ -70,11 +70,11 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
     private DBVersionControl versionControl;
 
-    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException {
+    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
     }
 
-    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool) throws InstantiationException {
+    public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool) throws InstantiationException, InterruptedException {
         super(entryMap, new FileRegistryPluginPool<>());
         try {
             this.databaseDirectory = databaseDirectory;

@@ -34,9 +34,9 @@ import org.dc.jul.exception.InstantiationException;
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
- * 
+ *
  * Factory pattern interface.
- * 
+ *
  * @param <INSTANCE> Type of instance which can be created by using this factory.
  * @param <CONFIG> Configuration type which contains all attributes to create a new instance.
  */
@@ -45,8 +45,9 @@ public interface Factory<INSTANCE, CONFIG> {
     /**
      * Creates a new instance with the given configuration.
      * @param config
-     * @return 
+     * @return
      * @throws org.dc.jul.exception.InstantiationException
+     * @throws java.lang.InterruptedException
      */
-    public INSTANCE newInstance(final CONFIG config) throws InstantiationException;
+    public INSTANCE newInstance(final CONFIG config) throws InstantiationException, InterruptedException;
 }

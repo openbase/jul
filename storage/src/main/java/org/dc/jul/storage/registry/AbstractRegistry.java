@@ -553,7 +553,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    public void registerPlugin(P plugin) throws CouldNotPerformException {
+    public void registerPlugin(P plugin) throws CouldNotPerformException, InterruptedException {
         pluginPool.addPlugin(plugin);
     }
 

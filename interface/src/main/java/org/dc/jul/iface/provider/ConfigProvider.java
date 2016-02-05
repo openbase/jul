@@ -1,15 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package org.dc.jul.iface;
+package org.dc.jul.iface.provider;
 
 /*
  * #%L
  * JUL Interface
- * $Id:$
- * $HeadURL:$
  * %%
  * Copyright (C) 2015 - 2016 DivineCooperation
  * %%
@@ -33,12 +26,9 @@ import org.dc.jul.exception.NotAvailableException;
 
 /**
  *
- * @author Divine Threepwood
- * @param <ID>
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @param <CONFIG>
  */
-public interface Identifiable<ID> {
-
-    public String FIELD_ID = "id";
-
-    public ID getId() throws NotAvailableException;
+public interface ConfigProvider<CONFIG> {
+    public CONFIG getConfig() throws NotAvailableException;
 }
