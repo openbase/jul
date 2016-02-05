@@ -29,7 +29,10 @@ package org.dc.jul.extension.rsb.com;
 
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InvalidStateException;
+import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Identifiable;
+import static org.dc.jul.iface.Identifiable.FIELD_ID;
 
 /**
  *
@@ -38,21 +41,16 @@ import org.dc.jul.iface.Identifiable;
  */
 public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements Identifiable<String> {
 
-//    @Override
-//    public ServiceType getServiceType() {
-//        return ServiceType.MULTI;
-//    }
-
     @Override
-    public String getId() throws CouldNotPerformException {
-        return (String) getField(FIELD_ID);
+    public String getId() throws NotAvailableException {
+        try {
+            String id = (String) getField(FIELD_ID);
+            if (id.isEmpty()) {
+                throw new InvalidStateException("data.id is empty!");
+            }
+            return id;
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("data.id", ex);
+        }
     }
-//
-//    @Override
-//    @Deprecated
-//    public ServiceConfigType.ServiceConfig getServiceConfig() {
-//        // TODO mpohling: redesign!
-//        throw new UnsupportedOperationException("Not supported yet.");
-//
-//    }
 }

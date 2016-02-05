@@ -55,11 +55,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
 	private final IdGenerator<KEY, M> idGenerator;
 
-	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator) throws InstantiationException, InterruptedException {
-		this(idGenerator, new HashMap<KEY, IdentifiableMessage<KEY, M, MB>>());
+	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
+		this(idGenerator, new HashMap<>());
 	}
 
-	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException, InterruptedException {
+	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
 		super(internalMap);
 		this.idGenerator = idGenerator;
 	}

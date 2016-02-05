@@ -29,7 +29,7 @@ package org.dc.jul.iface;
  * #L%
  */
 
-import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.NotAvailableException;
 
 /**
  *
@@ -40,5 +40,5 @@ public interface Identifiable<ID> {
 
     public String FIELD_ID = "id";
 
-    public ID getId() throws CouldNotPerformException;
+    public ID getId() throws NotAvailableException;
 }

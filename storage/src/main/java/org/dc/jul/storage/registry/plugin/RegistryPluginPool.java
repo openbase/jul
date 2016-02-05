@@ -55,7 +55,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     }
 
     @Override
-    public void init(Registry<KEY, ENTRY, ?> registry) throws InitializationException, InterruptedException {
+    public void init(Registry<KEY, ENTRY, ?> registry) throws InitializationException {
         this.registry = registry;
     }
 

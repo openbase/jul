@@ -42,11 +42,11 @@ import org.dc.jul.storage.registry.plugin.RegistryPlugin;
  */
 public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, RegistryImpl<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY>> {
 
-    public RegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException, InterruptedException {
+    public RegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
         super(entryMap);
     }
 
-    public RegistryImpl() throws InstantiationException, InterruptedException {
+    public RegistryImpl() throws InstantiationException {
         super(new HashMap<>());
     }
 }

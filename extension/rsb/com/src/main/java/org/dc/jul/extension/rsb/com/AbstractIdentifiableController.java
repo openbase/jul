@@ -21,10 +21,11 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
+import org.dc.jul.exception.InvalidStateException;
+import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Identifiable;
 
 /**
@@ -40,8 +41,16 @@ public abstract class AbstractIdentifiableController<M extends GeneratedMessage,
     }
 
     @Override
-    public String getId() throws CouldNotPerformException {
-        return (String) getField(FIELD_ID);
+    public String getId() throws NotAvailableException {
+        try {
+            String id = (String) getField(FIELD_ID);
+            if (id.isEmpty()) {
+                throw new InvalidStateException("data.id is empty!");
+            }
+            return id;
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("data.id", ex);
+        }
     }
 
 }

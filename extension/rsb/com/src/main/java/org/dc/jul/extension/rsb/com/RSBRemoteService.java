@@ -17,12 +17,12 @@ package org.dc.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -57,8 +57,8 @@ import static org.dc.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_S
 import org.dc.jul.extension.rsb.iface.RSBListenerInterface;
 import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
-import org.dc.jul.extension.rsb.scope.ScopeProvider;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
+import org.dc.jul.extension.rst.iface.ScopeProvider;
 import org.dc.jul.iface.Activatable;
 import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.pattern.Observable;
@@ -106,15 +106,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         this.syncTasks = new ArrayList<>();
     }
 
-    @Deprecated
-    public void init(final String label, final ScopeProvider location) throws InitializationException, InterruptedException {
-        try {
-            init(generateScope(label, detectMessageClass(), location));
-        } catch (CouldNotPerformException ex) {
-            throw new InitializationException(this, ex);
-        }
-    }
-
     public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
@@ -126,7 +117,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
             init(new Scope(scope));
-        } catch (Exception ex) {
+        } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
     }
@@ -447,16 +438,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public Class detectMessageClass() {
         ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
         return (Class) parameterizedType.getActualTypeArguments()[0];
-    }
-
-    public static Scope generateScope(final String label, final Class typeClass, final ScopeProvider parentScopeProvider) throws CouldNotPerformException {
-        try {
-            return parentScopeProvider.getScope().concat(new Scope(Scope.COMPONENT_SEPARATOR + typeClass.getSimpleName())).concat(new Scope(Scope.COMPONENT_SEPARATOR + label));
-
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Coult not generate scope!", ex);
-        }
-    }
+    }   
 
     protected final Object getField(String name) throws CouldNotPerformException {
         try {
@@ -475,10 +457,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             throw new InvalidStateException("Remote communication service not initialized!");
         }
     }
-
-    public ScopeType.Scope getScope() {
-        return scope;
-    }
+//
+//    public ScopeType.Scope getScope() {
+//        return scope;
+//    }
 
     @Override
     public String toString() {

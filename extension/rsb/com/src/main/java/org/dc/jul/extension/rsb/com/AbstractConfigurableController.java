@@ -65,7 +65,11 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     @Override
     public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException {
-        this.config = (CONFIG) config.toBuilder().mergeFrom(config).build();
+        if(this.config == null) {
+            this.config = config;
+        } else {
+            this.config = (CONFIG) this.config.toBuilder().mergeFrom(config).build();
+        }
         return this.config;
     }
 
