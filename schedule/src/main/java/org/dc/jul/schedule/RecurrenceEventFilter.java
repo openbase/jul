@@ -43,8 +43,9 @@ import org.slf4j.LoggerFactory;
  *
  * RecurrenceEventFilter helps to filter high frequency events. After a new incoming event is processed, all further incoming events are skipped except of the last event which is executed after the
  * defined timeout is reached.
+ * @param <VALUE>
  */
-public abstract class RecurrenceEventFilter {
+public abstract class RecurrenceEventFilter<VALUE> {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(RecurrenceEventFilter.class);
 
@@ -52,6 +53,7 @@ public abstract class RecurrenceEventFilter {
     public static final long DEFAULT_TEST_TIMEOUT = 500;
 
     private Timeout timeout;
+    private VALUE lastValue;
 
     private boolean changeDetected;
 
@@ -59,6 +61,10 @@ public abstract class RecurrenceEventFilter {
         this(DEFAULT_TIMEOUT);
     }
 
+    /**
+     * Timeout in milliseconds.
+     * @param timeout
+     */
     public RecurrenceEventFilter(long timeout) {
         this.changeDetected = false;
 
@@ -81,6 +87,11 @@ public abstract class RecurrenceEventFilter {
         };
     }
 
+    public synchronized void trigger(final VALUE value) {
+        this.lastValue = value;
+        trigger();
+    }
+
     public synchronized void trigger() {
         if (timeout.isActive()) {
             changeDetected = true;
@@ -94,6 +105,10 @@ public abstract class RecurrenceEventFilter {
 
     public void cancel() {
         timeout.cancel();
+    }
+
+    public VALUE getLastValue() {
+        return lastValue;
     }
 
     private void callRelay() {

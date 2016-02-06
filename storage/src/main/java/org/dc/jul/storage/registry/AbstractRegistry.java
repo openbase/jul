@@ -28,7 +28,6 @@ package org.dc.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +50,7 @@ import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.pattern.Observable;
+import org.dc.jul.schedule.RecurrenceEventFilter;
 import org.dc.jul.storage.registry.plugin.RegistryPlugin;
 import org.dc.jul.storage.registry.plugin.RegistryPluginPool;
 import org.slf4j.Logger;
@@ -80,6 +80,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
 
+    private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
+
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         this(entryMap, new RegistryPluginPool<>());
     }
@@ -94,6 +96,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.pluginPool.init(this);
             this.sandbox = new MockRegistrySandbox<>();
             this.consistencyHandlerList = new ArrayList<>();
+            this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
+
+                @Override
+                public void relay() throws Exception {
+                    logger.info(getLastValue());
+                }
+            };
+            
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 shutdown();
             }));
@@ -442,26 +452,46 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     MultiException.ExceptionStack exceptionStack = null;
 
                     final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
-//                    ConsistencyHandler lastActiveConsistencyHandler = null;
                     Object lastModifieredEntry = null;
+                    int maxConsistencyChecks;
+                    int errorCounter;
+                    String note;
 
                     while (true) {
 
                         Thread.yield();
 
                         // handle handler interference
-                        if (iterationCounter > consistencyHandlerList.size() * entryMap.size() * 2) {
+                        maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
+                        if (iterationCounter > maxConsistencyChecks) {
                             MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
                             throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
+                        // prepare for next iteraction
+                        iterationCounter++;
                         if (exceptionStack != null) {
+                            errorCounter = exceptionStack.size();
                             exceptionStack.clear();
+                        } else {
+                            errorCounter = 0;
                         }
+                        if (!consistencyHandlerQueue.isEmpty() || errorCounter != 0) {
+                            
+                            if(errorCounter > 0) {
+                                note = " with "+ errorCounter + " errors";
+                            } else {
+                                note = "";
+                            }
 
+                            if(!consistencyHandlerQueue.isEmpty()) {
+                                note += " after "+ consistencyHandlerQueue.size() + " applied modifications";
+                            }
+                            consistencyFeedbackEventFilter.trigger(((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100)) + "% of max consistency checks passed"+note+".");
+                        }
                         consistencyHandlerQueue.clear();
 
-                        iterationCounter++;
+                        // check
                         try {
                             for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
                                 consistencyHandler.reset();
