@@ -28,10 +28,12 @@ package org.dc.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jps.preset.JPDebugMode;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.InvalidStateException;
@@ -39,6 +41,7 @@ import org.dc.jul.exception.MultiException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.VerificationFailedException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
+import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.extension.protobuf.container.MessageContainer;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.pattern.Observable;
@@ -56,9 +59,18 @@ import org.slf4j.LoggerFactory;
 public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> implements Identifiable<KEY>, MessageContainer<M> {
 
     protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
+    private static boolean debugMode;
+
+    static {
+        try {
+            debugMode = JPService.getProperty(JPDebugMode.class).getValue();
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not check debug mode state!", ex), logger, LogLevel.WARN);
+            debugMode = false;
+        }
+    }
 
     private M internalMessage;
-
     private Observable<IdentifiableMessage<KEY, M, MB>> observable;
 
     public IdentifiableMessage(IdentifiableMessage<KEY, M, MB> identifiableMessage) throws InstantiationException {
@@ -91,8 +103,8 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 
             this.internalMessage = message;
 
-            if(!verifyId()) {
-                throw new InvalidStateException("message does not contain Field["+FIELD_ID+"]");
+            if (!verifyId()) {
+                throw new InvalidStateException("message does not contain Field[" + FIELD_ID + "]");
             }
 
             this.observable = new Observable<>();
@@ -189,7 +201,9 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     @Override
     public String toString() {
         try {
-//            return getClass().getSimpleName() + "[" + getId().toString() + "] = [" + internalMessage + "]";
+            if (debugMode) {
+                return getClass().getSimpleName() + "[" + getId().toString() + "] = [" + internalMessage + "]";
+            }
             return getClass().getSimpleName() + "[" + getId().toString() + "]";
         } catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);

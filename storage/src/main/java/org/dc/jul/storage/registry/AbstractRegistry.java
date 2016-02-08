@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.storage.registry;
 
 /*
@@ -103,7 +98,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     logger.info(getLastValue());
                 }
             };
-            
+
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 shutdown();
             }));
@@ -416,6 +411,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         if (id == null) {
             throw new VerificationFailedException("Invalid id!", new NotAvailableException("id"));
         }
+
+        if(id instanceof String && ((String) id).isEmpty()) {
+            throw new VerificationFailedException("Invalid id!", new InvalidStateException("id is empty!"));
+        }
         return id;
     }
 
@@ -464,7 +463,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         // handle handler interference
                         maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
                         if (iterationCounter > maxConsistencyChecks) {
-                            MultiException.checkAndThrow("To many errors occoured during processing!", exceptionStack);
+                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " errors occoured during processing!", exceptionStack);
                             throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
@@ -477,21 +476,21 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             errorCounter = 0;
                         }
                         if (!consistencyHandlerQueue.isEmpty() || errorCounter != 0) {
-                            
-                            if(errorCounter > 0) {
-                                note = " with "+ errorCounter + " errors";
+
+                            if (errorCounter > 0) {
+                                note = " with " + errorCounter + " errors";
                             } else {
                                 note = "";
                             }
 
-                            if(!consistencyHandlerQueue.isEmpty()) {
-                                note += " after "+ consistencyHandlerQueue.size() + " applied modifications";
+                            if (!consistencyHandlerQueue.isEmpty()) {
+                                note += " after " + consistencyHandlerQueue.size() + " applied modifications";
                             }
-                            consistencyFeedbackEventFilter.trigger(((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100)) + "% of max consistency checks passed"+note+".");
+                            consistencyFeedbackEventFilter.trigger(((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100)) + "% of max consistency checks passed" + note + ".");
                         }
                         consistencyHandlerQueue.clear();
 
-                        // check
+                        // consistency check
                         try {
                             for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
                                 consistencyHandler.reset();
@@ -499,6 +498,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
+                                        logger.info("Inconsisteny detected by ConsistencyHandler["+consistencyHandler+"] in Entry["+ entry+"]!");
                                         exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry.getId() + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
                                     }
                                 }

@@ -122,7 +122,7 @@ public class ExceptionPrinter {
     public static <T extends Throwable> void printHistory(final T th, final Printer printer) {
         printHistory(th, printer, "", "");
 
-        // Print normal stacktrace in debug mode.
+        // Print normal stacktrace in debug mode for all errors.
         if (printer.isDebugEnabled()) {
             printer.print(SEPARATOR);
             printer.print(removeNewLines(th), th);

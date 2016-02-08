@@ -42,16 +42,16 @@ import org.slf4j.Logger;
 public class LogPrinter implements Printer {
 
     private final Logger logger;
-    private final LogLevel level;
+    private final LogLevel logLevel;
 
-    public LogPrinter(final Logger logger, final LogLevel level) {
+    public LogPrinter(final Logger logger, final LogLevel logLevel) {
         this.logger = logger;
-        this.level = level;
+        this.logLevel = logLevel;
     }
 
     @Override
     public void print(final String message) {
-        switch (level) {
+        switch (logLevel) {
             case TRACE:
                 logger.trace(message);
                 break;
@@ -72,7 +72,7 @@ public class LogPrinter implements Printer {
 
     @Override
     public void print(String message, Throwable throwable) {
-        switch (level) {
+        switch (logLevel) {
             case TRACE:
                 logger.trace(message, throwable);
                 break;
@@ -94,10 +94,14 @@ public class LogPrinter implements Printer {
     @Override
     public boolean isDebugEnabled() {
         try {
-            return logger.isDebugEnabled() || JPService.getProperty(JPVerbose.class).getValue();
+            return logger.isDebugEnabled() || (JPService.getProperty(JPVerbose.class).getValue() && logLevel == LogLevel.ERROR);
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             return true;
         }
+    }
+
+    public LogLevel getLogLevel() {
+        return logLevel;
     }
 };
