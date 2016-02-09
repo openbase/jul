@@ -104,7 +104,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             this.internalMessage = message;
 
             if (!verifyId()) {
-                throw new InvalidStateException("message does not contain Field[" + FIELD_ID + "]");
+                throw new InvalidStateException("message does not contain Field[" + TYPE_FILED_ID + "]");
             }
 
             this.observable = new Observable<>();
@@ -119,10 +119,10 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             if (internalMessage == null) {
                 throw new NotAvailableException("messageOrBuilder");
             }
-            if (!internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID))) {
+            if (!internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FILED_ID))) {
                 throw new VerificationFailedException("Given message has no id field!");
             }
-            KEY id = (KEY) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID));
+            KEY id = (KEY) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FILED_ID));
 
             if (id.toString().isEmpty()) {
                 throw new VerificationFailedException("Detected id is empty!");
@@ -147,7 +147,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     }
 
     private boolean verifyId() {
-        return internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID));
+        return internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FILED_ID));
     }
 
     private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
@@ -155,7 +155,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             if (verifyId()) {
                 throw new InvalidStateException("ID already specified!");
             }
-            setMessage((M) internalMessage.toBuilder().setField(internalMessage.getDescriptorForType().findFieldByName(FIELD_ID), id).build());
+            setMessage((M) internalMessage.toBuilder().setField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FILED_ID), id).build());
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not setup id!", ex);
         }

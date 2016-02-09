@@ -416,6 +416,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    protected final boolean supportsField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByName(name);
+            return findFieldByName != null;
+        } catch (NullPointerException ex) {
+            return false;
+        }
+    }
+
     protected final Descriptors.FieldDescriptor getFieldDescriptor(int fieldId) {
         return cloneDataBuilder().getDescriptorForType().findFieldByNumber(fieldId);
     }

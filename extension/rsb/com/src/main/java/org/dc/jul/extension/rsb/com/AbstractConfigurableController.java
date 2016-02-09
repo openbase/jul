@@ -29,6 +29,7 @@ import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Configurable;
 import org.dc.jul.iface.Manageable;
+import static org.dc.jul.iface.provider.LabelProvider.TYPE_FILED_LABEL;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -42,7 +43,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     public static final String FIELD_SCOPE = "scope";
 
-    protected CONFIG config;
+    private CONFIG config;
 
     public AbstractConfigurableController(MB builder) throws InstantiationException {
         super(builder);
@@ -52,6 +53,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      *
      * @param config
      * @throws InitializationException
+     * @throws java.lang.InterruptedException
      */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
@@ -65,11 +67,20 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     @Override
     public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException {
-        if(this.config == null) {
+        if (this.config == null) {
             this.config = config;
         } else {
             this.config = (CONFIG) this.config.toBuilder().mergeFrom(config).build();
         }
+
+        if (supportsField(TYPE_FILED_ID) && hasConfigField(TYPE_FILED_ID)) {
+            setField(TYPE_FILED_ID, getConfigField(TYPE_FILED_ID));
+        }
+
+        if (supportsField(TYPE_FILED_LABEL) && hasConfigField(TYPE_FILED_LABEL)) {
+            setField(TYPE_FILED_LABEL, getConfigField(TYPE_FILED_LABEL));
+        }
+
         return this.config;
     }
 
@@ -91,6 +102,27 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
             return currentConfig.getField(findFieldByName);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not return value of config field [" + name + "] for " + this, ex);
+        }
+    }
+
+    protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                return false;
+            }
+            return config.hasField(findFieldByName);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            return findFieldByName != null;
+        } catch (NullPointerException ex) {
+            return false;
         }
     }
 

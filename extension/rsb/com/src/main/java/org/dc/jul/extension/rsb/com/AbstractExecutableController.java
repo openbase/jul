@@ -70,7 +70,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
 
 
         try {
-            setField("activation_state", activation);
+            setField(ACTIVATION_STATE, activation);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not apply data change!", ex);
         }
@@ -96,10 +96,6 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         return executing;
     }
 
-    protected abstract void execute() throws CouldNotPerformException, InterruptedException;
-
-    protected abstract void stop() throws CouldNotPerformException, InterruptedException;
-
     @Override
     public void enable() throws CouldNotPerformException, InterruptedException {
         super.enable();
@@ -114,4 +110,8 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         setActivationState(ActivationStateType.ActivationState.newBuilder().setValue(ActivationStateType.ActivationState.State.DEACTIVE).build());
         super.disable();
     }
+
+    protected abstract void execute() throws CouldNotPerformException, InterruptedException;
+
+    protected abstract void stop() throws CouldNotPerformException, InterruptedException;
 }

@@ -32,7 +32,7 @@ import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Identifiable;
-import static org.dc.jul.iface.Identifiable.FIELD_ID;
+import static org.dc.jul.iface.Identifiable.TYPE_FILED_ID;
 
 /**
  *
@@ -44,7 +44,7 @@ public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> ext
     @Override
     public String getId() throws NotAvailableException {
         try {
-            String id = (String) getField(FIELD_ID);
+            String id = (String) getField(TYPE_FILED_ID);
             if (id.isEmpty()) {
                 throw new InvalidStateException("data.id is empty!");
             }
