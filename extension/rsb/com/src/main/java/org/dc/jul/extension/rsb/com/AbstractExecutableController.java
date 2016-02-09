@@ -1,0 +1,117 @@
+package org.dc.jul.extension.rsb.com;
+
+/*
+ * #%L
+ * JUL Extension RSB Communication
+ * %%
+ * Copyright (C) 2015 - 2016 DivineCooperation
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Lesser Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Lesser Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ * #L%
+ */
+
+import com.google.protobuf.GeneratedMessage;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InitializationException;
+import org.dc.jul.exception.InvalidStateException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
+import org.dc.jul.iface.Enableable;
+import rst.homeautomation.state.ActivationStateType;
+import rst.homeautomation.state.ActivationStateType.ActivationState;
+import org.dc.jul.exception.InstantiationException;
+import org.dc.jul.exception.NotAvailableException;
+
+/**
+ *
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ */
+public abstract class AbstractExecutableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractEnableableConfigurableController<M, MB, CONFIG> implements Enableable {
+
+    public static final String ACTIVATION_STATE = "activation_state";
+
+    private boolean executing;
+    private final boolean autostart;
+
+    public AbstractExecutableController(final MB builder, final boolean autostart) throws InstantiationException {
+        super(builder);
+        this.autostart = autostart;
+    }
+
+    @Override
+    public void init(final CONFIG config) throws InitializationException, InterruptedException {
+        this.executing = false;
+        super.init(config);
+    }
+
+    public ActivationState getActivationState() throws NotAvailableException {
+        return (ActivationState) getField(ACTIVATION_STATE);
+    }
+
+    public void setActivationState(final ActivationState activation) throws CouldNotPerformException {
+        if (activation.getValue().equals(ActivationState.State.UNKNOWN)) {
+            throw new InvalidStateException("Unknown is not a valid state!");
+        }
+
+        if (activation.getValue().equals(getActivationState().getValue())) {
+            return;
+        }
+
+
+        try {
+            setField("activation_state", activation);
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not apply data change!", ex);
+        }
+
+        try {
+            if (activation.getValue().equals(ActivationState.State.ACTIVE)) {
+                if (!executing) {
+                    executing = true;
+                    execute();
+                }
+            } else {
+                if (executing) {
+                    executing = false;
+                    stop();
+                }
+            }
+        } catch (CouldNotPerformException | InterruptedException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update execution state!", ex), logger);
+        }
+    }
+
+    public boolean isExecuting() {
+        return executing;
+    }
+
+    protected abstract void execute() throws CouldNotPerformException, InterruptedException;
+
+    protected abstract void stop() throws CouldNotPerformException, InterruptedException;
+
+    @Override
+    public void enable() throws CouldNotPerformException, InterruptedException {
+        super.enable();
+        if (autostart) {
+            setActivationState(ActivationStateType.ActivationState.newBuilder().setValue(ActivationStateType.ActivationState.State.ACTIVE).build());
+        }
+    }
+
+    @Override
+    public void disable() throws CouldNotPerformException, InterruptedException {
+        executing = false;
+        setActivationState(ActivationStateType.ActivationState.newBuilder().setValue(ActivationStateType.ActivationState.State.DEACTIVE).build());
+        super.disable();
+    }
+}
