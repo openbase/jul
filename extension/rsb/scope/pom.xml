@@ -12,7 +12,7 @@
         <version>1.1-SNAPSHOT</version>
     </parent>
     
-    <url>http://maven.apache.org</url>
+    <url>https://github.com/divinecooperation/jul/wiki</url>
     <build>
         <plugins>
             <plugin>

@@ -12,7 +12,9 @@
     <name>JUL</name>
     <inceptionYear>2015</inceptionYear>
     <description>Java Utility Lib</description>
-    
+
+    <url>https://github.com/DivineCooperation/jul/wiki</url>
+
     <organization>
         <name>DivineCooperation</name>
         <url>https://github.com/divinecooperation</url>
