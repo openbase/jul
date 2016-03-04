@@ -23,7 +23,6 @@ package org.dc.jul.visual.layout;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import javax.swing.GroupLayout;
@@ -46,55 +45,65 @@ public final class LayoutGenerator {
 
     protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(LayoutGenerator.class);
 
-    public static final int DEFAULT_GAB_TYPE = -1;
-    public static final int ZERO_GAB_TYPE = -2;
+    public static final int DEFAULT_GAP_TYPE = -1;
+    public static final int ZERO_GAP_TYPE = -2;
 
     private LayoutGenerator() {
     }
 
     public static GroupLayout designList(final JPanel panel, final Collection<? extends JComponent> componentCollection) {
-        return designList(panel, componentCollection, DEFAULT_GAB_TYPE);
+        return designList(panel, componentCollection, DEFAULT_GAP_TYPE);
     }
 
-    public static GroupLayout designList(final JPanel panel, final Collection<? extends JComponent> componentCollection, final int gabSize) {
+    public static GroupLayout designList(final JPanel panel, final Collection<? extends JComponent> componentCollection, final int gapSize) {
         final GroupLayout listLayout = new GroupLayout(panel);
         try {
-            SwingUtilities.invokeAndWait(() -> {
-                synchronized (panel) {
-                    assert panel != null;
-                    assert componentCollection != null;
-                    panel.removeAll();
+            Runnable runnable = new Runnable() {
 
-                    panel.setLayout(listLayout);
-                    final GroupLayout.ParallelGroup parallelGroup = listLayout.createParallelGroup(Alignment.LEADING);
+                @Override
+                public void run() {
+                    synchronized (panel) {
+                        assert panel != null;
+                        assert componentCollection != null;
+                        panel.removeAll();
 
-                    // return if list is components empty
-                    if (componentCollection.isEmpty()) {
-                        return;
-                    }
+                        panel.setLayout(listLayout);
+                        final GroupLayout.ParallelGroup parallelGroup = listLayout.createParallelGroup(Alignment.LEADING);
 
-                    componentCollection.stream().forEach((component) -> {
-                        parallelGroup.addComponent(component, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
-                    });
-                    listLayout.setHorizontalGroup(parallelGroup);
-
-                    final GroupLayout.SequentialGroup sequentialGroup = listLayout.createSequentialGroup();
-                    for (JComponent component : componentCollection) {
-                        sequentialGroup.addComponent(component);
-                        switch (gabSize) {
-                            case ZERO_GAB_TYPE:
-                                break;
-                            case DEFAULT_GAB_TYPE:
-                                sequentialGroup.addPreferredGap(ComponentPlacement.RELATED);
-                                break;
-                            default:
-                                sequentialGroup.addPreferredGap(ComponentPlacement.RELATED, gabSize, gabSize);
+                        // return if list is components empty
+                        if (componentCollection.isEmpty()) {
+                            return;
                         }
-                    }
-                    listLayout.setVerticalGroup(listLayout.createParallelGroup(Alignment.LEADING).addGroup(sequentialGroup));
-                }
-            });
 
+                        componentCollection.stream().forEach((component) -> {
+                            parallelGroup.addComponent(component, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE);
+                        });
+                        listLayout.setHorizontalGroup(parallelGroup);
+
+                        final GroupLayout.SequentialGroup sequentialGroup = listLayout.createSequentialGroup();
+                        for (JComponent component : componentCollection) {
+                            sequentialGroup.addComponent(component);
+                            switch (gapSize) {
+                                case ZERO_GAP_TYPE:
+                                    break;
+                                case DEFAULT_GAP_TYPE:
+                                    sequentialGroup.addPreferredGap(ComponentPlacement.RELATED);
+                                    break;
+                                default:
+                                    sequentialGroup.addPreferredGap(ComponentPlacement.RELATED, gapSize, gapSize);
+                            }
+                        }
+                        listLayout.setVerticalGroup(listLayout.createParallelGroup(Alignment.LEADING).addGroup(sequentialGroup));
+                    }
+                }
+            };
+            if (SwingUtilities.isEventDispatchThread()) {
+                runnable.run();
+            } else {
+                SwingUtilities.invokeAndWait(() -> {
+                    runnable.run();
+                });
+            }
         } catch (InterruptedException | InvocationTargetException ex) {
             ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
         }
@@ -102,41 +111,51 @@ public final class LayoutGenerator {
     }
 
     public static GroupLayout designLine(final JPanel panel, final Collection<? extends JComponent> componentCollection) {
-        return designLine(panel, componentCollection, DEFAULT_GAB_TYPE);
+        return designLine(panel, componentCollection, DEFAULT_GAP_TYPE);
     }
 
     public static GroupLayout designLine(final JPanel panel, final Collection<? extends JComponent> componentCollection, final int gabSize) {
         final GroupLayout lineLayout = new GroupLayout(panel);
         try {
-            SwingUtilities.invokeAndWait(() -> {
-                synchronized (panel) {
-                    assert panel != null;
-                    assert componentCollection != null;
-                    panel.removeAll();
+            Runnable runnable = new Runnable() {
 
-                    panel.setLayout(lineLayout);
+                @Override
+                public void run() {
+                    synchronized (panel) {
+                        assert panel != null;
+                        assert componentCollection != null;
+                        panel.removeAll();
 
-                    final ParallelGroup parallelGroup = lineLayout.createParallelGroup(Alignment.LEADING);
-                    final SequentialGroup sequentialGroup = lineLayout.createSequentialGroup();
-                    componentCollection.stream().map((component) -> {
-                        sequentialGroup.addComponent(component);
-                        return component;
-                    }).forEach((_item) -> {
-                        sequentialGroup.addGap(0, 0, 0);
-                    });
-                    parallelGroup.addGroup(sequentialGroup);
-                    lineLayout.setHorizontalGroup(parallelGroup);
+                        panel.setLayout(lineLayout);
 
-                    final ParallelGroup outerParallelGroup = lineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING);
-                    final ParallelGroup innerParallelGroup = lineLayout.createParallelGroup(Alignment.BASELINE);
-                    componentCollection.stream().forEach((component) -> {
-                        innerParallelGroup.addComponent(component);
-                    });
-                    outerParallelGroup.addGroup(innerParallelGroup);
-                    lineLayout.setVerticalGroup(outerParallelGroup);
+                        final ParallelGroup parallelGroup = lineLayout.createParallelGroup(Alignment.LEADING);
+                        final SequentialGroup sequentialGroup = lineLayout.createSequentialGroup();
+                        componentCollection.stream().map((component) -> {
+                            sequentialGroup.addComponent(component);
+                            return component;
+                        }).forEach((_item) -> {
+                            sequentialGroup.addGap(0, 0, 0);
+                        });
+                        parallelGroup.addGroup(sequentialGroup);
+                        lineLayout.setHorizontalGroup(parallelGroup);
+
+                        final ParallelGroup outerParallelGroup = lineLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING);
+                        final ParallelGroup innerParallelGroup = lineLayout.createParallelGroup(Alignment.BASELINE);
+                        componentCollection.stream().forEach((component) -> {
+                            innerParallelGroup.addComponent(component);
+                        });
+                        outerParallelGroup.addGroup(innerParallelGroup);
+                        lineLayout.setVerticalGroup(outerParallelGroup);
+                    }
                 }
-            });
-
+            };
+            if (SwingUtilities.isEventDispatchThread()) {
+                runnable.run();
+            } else {
+                SwingUtilities.invokeAndWait(() -> {
+                    runnable.run();
+                });
+            }
         } catch (InterruptedException | InvocationTargetException ex) {
             ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
         }
