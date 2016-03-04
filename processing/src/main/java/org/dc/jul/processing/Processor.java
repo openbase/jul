@@ -38,6 +38,6 @@ import org.dc.jul.exception.CouldNotPerformException;
  * @param <B>
  */
 public interface Processor<A, B>{
-    public A deserialize(final B file, final A message) throws CouldNotPerformException;
-    public B serialize(final A message, final B file) throws CouldNotPerformException;
+    public A deserialize(final B b, final A a) throws CouldNotPerformException;
+    public B serialize(final A a, final B b) throws CouldNotPerformException;
 }
