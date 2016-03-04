@@ -222,10 +222,16 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 }
             });
 
+            postInit();
+
             initialized = true;
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
+    }
+
+    protected void postInit() throws InitializationException, InterruptedException {
+        // overwrite for specific post initialization tasks.
     }
 
     private Class<M> detectMessageClass() throws CouldNotPerformException {

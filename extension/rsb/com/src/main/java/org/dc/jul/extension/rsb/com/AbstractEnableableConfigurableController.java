@@ -45,13 +45,13 @@ public abstract class AbstractEnableableConfigurableController<M extends Generat
     @Override
     public void enable() throws CouldNotPerformException, InterruptedException {
         enabled = true;
-        super.activate();
+        activate();
     }
 
     @Override
     public void disable() throws CouldNotPerformException, InterruptedException {
         enabled = false;
-        super.deactivate();
+        deactivate();
     }
 
     @Override
