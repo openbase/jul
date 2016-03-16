@@ -28,7 +28,8 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import org.dc.jps.core.JPService;
+import org.dc.jps.preset.JPTestMode;
 import rsb.Factory;
 import rsb.config.ParticipantConfig;
 import rsb.transport.spread.InPushConnectorFactoryRegistry;
@@ -47,6 +48,7 @@ public class RSBSharedConnectionConfig {
         if (init) {
             return;
         }
+        participantConfig = Factory.getInstance().getDefaultParticipantConfig();
 
         final String inPushFactoryKey = "shareIfPossible";
         // register a (spread-specifc) factory to create the appropriate in push
@@ -58,15 +60,19 @@ public class RSBSharedConnectionConfig {
 
         // instruct the spread transport to use your newly registered factory
         // for creating in push connector instances
-        participantConfig = Factory.getInstance().getDefaultParticipantConfig();
         participantConfig.getOrCreateTransport("spread")
                 .getOptions()
                 .setProperty("transport.spread.java.infactory", inPushFactoryKey);
-
         init = true;
+
     }
 
+    //TODO: should be replaced with a the copy version at the bottom which does not work at the moment
     public static ParticipantConfig getParticipantConfig() {
-        return participantConfig.copy();
+        participantConfig = Factory.getInstance().getDefaultParticipantConfig();
+        participantConfig.getOrCreateTransport("spread");
+        return participantConfig;
+
+//        return participantConfig.copy();
     }
 }

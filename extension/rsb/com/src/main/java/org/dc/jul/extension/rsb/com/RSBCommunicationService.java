@@ -169,14 +169,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // activate inprocess communication for junit tests.
             if (JPService.getProperty(JPTestMode.class).getValue()) {
                 for (TransportConfig transport : internalParticipantConfig.getEnabledTransports()) {
-                    logger.info("Disable " + transport.getName() + " communication during tests.");
+                    logger.debug("Disable " + transport.getName() + " communication during tests.");
                     transport.setEnabled(false);
                 }
-                logger.info("Enable inprocess communication during tests.");
+                logger.debug("Enable inprocess communication during tests.");
                 internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
-            }
-            for (TransportConfig transport : internalParticipantConfig.getEnabledTransports()) {
-                logger.info("Enabled: " + transport.getName());
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);

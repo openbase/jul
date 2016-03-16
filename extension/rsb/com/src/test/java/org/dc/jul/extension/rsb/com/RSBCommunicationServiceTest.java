@@ -28,7 +28,6 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -45,6 +44,10 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rsb.Factory;
+import rsb.Informer;
+import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import rst.spatial.LocationConfigType.LocationConfig;
@@ -143,6 +146,27 @@ public class RSBCommunicationServiceTest {
 
         communicationService.deactivate();
         remoteService.deactivate();
+    }
+
+    @Test
+    public void testInProcessCommunication() throws Exception {
+        ParticipantConfig config = Factory.getInstance().getDefaultParticipantConfig();
+//        config = config.copy();
+
+        for (TransportConfig transport : config.getEnabledTransports()) {
+            logger.info("Disable " + transport.getName() + " communication during tests.");
+            transport.setEnabled(false);
+        }
+        logger.info("Enable inprocess communication during tests.");
+        config.getOrCreateTransport("inprocess").setEnabled(true);
+
+        for (TransportConfig transport : config.getEnabledTransports()) {
+            logger.info("Enabled: " + transport.getName());
+        }
+        // config modi
+        Informer<Object> informer = Factory.getInstance().createInformer("/test", config);
+        informer.activate();
+        informer.send("TestString");
     }
 
     public class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
