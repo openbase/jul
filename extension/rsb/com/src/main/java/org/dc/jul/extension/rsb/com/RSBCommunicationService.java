@@ -28,10 +28,9 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -169,10 +168,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         try {
             // activate inprocess communication for junit tests.
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                for (Map.Entry<String, TransportConfig> transport : internalParticipantConfig.getTransports().entrySet()) {
-                    transport.getValue().setEnabled(false);
+                for (TransportConfig transport : internalParticipantConfig.getEnabledTransports()) {
+                    logger.info("Disable " + transport.getName() + " communication during tests.");
+                    transport.setEnabled(false);
                 }
+                logger.info("Enable inprocess communication during tests.");
                 internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
+            }
+            for (TransportConfig transport : internalParticipantConfig.getEnabledTransports()) {
+                logger.info("Enabled: " + transport.getName());
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
@@ -310,8 +314,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * This method generates a closable data builder wrapper including the internal builder instance. Be informed that the internal builder is directly locked and all internal builder operations are
-     * queued. In fact call the close method soon as possible to release the builder lock after you builder modifications, otherwise the overall processing pipeline is delayed.
+     * This method generates a closable data builder wrapper including the
+     * internal builder instance. Be informed that the internal builder is
+     * directly locked and all internal builder operations are queued. In fact
+     * call the close method soon as possible to release the builder lock after
+     * you builder modifications, otherwise the overall processing pipeline is
+     * delayed.
      *
      *
      * <pre>
@@ -323,7 +331,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      *         throw new CouldNotPerformException("Could not apply data change!", ex);
      *     }
      * }
-     * </pre> In this example the ClosableDataBuilder.close method is be called in background after leaving the try brackets.
+     * </pre> In this example the ClosableDataBuilder.close method is be called
+     * in background after leaving the try brackets.
      *
      * @param consumer
      * @return a new builder wrapper with a locked builder instance.

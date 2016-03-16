@@ -29,8 +29,8 @@ package org.dc.jul.extension.rsb.com;
  * #L%
  */
 
-import org.dc.jul.extension.rsb.com.RSBCommunicationService;
-import org.dc.jul.extension.rsb.com.RSBRemoteService;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
@@ -67,7 +67,8 @@ public class RSBCommunicationServiceTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass
