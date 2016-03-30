@@ -28,7 +28,6 @@ package org.dc.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,8 +38,8 @@ import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.NotSupportedException;
-import org.dc.jul.extension.protobuf.IdGenerator;
 import org.dc.jul.extension.protobuf.IdentifiableMessage;
+import static org.dc.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.dc.jul.storage.registry.plugin.RemoteRegistryPlugin;
 
 /**
@@ -53,79 +52,81 @@ import org.dc.jul.storage.registry.plugin.RemoteRegistryPlugin;
  */
 public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistryInterface<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>>> implements ProtoBufRegistryInterface<KEY, M, MB> {
 
-	private final IdGenerator<KEY, M> idGenerator;
-
-	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
-		this(idGenerator, new HashMap<>());
-	}
-
-	public RemoteRegistry(final IdGenerator<KEY, M> idGenerator, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
-		super(internalMap);
-		this.idGenerator = idGenerator;
-	}
-
-	public synchronized void notifyRegistryUpdated(final Collection<M> values) throws CouldNotPerformException {
-		Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
-		for (M value : values) {
-			IdentifiableMessage<KEY, M, MB> data = new IdentifiableMessage<>(value, idGenerator);
-			newRegistryMap.put(data.getId(), data);
-		}
-		replaceInternalMap(newRegistryMap);
-	}
-
-    public KEY getKey(final M entry) throws CouldNotPerformException {
-        return idGenerator.generateId(entry);
+    public RemoteRegistry() throws InstantiationException {
+        this(new HashMap<>());
     }
 
-	@Override
-	public M getMessage(final KEY key) throws CouldNotPerformException {
-		return get(key).getMessage();
-	}
+    public RemoteRegistry(final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
+        super(internalMap);
+    }
 
-	@Override
-	public MB getBuilder(final KEY key) throws CouldNotPerformException {
-		return (MB) getMessage(key).toBuilder();
-	}
+    public synchronized void notifyRegistryUpdated(final Collection<M> values) throws CouldNotPerformException {
+        Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
+        for (M value : values) {
+            IdentifiableMessage<KEY, M, MB> data = new IdentifiableMessage<>(value);
+            newRegistryMap.put(data.getId(), data);
+        }
+        replaceInternalMap(newRegistryMap);
+    }
 
-	@Override
-	public M register(final M entry) throws CouldNotPerformException {
-		throw new NotSupportedException("register", this, "Operation not permitted!");
-	}
+    public KEY getKey(final M entry) throws CouldNotPerformException {
+        KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
+        if (!contains(key)) {
+            throw new CouldNotPerformException("Entry for given Key[" + key + "] is not available!");
+        }
+        return key;
+    }
 
-	@Override
-	public M update(final M entry) throws CouldNotPerformException {
-		throw new NotSupportedException("update", this, "Operation not permitted!");
-	}
+    @Override
+    public M getMessage(final KEY key) throws CouldNotPerformException {
+        return get(key).getMessage();
+    }
 
-	@Override
-	public M remove(final M entry) throws CouldNotPerformException {
-		throw new NotSupportedException("remove", this, "Operation not permitted!");
-	}
+    @Override
+    public MB getBuilder(final KEY key) throws CouldNotPerformException {
+        return (MB) getMessage(key).toBuilder();
+    }
 
-	@Override
-	public boolean contains(final M key) throws CouldNotPerformException {
-		return super.contains(new IdentifiableMessage<>(key, idGenerator).getId());
-	}
+    @Override
+    public M register(final M entry) throws CouldNotPerformException {
+        throw new NotSupportedException("register", this, "Operation not permitted!");
+    }
 
-	@Override
-	public void loadRegistry() throws CouldNotPerformException {
-		throw new NotSupportedException("loadRegistry", this, "Operation not permitted!");
-	}
+    @Override
+    public M update(final M entry) throws CouldNotPerformException {
+        throw new NotSupportedException("update", this, "Operation not permitted!");
+    }
 
-	@Override
-	public void saveRegistry() throws CouldNotPerformException {
-		throw new NotSupportedException("saveRegistry", this, "Operation not permitted!");
-	}
+    @Override
+    public M remove(final M entry) throws CouldNotPerformException {
+        throw new NotSupportedException("remove", this, "Operation not permitted!");
+    }
 
-	@Override
-	public IdGenerator<KEY, M> getIdGenerator() {
-		return idGenerator;
-	}
+    @Override
+    public boolean contains(final M entry) throws CouldNotPerformException {
+        KEY key;
+        try {
+            key = getKey(entry);
+        } catch (CouldNotPerformException ex) {
+            return false;
+        }
+        return super.contains(key);
+    }
+
+    @Override
+    public void loadRegistry() throws CouldNotPerformException {
+        throw new NotSupportedException("loadRegistry", this, "Operation not permitted!");
+    }
+
+    @Override
+    public void saveRegistry() throws CouldNotPerformException {
+        throw new NotSupportedException("saveRegistry", this, "Operation not permitted!");
+    }
 
     @Override
     public List<M> getMessages() throws CouldNotPerformException {
         List<M> messageList = new ArrayList<>();
-        for(IdentifiableMessage<KEY, M, MB> messageContainer : getEntries()) {
+        for (IdentifiableMessage<KEY, M, MB> messageContainer : getEntries()) {
             messageList.add(messageContainer.getMessage());
         }
         return messageList;

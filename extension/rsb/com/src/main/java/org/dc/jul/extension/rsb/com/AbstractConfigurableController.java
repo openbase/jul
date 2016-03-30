@@ -29,7 +29,7 @@ import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Configurable;
 import org.dc.jul.iface.Manageable;
-import static org.dc.jul.iface.provider.LabelProvider.TYPE_FILED_LABEL;
+import static org.dc.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -73,12 +73,12 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
             this.config = (CONFIG) this.config.toBuilder().mergeFrom(config).build();
         }
 
-        if (supportsField(TYPE_FILED_ID) && hasConfigField(TYPE_FILED_ID)) {
-            setField(TYPE_FILED_ID, getConfigField(TYPE_FILED_ID));
+        if (supportsField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
+            setField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
         }
 
-        if (supportsField(TYPE_FILED_LABEL) && hasConfigField(TYPE_FILED_LABEL)) {
-            setField(TYPE_FILED_LABEL, getConfigField(TYPE_FILED_LABEL));
+        if (supportsField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
+            setField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
         }
 
         return this.config;

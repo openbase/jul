@@ -28,7 +28,6 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
@@ -38,7 +37,6 @@ import org.dc.jul.exception.NotAvailableException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
@@ -121,7 +119,7 @@ public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServe
                     getParticipant().addMethod(name, callback);
                 }
             } catch (NotAvailableException ex) {
-                logger.debug("Method[" + name + "] is cached and will be registered during init phrase of local server.");
+                logger.debug("Method[" + name + "] is cached and will be registered during init phase of local server.");
             }
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not add Method[" + name + "]!", ex);

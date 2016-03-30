@@ -28,7 +28,6 @@ package org.dc.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.util.List;
@@ -92,7 +91,6 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
         return (MB) getMessage(key).toBuilder();
     }
 
-    @Override
     public IdGenerator<KEY, M> getIdGenerator() {
         return idGenerator;
     }

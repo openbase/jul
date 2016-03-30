@@ -32,6 +32,7 @@ package org.dc.jul.storage.registry;
 import java.util.Map;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.iface.Identifiable;
+import org.dc.jul.pattern.Observer;
 import org.dc.jul.storage.registry.clone.RITSCloner;
 import org.dc.jul.storage.registry.clone.RegistryCloner;
 import org.dc.jul.storage.registry.plugin.RegistryPlugin;
@@ -90,6 +91,19 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
         } catch (Exception ex) {
             throw new CouldNotPerformException("FATAL: Sandbox sync failed!", ex);
         }
+    }
+
+    @Override
+    public void addObserver(Observer<Map<KEY, ENTRY>> observer) {
+        logger.warn("Observer registration on sandbox instance!");
+        super.addObserver(observer);
+    }
+    
+    
+
+    @Override
+    protected void notifyObservers() {
+        //skip sandbox notifications.
     }
 
     @Override

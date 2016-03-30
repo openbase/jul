@@ -393,6 +393,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     protected void notifyObservers() {
         try {
+            if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
+                logger.info("Notification of registry change skipped because of running consistency check!");
+                return;
+            }
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);

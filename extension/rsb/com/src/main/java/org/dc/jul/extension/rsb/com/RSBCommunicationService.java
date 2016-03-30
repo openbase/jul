@@ -48,6 +48,7 @@ import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.extension.protobuf.BuilderSyncSetup;
 import org.dc.jul.extension.protobuf.ClosableDataBuilder;
+import org.dc.jul.extension.rsb.com.jp.JPRSBTransport;
 import org.dc.jul.extension.rsb.iface.RSBInformerInterface;
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
@@ -161,20 +162,26 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    private void enableTransport(final ParticipantConfig participantConfig, final JPRSBTransport.TransportType type) {
+        if (type == JPRSBTransport.TransportType.DEFAULT) {
+            return;
+        }
+
+        for (TransportConfig transport : participantConfig.getEnabledTransports()) {
+            logger.debug("Disable " + transport.getName() + " communication.");
+            transport.setEnabled(false);
+        }
+        logger.debug("Enable [" + type.name().toLowerCase() + "] communication.");
+        participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
+    }
+
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         this.scope = scope;
         ParticipantConfig internalParticipantConfig = participantConfig;
 
         try {
-            // activate inprocess communication for junit tests.
-            if (JPService.getProperty(JPTestMode.class).getValue()) {
-                for (TransportConfig transport : internalParticipantConfig.getEnabledTransports()) {
-                    logger.debug("Disable " + transport.getName() + " communication during tests.");
-                    transport.setEnabled(false);
-                }
-                logger.debug("Enable inprocess communication during tests.");
-                internalParticipantConfig.getOrCreateTransport("inprocess").setEnabled(true);
-            }
+            // activate transport communication set by the JPRSBTransport porperty.
+            enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
@@ -452,6 +459,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     public M requestStatus() throws CouldNotPerformException {
+        //TODO switch to debug later
+        logger.info("requestStatus of " + this);
         try {
             return getData();
         } catch (Exception ex) {

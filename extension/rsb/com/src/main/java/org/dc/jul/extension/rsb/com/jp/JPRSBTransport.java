@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.dc.jul.extension.rsb.com;
+package org.dc.jul.extension.rsb.com.jp;
 
 /*
  * #%L
@@ -26,31 +26,41 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import com.google.protobuf.GeneratedMessage;
-import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.InvalidStateException;
-import org.dc.jul.exception.NotAvailableException;
-import org.dc.jul.iface.Identifiable;
-import static org.dc.jul.iface.Identifiable.TYPE_FIELD_ID;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPNotAvailableException;
+import org.dc.jps.preset.AbstractJPEnum;
 
 /**
  *
- * @author Divine Threepwood
- * @param <M>
+ * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements Identifiable<String> {
+public class JPRSBTransport extends AbstractJPEnum<JPRSBTransport.TransportType> {
+
+    public final static String[] COMMAND_IDENTIFIERS = {"--transport"};
+
+    public JPRSBTransport() {
+        super(COMMAND_IDENTIFIERS);
+    }
+
+    public enum TransportType {
+
+        DEFAULT,
+        SPREAD,
+        SOCKET,
+        INPROCESS;
+    }
 
     @Override
-    public String getId() throws NotAvailableException {
-        try {
-            String id = (String) getField(TYPE_FIELD_ID);
-            if (id.isEmpty()) {
-                throw new InvalidStateException("data.id is empty!");
-            }
-            return id;
-        } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException("data.id", ex);
+    protected TransportType getPropertyDefaultValue() throws JPNotAvailableException {
+        if (JPService.testMode()) {
+            return TransportType.INPROCESS;
         }
+        return TransportType.DEFAULT;
     }
+
+    @Override
+    public String getDescription() {
+        return "Setup the rsb transport type which is used by the application.";
+    }
+
 }

@@ -28,14 +28,11 @@ package org.dc.jul.extension.rst.storage.registry.consistency;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.dc.jul.extension.rst.storage.registry.consistency.AbstractTransformationFrameConsistencyHandler;
 import java.util.List;
 import java.util.Map;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.RejectedException;
-import org.dc.jul.extension.protobuf.IdGenerator;
 import org.dc.jul.extension.protobuf.IdentifiableMessage;
 import org.dc.jul.iface.Identifiable;
 import org.dc.jul.storage.registry.EntryModification;
@@ -54,7 +51,8 @@ import rst.spatial.PlacementConfigType.PlacementConfig;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
+ * Threepwood</a>
  */
 public class AbstractTransformationFrameConsistencyHandlerTest {
 
@@ -101,7 +99,8 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
     }
 
     /**
-     * Test of verifyAndUpdatePlacement method, of class AbstractTransformationFrameConsistencyHandler.
+     * Test of verifyAndUpdatePlacement method, of class
+     * AbstractTransformationFrameConsistencyHandler.
      */
     @Test
     public void testVerifyAndUpdatePlacement() throws Exception {
@@ -120,7 +119,8 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
     }
 
     /**
-     * Test of generateFrameId method, of class AbstractTransformationFrameConsistencyHandler.
+     * Test of generateFrameId method, of class
+     * AbstractTransformationFrameConsistencyHandler.
      */
     @Test
     public void testGenerateFrameId() throws Exception {
@@ -181,11 +181,6 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public LocationConfigType.LocationConfig.Builder getBuilder(String key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public IdGenerator<String, LocationConfigType.LocationConfig> getIdGenerator() {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 

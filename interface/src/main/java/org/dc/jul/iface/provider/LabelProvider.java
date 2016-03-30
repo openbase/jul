@@ -32,7 +32,7 @@ import org.dc.jul.exception.NotAvailableException;
  */
 public interface LabelProvider {
 
-    public final static String TYPE_FILED_LABEL = "label";
+    public final static String TYPE_FIELD_LABEL = "label";
 
     public String getLabel() throws NotAvailableException;
 }

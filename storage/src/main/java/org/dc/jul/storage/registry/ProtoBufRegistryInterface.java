@@ -31,7 +31,6 @@ package org.dc.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.extension.protobuf.IdGenerator;
 import org.dc.jul.extension.protobuf.IdentifiableMessage;
 import java.util.List;
 
@@ -58,5 +57,5 @@ public interface ProtoBufRegistryInterface<KEY, M extends GeneratedMessage, MB e
 
     public MB getBuilder(final KEY key) throws CouldNotPerformException;
     
-    public IdGenerator<KEY, M> getIdGenerator();
+//    public IdGenerator<KEY, M> getIdGenerator();
 }

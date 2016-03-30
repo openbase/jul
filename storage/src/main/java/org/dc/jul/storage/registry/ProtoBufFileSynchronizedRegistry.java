@@ -28,7 +28,6 @@ package org.dc.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.io.File;
@@ -78,7 +77,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             this.messageClass = messageClass;
             this.protobufMessageMap = internalMap;
             this.observer = (Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) -> {
-                    ProtoBufFileSynchronizedRegistry.this.update(data);
+                ProtoBufFileSynchronizedRegistry.this.update(data);
             };
             protobufMessageMap.addObserver(observer);
 
@@ -104,23 +103,33 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     }
 
     /**
-     * This method activate the version control unit of the underlying registry db. The version check and db upgrade is automatically performed during the registry db loading phrase. The db will be
-     * upgraded to the latest db format provided by the given converter package. The converter package should contain only classes implementing the DBVersionConverter interface. To fully support
-     * outdated db upgrade make sure that the converter pipeline covers the whole version range!
+     * This method activate the version control unit of the underlying registry
+     * db. The version check and db upgrade is automatically performed during
+     * the registry db loading phrase. The db will be upgraded to the latest db
+     * format provided by the given converter package. The converter package
+     * should contain only classes implementing the DBVersionConverter
+     * interface. To fully support outdated db upgrade make sure that the
+     * converter pipeline covers the whole version range!
      *
-     * Activate version control before loading the registry. Please provide within the converter package only converter with the naming structure
+     * Activate version control before loading the registry. Please provide
+     * within the converter package only converter with the naming structure
      * [$(EntryType)_$(VersionN)_To_$(VersionN+1)_DBConverter].
      *
      * Example:
      *
-     * converter package myproject.db.converter containing the converter pipeline
+     * converter package myproject.db.converter containing the converter
+     * pipeline
      *
-     * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
+     * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class
+     * myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class
+     * myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
      *
      * Would support the db upgrade from version 0 till the latest db version 3.
      *
-     * @param converterPackage the package containing all converter which provides db entry updates from the first to the latest db version.
-     * @throws CouldNotPerformException in case of an invalid converter pipeline or initialization issues.
+     * @param converterPackage the package containing all converter which
+     * provides db entry updates from the first to the latest db version.
+     * @throws CouldNotPerformException in case of an invalid converter pipeline
+     * or initialization issues.
      */
     public void activateVersionControl(final Package converterPackage) throws CouldNotPerformException {
         try {
@@ -175,7 +184,6 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
         return (MB) getMessage(key).toBuilder();
     }
 
-    @Override
     public IdGenerator<KEY, M> getIdGenerator() {
         return idGenerator;
     }
