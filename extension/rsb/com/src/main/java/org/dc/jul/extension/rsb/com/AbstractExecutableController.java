@@ -21,7 +21,7 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
@@ -32,10 +32,12 @@ import rst.homeautomation.state.ActivationStateType;
 import rst.homeautomation.state.ActivationStateType.ActivationState;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.extension.protobuf.ClosableDataBuilder;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
+ * Threepwood</a>
  */
 public abstract class AbstractExecutableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractEnableableConfigurableController<M, MB, CONFIG> implements Enableable {
 
@@ -68,12 +70,21 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
             return;
         }
 
-
-        try {
-            setField(ACTIVATION_STATE, activation);
+        try (ClosableDataBuilder<MB> dataBuilder = getDataBuilder(this)) {
+            Descriptors.FieldDescriptor findFieldByName = dataBuilder.getInternalBuilder().getDescriptorForType().findFieldByName(ACTIVATION_STATE);
+            if (findFieldByName == null) {
+                throw new NotAvailableException("Field[" + ACTIVATION_STATE + "] does not exist for type " + dataBuilder.getClass().getName());
+            }
+            dataBuilder.getInternalBuilder().setField(findFieldByName, activation);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not apply data change!", ex);
         }
+
+//        try {
+//            setField(ACTIVATION_STATE, activation);
+//        } catch (Exception ex) {
+//            throw new CouldNotPerformException("Could not apply data change!", ex);
+//        }
 
         try {
             if (activation.getValue().equals(ActivationState.State.ACTIVE)) {
