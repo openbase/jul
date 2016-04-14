@@ -2,16 +2,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.dc</groupId>
-    <artifactId>jul.extension</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>jul.extension.openhab</artifactId>
+    <packaging>jar</packaging>
 
-    <name>JUL Extension</name>
+    <name>JUL Extension OpenHAB</name>
     
     <parent>
         <groupId>org.dc</groupId>
-        <artifactId>jul</artifactId>
+        <artifactId>jul.extension</artifactId>
         <version>1.1-SNAPSHOT</version>
-    </parent>    
+    </parent>
     
     <url>https://github.com/divinecooperation/jul/wiki</url>
     <build>
@@ -28,19 +28,17 @@
         </plugins>
     </build>
 
-    <modules>
-        <module>openhab</module>
-        <module>protobuf</module>
-        <module>rsb</module>
-        <module>rst</module>
-        <module>rct</module>
-    </modules>
-    
     <dependencies>
         <dependency>
+            <groupId>rsb</groupId>
+            <artifactId>${dependency.rst.sandbox.artifact}</artifactId>
+            <version>${dependency.rst.sandbox.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.dc</groupId>
-            <artifactId>jul.exception</artifactId>
+            <artifactId>jul.extension.rsb.com</artifactId>
             <version>${project.version}</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
 </project>
