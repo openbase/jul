@@ -17,12 +17,12 @@ package org.dc.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -33,23 +33,21 @@ import com.google.protobuf.GeneratedMessage;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
-import org.dc.jps.preset.JPTestMode;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.CouldNotTransformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.NotAvailableException;
-import org.dc.jul.exception.RejectedException;
 import org.dc.jul.exception.TimeoutException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
@@ -59,7 +57,6 @@ import org.dc.jul.extension.rsb.iface.RSBListenerInterface;
 import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
-import org.dc.jul.extension.rst.iface.ScopeProvider;
 import org.dc.jul.iface.Activatable;
 import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.pattern.Observable;
@@ -83,6 +80,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    public static final long REQUEST_TIMEOUT = 15000;
+
     static {
         RSBSharedConnectionConfig.load();
     }
@@ -91,6 +90,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private RSBRemoteServerInterface remoteServer;
     private final Handler mainHandler;
+
+    // TODO mpohling: Replace by Global executorService!
     private final ExecutorService executorService;
     private final List<Future<Void>> syncTasks;
 
@@ -143,7 +144,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         logger.debug("Enable [" + type.name().toLowerCase() + "] communication.");
         participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
     }
-    
+
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
 
@@ -300,6 +301,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         remoteServerWatchDog.deactivate();
     }
 
+    //Timeout neeted!
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException {
         return callMethod(methodName, null);
     }
@@ -312,7 +314,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public final static double TIMEOUT_MULTIPLIER = 1.2;
     public final static double MAX_TIMEOUT = 30;
 
-    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
+    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException, InterruptedException {
         try {
             logger.debug("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
             checkInitialization();
@@ -333,9 +335,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                     Thread.yield();
                 }
             }
-        } catch (InterruptedException ex) {
+//        } catch (InterruptedException ex) {
             //TODO mpohling: handle interrupted exception in paramite release
-            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+//            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
@@ -372,7 +374,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                     if (ex instanceof InterruptedException) {
                         throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.DEBUG);
                     } else {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.ERROR);
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.WARN);
                     }
                 }
                 return null;
@@ -385,21 +387,22 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
      * Triggers a server - remote data sync and returns the new acquired data. All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
      * changes, you can use this method to get instantly a data object with all applied changes.
      *
-     * Note: This method blocks until the new data is acquired!
+     * Note: This method blocks until the new data is acquired! In case the of no server response an exception is thrown after 15sec timeout.
      *
      * @return fresh synchronized data object.
      * @throws CouldNotPerformException
+     * @throws java.lang.InterruptedException
      */
-    public M requestStatus() throws CouldNotPerformException {
+    public M requestStatus() throws CouldNotPerformException, InterruptedException {
         try {
             logger.debug("requestStatus updated.");
             M dataUpdate;
             try {
-                dataUpdate = (M) callMethod(RPC_REQUEST_STATUS);
+                dataUpdate = (M) callMethodAsync(RPC_REQUEST_STATUS).get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
             } catch (InterruptedException ex) {
-                // TODO mpohling: forward interupted exception in paramite release.
-                throw new RejectedException("Remote call was interrupted!", ex);
-//                throw ex;
+                throw ex;
+            } catch (ExecutionException ex) {
+                throw new CouldNotPerformException("Local server could not process request!", ex);
             }
 
             if (dataUpdate == null) {
@@ -408,7 +411,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
             applyDataUpdate(dataUpdate);
             return dataUpdate;
-        } catch (CouldNotPerformException ex) {
+        } catch (CouldNotPerformException | java.util.concurrent.TimeoutException ex) {
             throw new CouldNotPerformException("Could not request the current status.", ex);
         }
     }
@@ -432,8 +435,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
      *
      * @return
      * @throws CouldNotPerformException
+     * @throws java.lang.InterruptedException
      */
-    public M getData() throws CouldNotPerformException {
+    public M getData() throws CouldNotPerformException, InterruptedException {
         try {
             if (data == null) {
                 return requestStatus();
@@ -444,10 +448,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    public boolean isDataAvailable() {
+        return data != null;
+    }
+
     public Class detectMessageClass() {
         ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
         return (Class) parameterizedType.getActualTypeArguments()[0];
-    }   
+    }
 
     protected final Object getField(String name) throws CouldNotPerformException {
         try {
