@@ -28,7 +28,6 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.InvalidStateException;
@@ -64,8 +63,8 @@ public class RPCHelper {
                         }
 
                         Object result;
-                        Class<?> resultType = method.getReturnType();
-
+                        Class<?> payloadType;
+//                        
                         if (event.getData() == null) {
                             result = method.invoke(instance);
                         } else {
@@ -73,18 +72,19 @@ public class RPCHelper {
                         }
 
                         // Implementation of Future support by resolving result to reache inner future object.
-                        if (method.getReturnType().isAssignableFrom(Future.class)) {
+//                        if (method.getReturnType().isAssignableFrom(Future.class)) {
+                        if (result instanceof Future) {
                             result = ((Future) result).get();
-                            if (result == null) {
-                                resultType = Void.class;
-                            } else {
-                                resultType = result.getClass();
-                            }
                         }
 
-                        return new Event(resultType, result);
+                        if (result == null) {
+                            payloadType = Void.class;
+                        } else {
+                            payloadType = result.getClass();
+                        }
+                        return new Event(payloadType, result);
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " +method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
                     }
                 }
             });
@@ -133,7 +133,7 @@ public class RPCHelper {
             return "Void";
         }
         String rep = event.getData().toString();
-        if(rep.length() > 10) {
+        if (rep.length() > 10) {
             return event.getData().getClass().getSimpleName();
         }
         return rep;
