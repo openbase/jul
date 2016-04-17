@@ -109,6 +109,7 @@ public class RPCHelper {
 
     private static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass, int methodStackDepth) throws CouldNotPerformException {
 
+        String methodName = "?";
         try {
             StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
             if (stackTrace == null) {
@@ -116,7 +117,7 @@ public class RPCHelper {
             } else if (stackTrace.length == 0) {
                 throw new InvalidStateException("Could not detect method stack!");
             }
-            String methodName;
+            
             try {
                 methodName = stackTrace[methodStackDepth].getMethodName();
             } catch (Exception ex) {
@@ -124,7 +125,7 @@ public class RPCHelper {
             }
             return (Future<RETURN>) remote.callMethodAsync(methodName, argument);
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not call remote Message[]", ex);
+            throw new CouldNotPerformException("Could not call remote Message["+methodName+"]", ex);
         }
     }
 

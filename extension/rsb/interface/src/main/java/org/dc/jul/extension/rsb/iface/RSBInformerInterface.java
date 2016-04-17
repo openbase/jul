@@ -31,11 +31,7 @@ package org.dc.jul.extension.rsb.iface;
 
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
-import org.dc.jul.iface.Activatable;
 import rsb.Event;
-import rsb.RSBException;
-import rsb.Scope;
-import rsb.config.ParticipantConfig;
 
 /**
  *

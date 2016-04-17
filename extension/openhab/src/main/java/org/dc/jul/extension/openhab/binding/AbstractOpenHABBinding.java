@@ -31,7 +31,7 @@ import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.openhab.binding.interfaces.OpenHABBinding;
-import org.dc.jul.extension.openhab.binding.interfaces.OpenHABCommunicator;
+import org.dc.jul.extension.openhab.binding.interfaces.OpenHABRemote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +44,9 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractOpenHABBinding.class);
 
     protected static OpenHABBinding instance;
-    protected final OpenHABCommunicator busCommunicator;
+    protected final OpenHABRemote busCommunicator;
 
-    public AbstractOpenHABBinding(OpenHABCommunicator busCommunicator) throws org.dc.jul.exception.InstantiationException {
+    public AbstractOpenHABBinding(OpenHABRemote busCommunicator) throws org.dc.jul.exception.InstantiationException {
         instance = this;
         this.busCommunicator = busCommunicator;
     }
@@ -75,7 +75,7 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
     }
 
     @Override
-    public OpenHABCommunicator getBusCommunicator() throws NotAvailableException {
+    public OpenHABRemote getOpenHABRemote() throws NotAvailableException {
         return busCommunicator;
     }
 }

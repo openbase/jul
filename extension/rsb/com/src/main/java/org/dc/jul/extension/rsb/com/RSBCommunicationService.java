@@ -367,9 +367,19 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             return;
         }
         try {
-            informer.send(getData());
+                informer.send(getData());
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+        }
+    }
+
+    public void send(Event event) throws CouldNotPerformException {
+        try {
+            informer.send(event);
+        } catch (RuntimeException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not send Event["+event+"]", ex);
         }
     }
 
@@ -460,7 +470,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     public M requestStatus() throws CouldNotPerformException {
         //TODO switch to debug later
-        logger.info("requestStatus of " + this);
+        logger.debug("requestStatus of " + this);
         try {
             return getData();
         } catch (Exception ex) {

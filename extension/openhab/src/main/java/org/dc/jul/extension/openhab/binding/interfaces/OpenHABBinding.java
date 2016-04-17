@@ -34,5 +34,5 @@ import org.dc.jul.exception.NotAvailableException;
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
 public interface OpenHABBinding {
-    public OpenHABCommunicator getBusCommunicator() throws NotAvailableException;
+    public OpenHABRemote getOpenHABRemote() throws NotAvailableException;
 }
