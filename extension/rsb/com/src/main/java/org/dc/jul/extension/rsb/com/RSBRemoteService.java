@@ -465,7 +465,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     private void validateConnectionState() throws InvalidStateException {
         validateInitialization();
-        if (!isConnected()) {
+        //TODO mpohling: remove after connection handshake is implemented.
+        if (!isActive() || data = null) {
             throw new InvalidStateException("Could not reach server!");
         }
     }
