@@ -44,11 +44,11 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractOpenHABBinding.class);
 
     protected static OpenHABBinding instance;
-    protected final OpenHABRemote busCommunicator;
+    protected final OpenHABRemote openHABRemote;
 
-    public AbstractOpenHABBinding(OpenHABRemote busCommunicator) throws org.dc.jul.exception.InstantiationException {
+    public AbstractOpenHABBinding(OpenHABRemote openHABRemote) throws org.dc.jul.exception.InstantiationException {
         instance = this;
-        this.busCommunicator = busCommunicator;
+        this.openHABRemote = openHABRemote;
     }
 
     public static OpenHABBinding getInstance() throws NotAvailableException {
@@ -60,22 +60,22 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
 
     public void init() throws InitializationException, InterruptedException {
         try {
-            this.busCommunicator.init();
-            this.busCommunicator.activate();
+            this.openHABRemote.init();
+            this.openHABRemote.activate();
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
     public void shutdown() throws InterruptedException {
-        if (busCommunicator != null) {
-            busCommunicator.shutdown();
+        if (openHABRemote != null) {
+            openHABRemote.shutdown();
         }
         instance = null;
     }
 
     @Override
     public OpenHABRemote getOpenHABRemote() throws NotAvailableException {
-        return busCommunicator;
+        return openHABRemote;
     }
 }

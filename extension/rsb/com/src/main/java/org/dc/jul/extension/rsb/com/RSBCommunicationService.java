@@ -30,13 +30,11 @@ package org.dc.jul.extension.rsb.com;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
-import org.dc.jps.preset.JPTestMode;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.CouldNotTransformException;
 import org.dc.jul.exception.InitializationException;
@@ -238,6 +236,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * Method is called after communication initialization.
+     * You can overwrite this method to trigger any component specific initialization.
+     * @throws InitializationException
+     * @throws InterruptedException
+     */
     protected void postInit() throws InitializationException, InterruptedException {
         // overwrite for specific post initialization tasks.
     }
@@ -320,7 +324,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * This method generates a closable data builder wrapper including the
      * internal builder instance. Be informed that the internal builder is
-     * directly locked and all internal builder operations are queued. In fact
+     * directly locked and all internal builder operations are queued. Therefore please
      * call the close method soon as possible to release the builder lock after
      * you builder modifications, otherwise the overall processing pipeline is
      * delayed.
@@ -370,16 +374,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 informer.send(getData());
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
-        }
-    }
-
-    public void send(Event event) throws CouldNotPerformException {
-        try {
-            informer.send(event);
-        } catch (RuntimeException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not send Event["+event+"]", ex);
         }
     }
 
@@ -473,6 +467,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         logger.debug("requestStatus of " + this);
         try {
             return getData();
+        } catch (RuntimeException ex) {
+            throw ex;
         } catch (Exception ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not request status update.", ex), logger, LogLevel.ERROR);
         }

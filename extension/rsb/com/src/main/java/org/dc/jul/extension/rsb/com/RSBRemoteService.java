@@ -33,7 +33,6 @@ import com.google.protobuf.GeneratedMessage;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +41,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
-import org.dc.jps.preset.JPTestMode;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.CouldNotTransformException;
 import org.dc.jul.exception.InitializationException;
@@ -59,7 +57,6 @@ import org.dc.jul.extension.rsb.iface.RSBListenerInterface;
 import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
-import org.dc.jul.extension.rst.iface.ScopeProvider;
 import org.dc.jul.iface.Activatable;
 import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.pattern.Observable;
@@ -131,6 +128,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    /**
+     * Method is called after communication initialization.
+     * You can overwrite this method to trigger any component specific initialization.
+     * @throws InitializationException
+     * @throws InterruptedException
+     */
+    protected void postInit() throws InitializationException, InterruptedException {
+        // overwrite for specific post initialization tasks.
+    }
+
     private void enableTransport(final ParticipantConfig participantConfig, final JPRSBTransport.TransportType type) {
         if (type == JPRSBTransport.TransportType.DEFAULT) {
             return;
@@ -174,6 +181,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             } catch (InterruptedException ex) {
                 logger.warn("Could not register main handler!", ex);
             }
+
+            postInit();
             initialized = true;
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);
@@ -194,7 +203,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             this.remoteServer = RSBFactory.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
             this.listenerWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
-
 
                 @Override
                 public void update(Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
@@ -245,15 +253,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public void deactivate() throws InterruptedException, CouldNotPerformException {
         try {
             validateInitialization();
-
-            // skip sync tasks
-            syncTasks.forEach((Future<Void> task) -> task.cancel(true));
-
+            skipSyncTasks();
             deactivateListener();
             deactivateRemoteServer();
         } catch (InvalidStateException ex) {
             throw new CouldNotPerformException("Could not deactivate " + getClass().getSimpleName() + "!", ex);
         }
+    }
+
+    private void skipSyncTasks() {
+        syncTasks.forEach((Future<Void> task) -> task.cancel(true));
     }
 
     private void activateListener() throws InterruptedException {
@@ -504,15 +513,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 } catch (ClassCastException ex) {
                     // Thats not the right internal data type. Skip update...
                 }
-
-                try {
-                    incomingEvent(event);
-                } catch (RuntimeException ex) {
-                    throw ex;
-                } catch (Exception ex) {
-                    throw new CouldNotPerformException("Error during incoming event notification of RemoteService["+this+"]", ex);
-                }
-
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception ex) {
@@ -534,14 +534,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger, LogLevel.ERROR);
         }
-    }
 
-    /**
-     * Overwrite this method to get informed about incoming events.
-     *
-     * @param event
-     */
-    protected void incomingEvent(Event event) {
-        // Methode dummy, overwirte to get informed about incoming event.
+        skipSyncTasks();
     }
 }

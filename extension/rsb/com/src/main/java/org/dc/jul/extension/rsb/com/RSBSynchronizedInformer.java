@@ -29,10 +29,10 @@ package org.dc.jul.extension.rsb.com;
  * #L%
  */
 
-import org.dc.jul.extension.rsb.iface.RSBInformerInterface;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.extension.rsb.iface.RSBInformerInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -93,13 +93,14 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
     @Override
     public Event send(final Event event) throws CouldNotPerformException {
         synchronized (participantLock) {
+            logger.debug("Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]");
             try {
                 if (event == null) {
                     throw new NotAvailableException("event");
                 }
                 return getParticipant().send(event);
             } catch (Exception ex) {
-                throw new CouldNotPerformException("Could not send Event[" + event + "]!", ex);
+                throw new CouldNotPerformException("Could not send Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
             }
         }
     }
