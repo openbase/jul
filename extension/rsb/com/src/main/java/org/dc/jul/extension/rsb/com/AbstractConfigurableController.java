@@ -67,7 +67,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     }
 
     @Override
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException {
+    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         if (this.config == null) {
             this.config = config;
         } else {
