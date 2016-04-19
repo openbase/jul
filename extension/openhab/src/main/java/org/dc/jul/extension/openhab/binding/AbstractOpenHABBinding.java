@@ -26,7 +26,6 @@ package org.dc.jul.extension.openhab.binding;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
@@ -44,11 +43,10 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractOpenHABBinding.class);
 
     protected static OpenHABBinding instance;
-    protected final OpenHABRemote openHABRemote;
+    protected OpenHABRemote openHABRemote;
 
-    public AbstractOpenHABBinding(OpenHABRemote openHABRemote) throws org.dc.jul.exception.InstantiationException {
+    public AbstractOpenHABBinding() throws org.dc.jul.exception.InstantiationException {
         instance = this;
-        this.openHABRemote = openHABRemote;
     }
 
     public static OpenHABBinding getInstance() throws NotAvailableException {
@@ -58,9 +56,10 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
         return instance;
     }
 
-    public void init() throws InitializationException, InterruptedException {
+    public void init(final String itemFilter, final OpenHABRemote openHABRemote) throws InitializationException, InterruptedException {
         try {
-            this.openHABRemote.init();
+            this.openHABRemote = openHABRemote;
+            this.openHABRemote.init(itemFilter);
             this.openHABRemote.activate();
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);

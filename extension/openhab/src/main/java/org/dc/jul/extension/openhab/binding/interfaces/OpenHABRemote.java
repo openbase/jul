@@ -39,7 +39,7 @@ import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
  */
 public interface OpenHABRemote extends Activatable, Shutdownable {
 
-    public void init() throws InitializationException, InterruptedException;
+    public void init(String itemFilter) throws InitializationException, InterruptedException;
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException;
