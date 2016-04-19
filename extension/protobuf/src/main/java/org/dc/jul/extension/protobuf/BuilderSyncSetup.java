@@ -28,7 +28,6 @@ package org.dc.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage.Builder;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
@@ -103,7 +102,8 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     /**
-     * Returns the internal builder instance. Use builder with care of read and write locks.
+     * Returns the internal builder instance. Use builder with care of read and
+     * write locks.
      *
      * @return
      */
@@ -174,17 +174,23 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     public void unlockWrite() {
+        unlockWrite(true);
+    }
+
+    public void unlockWrite(boolean notifyChange) {
         logger.debug("order write unlock");
         writeLockConsumer = "Unknown";
         writeLockTimeout.cancel();
         writeLock.unlock();
         logger.debug("write unlocked");
-        try {
-            holder.notifyChange();
-        } catch (NotInitializedException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.DEBUG);
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
+        if (notifyChange) {
+            try {
+                holder.notifyChange();
+            } catch (NotInitializedException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.DEBUG);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
+            }
         }
     }
 }

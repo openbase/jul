@@ -34,7 +34,8 @@ import rst.rsb.ScopeType.Scope;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
+ * Threepwood</a>
  * @param <M>
  * @param <MB>
  * @param <CONFIG>
@@ -70,7 +71,9 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
         if (this.config == null) {
             this.config = config;
         } else {
-            this.config = (CONFIG) this.config.toBuilder().mergeFrom(config).build();
+            // merge fails when lists are updated because then entries are added and not replaced
+            // this.config = (CONFIG) this.config.toBuilder().mergeFrom(config).build();
+            this.config = config;
         }
 
         if (supportsField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
