@@ -124,15 +124,15 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
     @Override
     public void notifyUpdated(final RSBBindingType.RSBBinding data) {
         switch (data.getState().getState()) {
-            case ACTIVE:
-                logger.info("Active dal binding state!");
-                break;
-            case DEACTIVE:
-                logger.info("Deactive dal binding state!");
-                break;
-            case UNKNOWN:
-                logger.info("Unkown dal binding state!");
-                break;
+        case ACTIVE:
+            logger.info("Active dal binding state!");
+            break;
+        case DEACTIVE:
+            logger.info("Deactive dal binding state!");
+            break;
+        case UNKNOWN:
+            logger.info("Unkown dal binding state!");
+            break;
         }
     }
 
@@ -159,7 +159,9 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
         }
 
         try {
-            openhabUpdateListener.deactivate();
+            if (openhabUpdateListener != null) {
+                openhabUpdateListener.deactivate();
+            }
         } catch (InterruptedException ex) {
             logger.warn("Unable to deactivate openhab update listener!", ex);
             Thread.currentThread().interrupt();
@@ -168,7 +170,9 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
         }
 
         try {
-            openhabCommandListener.deactivate();
+            if (openhabCommandListener != null) {
+                openhabCommandListener.deactivate();
+            }
         } catch (InterruptedException ex) {
             logger.warn("Unable to deactivate openhab command listener!", ex);
             Thread.currentThread().interrupt();
