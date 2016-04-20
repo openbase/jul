@@ -43,6 +43,7 @@ import org.dc.jul.extension.protobuf.IdentifiableMessage;
 import org.dc.jul.extension.protobuf.IdentifiableMessageMap;
 import org.dc.jul.extension.protobuf.ProtobufListDiff;
 import org.dc.jul.iface.Configurable;
+import static org.dc.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.dc.jul.pattern.Factory;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
@@ -61,7 +62,7 @@ import org.slf4j.LoggerFactory;
 public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Registry<KEY, ENTRY, ?> registry;
+    private final Registry<KEY, ENTRY, ?> localRegistry;
     private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
@@ -70,7 +71,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     public RegistrySynchronizer(final Registry<KEY, ENTRY, ?> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.dc.jul.exception.InstantiationException {
         try {
-            this.registry = registry;
+            this.localRegistry = registry;
             this.remoteRegistry = remoteRegistry;
             this.entryConfigDiff = new ProtobufListDiff<>();
             this.factory = factory;
@@ -161,7 +162,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
             // sync origin list.
             IdentifiableMessageMap<KEY, CONFIG_M, CONFIG_MB> newOriginEntryMap = new IdentifiableMessageMap<>();
-            for (ENTRY entry : registry.getEntries()) {
+            for (ENTRY entry : localRegistry.getEntries()) {
                 newOriginEntryMap.put(remoteRegistry.get(entry.getId()));
             }
             entryConfigDiff.replaceOriginMap(newOriginEntryMap);
@@ -207,17 +208,26 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     }
 
     public ENTRY register(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
-        return registry.register(factory.newInstance(config));
+        return localRegistry.register(factory.newInstance(config));
     }
 
     public ENTRY update(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
-        ENTRY entry = registry.get(remoteRegistry.getKey(config));
+        ENTRY entry = localRegistry.get(remoteRegistry.getKey(config));
         entry.updateConfig(config);
         return entry;
     }
 
     public ENTRY remove(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
-        return registry.remove(remoteRegistry.getKey(config));
+        return localRegistry.remove(getKey(config));
+    }
+    
+    // TODO: move to interface or a util class. Redundant method - also used in RemoteRegistry and IdentifiableMessage
+    public KEY getKey(final CONFIG_M entry) throws CouldNotPerformException {
+        KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
+        if (!localRegistry.contains(key)) {
+            throw new CouldNotPerformException("Entry for given Key[" + key + "] is not available for local registry!");
+        }
+        return key;
     }
 
     /**
