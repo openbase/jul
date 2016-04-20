@@ -33,18 +33,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
-import org.dc.jps.core.JPService;
-import org.dc.jps.exception.JPServiceException;
-import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.InstantiationException;
-import org.dc.jul.exception.InvalidStateException;
-import org.dc.jul.exception.NotAvailableException;
-import org.dc.jul.storage.file.FileProvider;
-import org.dc.jul.storage.registry.AbstractVersionConsistencyHandler;
-import org.dc.jul.storage.registry.ConsistencyHandler;
-import org.dc.jul.storage.registry.FileSynchronizedRegistry;
-import org.dc.jul.storage.registry.FileSynchronizedRegistryInterface;
-import org.dc.jul.storage.registry.jp.JPInitializeDB;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -56,6 +44,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.apache.commons.io.FileUtils;
+import org.dc.jps.core.JPService;
+import org.dc.jps.exception.JPServiceException;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InstantiationException;
+import org.dc.jul.exception.InvalidStateException;
+import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.exception.RejectedException;
+import org.dc.jul.iface.Writable;
+import org.dc.jul.storage.file.FileProvider;
+import org.dc.jul.storage.registry.AbstractVersionConsistencyHandler;
+import org.dc.jul.storage.registry.ConsistencyHandler;
+import org.dc.jul.storage.registry.FileSynchronizedRegistryInterface;
+import org.dc.jul.storage.registry.jp.JPInitializeDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,9 +80,11 @@ public class DBVersionControl {
     private final FileProvider entryFileProvider;
     private final String entryType;
     private final File databaseDirectory;
+    private final Writable databaseWriteAccess;
 
-    public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory) throws InstantiationException {
+    public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory, final Writable databaseWriteAccess) throws InstantiationException {
         try {
+            this.databaseWriteAccess = databaseWriteAccess;
             this.entryType = entryType;
             this.gson = new GsonBuilder().setPrettyPrinting().create();
             this.parser = new JsonParser();
@@ -92,6 +95,17 @@ public class DBVersionControl {
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
+    }
+
+    public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory) throws InstantiationException {
+        this(entryType, entryFileProvider, converterPackage, databaseDirectory, new Writable() {
+            @Override
+            public void checkWriteAccess() throws RejectedException {
+                if(!databaseDirectory.canWrite()) {
+                    throw new RejectedException("db directory not writable!");
+                }
+            }
+        });
     }
 
     public void validateAndUpgradeDBVersion() throws CouldNotPerformException {
@@ -115,6 +129,12 @@ public class DBVersionControl {
             // init
             Map<File, JsonObject> dbSnapshot;
             final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
+
+
+            // check if upgrade is needed and write access is permitted.
+            if(!currentToTargetConverterPipeline.isEmpty()) {
+                databaseWriteAccess.checkWriteAccess();
+            }
 
             // load db entries
             final HashMap<File, JsonObject> dbFileEntryMap = new HashMap<>();

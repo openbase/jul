@@ -29,10 +29,10 @@ package org.dc.jul.storage.registry;
  * #L%
  */
 
-import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.RejectedException;
-import org.dc.jul.iface.Identifiable;
 import java.util.List;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.iface.Identifiable;
+import org.dc.jul.iface.Writable;
 
 /**
  *
@@ -41,7 +41,7 @@ import java.util.List;
  * @param <ENTRY>
  * @param <R>
  */
-public interface Registry<KEY, ENTRY extends Identifiable<KEY>, R extends Registry<KEY, ENTRY, R>> {
+public interface Registry<KEY, ENTRY extends Identifiable<KEY>, R extends Registry<KEY, ENTRY, R>> extends Writable {
 
     public String getName();
 
@@ -62,8 +62,6 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>, R extends Regist
     public boolean contains(final KEY key) throws CouldNotPerformException;
 
     public void clear() throws CouldNotPerformException;
-
-    public void checkAccess() throws RejectedException;
 
     public int size();
 

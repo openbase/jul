@@ -33,6 +33,21 @@
             <groupId>rct</groupId>
             <artifactId>rct</artifactId>
             <version>${dependency.rct.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>rsb</groupId>
+                    <artifactId>rsb</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>rsb</groupId>
+                    <artifactId>rst</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>rsb</groupId>
+            <artifactId>${dependency.rst.stable.artifact}</artifactId>
+            <version>${dependency.rst.stable.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -102,7 +102,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public void checkAccess() throws RejectedException {
+    public void checkWriteAccess() throws RejectedException {
     }
 
     @Override

@@ -28,7 +28,6 @@ package org.dc.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +35,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
-import org.dc.jps.preset.JPTestMode;
+import org.dc.jps.preset.JPForce;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.MultiException;
@@ -69,6 +68,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     private final FileProvider<Identifiable<KEY>> fileProvider;
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
     private DBVersionControl versionControl;
+    private Boolean dbUpToDate;
 
     public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
@@ -134,7 +134,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         if (!isEmpty()) {
             throw new CouldNotPerformException("Could not activate version control because registry already loaded! Please activate version control before loading the registry.");
         }
-        versionControl = new DBVersionControl(entryType, fileProvider, converterPackage, databaseDirectory);
+        versionControl = new DBVersionControl(entryType, fileProvider, converterPackage, databaseDirectory, this);
     }
 
     @Override
@@ -193,7 +193,14 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
 
         // check db version
         if (versionControl != null) {
-            versionControl.validateAndUpgradeDBVersion();
+            try {
+                versionControl.validateAndUpgradeDBVersion();
+                dbUpToDate = true;
+            } catch (CouldNotPerformException ex) {
+                dbUpToDate = false;
+                logger.warn("Registry is not up-to-date! To fix registry manually start the registry in force mode.");
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Force readonly mode!", ex), logger);
+            }
         }
 
         try {
@@ -295,15 +302,23 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     }
 
     @Override
-    public void checkAccess() throws RejectedException {
-        super.checkAccess();
-
+    public void checkWriteAccess() throws RejectedException {
         try {
-            if (!databaseDirectory.canWrite() && !JPService.getProperty(JPTestMode.class).getValue()) {
-                throw new RejectedException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
+            if (JPService.getProperty(JPForce.class).getValue()) { // || JPService.getProperty(JPTestMode.class).getValue()
+                return;
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+        }
+
+        super.checkWriteAccess();
+
+        if (dbUpToDate != null && !dbUpToDate) {
+            throw new RejectedException("Database[" + databaseDirectory.getAbsolutePath() + "] not up-to-date!");
+        }
+
+        if (!databaseDirectory.canWrite()) {
+            throw new RejectedException("DatabaseDirectory[" + databaseDirectory.getAbsolutePath() + "] not writable!");
         }
     }
 
@@ -326,5 +341,14 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     @Override
     public Integer getDBVersion() {
         return versionControl.getLatestDBVersion();
+    }
+
+    @Override
+    public boolean isConsistent() {
+        return super.isConsistent() && isUpToDate();
+    }
+
+    public boolean isUpToDate() {
+        return dbUpToDate;
     }
 }

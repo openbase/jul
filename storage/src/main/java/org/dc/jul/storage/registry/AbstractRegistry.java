@@ -129,7 +129,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         logger.debug("Register " + entry + "...");
         pluginPool.beforeRegister(entry);
         try {
-            checkAccess();
+            checkWriteAccess();
             try {
                 registryLock.writeLock().lock();
                 if (entryMap.containsKey(entry.getId())) {
@@ -181,7 +181,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         logger.debug("Update " + entry + "...");
         pluginPool.beforeUpdate(entry);
         try {
-            checkAccess();
+            checkWriteAccess();
             try {
                 // validate update
                 registryLock.writeLock().lock();
@@ -220,7 +220,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         pluginPool.beforeRemove(entry);
         ENTRY oldEntry;
         try {
-            checkAccess();
+            checkWriteAccess();
             try {
                 // validate removal
                 registryLock.writeLock().lock();
@@ -360,7 +360,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void checkAccess() throws RejectedException {
+    public void checkWriteAccess() throws RejectedException {
+        try {
+            if (JPService.getProperty(JPForce.class).getValue()) {
+                return;
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+        }
+
         try {
             if (JPService.getProperty(JPReadOnly.class).getValue()) {
                 throw new RejectedException("ReadOnlyMode is detected!");
@@ -371,20 +379,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         pluginPool.checkAccess();
 
-        try {
-            if (!consistent && !JPService.getProperty(JPForce.class).getValue()) {
-                logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
-                throw new RejectedException("Registry is inconsistent!");
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+        if (!consistent) {
+            logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
+            throw new RejectedException("Registry is inconsistent!");
         }
     }
 
     @Override
     public boolean isReadOnly() {
         try {
-            checkAccess();
+            checkWriteAccess();
         } catch (RejectedException ex) {
             return true;
         }
@@ -416,7 +420,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new VerificationFailedException("Invalid id!", new NotAvailableException("id"));
         }
 
-        if(id instanceof String && ((String) id).isEmpty()) {
+        if (id instanceof String && ((String) id).isEmpty()) {
             throw new VerificationFailedException("Invalid id!", new InvalidStateException("id is empty!"));
         }
         return id;
@@ -502,7 +506,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
-                                        logger.info("Inconsisteny detected by ConsistencyHandler["+consistencyHandler+"] in Entry["+ entry+"]!");
+                                        logger.info("Inconsisteny detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
                                         exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry.getId() + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
                                     }
                                 }
