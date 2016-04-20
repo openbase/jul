@@ -29,23 +29,31 @@ package org.dc.jul.extension.openhab.binding.interfaces;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
+import org.dc.jul.iface.Activatable;
+import org.dc.jul.iface.Shutdownable;
 import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
 
 /**
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public interface OpenHABCommunicator {
+public interface OpenHABRemote extends Activatable, Shutdownable {
 
-    void internalReceiveUpdate(OpenhabCommand command) throws CouldNotPerformException;
+    public void init(String itemFilter) throws InitializationException, InterruptedException;
 
-    void internalReceiveCommand(OpenhabCommand command) throws CouldNotPerformException;
+    @Override
+    public void activate() throws CouldNotPerformException, InterruptedException;
 
-    Future executeCommand(OpenhabCommand command) throws CouldNotPerformException;
+    @Override
+    public void shutdown() throws InterruptedException;
 
-    void init() throws InitializationException, InterruptedException;
+    public void internalReceiveUpdate(final OpenhabCommand command) throws CouldNotPerformException;
 
-    void activate() throws CouldNotPerformException, InterruptedException;
+    public void internalReceiveCommand(OpenhabCommand command) throws CouldNotPerformException;
 
-    void shutdown() throws InterruptedException;
+    public Future sendCommand(OpenhabCommand command) throws CouldNotPerformException;
+
+    public Future postCommand(final OpenhabCommand command) throws CouldNotPerformException;
+
+    public Future postUpdate(final OpenhabCommand command) throws CouldNotPerformException;
 }

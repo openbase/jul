@@ -26,12 +26,11 @@ package org.dc.jul.extension.openhab.binding;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.openhab.binding.interfaces.OpenHABBinding;
-import org.dc.jul.extension.openhab.binding.interfaces.OpenHABCommunicator;
+import org.dc.jul.extension.openhab.binding.interfaces.OpenHABRemote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +43,10 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
     protected static final Logger logger = LoggerFactory.getLogger(AbstractOpenHABBinding.class);
 
     protected static OpenHABBinding instance;
-    protected final OpenHABCommunicator busCommunicator;
+    protected OpenHABRemote openHABRemote;
 
-    public AbstractOpenHABBinding(OpenHABCommunicator busCommunicator) throws org.dc.jul.exception.InstantiationException {
+    public AbstractOpenHABBinding() throws org.dc.jul.exception.InstantiationException {
         instance = this;
-        this.busCommunicator = busCommunicator;
     }
 
     public static OpenHABBinding getInstance() throws NotAvailableException {
@@ -58,24 +56,25 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
         return instance;
     }
 
-    public void init() throws InitializationException, InterruptedException {
+    public void init(final String itemFilter, final OpenHABRemote openHABRemote) throws InitializationException, InterruptedException {
         try {
-            this.busCommunicator.init();
-            this.busCommunicator.activate();
+            this.openHABRemote = openHABRemote;
+            this.openHABRemote.init(itemFilter);
+            this.openHABRemote.activate();
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
     public void shutdown() throws InterruptedException {
-        if (busCommunicator != null) {
-            busCommunicator.shutdown();
+        if (openHABRemote != null) {
+            openHABRemote.shutdown();
         }
         instance = null;
     }
 
     @Override
-    public OpenHABCommunicator getBusCommunicator() throws NotAvailableException {
-        return busCommunicator;
+    public OpenHABRemote getOpenHABRemote() throws NotAvailableException {
+        return openHABRemote;
     }
 }
