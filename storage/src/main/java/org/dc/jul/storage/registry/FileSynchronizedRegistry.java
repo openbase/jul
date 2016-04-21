@@ -62,13 +62,21 @@ import org.dc.jul.storage.registry.version.DBVersionControl;
  */
 public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY, R>> extends AbstractRegistry<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY, R> {
 
+    public enum DatabaseState {
+
+        UNKNOWN,
+        OUTDATED,
+        LATEST;
+
+    }
+
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<ENTRY>> fileSynchronizerMap;
     private final FileProcessor<ENTRY> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
     private DBVersionControl versionControl;
-    private Boolean dbUpToDate;
+    private DatabaseState databaseState;
 
     public FileSynchronizedRegistry(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
@@ -82,6 +90,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
             this.fileProcessor = fileProcessor;
             this.fileProvider = fileProvider;
             this.filePluginPool = filePluginPool;
+            databaseState = DatabaseState.UNKNOWN;
 //            this.prepareDB();
         } catch (NullPointerException ex) {
             throw new InstantiationException(this, ex);
@@ -195,9 +204,9 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         if (versionControl != null) {
             try {
                 versionControl.validateAndUpgradeDBVersion();
-                dbUpToDate = true;
+                databaseState = DatabaseState.LATEST;
             } catch (CouldNotPerformException ex) {
-                dbUpToDate = false;
+                databaseState = DatabaseState.OUTDATED;
                 logger.warn("Registry is not up-to-date! To fix registry manually start the registry in force mode.");
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Force readonly mode!", ex), logger);
             }
@@ -313,8 +322,8 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
 
         super.checkWriteAccess();
 
-        if (dbUpToDate != null && !dbUpToDate) {
-            throw new RejectedException("Database[" + databaseDirectory.getAbsolutePath() + "] not up-to-date!");
+        if (isOutdated()) {
+            throw new RejectedException("Database[" + databaseDirectory.getAbsolutePath() + "] is outdated!");
         }
 
         if (!databaseDirectory.canWrite()) {
@@ -345,10 +354,14 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
 
     @Override
     public boolean isConsistent() {
-        return super.isConsistent() && isUpToDate();
+        return super.isConsistent() && !isOutdated();
     }
 
-    public boolean isUpToDate() {
-        return dbUpToDate;
+    public boolean isOutdated() {
+        return databaseState == DatabaseState.OUTDATED;
+    }
+    
+    public DatabaseState getDatabaseState() {
+        return databaseState;
     }
 }
