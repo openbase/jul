@@ -28,7 +28,6 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.InvalidStateException;
@@ -64,8 +63,8 @@ public class RPCHelper {
                         }
 
                         Object result;
-                        Class<?> resultType = method.getReturnType();
-
+                        Class<?> payloadType;
+//                        
                         if (event.getData() == null) {
                             result = method.invoke(instance);
                         } else {
@@ -73,18 +72,19 @@ public class RPCHelper {
                         }
 
                         // Implementation of Future support by resolving result to reache inner future object.
-                        if (method.getReturnType().isAssignableFrom(Future.class)) {
+//                        if (method.getReturnType().isAssignableFrom(Future.class)) {
+                        if (result instanceof Future) {
                             result = ((Future) result).get();
-                            if (result == null) {
-                                resultType = Void.class;
-                            } else {
-                                resultType = result.getClass();
-                            }
                         }
 
-                        return new Event(resultType, result);
+                        if (result == null) {
+                            payloadType = Void.class;
+                        } else {
+                            payloadType = result.getClass();
+                        }
+                        return new Event(payloadType, result);
                     } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " +method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
                     }
                 }
             });
@@ -109,6 +109,7 @@ public class RPCHelper {
 
     private static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass, int methodStackDepth) throws CouldNotPerformException {
 
+        String methodName = "?";
         try {
             StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
             if (stackTrace == null) {
@@ -116,7 +117,7 @@ public class RPCHelper {
             } else if (stackTrace.length == 0) {
                 throw new InvalidStateException("Could not detect method stack!");
             }
-            String methodName;
+            
             try {
                 methodName = stackTrace[methodStackDepth].getMethodName();
             } catch (Exception ex) {
@@ -124,7 +125,7 @@ public class RPCHelper {
             }
             return (Future<RETURN>) remote.callMethodAsync(methodName, argument);
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not call remote Message[]", ex);
+            throw new CouldNotPerformException("Could not call remote Message["+methodName+"]", ex);
         }
     }
 
@@ -133,7 +134,7 @@ public class RPCHelper {
             return "Void";
         }
         String rep = event.getData().toString();
-        if(rep.length() > 10) {
+        if (rep.length() > 10) {
             return event.getData().getClass().getSimpleName();
         }
         return rep;

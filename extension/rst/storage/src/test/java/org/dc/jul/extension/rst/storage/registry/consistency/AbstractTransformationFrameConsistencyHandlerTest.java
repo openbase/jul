@@ -145,7 +145,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
             super(new ProtoBufRegistryInterface<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder>() {
 
                 @Override
-                public void checkAccess() throws RejectedException {
+                public void checkWriteAccess() throws RejectedException {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 

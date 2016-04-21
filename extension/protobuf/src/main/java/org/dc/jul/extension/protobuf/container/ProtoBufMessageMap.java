@@ -154,7 +154,7 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
                     builder.addRepeatedField(fieldDescriptor, value.getMessage());
                 }
             } finally {
-                builderSetup.unlockWrite();
+                builderSetup.unlockWrite(false);
             }
         }
     }

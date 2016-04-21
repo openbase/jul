@@ -90,13 +90,13 @@ public class RSBCommunicationServiceTest {
     private boolean secondSync = false;
     private RSBCommunicationService communicationService;
 
-    @Test(timeout = 3000)
+    @Test(timeout = 20000)
     public void testInitialSync() throws Exception {
         String scope = "/test/synchronistion";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistry.Builder locationRegistry = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
-        communicationService = new RSBCommunicationServiceImpl(locationRegistry);
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
 
@@ -120,11 +120,12 @@ public class RSBCommunicationServiceTest {
                 }
             }
         });
-        remoteService.activate();
+        
 
         synchronized (waitForDataSync) {
             if (firstSync == false) {
                 logger.info("Wait for data sync");
+                remoteService.activate();
                 waitForDataSync.wait();
             }
         }
@@ -132,13 +133,14 @@ public class RSBCommunicationServiceTest {
 
         communicationService.deactivate();
         LocationConfig location2 = LocationConfig.newBuilder().setId("Location2").build();
-        locationRegistry.addLocationConfig(location2);
-        communicationService = new RSBCommunicationServiceImpl(locationRegistry);
+        testData.addLocationConfig(location2);
+        communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
-        communicationService.activate();
+        
 
         synchronized (waitForDataSync) {
             if (secondSync == false) {
+                communicationService.activate();
                 waitForDataSync.wait();
             }
         }
