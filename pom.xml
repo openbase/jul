@@ -152,7 +152,7 @@
         <dependency.rst.stable.version>[0.12,0.13-SNAPSHOT)</dependency.rst.stable.version>
         <!--<dependency.rst.stable.artifact>rst-csra-ha-paramite</dependency.rst.stable.artifact>-->
         <!--<dependency.rst.stable.version>0.12-SNAPSHOT</dependency.rst.stable.version>-->
-        <dependency.rsb.version>[0.12,0.13-SNAPSHOT)</dependency.rsb.version>
+        <dependency.rsb.version>[0.13,0.14-SNAPSHOT)</dependency.rsb.version>
         <dependency.rct.version>[1.0,1.1-SNAPSHOT)</dependency.rct.version>
     </properties>
     

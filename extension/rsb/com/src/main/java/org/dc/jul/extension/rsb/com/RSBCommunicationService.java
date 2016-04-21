@@ -64,6 +64,7 @@ import rsb.Event;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
+import rsb.patterns.Callback;
 import rst.rsb.ScopeType;
 
 /**
@@ -200,7 +201,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             // register rpc methods.
             server.addMethod(RPC_REQUEST_STATUS, (Event request) -> {
-                return new Event(messageClass, requestStatus());
+                try {
+                    return new Event(messageClass, requestStatus());
+                } catch (CouldNotPerformException ex) {
+                    throw new Callback.UserCodeException(ex);
+                }
             });
 
             registerMethods(server);
