@@ -26,15 +26,13 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
 import static org.dc.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
-import org.dc.jul.iface.Configurable;
-import org.dc.jul.iface.Manageable;
+import org.dc.jul.pattern.ConfigurableRemote;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import rst.rsb.ScopeType;
@@ -45,7 +43,7 @@ import rst.rsb.ScopeType;
  * @param <M>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements Configurable<String, CONFIG>, Manageable<CONFIG>{
+public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG> {
 
     protected CONFIG config;
     private final Observable<CONFIG> configObservable;

@@ -21,19 +21,18 @@ package org.dc.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.concurrent.Future;
-import static javafx.scene.input.KeyCode.M;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
-import org.dc.jul.iface.Manageable;
+import org.dc.jul.iface.Activatable;
+import org.dc.jul.iface.Shutdownable;
 
 /**
  *
  * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
- * @param <CONFIG>
+ * @param <M>
  */
-public interface Remote<DATA, CONFIG> extends Manageable<CONFIG> {
+public interface Remote<M> extends Shutdownable, Activatable {
 
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException;
 
@@ -45,8 +44,6 @@ public interface Remote<DATA, CONFIG> extends Manageable<CONFIG> {
 
     public void init(final String scope) throws InitializationException, InterruptedException;
 
-    public boolean isActive();
-
     public boolean isConnected();
 
     /**
@@ -57,6 +54,9 @@ public interface Remote<DATA, CONFIG> extends Manageable<CONFIG> {
      * applied changes. public * public * Note: This method blocks until the new
      * data is acquired! public * public * @return fresh synchronized data
      * object. public * @throws CouldNotPerformException public
+     *
+     * @return
+     * @throws org.dc.jul.exception.CouldNotPerformException
      */
-    public DATA requestStatus() throws CouldNotPerformException;
+    public M requestStatus() throws CouldNotPerformException;
 }

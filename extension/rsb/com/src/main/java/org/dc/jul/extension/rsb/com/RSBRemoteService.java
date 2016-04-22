@@ -57,10 +57,9 @@ import org.dc.jul.extension.rsb.iface.RSBListenerInterface;
 import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
-import org.dc.jul.iface.Activatable;
-import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
+import org.dc.jul.pattern.Remote;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +75,7 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Shutdownable, Activatable, Remote<M,M> {
+public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Remote<M> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -108,7 +107,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
-    @Override
     public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
@@ -122,7 +120,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    @Override
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             init(ScopeTransformer.transform(scope), participantConfig);
@@ -154,7 +151,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
     }
 
-    @Override
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             ParticipantConfig internalParticipantConfig = participantConfig;
