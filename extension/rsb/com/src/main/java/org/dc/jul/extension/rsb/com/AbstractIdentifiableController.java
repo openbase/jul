@@ -26,7 +26,7 @@ import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.NotAvailableException;
-import org.dc.jul.iface.Identifiable;
+import org.dc.jul.pattern.IdentifiableController;
 
 /**
  *
@@ -34,7 +34,7 @@ import org.dc.jul.iface.Identifiable;
  * @param <M>
  * @param <MB>
  */
-public abstract class AbstractIdentifiableController<M extends GeneratedMessage, MB extends M.Builder<MB>> extends RSBCommunicationService<M, MB> implements Identifiable<String> {
+public abstract class AbstractIdentifiableController<M extends GeneratedMessage, MB extends M.Builder<MB>> extends RSBCommunicationService<M, MB> implements IdentifiableController<String, M, MB> {
 
     public AbstractIdentifiableController(MB builder) throws InstantiationException {
         super(builder);

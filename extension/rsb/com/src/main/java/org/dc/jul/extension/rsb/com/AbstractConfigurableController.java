@@ -27,9 +27,8 @@ import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
-import org.dc.jul.iface.Configurable;
-import org.dc.jul.iface.Manageable;
 import static org.dc.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
+import org.dc.jul.pattern.ConfigurableController;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -40,7 +39,7 @@ import rst.rsb.ScopeType.Scope;
  * @param <MB>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements Configurable<String, CONFIG>, Manageable<CONFIG> {
+public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, MB, CONFIG> {
 
     public static final String FIELD_SCOPE = "scope";
 
