@@ -1,39 +1,23 @@
-package org.dc.jul.pattern;
-
 /*
- * #%L
- * JUL Pattern
- * %%
- * Copyright (C) 2015 - 2016 DivineCooperation
- * %%
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Lesser Public License for more details.
- * 
- * You should have received a copy of the GNU General Lesser Public
- * License along with this program.  If not, see
- * <http://www.gnu.org/licenses/lgpl-3.0.html>.
- * #L%
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
+package org.dc.jul.extension.rsb.com;
 
+import com.google.protobuf.GeneratedMessage;
 import java.util.concurrent.Future;
-import static javafx.scene.input.KeyCode.M;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
-import org.dc.jul.iface.Manageable;
+import rsb.Scope;
+import rsb.config.ParticipantConfig;
+import rst.rsb.ScopeType;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
- * @param <CONFIG>
+ * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public interface Remote<DATA, CONFIG> extends Manageable<CONFIG> {
+public interface RSBRemote<M extends GeneratedMessage> {
 
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException;
 
@@ -43,7 +27,13 @@ public interface Remote<DATA, CONFIG> extends Manageable<CONFIG> {
 
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException;
 
+    public void init(final Scope scope) throws InitializationException, InterruptedException;
+
     public void init(final String scope) throws InitializationException, InterruptedException;
+
+    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException;
+
+    public void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException;
 
     public boolean isActive();
 
@@ -58,5 +48,6 @@ public interface Remote<DATA, CONFIG> extends Manageable<CONFIG> {
      * data is acquired! public * public * @return fresh synchronized data
      * object. public * @throws CouldNotPerformException public
      */
-    public DATA requestStatus() throws CouldNotPerformException;
+    public M requestStatus() throws CouldNotPerformException;
+
 }

@@ -76,7 +76,7 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Shutdownable, Activatable {
+public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Shutdownable, Activatable, Remote<M,M> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -108,10 +108,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    @Override
     public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    @Override
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
             init(new Scope(scope));
@@ -120,6 +122,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    @Override
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             init(ScopeTransformer.transform(scope), participantConfig);
@@ -151,6 +154,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
     }
 
+    @Override
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             ParticipantConfig internalParticipantConfig = participantConfig;
@@ -273,6 +277,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         listenerWatchDog.deactivate();
     }
 
+    @Override
     public boolean isConnected() {
         //TODO mpohling implement connection server check.
 
@@ -309,10 +314,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         remoteServerWatchDog.deactivate();
     }
 
+    @Override
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException {
         return callMethod(methodName, null);
     }
 
+    @Override
     public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException {
         return callMethodAsync(methodName, null);
     }
@@ -321,6 +328,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public final static double TIMEOUT_MULTIPLIER = 1.2;
     public final static double MAX_TIMEOUT = 30;
 
+    @Override
     public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
         try {
             logger.debug("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
@@ -355,6 +363,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return Math.min(MAX_TIMEOUT, currentTimeout * TIMEOUT_MULTIPLIER + jitterRandom.nextDouble());
     }
 
+    @Override
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
         try {
             logger.debug("Calling method [" + methodName + "(" + (type != null ? type.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
@@ -401,6 +410,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
      * @return fresh synchronized data object.
      * @throws CouldNotPerformException
      */
+    @Override
     public M requestStatus() throws CouldNotPerformException {
         try {
             logger.debug("requestStatus updated.");
