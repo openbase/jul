@@ -342,7 +342,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @param consumer
      * @return a new builder wrapper with a locked builder instance.
      */
-    @Override
     public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
         return new ClosableDataBuilder<>(getBuilderSetup(), consumer);
     }
