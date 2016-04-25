@@ -1,8 +1,13 @@
-package org.dc.jul.pattern;
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.dc.jul.extension.rsb.com;
 
 /*
  * #%L
- * JUL Pattern
+ * JUL Extension RSB Communication
  * %%
  * Copyright (C) 2015 - 2016 DivineCooperation
  * %%
@@ -21,18 +26,20 @@ package org.dc.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import com.google.protobuf.GeneratedMessage;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
-import org.dc.jul.iface.Activatable;
-import org.dc.jul.iface.Shutdownable;
+import rsb.Scope;
+import rsb.config.ParticipantConfig;
+import rst.rsb.ScopeType;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
- * @param <M>
+ * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public interface Remote<M> extends Shutdownable, Activatable {
+public interface RSBRemote<M extends GeneratedMessage> {
 
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException;
 
@@ -42,7 +49,15 @@ public interface Remote<M> extends Shutdownable, Activatable {
 
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException;
 
+    public void init(final Scope scope) throws InitializationException, InterruptedException;
+
     public void init(final String scope) throws InitializationException, InterruptedException;
+
+    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException;
+
+    public void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException;
+
+    public boolean isActive();
 
     public boolean isConnected();
 
@@ -54,9 +69,7 @@ public interface Remote<M> extends Shutdownable, Activatable {
      * applied changes. public * public * Note: This method blocks until the new
      * data is acquired! public * public * @return fresh synchronized data
      * object. public * @throws CouldNotPerformException public
-     *
-     * @return
-     * @throws org.dc.jul.exception.CouldNotPerformException
      */
     public M requestStatus() throws CouldNotPerformException;
+
 }

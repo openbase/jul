@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.dc.jul.extension.rsb.com;
+package org.dc.jul.pattern;
 
 /*
  * #%L
- * JUL Extension RSB Communication
+ * JUL Pattern
  * %%
  * Copyright (C) 2015 - 2016 DivineCooperation
  * %%
@@ -27,30 +27,14 @@ package org.dc.jul.extension.rsb.com;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
-import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.InvalidStateException;
-import org.dc.jul.exception.NotAvailableException;
-import static org.dc.jul.iface.Identifiable.TYPE_FIELD_ID;
-import org.dc.jul.pattern.IdentifiableRemote;
+import org.dc.jul.iface.Identifiable;
 
 /**
  *
- * @author Divine Threepwood
+ * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @param <ID>
  * @param <M>
  */
-public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {
+public interface IdentifiableRemote<ID, M> extends Identifiable<ID>, Remote<M> {
 
-    @Override
-    public String getId() throws NotAvailableException {
-        try {
-            String id = (String) getField(TYPE_FIELD_ID);
-            if (id.isEmpty()) {
-                throw new InvalidStateException("data.id is empty!");
-            }
-            return id;
-        } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException("data.id", ex);
-        }
-    }
 }

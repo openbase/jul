@@ -52,9 +52,7 @@ import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
 import org.dc.jul.extension.rst.iface.ScopeProvider;
-import org.dc.jul.iface.Activatable;
-import org.dc.jul.iface.Changeable;
-import org.dc.jul.iface.Shutdownable;
+import org.dc.jul.pattern.Controller;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.schedule.WatchDog;
@@ -73,17 +71,13 @@ import rst.rsb.ScopeType;
  * @param <M>
  * @param <MB>
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements ScopeProvider, Activatable, Changeable, Shutdownable {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements Controller<M, MB>, ScopeProvider {
 
     static {
         RSBSharedConnectionConfig.load();
     }
 
-    // TODO mpohling: Should be moved to rst and reimplement for rsb 13.
-    public enum ConnectionState {
 
-        Online, Offline
-    };
 
     public final static Scope SCOPE_SUFFIX_CONTROL = new Scope("/ctrl");
     public final static Scope SCOPE_SUFFIX_STATUS = new Scope("/status");
@@ -264,6 +258,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    @Override
     public Class<M> getMessageClass() {
         return messageClass;
     }
@@ -305,6 +300,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public M getData() throws CouldNotPerformException {
         try {
             return (M) cloneDataBuilder().build();
@@ -313,6 +309,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    @Override
     public MB cloneDataBuilder() {
         try {
             dataBuilderReadLock.lock();
@@ -457,6 +454,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return cloneDataBuilder().getDescriptorForType().findFieldByNumber(fieldId);
     }
 
+    @Override
     public ConnectionState getState() {
         return state;
     }
@@ -467,6 +465,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    @Override
     public M requestStatus() throws CouldNotPerformException {
         //TODO switch to debug later
         logger.debug("requestStatus of " + this);

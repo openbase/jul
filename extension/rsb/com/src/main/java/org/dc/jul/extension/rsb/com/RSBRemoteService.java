@@ -57,10 +57,9 @@ import org.dc.jul.extension.rsb.iface.RSBListenerInterface;
 import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
-import org.dc.jul.iface.Activatable;
-import org.dc.jul.iface.Shutdownable;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
+import org.dc.jul.pattern.Remote;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +75,7 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Shutdownable, Activatable {
+public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Remote<M> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -116,6 +115,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    @Override
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
             init(new Scope(scope));
@@ -277,6 +277,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         listenerWatchDog.deactivate();
     }
 
+    @Override
     public boolean isConnected() {
         //TODO mpohling implement connection server check.
 
@@ -313,11 +314,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         remoteServerWatchDog.deactivate();
     }
 
-    //Timeout neeted!
+    //Timeout needed!
+    @Override
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException {
         return callMethod(methodName, null);
     }
 
+    @Override
     public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException {
         return callMethodAsync(methodName, null);
     }
@@ -326,7 +329,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public final static double TIMEOUT_MULTIPLIER = 1.2;
     public final static double MAX_TIMEOUT = 30;
 
+<<<<<<< HEAD
     public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException, InterruptedException {
+=======
+    @Override
+    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
+>>>>>>> master
         try {
             logger.debug("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
             validateConnectionState();
@@ -360,6 +368,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return Math.min(MAX_TIMEOUT, currentTimeout * TIMEOUT_MULTIPLIER + jitterRandom.nextDouble());
     }
 
+    @Override
     public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
         try {
             logger.debug("Calling method [" + methodName + "(" + (type != null ? type.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
@@ -407,7 +416,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
      * @throws CouldNotPerformException
      * @throws java.lang.InterruptedException
      */
+<<<<<<< HEAD
     public M requestStatus() throws CouldNotPerformException, InterruptedException {
+=======
+    @Override
+    public M requestStatus() throws CouldNotPerformException {
+>>>>>>> master
         try {
             logger.debug("requestStatus updated.");
             M dataUpdate;
