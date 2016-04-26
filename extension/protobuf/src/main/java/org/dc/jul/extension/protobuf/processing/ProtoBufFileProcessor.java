@@ -17,12 +17,12 @@ package org.dc.jul.extension.protobuf.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -36,11 +36,11 @@ import com.google.gson.JsonParser;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message.Builder;
 import com.googlecode.protobuf.format.JsonFormat;
+import java.io.File;
+import org.apache.commons.io.FileUtils;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.CouldNotTransformException;
 import org.dc.jul.processing.FileProcessor;
-import java.io.File;
-import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -51,6 +51,7 @@ import org.apache.commons.io.FileUtils;
  */
 public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.Builder<MB>> implements FileProcessor<DT> {
 
+    private static final String UTF_8 = "UTF-8";
     private final JsonParser parser;
     private final Gson gson;
     private final TypeToMessageTransformer<DT, M, MB> transformer;
@@ -64,7 +65,7 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
     @Override
     public DT deserialize(final File file, final DT data) throws CouldNotPerformException {
         try {
-            JsonFormat.merge(FileUtils.readFileToString(file), transformer.transform(data).newBuilderForType());
+            JsonFormat.merge(FileUtils.readFileToString(file, UTF_8), transformer.transform(data).newBuilderForType());
             return data;
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not deserialize " + file + " into " + data + "!", ex);
@@ -79,9 +80,9 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
             // format
             JsonElement el = parser.parse(jsonString);
             jsonString = gson.toJson(el);
-            
+
             //write
-            FileUtils.writeStringToFile(file, jsonString, "UTF-8");
+            FileUtils.writeStringToFile(file, jsonString, UTF_8);
             return file;
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not serialize " + transformer + " into " + file + "!", ex);
@@ -92,7 +93,7 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
     public DT deserialize(File file) throws CouldNotPerformException {
         MB builder = transformer.newBuilderForType();
         try {
-            JsonFormat.merge(FileUtils.readFileToString(file), builder);
+            JsonFormat.merge(FileUtils.readFileToString(file, UTF_8), builder);
             return transformer.transform((M) builder.build());
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not deserialize " + file + " into " + builder + "!", ex);
