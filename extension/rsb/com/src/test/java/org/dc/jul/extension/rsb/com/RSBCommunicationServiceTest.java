@@ -105,7 +105,7 @@ public class RSBCommunicationServiceTest {
         remoteService.addObserver(new Observer<LocationRegistry>() {
 
             @Override
-            public void update(Observable<LocationRegistry> source, LocationRegistry data) throws Exception {
+            public void update(final Observable<LocationRegistry> source, LocationRegistry data) throws Exception {
                 if (data.getLocationConfigCount() == 1 && data.getLocationConfig(0).getId().equals("Location1")) {
                     firstSync = true;
                     synchronized (waitForDataSync) {

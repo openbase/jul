@@ -32,7 +32,7 @@ import org.dc.jul.iface.Shutdownable;
  * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  * @param <M>
  */
-public interface Remote<M> extends Shutdownable, Activatable {
+public interface Remote<M> extends Shutdownable, Activatable, Observable<M> {
 
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException;
 
