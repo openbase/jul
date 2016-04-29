@@ -483,7 +483,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         validateInitialization();
         //TODO mpohling: remove after connection handshake is implemented.
         if (!isActive()) {
-            throw new InvalidStateException("Could not reach server!");
+            throw new InvalidStateException("Could not reach server! Remote is not activated!");
         }
     }
 
