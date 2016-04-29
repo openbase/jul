@@ -163,6 +163,9 @@ public class ScopeGenerator {
         // add location scope
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
+        // add type 'device'
+        scope.addComponent(convertIntoValidScopeComponent("device"));
+
         // add device scope
         scope.addComponent(convertIntoValidScopeComponent(deviceConfig.getLabel()));
 
