@@ -17,12 +17,12 @@ package org.dc.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -32,14 +32,14 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -60,6 +60,7 @@ import org.dc.jul.extension.rsb.scope.ScopeTransformer;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.pattern.Remote;
+import org.dc.jul.schedule.SyncObject;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,21 +91,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     private RSBRemoteServerInterface remoteServer;
     private final Handler mainHandler;
 
-    // TODO mpohling: Replace by Global executorService!
-    private final ExecutorService executorService;
-    private final List<Future<Void>> syncTasks;
+//    private final List<CompletableFuture<M>> syncTasks;
+    private final SyncObject syncMonitor = new SyncObject(this);
+    private CompletableFuture<M> syncFuture;
+    private ForkJoinTask<M> syncTask;
 
     protected Scope scope;
     private M data;
     private boolean initialized;
+    private Class<M> messageClass;
 
     public RSBRemoteService() {
         this.mainHandler = new InternalUpdateHandler();
         this.initialized = false;
         this.remoteServer = new NotInitializedRSBRemoteServer();
         this.listener = new NotInitializedRSBListener();
-        this.executorService = Executors.newCachedThreadPool();
         this.syncTasks = new ArrayList<>();
+        this.messageClass = detectMessageClass();
     }
 
     public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
@@ -135,6 +138,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     /**
      * Method is called after communication initialization.
      * You can overwrite this method to trigger any component specific initialization.
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -213,7 +217,54 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                     if (data == WatchDog.ServiceState.Running) {
 
                         // Sync data after service start.
-                        syncTasks.add(executorService.submit(new Callable<Void>() {
+//                        Future<Rep> result = new Future<>();
+//    Future.runAsync(() -> {
+//
+//        transporter.write(req);
+//        try {
+//            Rep rep = responseQueue.take();
+//            result.complete(rep);
+//        } catch (InterruptedException e) {
+//            result.completeExceptionally(e);
+//            Thread.currentThread().interrupt();
+//        } catch (Exception e) {
+//            result.completeExceptionally(e);
+//        }
+//
+//    }, executorService);
+//    return result;
+                        syncTasks.add(Future.runAsync(() -> {
+                            try {
+                                Rep rep = responseQueue.take();
+                                result.complete(rep);
+                            } catch (InterruptedException e) {
+                                result.completeExceptionally(e);
+                                Thread.currentThread().interrupt();
+                            } catch (Exception e) {
+                                result.completeExceptionally(e);
+                            }
+                        }
+                            new Supplier<Void>
+
+
+
+
+
+
+
+
+                            () {
+
+                            @Override
+                            public Void get
+
+
+
+                        () {
+//                                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                            }
+                        }));
+                        syncTasks.add(Future.run(new Callable<Void>() {
 
                             @Override
                             public Void call() throws Exception {
@@ -232,6 +283,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope + "]!", ex);
         }
+    }
+
+    public Class<M> getMessageClass() {
+        return messageClass;
     }
 
     public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
@@ -329,12 +384,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public final static double TIMEOUT_MULTIPLIER = 1.2;
     public final static double MAX_TIMEOUT = 30;
 
-<<<<<<< HEAD
-    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException, InterruptedException {
-=======
     @Override
-    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
->>>>>>> master
+    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException, InterruptedException {
         try {
             logger.debug("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
             validateConnectionState();
@@ -379,67 +430,95 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    protected Future<Object> sync() throws CouldNotPerformException {
-        final Future<Object> dataSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
+    /**
+     * This method synchronizes this remote instance with the main controller and returns the new data object.
+     * This action can not be canceled.
+     *
+     * @return A CompletableFuture which gives feedback about the successful synchronization.
+     * @throws CouldNotPerformException In case the sync could not be triggered an CouldNotPerformException will be thrown.
+     */
+    protected CompletableFuture<M> sync() throws CouldNotPerformException {
+        try {
+            synchronized (syncMonitor) {
 
-        //TODO mpohling: switch to Future<M> return value by defining message class via construtor.
+                // Check if sync is in process.
+                if (syncFuture != null) {
+                    return syncFuture;
+                }
+
+                // Create new sync process
+                syncFuture = new CompletableFuture();
+                syncTask = requestData();
+            }
+        }
+
+        CompletableFuture<M> completableFuture
+                = ForkJoinTask < M > sync = requestData();
+        syncTasks.add(completableFuture);
+        syncTasks.removeIf(completableFuture<M>::isDone);
+        requestStatusFuture.
+
+
+
+        return requestStatusFuture;
+
         // sumbit task for result processing
-        executorService.submit(new Callable<Void>() {
+        ForkJoinPool.commonPool().submit(new Callable<Void>() {
 
             @Override
             public Void call() throws Exception {
                 try {
                     applyDataUpdate((M) dataSyncFuture.get(1, TimeUnit.MINUTES));
-                } catch (Exception ex) {
                     dataSyncFuture.cancel(true);
-                    if (ex instanceof InterruptedException) {
-                        // BUG! InterruptedException is catched!!! // BUG BUG BUB BUG
-                        throw ex;
-//                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.DEBUG);
-                    } else {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.WARN);
-                    }
+                } catch (InterruptedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.WARN);
                 }
                 return null;
             }
         });
-        return dataSyncFuture;
+        return completableFuture;
     }
 
     /**
-     * Triggers a server - remote data sync and returns the new acquired data. All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
+     * Triggers a server - remote data sync and returns the new acquired data.
+     * All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
      * changes, you can use this method to get instantly a data object with all applied changes.
-     *
-     * Note: This method blocks until the new data is acquired! In case the of no server response an exception is thrown after 15sec timeout.
      *
      * @return fresh synchronized data object.
      * @throws CouldNotPerformException
-     * @throws java.lang.InterruptedException
      */
-<<<<<<< HEAD
-    public M requestStatus() throws CouldNotPerformException, InterruptedException {
-=======
     @Override
-    public M requestStatus() throws CouldNotPerformException {
->>>>>>> master
+    public ForkJoinTask<M> requestData() throws CouldNotPerformException {
+//        try {
+        logger.debug("requestData updated.");
+
         try {
-            logger.debug("requestStatus updated.");
-            M dataUpdate;
-            try {
-                dataUpdate = (M) callMethodAsync(RPC_REQUEST_STATUS).get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException ex) {
-                throw ex;
-            } catch (ExecutionException ex) {
-                throw new CouldNotPerformException("Local server could not process request!", ex);
-            }
+            return ForkJoinPool.commonPool().submit(new Callable<M>() {
 
-            if (dataUpdate == null) {
-                throw new InvalidStateException("Server result invalid!");
-            }
+                @Override
+                public M call() throws Exception {
+                    Future<M> internalFuture = null;
+                    M dataUpdate;
+                    try {
+                        internalFuture = callMethodAsync(RPC_REQUEST_STATUS, messageClass);
+                        dataUpdate = internalFuture.get();
 
-            applyDataUpdate(dataUpdate);
-            return dataUpdate;
-        } catch (CouldNotPerformException | java.util.concurrent.TimeoutException ex) {
+                        if (dataUpdate == null) {
+                            throw new InvalidStateException("Server result invalid!");
+                        }
+                        applyDataUpdate(dataUpdate);
+                        return dataUpdate;
+                    } catch (InterruptedException ex) {
+                        if (internalFuture != null) {
+                            internalFuture.cancel(true);
+                        }
+                        throw ex;
+                    }
+                }
+            });
+        } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not request the current status.", ex);
         }
     }
@@ -454,7 +533,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         } catch (CouldNotPerformException | InterruptedException ex) {
             logger.error("Could not deactivate remote service!", ex);
         }
-        executorService.shutdownNow();
         super.shutdown();
     }
 
@@ -463,26 +541,40 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
      *
      * @return
      * @throws CouldNotPerformException
-     * @throws java.lang.InterruptedException
      */
-    public M getData() throws CouldNotPerformException, InterruptedException {
+    public CompletableFuture<M> getDataFuture() throws CouldNotPerformException {
         try {
             if (data == null) {
-                return requestStatus();
+                return sync();
             }
-            return data;
+            return CompletableFuture.completedFuture(data);
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("data", ex);
         }
+    }
+
+    /**
+     * Method returns the data object.
+     *
+     * In case the data is not available a NotAvailableException is thrown.
+     * Use method getDataFuture()
+     * @return
+     * @throws CouldNotPerformException
+     */
+    public M getData() throws CouldNotPerformException {
+        if (data == null) {
+            throw new NotAvailableException("data");
+        }
+        return data;
     }
 
     public boolean isDataAvailable() {
         return data != null;
     }
 
-    public Class detectMessageClass() {
+    public final Class<M> detectMessageClass() {
         ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
-        return (Class) parameterizedType.getActualTypeArguments()[0];
+        return (Class<M>) parameterizedType.getActualTypeArguments()[0];
     }
 
     protected final Object getField(String name) throws CouldNotPerformException {
@@ -510,10 +602,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             throw new InvalidStateException("Remote communication service not initialized!");
         }
     }
+
     public ScopeType.Scope getScope() throws NotAvailableException {
         try {
             return ScopeTransformer.transform(scope);
-        } catch(CouldNotTransformException ex) {
+        } catch (CouldNotTransformException ex) {
             throw new NotAvailableException("scope", ex);
         }
     }
@@ -546,8 +639,25 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    private synchronized void applyDataUpdate(final M data) {
+    private void applyDataUpdate(final M data) {
         this.data = data;
+        CompletableFuture<M> currentSyncFuture = null;
+        ForkJoinTask<M> currentSyncTask = null;
+
+        synchronized (syncMonitor) {
+            // Check if sync is in process.
+            if (syncFuture != null) {
+                currentSyncFuture = syncFuture;
+                currentSyncTask = syncTask;
+                syncFuture = null;
+                syncTask = null;
+            }
+        }
+
+        if(currentSyncFuture != null && currentSyncTask != null) {
+            currentSyncFuture.complete(data);
+            currentSyncTask.complete(data);
+        }
 
         try {
             notifyUpdated(data);
@@ -559,7 +669,5 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger, LogLevel.ERROR);
         }
-
-        skipSyncTasks();
     }
 }

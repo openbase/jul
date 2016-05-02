@@ -21,7 +21,7 @@ package org.dc.jul.extension.openhab.binding;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
@@ -187,7 +187,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
             validateCommand(command);
             if (hardwareSimulationMode) {
                 internalReceiveUpdate(command);
-                return CompletableFuture.completedFuture(null);
+                return Future.completedFuture(null);
             }
             return RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
@@ -201,7 +201,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
             validateCommand(command);
             if (hardwareSimulationMode) {
                 internalReceiveUpdate(command);
-                return CompletableFuture.completedFuture(null);
+                return Future.completedFuture(null);
             }
             return RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
@@ -214,7 +214,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
-                return CompletableFuture.completedFuture(null);
+                return Future.completedFuture(null);
             }
             return RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {

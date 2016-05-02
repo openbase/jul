@@ -30,6 +30,7 @@ package org.dc.jul.extension.rsb.com;
  */
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.Future;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -49,7 +50,9 @@ import rsb.patterns.Callback;
 public class RPCHelper {
 
 //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
-    public static <T> void registerInterface(final Class<? super T> interfaceClass, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
+
+
+    public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
 
         for (final Method method : interfaceClass.getMethods()) {
@@ -95,11 +98,11 @@ public class RPCHelper {
         }
     }
 
-    public static Future callRemoteMethod(final RSBRemoteService remote) throws CouldNotPerformException {
+    public static Future<Object> callRemoteMethod(final RSBRemoteService remote) throws CouldNotPerformException {
         return callRemoteMethod(null, remote, Object.class, 3);
     }
 
-    public static Future callRemoteMethod(final Object argument, final RSBRemoteService remote) throws CouldNotPerformException {
+    public static Future<Object> callRemoteMethod(final Object argument, final RSBRemoteService remote) throws CouldNotPerformException {
         return callRemoteMethod(argument, remote, Object.class, 3);
     }
 
@@ -127,8 +130,8 @@ public class RPCHelper {
             } catch (NullPointerException | IndexOutOfBoundsException ex) {
                 throw new CouldNotPerformException("Could not detect method name!");
             }
-            return (Future<RETURN>) remote.callMethodAsync(methodName, argument);
-        } catch (Exception ex) {
+            return remote.callMethodAsync(methodName, argument);
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex);
         }
     }
