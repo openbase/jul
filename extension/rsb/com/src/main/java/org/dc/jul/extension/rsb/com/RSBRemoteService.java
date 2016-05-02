@@ -31,7 +31,6 @@ package org.dc.jul.extension.rsb.com;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
@@ -100,14 +99,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     protected Scope scope;
     private M data;
     private boolean initialized;
-    private Class<M> messageClass;
+    private final Class<M> messageClass;
 
     public RSBRemoteService() {
         this.mainHandler = new InternalUpdateHandler();
         this.initialized = false;
         this.remoteServer = new NotInitializedRSBRemoteServer();
         this.listener = new NotInitializedRSBListener();
-        this.syncTasks = new ArrayList<>();
         this.messageClass = detectMessageClass();
     }
 
@@ -254,6 +252,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
 
 
+
+
+
+
+
+
+
                             () {
 
                             @Override
@@ -286,6 +291,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    @Override
     public Class<M> getMessageClass() {
         return messageClass;
     }
@@ -319,10 +325,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         } catch (InvalidStateException ex) {
             throw new CouldNotPerformException("Could not deactivate " + getClass().getSimpleName() + "!", ex);
         }
-    }
-
-    private void skipSyncTasks() {
-        syncTasks.forEach((Future<Void> task) -> task.cancel(true));
     }
 
     private void activateListener() throws InterruptedException {
@@ -433,12 +435,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     /**
      * This method synchronizes this remote instance with the main controller and returns the new data object.
-     * This action can not be canceled.
+     * Normally, all server data changes are automatically synchronized to all remote instances. In case you have triggered many server
+     * changes, this changes are sequentially applied. With this method you can force the sync to get instantly a data object with all applied changes.
+     * This action can not be canceled! Use this method with caution because high frequently calls will reduce the network performance!
+     * The preferred by to access the data object
      *
      * @return A CompletableFuture which gives feedback about the successful synchronization.
      * @throws CouldNotPerformException In case the sync could not be triggered an CouldNotPerformException will be thrown.
      */
-    protected CompletableFuture<M> sync() throws CouldNotPerformException {
+    @Override
+    public CompletableFuture<M> requestData() throws CouldNotPerformException {
         try {
             synchronized (syncMonitor) {
 
@@ -449,78 +455,65 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
                 // Create new sync process
                 syncFuture = new CompletableFuture();
-                syncTask = requestData();
+                syncTask = sync();
+                return syncFuture;
             }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not request data!", ex);
         }
-
-        CompletableFuture<M> completableFuture
-                = ForkJoinTask < M > sync = requestData();
-        syncTasks.add(completableFuture);
-        syncTasks.removeIf(completableFuture<M>::isDone);
-        requestStatusFuture.
-
-
-
-        return requestStatusFuture;
-
-        // sumbit task for result processing
-        ForkJoinPool.commonPool().submit(new Callable<Void>() {
-
-            @Override
-            public Void call() throws Exception {
-                try {
-                    applyDataUpdate((M) dataSyncFuture.get(1, TimeUnit.MINUTES));
-                    dataSyncFuture.cancel(true);
-                } catch (InterruptedException ex) {
-                    throw ex;
-                } catch (Exception ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.WARN);
-                }
-                return null;
-            }
-        });
-        return completableFuture;
     }
 
     /**
-     * Triggers a server - remote data sync and returns the new acquired data.
-     * All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
-     * changes, you can use this method to get instantly a data object with all applied changes.
+     * Method forces a server - remote data sync and returns the new acquired data.
+     * Can be useful for initial data sync or data sync after reconnection.
      *
      * @return fresh synchronized data object.
      * @throws CouldNotPerformException
      */
-    @Override
-    public ForkJoinTask<M> requestData() throws CouldNotPerformException {
-//        try {
-        logger.debug("requestData updated.");
+    protected ForkJoinTask<M> sync() throws CouldNotPerformException {
+        logger.info("Synchronization of Remote[" + this + "] triggered...");
 
         try {
-            return ForkJoinPool.commonPool().submit(new Callable<M>() {
-
-                @Override
-                public M call() throws Exception {
-                    Future<M> internalFuture = null;
-                    M dataUpdate;
-                    try {
-                        internalFuture = callMethodAsync(RPC_REQUEST_STATUS, messageClass);
-                        dataUpdate = internalFuture.get();
-
-                        if (dataUpdate == null) {
-                            throw new InvalidStateException("Server result invalid!");
-                        }
-                        applyDataUpdate(dataUpdate);
-                        return dataUpdate;
-                    } catch (InterruptedException ex) {
-                        if (internalFuture != null) {
-                            internalFuture.cancel(true);
-                        }
-                        throw ex;
-                    }
-                }
-            });
+            SyncTaskCallable<M> syncCallable = new SyncTaskCallable<>();
+            final ForkJoinTask<M> currentSyncTask = ForkJoinPool.commonPool().submit(syncCallable);
+            syncCallable.setRelatedFuture(currentSyncTask);
+            return currentSyncTask;
         } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not request the current status.", ex);
+        }
+    }
+
+    private class SyncTaskCallable<M> implements Callable<M> {
+
+        ForkJoinTask<M> relatedFuture;
+
+        public void setRelatedFuture(ForkJoinTask<M> relatedFuture) {
+            this.relatedFuture = relatedFuture;
+        }
+
+        @Override
+        public M call() throws Exception {
+            Future<M> internalFuture = null;
+            M dataUpdate;
+            try {
+                internalFuture = callMethodAsync(RPC_REQUEST_STATUS, messageClass);
+                dataUpdate = internalFuture.get();
+
+                if (dataUpdate == null) {
+                    throw new InvalidStateException("Server result invalid!");
+                }
+
+                // skip if sync was already performed by global data update.
+                if (relatedFuture == null || !relatedFuture.isCompletedNormally()) {
+                    applyDataUpdate(dataUpdate);
+                }
+                return dataUpdate;
+            } catch (InterruptedException ex) {
+                if (internalFuture != null) {
+                    internalFuture.cancel(true);
+                }
+                throw ex;
+            }
         }
     }
 
@@ -538,15 +531,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     /**
-     * Returns the data object of the given remote.
+     * Returns a future of the data object.
+     * This method can be useful after remote initialization in case the data object was not received jet.
+     * The future can be used to wait for the data object.
      *
-     * @return
-     * @throws CouldNotPerformException
+     * @return a future object delivering the data if available.
+     * @throws CouldNotPerformException In case something went wrong a CouldNotPerformException is thrown.
      */
     public CompletableFuture<M> getDataFuture() throws CouldNotPerformException {
         try {
             if (data == null) {
-                return sync();
+                return requestData();
             }
             return CompletableFuture.completedFuture(data);
         } catch (CouldNotPerformException ex) {
@@ -555,10 +550,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     /**
-     * Method returns the data object.
+     * Method returns the data object of this remote which is synchronized with the server data in background.
      *
-     * In case the data is not available a NotAvailableException is thrown.
+     * In case the data was never received not available a NotAvailableException is thrown.
      * Use method getDataFuture()
+     *
      * @return
      * @throws CouldNotPerformException
      */
@@ -569,11 +565,18 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return data;
     }
 
+    /**
+     * Check if the data object is already available.
+     *
+     * @return
+     */
     public boolean isDataAvailable() {
         return data != null;
     }
 
-    public final Class<M> detectMessageClass() {
+
+
+    private final Class<M> detectMessageClass() {
         ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
         return (Class<M>) parameterizedType.getActualTypeArguments()[0];
     }
@@ -617,8 +620,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return getClass().getSimpleName() + "[scope:" + scope + "]";
     }
 
-    public abstract void notifyUpdated(M data) throws CouldNotPerformException;
-
     private class InternalUpdateHandler implements Handler {
 
         @Override
@@ -628,7 +629,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 Object data = event.getData();
                 try {
                     applyDataUpdate((M) data);
-                    return;
                 } catch (ClassCastException ex) {
                     // Thats not the right internal data type. Skip update...
                 }
@@ -645,8 +645,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         CompletableFuture<M> currentSyncFuture = null;
         ForkJoinTask<M> currentSyncTask = null;
 
+        // Check if sync is in process.
         synchronized (syncMonitor) {
-            // Check if sync is in process.
             if (syncFuture != null) {
                 currentSyncFuture = syncFuture;
                 currentSyncTask = syncTask;
@@ -655,8 +655,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             }
         }
 
-        if(currentSyncFuture != null && currentSyncTask != null) {
+        // Notify data update
+        if (currentSyncFuture != null) {
             currentSyncFuture.complete(data);
+        }
+
+        if (currentSyncTask != null) {
             currentSyncTask.complete(data);
         }
 

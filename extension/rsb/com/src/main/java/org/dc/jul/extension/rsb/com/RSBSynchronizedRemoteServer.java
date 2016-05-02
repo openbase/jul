@@ -28,8 +28,8 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Future;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Factory;
 import rsb.InitializeException;
+import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.patterns.RemoteServer;
@@ -113,7 +114,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return FutureProcessor.toFuture(getParticipant().callAsync(name, event));
             }
-        } catch (CouldNotPerformException ex) {
+        } catch (RSBException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
         }
     }
@@ -127,7 +128,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name);
             }
-        } catch (CouldNotPerformException ex) {
+        } catch (RSBException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
         }
     }
@@ -141,7 +142,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name, data);
             }
-        } catch (CouldNotPerformException ex) {
+        } catch (RSBException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
         }
     }

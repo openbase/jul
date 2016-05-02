@@ -21,6 +21,7 @@ package org.dc.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
@@ -32,11 +33,11 @@ import org.dc.jul.iface.Shutdownable;
  * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  * @param <M>
  */
-public interface Remote<M> extends Shutdownable, Activatable, Observable<M> {
+public interface Remote<M> extends Shutdownable, Activatable, Observable<M>, ScopeProvider {
 
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException;
 
-    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException;
+    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException, InterruptedException;
 
     public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException;
 
@@ -44,19 +45,46 @@ public interface Remote<M> extends Shutdownable, Activatable, Observable<M> {
 
     public void init(final String scope) throws InitializationException, InterruptedException;
 
+    public void notifyUpdated(M data) throws CouldNotPerformException;
+
+    /**
+     * Method returns the class of the data object.
+     * @return
+     */
+    public Class<M> getDataClass();
+
+    /**
+     * Method returns the data object of this remote which is synchronized with the server data in background.
+     *
+     * In case the data was never received not available a NotAvailableException is thrown.
+     * Use method getDataFuture()
+     *
+     * @return
+     * @throws CouldNotPerformException
+     */
+    public M getData() throws CouldNotPerformException;
+
+    /**
+     * Returns a future of the data object.
+     * This method can be useful after remote initialization in case the data object was not received jet.
+     * The future can be used to wait for the data object.
+     *
+     * @return a future object delivering the data if available.
+     * @throws CouldNotPerformException In case something went wrong a CouldNotPerformException is thrown.
+     */
+    public CompletableFuture<M> getDataFuture() throws CouldNotPerformException;
+
     public boolean isConnected();
 
     /**
-     * public * Triggers a server - remote data sync and returns the new
-     * acquired data. All server data changes are synchronized automatically to
-     * all remote instances. In case you have triggered many server public *
-     * changes, you can use this method to get instantly a data object with all
-     * applied changes. public * public * Note: This method blocks until the new
-     * data is acquired! public * public * @return fresh synchronized data
-     * object. public * @throws CouldNotPerformException public
+     * This method synchronizes this remote instance with the main controller and returns the new data object.
+     * Normally, all server data changes are automatically synchronized to all remote instances. In case you have triggered many server
+     * changes, this changes are sequentially applied. With this method you can force the sync to get instantly a data object with all applied changes.
+     * This action can not be canceled! Use this method with caution because high frequently calls will reduce the network performance!
+     * The preferred by to access the data object
      *
-     * @return
-     * @throws org.dc.jul.exception.CouldNotPerformException
+     * @return A CompletableFuture which gives feedback about the successful synchronization.
+     * @throws CouldNotPerformException In case the sync could not be triggered an CouldNotPerformException will be thrown.
      */
-    public Future<M> requestStatus() throws CouldNotPerformException;
+    public CompletableFuture<M> requestData() throws CouldNotPerformException {
 }
