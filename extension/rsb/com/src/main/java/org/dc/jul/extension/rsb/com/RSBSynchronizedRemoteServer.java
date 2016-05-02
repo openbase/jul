@@ -17,12 +17,12 @@ package org.dc.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -35,7 +35,6 @@ import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
-import org.dc.jul.processing.FutureProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -112,7 +111,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
                 throw new NotAvailableException("name");
             }
             synchronized (participantLock) {
-                return FutureProcessor.toFuture(getParticipant().callAsync(name, event));
+                return getParticipant().callAsync(name, event);
             }
         } catch (RSBException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);

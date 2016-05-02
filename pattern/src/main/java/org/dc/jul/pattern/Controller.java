@@ -68,11 +68,16 @@ public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable
      *
 //     * @param consumer
 //     * @return a new builder wrapper with a locked builder instance.
+     * @return 
      */
     //TODO: Should be implemented as interface.
 //    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
 
-    public Class<M> getMessageClass();
+    /**
+     * 
+     * @return 
+     */
+    public Class<M> getDataClass();
 
     public ConnectionState getState();
 

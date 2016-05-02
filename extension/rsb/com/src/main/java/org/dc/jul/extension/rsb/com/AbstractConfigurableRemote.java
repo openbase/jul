@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -63,7 +58,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
     }
 
     @Override
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException, InterruptedException {
+    public CONFIG updateConfig(CONFIG config) throws CouldNotPerformException {
         this.config = (CONFIG) config.toBuilder().mergeFrom(config).build();
         this.configObservable.notifyObservers(config);
         return this.config;

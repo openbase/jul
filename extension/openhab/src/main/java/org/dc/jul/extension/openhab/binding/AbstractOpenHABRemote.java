@@ -21,7 +21,7 @@ package org.dc.jul.extension.openhab.binding;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
@@ -182,41 +182,41 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
     }
 
     @Override
-    public Future postCommand(final OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> postCommand(final OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
                 internalReceiveUpdate(command);
-                return Future.completedFuture(null);
+                return CompletableFuture.completedFuture(null);
             }
-            return RPCHelper.callRemoteMethod(command, this);
+            return (Future) RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not post Command[" + command + "]!", ex);
         }
     }
 
     @Override
-    public Future sendCommand(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> sendCommand(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
                 internalReceiveUpdate(command);
-                return Future.completedFuture(null);
+                return CompletableFuture.completedFuture(null);
             }
-            return RPCHelper.callRemoteMethod(command, this);
+            return (Future) RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not send Command[" + command + "]!", ex);
         }
     }
 
     @Override
-    public Future postUpdate(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> postUpdate(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
-                return Future.completedFuture(null);
+                return CompletableFuture.completedFuture(null);
             }
-            return RPCHelper.callRemoteMethod(command, this);
+            return (Future) RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not post Update[" + command + "]!", ex);
         }

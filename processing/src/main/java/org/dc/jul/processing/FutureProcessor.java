@@ -1,9 +1,28 @@
 package org.dc.jul.processing;
 
+/*
+ * #%L
+ * JUL Processing
+ * %%
+ * Copyright (C) 2015 - 2016 DivineCooperation
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Lesser Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Lesser Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ * #L%
+ */
 import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -12,45 +31,15 @@ import java.util.concurrent.Future;
 public class FutureProcessor {
 
     /**
-     * Method transforms a callable into a Future object.
+     * Method transforms a callable into a CompletableFuture object.
      *
      * @param <T>
-     * @param future the future object to wrap.
+     * @param callable the callable to wrap.
      * @return the Future representing the call state.
      */
-    public static <T> Future<T> toFuture(final Future<T> internalFuture) {
-        ForkJoinTask<Object> submit = ForkJoinPool.commonPool().submit(null);
-        submit.isCompletedNormally()
-        Future<T> future = new Future<>();
-        Future.runAsync(() -> {
-            try {
-                future.complete(internalFuture.get());
-            } catch (InterruptedException e) {
-                future.completeExceptionally(e);
-                Thread.currentThread().interrupt();
-            } catch (Exception e) {
-                future.completeExceptionally(e);
-            }
-
-        });
-        return future;
-//        Future<T> future = new Future<>();
-//        future.
-//        return Future.supplyAsync(() -> {
-//            try {
-//                return future.get();
-//            } catch (InterruptedException ex) {
-//                Thread.currentThread().interrupt();
-//                throw new CouldNotProcessException(ex);
-//            } catch (ExecutionException ex) {
-//                throw new CouldNotProcessException(ex);
-//            }
-//        });
-    }
-
-     public static <T> Future<T> toFuture(final Callable<T> callable) {
-        Future<T> future = new Future<>();
-        Future.runAsync(() -> {
+    public static <T> CompletableFuture<T> toFuture(final Callable<T> callable) {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        CompletableFuture.runAsync(() -> {
             try {
                 future.complete(callable.call());
             } catch (InterruptedException e) {
@@ -59,28 +48,7 @@ public class FutureProcessor {
             } catch (Exception e) {
                 future.completeExceptionally(e);
             }
-
         });
         return future;
     }
-
-//    /**
-//     * Method transforms a callable into a Future object.
-//     *
-//     * @param <T>
-//     * @param callable the callable to wrap.
-//     * @return the Future representing the call state.
-//     */
-//    public static <T> Future<T> toFuture(final Callable<T> callable) {
-//        return Future.supplyAsync(() -> {
-//            try {
-//                return callable.call();
-//            } catch (InterruptedException ex) {
-//                Thread.currentThread().interrupt();
-//                throw new CouldNotProcessException(ex);
-//            } catch (Exception ex) {
-//                throw new CouldNotProcessException(ex);
-//            }
-//        });
-//    }
 }

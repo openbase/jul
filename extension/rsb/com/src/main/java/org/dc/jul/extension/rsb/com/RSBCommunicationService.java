@@ -30,6 +30,7 @@ package org.dc.jul.extension.rsb.com;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -77,8 +78,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         RSBSharedConnectionConfig.load();
     }
 
-
-
     public final static Scope SCOPE_SUFFIX_CONTROL = new Scope("/ctrl");
     public final static Scope SCOPE_SUFFIX_STATUS = new Scope("/status");
 
@@ -114,7 +113,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
-            this.messageClass = detectMessageClass();
+            this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
             this.initialized = false;
@@ -173,7 +172,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         ParticipantConfig internalParticipantConfig = participantConfig;
 
         try {
-            // activate transport communication set by the JPRSBTransport porperty.
+            // activate transport communication set by the JPRSBTransport property.
             enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
@@ -196,6 +195,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // register rpc methods.
             server.addMethod(RPC_REQUEST_STATUS, (Event request) -> {
                 try {
+                    logger.info("incomming data request...");
                     return new Event(messageClass, requestStatus());
                 } catch (CouldNotPerformException ex) {
                     throw new Callback.UserCodeException(ex);
@@ -212,17 +212,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     if (data == WatchDog.ServiceState.Running) {
 
                         // Sync data after service start.
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    serverWatchDog.waitForActivation();
-                                    notifyChange();
-                                } catch (InterruptedException | CouldNotPerformException ex) {
-                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
-                                }
+                        ForkJoinPool.commonPool().submit(() -> {
+                            try {
+                                serverWatchDog.waitForActivation();
+                                logger.info("trigger initial sync");
+                                notifyChange();
+                            } catch (InterruptedException | CouldNotPerformException ex) {
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
                             }
-                        }.start();
+                        });
                     }
                 }
             });
@@ -238,6 +236,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * Method is called after communication initialization.
      * You can overwrite this method to trigger any component specific initialization.
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -245,7 +244,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         // overwrite for specific post initialization tasks.
     }
 
-    private Class<M> detectMessageClass() throws CouldNotPerformException {
+    private Class<M> detectDataClass() throws CouldNotPerformException {
         try {
             @SuppressWarnings("unchecked")
             Class<M> clazz = (Class<M>) dataBuilder.getClass().getEnclosingClass();
@@ -259,7 +258,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @Override
-    public Class<M> getMessageClass() {
+    public Class<M> getDataClass() {
         return messageClass;
     }
 
@@ -366,14 +365,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public void notifyChange() throws CouldNotPerformException {
-        logger.debug("Notify data change of " + this);
+        logger.info("Notify data change of " + this);
         checkInitialization();
         if (!informer.isActive()) {
             logger.debug("Skip update notification because connection not established.");
             return;
         }
         try {
-                informer.send(getData());
+            informer.send(getData());
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
@@ -468,7 +467,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public M requestStatus() throws CouldNotPerformException {
         //TODO switch to debug later
-        logger.debug("requestStatus of " + this);
+        logger.info("requestStatus of " + this);
         try {
             return getData();
         } catch (RuntimeException ex) {

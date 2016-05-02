@@ -92,7 +92,7 @@ public class RSBCommunicationServiceTest {
 
     @Test(timeout = 20000)
     public void testInitialSync() throws Exception {
-        String scope = "/test/synchronistion";
+        String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
         LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
