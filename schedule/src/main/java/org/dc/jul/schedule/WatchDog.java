@@ -31,13 +31,14 @@ package org.dc.jul.schedule;
 
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.MultiException;
-import org.dc.jul.pattern.Observable;
+import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Activatable;
+import org.dc.jul.pattern.Observable;
 
 /**
  *
@@ -62,14 +63,14 @@ public class WatchDog implements Activatable {
     private Minder minder;
     private ServiceState serviceState = ServiceState.Unknown;
 
-    private final Observable<ServiceState> serviceStateObserable;
+    private final ObservableImpl<ServiceState> serviceStateObserable;
 
     public WatchDog(final Activatable task, final String serviceName) throws InstantiationException {
         try {
 
             this.service = task;
             this.serviceName = serviceName;
-            this.serviceStateObserable = new Observable<>();
+            this.serviceStateObserable = new ObservableImpl<>();
             this.activationLock = new SyncObject(serviceName + "WatchDogLock");
 
             if (task == null) {
@@ -155,7 +156,7 @@ public class WatchDog implements Activatable {
             addObserver(new Observer<ServiceState>() {
 
                 @Override
-                public void update(Observable<ServiceState> source, ServiceState data) throws Exception {
+                public void update(final Observable<ServiceState> source, ServiceState data) throws Exception {
                     if (data == ServiceState.Running) {
                         synchronized (activationLock) {
                             activationLock.notifyAll();

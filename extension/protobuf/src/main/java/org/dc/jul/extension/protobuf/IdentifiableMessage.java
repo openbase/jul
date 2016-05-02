@@ -44,7 +44,7 @@ import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.extension.protobuf.container.MessageContainer;
 import org.dc.jul.iface.Identifiable;
-import org.dc.jul.pattern.Observable;
+import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +71,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     }
 
     private M internalMessage;
-    private Observable<IdentifiableMessage<KEY, M, MB>> observable;
+    private ObservableImpl<IdentifiableMessage<KEY, M, MB>> observable;
 
     public IdentifiableMessage(IdentifiableMessage<KEY, M, MB> identifiableMessage) throws InstantiationException {
         this(identifiableMessage.getMessage());
@@ -88,7 +88,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             }
 
             this.internalMessage = message;
-            this.observable = new Observable<>();
+            this.observable = new ObservableImpl<>();
             this.setupId(idGenerator);
         } catch (CouldNotPerformException ex) {
             throw new org.dc.jul.exception.InstantiationException(this, ex);
@@ -107,7 +107,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
                 throw new InvalidStateException("message does not contain Field[" + TYPE_FIELD_ID + "]");
             }
 
-            this.observable = new Observable<>();
+            this.observable = new ObservableImpl<>();
         } catch (CouldNotPerformException ex) {
             throw new org.dc.jul.exception.InstantiationException(this, ex);
         }

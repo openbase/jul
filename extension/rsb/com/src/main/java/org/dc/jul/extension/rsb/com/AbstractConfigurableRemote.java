@@ -33,7 +33,7 @@ import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
 import static org.dc.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
 import org.dc.jul.pattern.ConfigurableRemote;
-import org.dc.jul.pattern.Observable;
+import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import rst.rsb.ScopeType;
 
@@ -46,10 +46,10 @@ import rst.rsb.ScopeType;
 public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG> {
 
     protected CONFIG config;
-    private final Observable<CONFIG> configObservable;
+    private final ObservableImpl<CONFIG> configObservable;
 
     public AbstractConfigurableRemote() {
-        this.configObservable = new Observable<>(true);
+        this.configObservable = new ObservableImpl<>(true);
     }
 
     @Override

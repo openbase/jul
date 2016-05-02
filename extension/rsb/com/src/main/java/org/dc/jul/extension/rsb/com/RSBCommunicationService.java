@@ -208,7 +208,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.serverWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
 
                 @Override
-                public void update(Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
+                public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
                     if (data == WatchDog.ServiceState.Running) {
 
                         // Sync data after service start.

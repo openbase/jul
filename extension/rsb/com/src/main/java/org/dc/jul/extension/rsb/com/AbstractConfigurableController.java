@@ -58,6 +58,9 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
         try {
+            if(config == null) {
+                throw new NotAvailableException("config");
+            }
             updateConfig(config);
             super.init(detectScope());
         } catch (CouldNotPerformException ex) {

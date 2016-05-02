@@ -44,7 +44,7 @@ import org.dc.jul.exception.VerificationFailedException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
 import org.dc.jul.iface.Identifiable;
-import org.dc.jul.pattern.Observable;
+import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.schedule.RecurrenceEventFilter;
 import org.dc.jul.storage.registry.plugin.RegistryPlugin;
 import org.dc.jul.storage.registry.plugin.RegistryPluginPool;
@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * @param <R> Registry
  * @param <P> RegistryPluginType
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends Observable<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY, R> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY, R> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

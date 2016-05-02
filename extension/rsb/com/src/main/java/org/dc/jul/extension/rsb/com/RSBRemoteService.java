@@ -58,6 +58,7 @@ import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
 import org.dc.jul.pattern.Observable;
+import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.pattern.Remote;
 import org.dc.jul.schedule.SyncObject;
@@ -76,7 +77,7 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends Observable<M> implements Remote<M> {
+public abstract class RSBRemoteService<M extends GeneratedMessage> extends ObservableImpl<M> implements Remote<M> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -213,7 +214,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             this.listenerWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
 
                 @Override
-                public void update(Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
+                public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
                     if (data == WatchDog.ServiceState.Running) {
 
                         // Sync data after service start.
@@ -593,7 +594,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         validateInitialization();
         //TODO mpohling: remove after connection handshake is implemented.
         if (!isActive()) {
-            throw new InvalidStateException("Could not reach server!");
+            throw new InvalidStateException("Could not reach server! Remote is not activated!");
         }
     }
 

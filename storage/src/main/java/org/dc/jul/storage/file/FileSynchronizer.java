@@ -37,7 +37,7 @@ import org.dc.jul.exception.EnumNotSupportedException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
-import org.dc.jul.pattern.Observable;
+import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.processing.FileProcessor;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author mpohling
  * @param <D> data type
  */
-public class FileSynchronizer<D> extends Observable<D> {
+public class FileSynchronizer<D> extends ObservableImpl<D> {
 
     public enum InitMode {
 

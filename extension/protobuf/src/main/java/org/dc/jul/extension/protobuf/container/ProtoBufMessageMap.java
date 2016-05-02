@@ -36,12 +36,13 @@ import com.google.protobuf.GeneratedMessage.Builder;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.protobuf.BuilderSyncSetup;
-import org.dc.jul.pattern.Observable;
+import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.dc.jul.pattern.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,18 +62,18 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
     private boolean shudownDetected = false;
     private final BuilderSyncSetup<SIB> builderSetup;
     private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
-    private final Observable<IdentifiableMessage<KEY, M, MB>> observable;
+    private final ObservableImpl<IdentifiableMessage<KEY, M, MB>> observable;
 
     private final Descriptors.FieldDescriptor fieldDescriptor;
 
     public ProtoBufMessageMap(final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor) {
         this.builderSetup = builderSetup;
         this.fieldDescriptor = fieldDescriptor;
-        this.observable = new Observable<>();
+        this.observable = new ObservableImpl<>();
         this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
 
             @Override
-            public void update(Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
+            public void update(final Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
                 syncBuilder();
                 observable.notifyObservers(source, data);
             }
