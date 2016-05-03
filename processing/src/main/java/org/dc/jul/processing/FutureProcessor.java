@@ -21,8 +21,17 @@ package org.dc.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.Future;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.MultiException;
+import org.dc.jul.iface.Processable;
 
 /**
  *
@@ -37,7 +46,7 @@ public class FutureProcessor {
      * @param callable the callable to wrap.
      * @return the Future representing the call state.
      */
-    public static <T> CompletableFuture<T> toFuture(final Callable<T> callable) {
+    public static <T> CompletableFuture<T> toCompletableFuture(final Callable<T> callable) {
         CompletableFuture<T> future = new CompletableFuture<>();
         CompletableFuture.runAsync(() -> {
             try {
@@ -50,5 +59,43 @@ public class FutureProcessor {
             }
         });
         return future;
+    }
+
+    public static <I> ForkJoinTask<Void> toForkJoinTask(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {
+        return toForkJoinTask(actionProcessor, (Collection<Future<Void>> input) -> null, inputList);
+    }
+
+    public static <I, O, R> ForkJoinTask<R> toForkJoinTask(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList) {
+        return ForkJoinTask.adapt(new Callable<R>() {
+            @Override
+            public R call() throws Exception {
+                MultiException.ExceptionStack exceptionStack = null;
+                List<Future<O>> futureList = new ArrayList<>();
+                for (I input : inputList) {
+                    try {
+                        futureList.add(actionProcessor.process(input));
+                    } catch (CouldNotPerformException ex) {
+                        exceptionStack = MultiException.push(this, ex, exceptionStack);
+                    }
+                }
+                try {
+                    for (Future<O> future : futureList) {
+                        try {
+                            future.get();
+                        } catch (ExecutionException ex) {
+                            exceptionStack = MultiException.push(this, ex, exceptionStack);
+                        }
+                    }
+                } catch (InterruptedException ex) {
+                    // cancel all pending actions.
+                    futureList.stream().forEach((future) -> {
+                        future.cancel(true);
+                    });
+                    throw ex;
+                }
+                MultiException.checkAndThrow("Could not apply all actions!", exceptionStack);
+                return resultProcessor.process(futureList);
+            }
+        });
     }
 }

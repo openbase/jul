@@ -28,7 +28,6 @@ package org.dc.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.ArrayList;
 import org.slf4j.LoggerFactory;
 
@@ -69,11 +68,11 @@ public class MultiException extends CouldNotPerformException {
         }
         throw new MultiException(message, exceptionStack);
     }
-	
-	public static boolean containsException(final ExceptionStack exceptionStack) {
-		return !(exceptionStack == null || exceptionStack.isEmpty());
-	}
-    
+
+    public static boolean containsException(final ExceptionStack exceptionStack) {
+        return !(exceptionStack == null || exceptionStack.isEmpty());
+    }
+
     public static int size(final ExceptionStack exceptionStack) {
         return exceptionStack == null ? 0 : exceptionStack.size();
     }
