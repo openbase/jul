@@ -25,29 +25,39 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
-import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Activatable;
 import org.dc.jul.iface.Shutdownable;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
- * Threepwood</a>
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  * @param <M>
  */
-public interface Remote<M> extends Shutdownable, Activatable, Observable<M> {
+public interface Remote<M> extends Shutdownable, Activatable {
 
-    public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException;
+    public Object callMethod(final String methodName) throws CouldNotPerformException, InterruptedException;
 
-    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException, InterruptedException;
+    public <R, T extends Object> R callMethod(final String methodName, final T type) throws CouldNotPerformException, InterruptedException;
 
-    public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException;
+    public Future<Object> callMethodAsync(final String methodName) throws CouldNotPerformException;
 
-    public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException;
+    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T type) throws CouldNotPerformException;
 
     public void init(final String scope) throws InitializationException, InterruptedException;
 
-    public void notifyUpdated(M data) throws CouldNotPerformException;
+    /**
+     * This method allows the registration of data observers to get informed about data updates.
+     *
+     * @param observer
+     */
+    public void addDataObserver(final Observer<M> observer);
+
+    /**
+     * This method removes already registered data observers.
+     *
+     * @param observer
+     */
+    public void removeDataObserver(final Observer<M> observer);
 
     /**
      * Check if the data object is already available.
@@ -86,9 +96,19 @@ public interface Remote<M> extends Shutdownable, Activatable, Observable<M> {
      */
     public CompletableFuture<M> getDataFuture() throws CouldNotPerformException;
 
+    
+    /**
+     * Method blocks until an initial data message was received from the remote controller.
+     * 
+     * @throws CouldNotPerformException
+     * @throws InterruptedException 
+     */
+    public void waitForData() throws CouldNotPerformException, InterruptedException;
+    
     /**
      * Checks if a server connection is established.
-     * @return 
+     *
+     * @return
      */
     public boolean isConnected();
 

@@ -122,7 +122,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
     }
 
     @Override
-    public void notifyUpdated(final RSBBindingType.RSBBinding data) {
+    public void notifyDataUpdate(final RSBBindingType.RSBBinding data) {
         switch (data.getState().getState()) {
         case ACTIVE:
             logger.info("Active dal binding state!");

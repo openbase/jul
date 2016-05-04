@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.pattern;
 
 /*
@@ -40,7 +35,20 @@ import org.dc.jul.iface.Manageable;
  */
 public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID, M>, Manageable<CONFIG> {
 
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException;
-
     public CONFIG getConfig() throws NotAvailableException;
+    
+    
+    /**
+     * This method allows the registration of config observers to get informed about config updates.
+     *
+     * @param observer
+     */
+    public void addConfigObserver(final Observer<CONFIG> observer);
+
+    /**
+     * This method removes already registered config observers.
+     *
+     * @param observer
+     */
+    public void removeConfigObserver(final Observer<CONFIG> observer);
 }

@@ -29,6 +29,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
@@ -69,7 +70,7 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends ObservableImpl<M> implements RSBRemote<M> {
+public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -92,6 +93,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     private M data;
     private boolean initialized;
     private final Class<M> messageClass;
+    private final ObservableImpl<M> dataObservable = new ObservableImpl<>();
 
     public RSBRemoteService() {
         this.mainHandler = new InternalUpdateHandler();
@@ -209,8 +211,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
                 @Override
                 public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
-                    
-                    logger.info("listener state update: "+data.name());
+
+                    logger.info("listener state update: " + data.name());
                     // Sync data after service start.
                     if (data == WatchDog.ServiceState.Running) {
                         remoteServerWatchDog.waitForActivation();
@@ -430,7 +432,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
         @Override
         public M call() throws Exception {
-            
+
             Future<M> internalFuture = null;
             M dataUpdate;
             try {
@@ -445,7 +447,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
                 // skip if sync was already performed by global data update.
                 if (relatedFuture == null || !relatedFuture.isCompletedNormally()) {
-                    
+
                     applyDataUpdate(dataUpdate);
                 } else {
                     logger.info("skip because already synced!");
@@ -467,12 +469,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
      */
     @Override
     public void shutdown() {
+        dataObservable.shutdown();
         try {
             deactivate();
         } catch (CouldNotPerformException | InterruptedException ex) {
             logger.error("Could not deactivate remote service!", ex);
         }
-        super.shutdown();
     }
 
     /**
@@ -522,6 +524,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     @Override
     public boolean isDataAvailable() {
         return data != null;
+    }
+
+    public void waitForData() throws CouldNotPerformException, InterruptedException {
+        try {
+            getDataFuture().get();
+        } catch (ExecutionException ex) {
+            throw new CouldNotPerformException("Could not wait for data!", ex);
+        }
     }
 
     private Class<M> detectDataClass() {
@@ -590,7 +600,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     private void applyDataUpdate(final M data) {
-        logger.info("Apply data update:"+data);
+        logger.info("Apply data update:" + data);
         this.data = data;
         CompletableFuture<M> currentSyncFuture = null;
         ForkJoinTask<M> currentSyncTask = null;
@@ -615,17 +625,58 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
 
         try {
-            notifyUpdated(data);
+            notifyDataUpdate(data);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger, LogLevel.ERROR);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
+
         try {
-            notifyObservers(data);
+            dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger, LogLevel.ERROR);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
         }
     }
-    
+
+    /**
+     * Method can be overwritten to get internally informed about data updates.
+     *
+     * @param data new arrived data messages.
+     * @throws CouldNotPerformException
+     */
+    protected void notifyDataUpdate(M data) throws CouldNotPerformException {
+        // dummy method, please overwrite if needed.
+    }
+
+    /**
+     *
+     * @param observer
+     * @deprecated use addDataObserver(observer); instead!
+     */
+    @Deprecated
+    public void addObserver(Observer<M> observer) {
+        addDataObserver(observer);
+    }
+
+    /**
+     *
+     * @param observer
+     * @deprecated use removeDataObserver(observer); instead
+     */
+    @Deprecated
+    public void removeObserver(Observer<M> observer) {
+        removeDataObserver(observer);
+    }
+
+    @Override
+    public void addDataObserver(final Observer<M> observer) {
+        dataObservable.addObserver(observer);
+    }
+
+    @Override
+    public void removeDataObserver(final Observer<M> observer) {
+        dataObservable.removeObserver(observer);
+    }
+
     private void skipSyncTasks() {
         CompletableFuture<M> currentSyncFuture = null;
         ForkJoinTask<M> currentSyncTask = null;

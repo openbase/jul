@@ -26,6 +26,7 @@ import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
 import static org.dc.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
 import org.dc.jul.pattern.ConfigurableRemote;
 import org.dc.jul.pattern.ObservableImpl;
@@ -57,11 +58,25 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         }
     }
 
-    @Override
-    public CONFIG updateConfig(CONFIG config) throws CouldNotPerformException {
+    protected CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         this.config = (CONFIG) config.toBuilder().mergeFrom(config).build();
-        this.configObservable.notifyObservers(config);
+        configObservable.notifyObservers(config);
+        try {
+            notifyConfigUpdate(config);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify config update!", ex), logger);
+        }
         return this.config;
+    }
+
+    /**
+     * Method can be overwritten to get internally informed about config updates.
+     *
+     * @param config new arrived config messages.
+     * @throws CouldNotPerformException
+     */
+    protected void notifyConfigUpdate(final CONFIG config) throws CouldNotPerformException {
+        // dummy method, please overwrite if needed.
     }
 
     private ScopeType.Scope detectScope() throws NotAvailableException {
@@ -93,11 +108,19 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         return config;
     }
 
+    @Override
     public void addConfigObserver(final Observer<CONFIG> observer) {
         configObservable.addObserver(observer);
     }
 
+    @Override
     public void removeConfigObserver(final Observer<CONFIG> observer) {
         configObservable.removeObserver(observer);
+    }
+
+    @Override
+    public void shutdown() {
+        configObservable.shutdown();
+        super.shutdown();
     }
 }
