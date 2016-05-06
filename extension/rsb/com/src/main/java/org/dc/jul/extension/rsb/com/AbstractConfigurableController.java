@@ -58,7 +58,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
         try {
-            if(config == null) {
+            if (config == null) {
                 throw new NotAvailableException("config");
             }
             applyConfigUpdate(config);
@@ -77,13 +77,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        if (this.config == null) {
-            this.config = config;
-        } else {
-            // merge fails when lists are updated because then entries are added and not replaced
-            // this.config = (CONFIG) this.config.toBuilder().mergeFrom(config).build();
-            this.config = config;
-        }
+        this.config = config;
 
         if (supportsField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
             setField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
