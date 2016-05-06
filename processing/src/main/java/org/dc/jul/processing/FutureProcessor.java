@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -66,7 +67,7 @@ public class FutureProcessor {
     }
 
     public static <I, O, R> ForkJoinTask<R> toForkJoinTask(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList) {
-        return ForkJoinTask.adapt(new Callable<R>() {
+        return ForkJoinPool.commonPool().submit(new Callable<R>() {
             @Override
             public R call() throws Exception {
                 MultiException.ExceptionStack exceptionStack = null;
