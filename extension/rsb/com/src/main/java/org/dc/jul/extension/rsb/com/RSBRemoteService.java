@@ -441,6 +441,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 //                internalFuture = callAsyncMethod(RPC_REQUEST_STATUS, messageClass);
 //                dataUpdate = internalFuture.get();
                 logger.info("got data!");
+                
                 if (dataUpdate == null) {
                     throw new InvalidStateException("Server result invalid!");
                 }
@@ -458,7 +459,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     internalFuture.cancel(true);
                 }
                 throw ex;
-            } catch (Exception ex) {
+            } catch (CouldNotPerformException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
             }
         }
@@ -526,6 +527,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         return data != null;
     }
 
+    @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
         try {
             getDataFuture().get();
