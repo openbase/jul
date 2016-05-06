@@ -28,6 +28,7 @@ import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import static org.dc.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
+import org.dc.jul.iface.Configurable;
 import org.dc.jul.pattern.ConfigurableRemote;
 import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
@@ -39,7 +40,7 @@ import rst.rsb.ScopeType;
  * @param <M>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG> {
+public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG>, Configurable<String, CONFIG> {
 
     protected CONFIG config;
     private final ObservableImpl<CONFIG> configObservable;
@@ -58,7 +59,8 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         }
     }
 
-    protected CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
+    @Override
+    public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         this.config = (CONFIG) config.toBuilder().mergeFrom(config).build();
         configObservable.notifyObservers(config);
         try {
@@ -83,7 +85,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         try {
             return (ScopeType.Scope) getConfigField(FIELD_SCOPE);
         } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException(scope);
+            throw new NotAvailableException(scope, ex);
         }
     }
 

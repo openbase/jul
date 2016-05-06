@@ -22,7 +22,6 @@ package org.dc.jul.pattern;
  * #L%
  */
 
-import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.iface.Manageable;
 

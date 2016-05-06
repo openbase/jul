@@ -208,7 +208,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     public ENTRY update(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
         ENTRY entry = localRegistry.get(remoteRegistry.getKey(config));
-        entry.updateConfig(config);
+        entry.applyConfigUpdate(config);
         return entry;
     }
 

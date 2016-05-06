@@ -38,6 +38,13 @@ import org.dc.jul.iface.provider.ConfigProvider;
  */
 public interface Configurable<ID, CONFIG> extends Identifiable<ID>, ConfigProvider<CONFIG> {
 
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException, InterruptedException;
+    /**
+     * Method can be used to update the internal configuration.
+     * @param config
+     * @return
+     * @throws CouldNotPerformException
+     * @throws InterruptedException 
+     */
+    CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException;
     
 }
