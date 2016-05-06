@@ -212,7 +212,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 @Override
                 public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
 
-                    logger.info("listener state update: " + data.name());
+                    logger.debug("listener state update: " + data.name());
                     // Sync data after service start.
                     if (data == WatchDog.ServiceState.Running) {
                         remoteServerWatchDog.waitForActivation();
@@ -438,7 +438,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             try {
                 logger.info("call request");
                 dataUpdate = callMethod(RPC_REQUEST_STATUS, messageClass);
-//                internalFuture = callMethod(RPC_REQUEST_STATUS, messageClass);
+//                internalFuture = callAsyncMethod(RPC_REQUEST_STATUS, messageClass);
 //                dataUpdate = internalFuture.get();
                 logger.info("got data!");
                 if (dataUpdate == null) {
@@ -600,7 +600,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     private void applyDataUpdate(final M data) {
-        logger.info("Apply data update:" + data);
+//        logger.debug("Apply data update:" + data);
         this.data = data;
         CompletableFuture<M> currentSyncFuture = null;
         ForkJoinTask<M> currentSyncTask = null;
