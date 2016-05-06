@@ -21,9 +21,7 @@ package org.dc.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.iface.Configurable;
 import org.dc.jul.iface.Manageable;
 
 /**
@@ -34,8 +32,6 @@ import org.dc.jul.iface.Manageable;
  * @param <MB>
  * @param <CONFIG>
  */
-public interface ConfigurableController<ID, M, MB, CONFIG> extends IdentifiableController<ID, M, MB>, Manageable<CONFIG> {
+public interface ConfigurableController<ID, M, MB, CONFIG> extends IdentifiableController<ID, M, MB>, Manageable<CONFIG>, Configurable<ID, CONFIG> {
 
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException, InterruptedException;
-    public CONFIG getConfig() throws NotAvailableException;
 }

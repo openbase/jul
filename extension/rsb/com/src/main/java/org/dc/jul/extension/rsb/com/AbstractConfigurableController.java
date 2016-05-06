@@ -61,15 +61,22 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
             if(config == null) {
                 throw new NotAvailableException("config");
             }
-            updateConfig(config);
+            applyConfigUpdate(config);
             super.init(detectScope());
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
+    /**
+     *
+     * @param config
+     * @return
+     * @throws CouldNotPerformException
+     * @throws InterruptedException
+     */
     @Override
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException, InterruptedException {
+    public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         if (this.config == null) {
             this.config = config;
         } else {
