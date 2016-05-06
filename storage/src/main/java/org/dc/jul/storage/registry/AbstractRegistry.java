@@ -397,8 +397,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     protected void notifyObservers() {
         try {
-            if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
-                logger.info("Notification of registry change skipped because of running consistency check!");
+            // It is not waited untill the write actions is finished because the notification will be triggered by it
+            if (registryLock.isWriteLockedByCurrentThread()) {
+                logger.info("Notification of registry change skipped because of running write operations!");
                 return;
             }
             super.notifyObservers(entryMap);
