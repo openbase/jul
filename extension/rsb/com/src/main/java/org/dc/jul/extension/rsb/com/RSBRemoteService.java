@@ -82,6 +82,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public static final long REQUEST_TIMEOUT = 15000;
     public static final long PING_TIMEOUT = 3000;
     public static final long CONNECTION_TIMEOUT = 60000;
+    public static final long DATA_WAIT_TIMEOUT = 1000;
 
     static {
         RSBSharedConnectionConfig.load();
@@ -325,8 +326,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             ping();
         }
 
-        System.out.println("connectionstate: " + connectionState.name());
-
+//        System.out.println("connectionstate: " + connectionState.name());
         synchronized (connectionMonitor) {
             this.connectionState = connectionState;
             this.connectionMonitor.notifyAll();
@@ -463,7 +463,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
 
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
-        System.out.println("RSBRemoteService[" + localId + "] requestData...");
+//        System.out.println("RSBRemoteService[" + localId + "] requestData...");
         logger.info("requestData...");
         validateInitialization();
         try {
@@ -471,13 +471,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 // Check if sync is in process.
                 if (syncFuture != null) {
-                    System.out.println("RSBRemoteService[" + localId + "] sync in progress");
+//                    System.out.println("RSBRemoteService[" + localId + "] sync in progress");
                     return syncFuture;
                 }
 
                 // Create new sync process
                 syncFuture = new CompletableFuture();
-                System.out.println("RSBRemoteService[" + localId + "] syncing ...");
+//                System.out.println("RSBRemoteService[" + localId + "] syncing ...");
                 syncTask = sync();
                 return syncFuture;
             }
@@ -495,7 +495,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws CouldNotPerformException
      */
     private ForkJoinTask<M> sync() throws CouldNotPerformException {
-        System.out.println("Synchronization of Remote[" + localId + "][" + this + "] triggered...");
+//        System.out.println("Synchronization of Remote[" + localId + "][" + this + "] triggered...");
         logger.info("Synchronization of Remote[" + this + "] triggered...");
         validateInitialization();
         try {
@@ -522,12 +522,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             Future<Event> internalFuture = null;
             M dataUpdate;
             try {
-                System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] call request");
+//                System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] call request");
                 logger.info("call request");
 //                dataUpdate = callMethod(RPC_REQUEST_STATUS, messageClass);
                 internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                 dataUpdate = (M) internalFuture.get().getData();
-                System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] got data!");
+//                System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] got data!");
                 logger.info("got data!");
 
                 if (dataUpdate == null) {
@@ -536,10 +536,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 // skip if sync was already performed by global data update.
                 if (relatedFuture == null || !relatedFuture.isCompletedNormally()) {
-                    System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] apply data update...");
+//                    System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] apply data update...");
                     applyDataUpdate(dataUpdate);
                 } else {
-                    System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] skip because already synced!");
+//                    System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] skip because already synced!");
                 }
                 setConnectionState(CONNECTED);
                 return dataUpdate;
@@ -581,13 +581,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public CompletableFuture<M> getDataFuture() throws CouldNotPerformException {
-        System.out.println("RSBRemoteService[" + localId + "] getDataFuture...");
+//        System.out.println("RSBRemoteService[" + localId + "] getDataFuture...");
         try {
             if (data == null) {
-                System.out.println("RSBRemoteService[" + localId + "] data is null. Calling request data.");
+//                System.out.println("RSBRemoteService[" + localId + "] data is null. Calling request data.");
                 return requestData();
             }
-            System.out.println("RSBRemoteService[" + localId + "] data is not null. Returning completed future with data.");
+//            System.out.println("RSBRemoteService[" + localId + "] data is not null. Returning completed future with data.");
             return CompletableFuture.completedFuture(data);
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("data", ex);
@@ -624,15 +624,29 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
-        System.out.println("RSBRemoteService[" + localId + "] waiting for data...");
+//        System.out.println("RSBRemoteService[" + localId + "] waiting for data...");
         try {
-            System.out.println("RSBRemoteService[" + localId + "] calling get on getDataFuture...");
+//            System.out.println("RSBRemoteService[" + localId + "] calling get on getDataFuture...");
             getDataFuture().get();
-            System.out.println("RSBRemoteService[" + localId + "] calling get on getDataFuture finished");
+//            System.out.println("RSBRemoteService[" + localId + "] calling get on getDataFuture finished");
         } catch (ExecutionException ex) {
             throw new CouldNotPerformException("Could not wait for data!", ex);
         }
-        System.out.println("RSBRemoteService[" + localId + "] waiting for data finished");
+//        System.out.println("RSBRemoteService[" + localId + "] waiting for data finished");
+    }
+
+    @Override
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException {
+        try {
+            getDataFuture().get(timeout, timeUnit);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new CouldNotPerformException("Interrupted while waiting for data!", ex);
+        } catch (java.util.concurrent.TimeoutException ex) {
+            throw new NotAvailableException("Data is not yet available!", ex);
+        } catch (ExecutionException ex) {
+            throw new CouldNotPerformException("Could not wait for timeout!", ex);
+        }
     }
 
     private Class<M> detectDataClass() {
@@ -693,9 +707,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 if (this.connectionState.equals(connectionState)) {
                     return;
                 }
-                System.out.println("wait_for_connection");
+//                System.out.println("wait_for_connection");
                 connectionMonitor.wait();
-                System.out.println("continue");
+//                System.out.println("continue");
             }
         }
     }
@@ -735,7 +749,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     private void applyDataUpdate(final M data) {
-        System.out.println("RSBRemoteService[" + localId + "] apply data update....");
+//        System.out.println("RSBRemoteService[" + localId + "] apply data update....");
         this.data = data;
         CompletableFuture<M> currentSyncFuture = null;
         ForkJoinTask<M> currentSyncTask = null;
@@ -751,6 +765,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         // Notify data update
+        try {
+//            System.out.println("RSBRemoteService[" + localId + "] notify data update...");
+            notifyDataUpdate(data);
+//            System.out.println("RSBRemoteService[" + localId + "] notify data update finished");
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+        }
+
         if (currentSyncFuture != null) {
             currentSyncFuture.complete(data);
         }
@@ -758,24 +780,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (currentSyncTask != null) {
             currentSyncTask.complete(data);
         }
-        System.out.println("RSBRemoteService[" + localId + "] completed both sync futures");
 
+//        System.out.println("RSBRemoteService[" + localId + "] completed both sync futures");
         try {
-            System.out.println("RSBRemoteService[" + localId + "] notify data update...");
-            notifyDataUpdate(data);
-            System.out.println("RSBRemoteService[" + localId + "] notify data update finished");
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
-        }
-
-        try {
-            System.out.println("RSBRemoteService[" + localId + "] notify observer...");
+//            System.out.println("RSBRemoteService[" + localId + "] notify observer...");
             dataObservable.notifyObservers(data);
-            System.out.println("RSBRemoteService[" + localId + "] notify observer finished");
+//            System.out.println("RSBRemoteService[" + localId + "] notify observer finished");
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
         }
-        System.out.println("RSBRemoteService[" + localId + "] apply data update finished");
+//        System.out.println("RSBRemoteService[" + localId + "] apply data update finished");
     }
 
     /**
@@ -819,7 +833,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     public Future<Long> ping() {
-        System.out.println("compute ping");
+//        System.out.println("compute ping");
         return ForkJoinPool.commonPool().submit(new Callable<Long>() {
 
             @Override
@@ -828,7 +842,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     Long requestTime = (Long) callMethodAsync("ping", System.currentTimeMillis()).get(PING_TIMEOUT, TimeUnit.MILLISECONDS);
                     lastPingReceived = System.currentTimeMillis();
                     connectionPing = lastPingReceived - requestTime;
-                    System.out.println("ping is: " + connectionPing);
+//                    System.out.println("ping is: " + connectionPing);
                     return connectionPing;
                 } catch (java.util.concurrent.TimeoutException ex) {
                     synchronized (connectionMonitor) {

@@ -23,10 +23,10 @@ package org.dc.jul.pattern;
  */
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.iface.Activatable;
-import org.dc.jul.iface.Pingable;
 import org.dc.jul.iface.Shutdownable;
 
 /**
@@ -110,6 +110,13 @@ public interface Remote<M> extends Shutdownable, Activatable {
      * @throws InterruptedException 
      */
     public void waitForData() throws CouldNotPerformException, InterruptedException;
+    
+    /**
+     * Method blocks until an initial data message was received from the remote controller or it times out.
+     * 
+     * @throws CouldNotPerformException
+     */
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException;
     
     /**
      * Checks if a server connection is established.
