@@ -23,9 +23,12 @@ package org.dc.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,15 +41,13 @@ public abstract class Timeout {
 
     private static final Logger logger = LoggerFactory.getLogger(Timeout.class);
 
-    private final ExecutorService executorService;
     private final Object lock = new Object();
-    private Thread timerThread;
+    private ForkJoinTask timerTask;
     private long waitTime;
     private boolean expired;
 
     public Timeout(final long waitTime) {
         this.waitTime = waitTime;
-        this.executorService = Executors.newCachedThreadPool();
     }
 
     public long getTimeToWait() {
@@ -80,7 +81,7 @@ public abstract class Timeout {
      */
     public boolean isActive() {
         synchronized (lock) {
-            return timerThread != null && timerThread.isAlive();
+            return timerTask != null && !timerTask.isDone();
         }
     }
 
@@ -91,46 +92,42 @@ public abstract class Timeout {
 
     public void start() {
         synchronized (lock) {
-            if (timerThread != null && !timerThread.isInterrupted() && timerThread.isAlive()) {
-                logger.debug("Cancel start, not interupted or expired.");
+            if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
+                logger.debug("Reject start, not interupted or expired.");
                 return;
             }
 
             logger.debug("Create new timer");
-            timerThread = new Thread(getClass().getSimpleName() + "[wait:" + waitTime + "]") {
+            timerTask = ForkJoinPool.commonPool().submit(new Callable<Void>() {
 
                 @Override
-                public void run() {
+                public Void call() {
                     try {
                         Thread.sleep(waitTime);
                     } catch (InterruptedException ex) {
                         logger.debug("TimeOut interrupted.");
-                        return;
+                        return null;
                     }
                     try {
                         logger.debug("Expire...");
                         expired = true;
-                        //TODO mpohling: good idea but depending unit tests are failing. Please check!
-//                        executorService.submit(() -> {
-                            expired();
-//                        });
-
+                        expired();
                     } catch (Exception ex) {
                         logger.debug("Error during timeout handling!", ex);
                     }
                     logger.debug("Worker finished.");
+                    return null;
                 }
-            };
-            timerThread.start();
+            });
         }
     }
 
     public void cancel() {
         synchronized (lock) {
-            if (timerThread != null) {
-                logger.debug("interrupt timer.");
-                timerThread.interrupt();
-                timerThread = null;
+            if (timerTask != null) {
+                logger.debug("cancel timer.");
+                timerTask.cancel(true);
+                timerTask = null;
             }
         }
     }

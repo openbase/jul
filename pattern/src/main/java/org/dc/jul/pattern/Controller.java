@@ -3,6 +3,8 @@ package org.dc.jul.pattern;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.iface.Activatable;
 import org.dc.jul.iface.Changeable;
+import org.dc.jul.iface.Pingable;
+import org.dc.jul.iface.Requestable;
 import org.dc.jul.iface.Shutdownable;
 
 /*
@@ -32,12 +34,11 @@ import org.dc.jul.iface.Shutdownable;
  * @param <M> Message
  * @param <MB> Message Builder
  */
-public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable {
+public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable, Pingable, Requestable<M> {
 
-    // TODO mpohling: Should be moved to rst and reimplement for rsb 13.
-    public enum ConnectionState {
-
-        Online, Offline
+    // TODO mpohling: Should be moved to rst and reimplement for rsb 14.
+    public enum CommunicationServiceState {
+        ONLINE, OFFLINE
     };
 
     public MB cloneDataBuilder();
@@ -79,7 +80,7 @@ public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable
      */
     public Class<M> getDataClass();
 
-    public ConnectionState getState();
+    public CommunicationServiceState getState();
 
     /**
      * Synchronize all registered remote instances about a data change.
@@ -89,5 +90,4 @@ public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable
     @Override
     public void notifyChange() throws CouldNotPerformException;
 
-    public M requestStatus() throws CouldNotPerformException;
 }

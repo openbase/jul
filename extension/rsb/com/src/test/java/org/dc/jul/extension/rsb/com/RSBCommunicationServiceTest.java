@@ -31,6 +31,7 @@ import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
+import org.dc.jul.pattern.Remote;
 import org.dc.jul.schedule.SyncObject;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -86,7 +87,8 @@ public class RSBCommunicationServiceTest {
     private boolean secondSync = false;
     private RSBCommunicationService communicationService;
 
-    @Test(timeout = 20000)
+//    @Test(timeout = 20000)
+    @Test
     public void testInitialSync() throws Exception {
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
@@ -124,7 +126,7 @@ public class RSBCommunicationServiceTest {
                 waitForDataSync.wait();
             }
         }
-        assertTrue("Syncronisation after the start of the remote service has not been done", firstSync);
+        assertTrue("Synchronization after the start of the remote service has not been done", firstSync);
 
         communicationService.deactivate();
         LocationConfig location2 = LocationConfig.newBuilder().setId("Location2").build();
@@ -138,10 +140,19 @@ public class RSBCommunicationServiceTest {
                 waitForDataSync.wait();
             }
         }
-        assertTrue("Syncronisation after the restart of the communication service has not been done", secondSync);
+        assertTrue("Synchronization after the restart of the communication service has not been done", secondSync);
 
         communicationService.deactivate();
+
+        try {
+            remoteService.ping().get();
+            assertTrue("Pinging was not canceled after timeout.", false);
+        } catch (Exception ex) {
+            // ping canceled
+        }
+        assertEquals("Remote is still connected after remote service shutdown!", Remote.RemoteConnectionState.CONNECTING, remoteService.getConnectionState());
         remoteService.deactivate();
+        assertEquals("Remote is not disconnected after deactivation!", Remote.RemoteConnectionState.DISCONNECTED, remoteService.getConnectionState());
     }
 
     @Test

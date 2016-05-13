@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
 import org.dc.jul.iface.Activatable;
+import org.dc.jul.iface.Pingable;
 import org.dc.jul.iface.Shutdownable;
 
 /**
@@ -35,6 +36,11 @@ import org.dc.jul.iface.Shutdownable;
  */
 public interface Remote<M> extends Shutdownable, Activatable {
 
+    // TODO mpohling: Should be moved to rst and reimplement for rsb 14.
+    public enum RemoteConnectionState {
+        CONNECTING, CONNECTED, DISCONNECTED
+    };
+    
     public Object callMethod(final String methodName) throws CouldNotPerformException, InterruptedException;
 
     public <R, T extends Object> R callMethod(final String methodName, final T type) throws CouldNotPerformException, InterruptedException;
@@ -111,6 +117,8 @@ public interface Remote<M> extends Shutdownable, Activatable {
      * @return
      */
     public boolean isConnected();
+    
+    public RemoteConnectionState getConnectionState();
 
     /**
      * This method synchronizes this remote instance with the main controller
