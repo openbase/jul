@@ -35,6 +35,7 @@ import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import java.lang.reflect.Method;
 import java.util.concurrent.Future;
+import org.dc.jul.pattern.Remote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -91,23 +92,23 @@ public class RPCHelper {
         }
     }
 
-    public static Future callRemoteMethod(final RSBRemoteService remote) throws CouldNotPerformException {
+    public static Future callRemoteMethod(final Remote remote) throws CouldNotPerformException {
         return callRemoteMethod(null, remote, Object.class, 3);
     }
 
-    public static Future callRemoteMethod(final Object argument, final RSBRemoteService remote) throws CouldNotPerformException {
+    public static Future callRemoteMethod(final Object argument, final Remote remote) throws CouldNotPerformException {
         return callRemoteMethod(argument, remote, Object.class, 3);
     }
 
-    public static <RETURN> Future<RETURN> callRemoteMethod(final RSBRemoteService remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
+    public static <RETURN> Future<RETURN> callRemoteMethod(final Remote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         return callRemoteMethod(null, remote, returnClass, 3);
     }
 
-    public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
+    public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final Remote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         return callRemoteMethod(argument, remote, returnClass, 3);
     }
 
-    private static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemoteService remote, final Class<? extends RETURN> returnClass, int methodStackDepth) throws CouldNotPerformException {
+    private static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final Remote remote, final Class<? extends RETURN> returnClass, int methodStackDepth) throws CouldNotPerformException {
 
         String methodName = "?";
         try {
