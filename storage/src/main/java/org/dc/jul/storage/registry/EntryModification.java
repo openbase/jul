@@ -23,7 +23,6 @@ package org.dc.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * @author mpohling
@@ -33,10 +32,14 @@ public class EntryModification extends Exception {
     private final Object entry;
     private ConsistencyHandler consistencyHandler;
 
-    public EntryModification(final Object entry, final ConsistencyHandler consistencyHandler) {
-        super(entry + " has been modified by "+consistencyHandler.getClass().getSimpleName()+".");
+    public EntryModification(final String message, final Object entry, final ConsistencyHandler consistencyHandler) {
+        super(entry + " has been modified by " + consistencyHandler.getClass().getSimpleName() + formatMessage(message));
         this.entry = entry;
         this.consistencyHandler = consistencyHandler;
+    }
+
+    public EntryModification(final Object entry, final ConsistencyHandler consistencyHandler) {
+        this(null, entry, consistencyHandler);
     }
 
     public Object getEntry() {
@@ -45,5 +48,12 @@ public class EntryModification extends Exception {
 
     public ConsistencyHandler getConsistencyHandler() {
         return consistencyHandler;
+    }
+
+    private static String formatMessage(final String message) {
+        if (message == null || message.isEmpty()) {
+            return ".";
+        }
+        return ": " + message;
     }
 }

@@ -90,15 +90,7 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
 
     @Override
     public void addObserver(Observer<Map<KEY, ENTRY>> observer) {
-        logger.warn("Observer registration on sandbox instance!");
-        super.addObserver(observer);
-    }
-    
-    
-
-    @Override
-    protected void notifyObservers() {
-        //skip sandbox notifications.
+        logger.warn("Observer registration on sandbox instance skiped!");
     }
 
     @Override
