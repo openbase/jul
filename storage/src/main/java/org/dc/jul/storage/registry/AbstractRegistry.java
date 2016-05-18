@@ -128,7 +128,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
-        logger.debug("Register " + entry + "...");
+        logger.info("Register " + entry + "...");
         pluginPool.beforeRegister(entry);
         try {
             checkWriteAccess();
@@ -180,7 +180,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
-        logger.debug("Update " + entry + "...");
+        logger.info("Update " + entry + "...");
+        for (int i = 0; i < Thread.currentThread().getStackTrace().length; ++i) {
+            System.out.println(Thread.currentThread().getStackTrace()[i]);
+        }
         pluginPool.beforeUpdate(entry);
         try {
             checkWriteAccess();
@@ -440,17 +443,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public final int checkConsistency() throws CouldNotPerformException {
-        System.out.println("=========== start check " + getName());
+        System.out.println("=========== start check " + getName() + " from thread " + Thread.currentThread().getId()
+        );
         int modificationCounter = 0;
 
         if (consistencyHandlerList.isEmpty()) {
-            logger.info("Skip consistency check because no handler are registered.");
+            logger.debug("Skip consistency check because no handler are registered.");
             return modificationCounter;
         }
 
         if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
             // Avoid triggering recursive consistency checks.
-            logger.info("Skip consistency check check is already running by same thread.");
+            logger.info(getName() + " skipping consistency check check is already running by same thread. " + Thread.currentThread().getId());
             return modificationCounter;
         }
 
@@ -601,10 +605,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     /**
-     * Method can be used to register any compatible registry plugin for this registry. 
+     * Method can be used to register any compatible registry plugin for this
+     * registry.
+     *
      * @param plugin the plugin to register.
-     * @throws CouldNotPerformException is thrown in case the plugin could not be registered.
-     * @throws InterruptedException is thrown if the thread is externally interrupted.
+     * @throws CouldNotPerformException is thrown in case the plugin could not
+     * be registered.
+     * @throws InterruptedException is thrown if the thread is externally
+     * interrupted.
      */
     public void registerPlugin(P plugin) throws CouldNotPerformException, InterruptedException {
         pluginPool.addPlugin(plugin);
@@ -612,6 +620,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * Method defines the name of this registry.
+     *
      * @param name
      */
     public void setName(String name) {
@@ -619,8 +628,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     /**
-     * Method returns the name of this registry.
-     * In case the name was never set for this registry the simple class name of the registry class is returned instead.
+     * Method returns the name of this registry. In case the name was never set
+     * for this registry the simple class name of the registry class is returned
+     * instead.
+     *
      * @return the name of the registry.
      */
     @Override

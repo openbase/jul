@@ -429,6 +429,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         });
     }
 
+    private static long time;
     /**
      * This method synchronizes this remote instance with the main controller
      * and returns the new data object. Normally, all server data changes are
@@ -449,7 +450,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
         System.out.println("RSBRemoteService[" + localId + "] requestData...");
         logger.info("requestData...");
+        time = System.currentTimeMillis();
         validateInitialization();
+        System.out.println("Initialization validation [" + (System.currentTimeMillis() - time) + "]");
         try {
             synchronized (syncMonitor) {
 
@@ -458,11 +461,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     System.out.println("RSBRemoteService[" + localId + "] sync in progress");
                     return syncFuture;
                 }
+                System.out.println("Sync in progress check [" + (System.currentTimeMillis() - time) + "]");
 
                 // Create new sync process
                 syncFuture = new CompletableFuture();
                 System.out.println("RSBRemoteService[" + localId + "] syncing ...");
                 syncTask = sync();
+                System.out.println("Sync task created[" + (System.currentTimeMillis() - time) + "]");
                 return syncFuture;
             }
         } catch (CouldNotPerformException ex) {
@@ -507,6 +512,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             M dataUpdate;
             try {
                 System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] call request");
+                System.out.println("Sync callable called [" + (System.currentTimeMillis() - time) + "]");
                 logger.info("call request");
 //                dataUpdate = callMethod(RPC_REQUEST_STATUS, messageClass);
 
@@ -520,11 +526,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     try {
                         internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                         dataUpdate = (M) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData();
+                        System.out.println("Date update recieved [" + (System.currentTimeMillis() - time) + "]");
                         break;
                     } catch (TimeoutException ex) {
+                        System.out.println("timeout [" + (System.currentTimeMillis() - time) + "]");
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                         timeout = generateTimeout(timeout);
-                        logger.warn("Remote Controller["+ScopeTransformer.transform(getScope())+"] does not respond!  Next timeout in " + ((int) timeout) + " seconds.");
+                        logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next timeout in " + ((int) timeout) + " seconds.");
                         Thread.yield();
                     }
                 }
@@ -540,6 +548,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 if (relatedFuture == null || !relatedFuture.isCompletedNormally()) {
                     System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] apply data update...");
                     applyDataUpdate(dataUpdate);
+                    System.out.println("Data update applyed [" + (System.currentTimeMillis() - time) + "]");
                 } else {
                     System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] skip because already synced!");
                 }

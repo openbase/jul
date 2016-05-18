@@ -58,7 +58,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     private final ProtoBufMessageMap<KEY, M, MB, SIB> protobufMessageMap;
     private final IdGenerator<KEY, M> idGenerator;
-    private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
+//    private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
     private final Class<M> messageClass;
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
@@ -71,10 +71,12 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             this.idGenerator = idGenerator;
             this.messageClass = messageClass;
             this.protobufMessageMap = internalMap;
-            this.observer = (Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) -> {
-                ProtoBufFileSynchronizedRegistry.this.update(data);
-            };
-            protobufMessageMap.addObserver(observer);
+            // check if the registry works without this
+            // lead to a loop where during consisntecy checks update has been called
+//            this.observer = (Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) -> {
+//                ProtoBufFileSynchronizedRegistry.this.update(data);
+//            };
+//            protobufMessageMap.addObserver(observer);
 
             try {
                 if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
@@ -92,7 +94,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public void shutdown() {
-        protobufMessageMap.removeObserver(observer);
+//        protobufMessageMap.removeObserver(observer);
         protobufMessageMap.shutdown();
         super.shutdown();
     }
