@@ -56,6 +56,7 @@ import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.pattern.Remote;
 import static org.dc.jul.pattern.Remote.RemoteConnectionState.*;
+import org.dc.jul.schedule.GlobalExecuterService;
 import org.dc.jul.schedule.SyncObject;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -100,7 +101,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
 
     private CompletableFuture<M> syncFuture;
-    private ForkJoinTask<M> syncTask;
+    private Future<M> syncTask;
 
     protected Scope scope;
     private M data;
@@ -430,6 +431,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     private static long time;
+
     /**
      * This method synchronizes this remote instance with the main controller
      * and returns the new data object. Normally, all server data changes are
@@ -483,13 +485,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @return fresh synchronized data object.
      * @throws CouldNotPerformException
      */
-    private ForkJoinTask<M> sync() throws CouldNotPerformException {
+    private Future<M> sync() throws CouldNotPerformException {
         System.out.println("Synchronization of Remote[" + localId + "][" + this + "] triggered...");
         logger.info("Synchronization of Remote[" + this + "] triggered...");
         validateInitialization();
         try {
             SyncTaskCallable syncCallable = new SyncTaskCallable();
-            final ForkJoinTask<M> currentSyncTask = ForkJoinPool.commonPool().submit(syncCallable);
+            
+            final Future<M> currentSyncTask = GlobalExecuterService.submit(syncCallable);
             syncCallable.setRelatedFuture(currentSyncTask);
             return currentSyncTask;
         } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
@@ -499,9 +502,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private class SyncTaskCallable implements Callable<M> {
 
-        ForkJoinTask<M> relatedFuture;
+        Future<M> relatedFuture;
 
-        public void setRelatedFuture(ForkJoinTask<M> relatedFuture) {
+        public void setRelatedFuture(Future<M> relatedFuture) {
             this.relatedFuture = relatedFuture;
         }
 
@@ -545,7 +548,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
 
                 // skip if sync was already performed by global data update.
-                if (relatedFuture == null || !relatedFuture.isCompletedNormally()) {
+                if (relatedFuture == null || (!relatedFuture.isCancelled() && relatedFuture.isDone())) {
                     System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] apply data update...");
                     applyDataUpdate(dataUpdate);
                     System.out.println("Data update applyed [" + (System.currentTimeMillis() - time) + "]");
@@ -739,7 +742,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         System.out.println("RSBRemoteService[" + localId + "] apply data update....");
         this.data = data;
         CompletableFuture<M> currentSyncFuture = null;
-        ForkJoinTask<M> currentSyncTask = null;
+        Future<M> currentSyncTask = null;
 
         // Check if sync is in process.
         synchronized (syncMonitor) {
@@ -764,10 +767,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             currentSyncFuture.complete(data);
         }
 
-        if (currentSyncTask != null) {
-            currentSyncTask.complete(data);
-            setConnectionState(CONNECTED);
+        if (currentSyncTask != null && !currentSyncTask.isDone()) {
+            currentSyncTask.cancel(true);
         }
+        setConnectionState(CONNECTED);
 
         System.out.println("RSBRemoteService[" + localId + "] completed both sync futures");
         try {
@@ -854,7 +857,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private void skipSyncTasks() {
         logger.info("RSBRemoteService[" + localId + "] skip sync...");
         CompletableFuture<M> currentSyncFuture = null;
-        ForkJoinTask<M> currentSyncTask = null;
+        Future<M> currentSyncTask = null;
 
         // Check if sync is in process.
         synchronized (syncMonitor) {
