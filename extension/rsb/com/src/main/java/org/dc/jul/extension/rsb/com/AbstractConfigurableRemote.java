@@ -25,10 +25,12 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
+import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import static org.dc.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
 import org.dc.jul.iface.Configurable;
+import static org.dc.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.dc.jul.pattern.ConfigurableRemote;
 import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
@@ -102,12 +104,47 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         }
     }
 
+    protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                return false;
+            }
+            return config.hasField(findFieldByName);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            return findFieldByName != null;
+        } catch (NullPointerException ex) {
+            return false;
+        }
+    }
+
     @Override
     public CONFIG getConfig() throws NotAvailableException {
         if (config == null) {
             throw new NotAvailableException("config");
         }
         return config;
+    }
+
+    @Override
+    public String getId() throws NotAvailableException {
+        try {
+            String tmpId = (String) getConfigField(TYPE_FIELD_ID);
+            if (tmpId.isEmpty()) {
+                throw new InvalidStateException("config.id is empty!");
+            }
+            return tmpId;
+        } catch (CouldNotPerformException ex) {
+            logger.warn("Config does not contain the remote id!");
+        }
+        return super.getId();
     }
 
     @Override

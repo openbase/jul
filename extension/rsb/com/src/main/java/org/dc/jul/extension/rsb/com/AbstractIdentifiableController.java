@@ -43,7 +43,7 @@ public abstract class AbstractIdentifiableController<M extends GeneratedMessage,
     @Override
     public String getId() throws NotAvailableException {
         try {
-            String id = (String) getField(TYPE_FIELD_ID);
+            String id = (String) getDataField(TYPE_FIELD_ID);
             if (id.isEmpty()) {
                 throw new InvalidStateException("data.id is empty!");
             }

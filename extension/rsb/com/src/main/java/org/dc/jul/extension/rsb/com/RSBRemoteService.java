@@ -664,7 +664,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         return (Class<M>) parameterizedType.getActualTypeArguments()[0];
     }
 
-    protected final Object getField(String name) throws CouldNotPerformException {
+    protected final Object getDataField(String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
             if (findFieldByName == null) {
@@ -673,6 +673,18 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             return getData().getField(findFieldByName);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
+        }
+    }
+    
+    protected final boolean hasDataField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                return false;
+            }
+            return getData().hasField(findFieldByName);
+        } catch (Exception ex) {
+            return false;
         }
     }
 

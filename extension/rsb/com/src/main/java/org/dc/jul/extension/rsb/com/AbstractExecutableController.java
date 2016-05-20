@@ -58,7 +58,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
     }
 
     public ActivationState getActivationState() throws NotAvailableException {
-        return (ActivationState) getField(ACTIVATION_STATE);
+        return (ActivationState) getDataField(ACTIVATION_STATE);
     }
 
     public void setActivationState(final ActivationState activation) throws CouldNotPerformException {

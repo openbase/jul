@@ -382,7 +382,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final void setField(int fieldNumber, Object value) throws CouldNotPerformException {
+    protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
         try {
             try {
                 dataBuilderWriteLock.lock();
@@ -400,7 +400,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final void setField(String fieldName, Object value) throws CouldNotPerformException {
+    protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
         try {
             try {
                 dataBuilderWriteLock.lock();
@@ -418,7 +418,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final Object getField(String name) throws NotAvailableException {
+    protected final Object getDataField(String name) throws NotAvailableException {
         try {
             MB dataClone = cloneDataBuilder();
             Descriptors.FieldDescriptor findFieldByName = dataClone.getDescriptorForType().findFieldByName(name);
@@ -431,7 +431,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final boolean hasField(final String name) throws CouldNotPerformException {
+    protected final boolean hasDataField(final String name) throws CouldNotPerformException {
         try {
             MB dataClone = cloneDataBuilder();
             Descriptors.FieldDescriptor findFieldByName = dataClone.getDescriptorForType().findFieldByName(name);
@@ -444,7 +444,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final boolean supportsField(final String name) throws CouldNotPerformException {
+    protected final boolean supportsDataField(final String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByName(name);
             return findFieldByName != null;
@@ -453,7 +453,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final Descriptors.FieldDescriptor getFieldDescriptor(int fieldId) {
+    protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
         return cloneDataBuilder().getDescriptorForType().findFieldByNumber(fieldId);
     }
 
