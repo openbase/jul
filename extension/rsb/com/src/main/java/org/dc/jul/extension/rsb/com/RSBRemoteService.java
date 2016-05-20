@@ -392,7 +392,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
 
         validateActivation();
-        return ForkJoinPool.commonPool().submit(new Callable<R>() {
+        return GlobalExecuterService.submit(new Callable<R>() {
 
             public Future<R> internalCallFuture;
 
