@@ -100,7 +100,7 @@ public class RSBCommunicationServiceTest {
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
-        remoteService.addObserver(new Observer<LocationRegistry>() {
+        remoteService.addDataObserver(new Observer<LocationRegistry>() {
 
             @Override
             public void update(final Observable<LocationRegistry> source, LocationRegistry data) throws Exception {

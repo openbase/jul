@@ -30,8 +30,6 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.dc.jps.core.JPService;
@@ -448,7 +446,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * an CouldNotPerformException will be thrown.
      */
     @Override
-
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
         System.out.println("RSBRemoteService[" + localId + "] requestData...");
         logger.info("requestData...");
@@ -548,7 +545,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
 
                 // skip if sync was already performed by global data update.
-                if (relatedFuture == null || (!relatedFuture.isCancelled() && relatedFuture.isDone())) {
+                if (relatedFuture == null || !relatedFuture.isCancelled()) {
                     System.out.println("RSBRemoteServiceSyncCallable[" + localId + "] apply data update...");
                     applyDataUpdate(dataUpdate);
                     System.out.println("Data update applyed [" + (System.currentTimeMillis() - time) + "]");
@@ -825,7 +822,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     public Future<Long> ping() {
 //        System.out.println("compute ping");
-        return ForkJoinPool.commonPool().submit(new Callable<Long>() {
+        return GlobalExecuterService.submit(new Callable<Long>() {
 
             @Override
             public Long call() throws Exception {
