@@ -477,15 +477,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public Future<Long> ping(Long timestemp) {
-        System.out.println("bong");
         return CompletableFuture.completedFuture(timestemp);
     }
 
     @Override
     public M requestStatus() throws CouldNotPerformException {
-        //TODO switch to debug later
-        logger.info("requestStatus of " + this);
-        System.out.println("requestStatus");
+        logger.debug("requestStatus of " + this);
         try {
             return getData();
         } catch (RuntimeException ex) {
