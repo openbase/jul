@@ -128,7 +128,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Register " + entry + "...");
+        logger.debug("Register " + entry + "...");
         pluginPool.beforeRegister(entry);
         try {
             checkWriteAccess();
@@ -180,10 +180,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Update " + entry + "...");
-        for (int i = 0; i < Thread.currentThread().getStackTrace().length; ++i) {
-            System.out.println(Thread.currentThread().getStackTrace()[i]);
-        }
+        logger.debug("Update " + entry + "...");
         pluginPool.beforeUpdate(entry);
         try {
             checkWriteAccess();
@@ -443,8 +440,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public final int checkConsistency() throws CouldNotPerformException {
-        System.out.println("=========== start check " + getName() + " from thread " + Thread.currentThread().getId()
-        );
         int modificationCounter = 0;
 
         if (consistencyHandlerList.isEmpty()) {
@@ -550,7 +545,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     if (modificationCounter > 0) {
                         consistencyFeedbackEventFilter.trigger("100% of consistency checks passed after " + modificationCounter + " applied modifications.");
                     }
-                    System.out.println("=========== finish check " + getName());
                     return modificationCounter;
 
                 } catch (CouldNotPerformException ex) {

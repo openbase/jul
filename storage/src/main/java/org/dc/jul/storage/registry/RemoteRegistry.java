@@ -61,7 +61,6 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
             IdentifiableMessage<KEY, M, MB> data = new IdentifiableMessage<>(value);
             newRegistryMap.put(data.getId(), data);
         }
-        System.out.println("replace internal map["+newRegistryMap.size()+"] with map["+getMessages().size()+"]");
         replaceInternalMap(newRegistryMap);
     }
 
