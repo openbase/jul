@@ -139,7 +139,7 @@ public abstract class Timeout {
         }
     }
 
-    public abstract void expired();
+    public abstract void expired() throws InterruptedException;
 
     @Override
     public String toString() {
