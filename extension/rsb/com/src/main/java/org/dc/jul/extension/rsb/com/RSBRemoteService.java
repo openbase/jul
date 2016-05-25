@@ -294,17 +294,19 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     private void setConnectionState(final RemoteConnectionState connectionState) {
-
-        // filter unchanged events
-        if (this.connectionState.equals(connectionState)) {
-            return;
-        }
-
-        if (connectionState.equals(CONNECTED)) {
-            ping();
-        }
-
         synchronized (connectionMonitor) {
+            
+            // filter unchanged events
+            if (this.connectionState.equals(connectionState)) {
+                return;
+            }
+
+            // init ping
+            if (connectionState.equals(CONNECTED)) {
+                ping();
+            }
+
+            // update state and notify
             this.connectionState = connectionState;
             this.connectionMonitor.notifyAll();
         }
@@ -644,7 +646,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
         }
     }
-    
+
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
