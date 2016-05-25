@@ -677,7 +677,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 if (this.connectionState.equals(connectionState)) {
                     return;
                 }
-                connectionMonitor.wait();
+                // TODO: verify if this timeout is really neccessary
+                connectionMonitor.wait(1000);
             }
         }
     }
