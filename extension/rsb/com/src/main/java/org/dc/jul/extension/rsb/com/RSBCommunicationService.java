@@ -214,7 +214,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                         ForkJoinPool.commonPool().submit(() -> {
                             try {
                                 serverWatchDog.waitForActivation();
-                                logger.info("trigger initial sync");
+                                logger.debug("trigger initial sync");
                                 notifyChange();
                             } catch (InterruptedException | CouldNotPerformException ex) {
                                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
@@ -369,7 +369,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public void notifyChange() throws CouldNotPerformException {
-        logger.info("Notify data change of " + this);
+        logger.debug("Notify data change of " + this);
         validateInitialization();
         if (!informer.isActive()) {
             logger.debug("Skip update notification because connection not established.");
