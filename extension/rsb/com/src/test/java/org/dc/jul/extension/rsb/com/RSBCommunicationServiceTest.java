@@ -27,7 +27,6 @@ import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InstantiationException;
-import org.dc.jul.exception.NotAvailableException;
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
@@ -188,6 +187,10 @@ public class RSBCommunicationServiceTest {
     }
 
     public class RSBRemoteServiceImpl extends RSBRemoteService<LocationRegistry> {
+
+        public RSBRemoteServiceImpl() {
+            super(LocationRegistry.class);
+        }
 
         @Override
         public void notifyDataUpdate(LocationRegistry data) throws CouldNotPerformException {

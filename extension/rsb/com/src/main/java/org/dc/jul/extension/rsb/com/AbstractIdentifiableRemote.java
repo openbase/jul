@@ -36,6 +36,10 @@ import org.dc.jul.pattern.IdentifiableRemote;
  */
 public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {
 
+    public AbstractIdentifiableRemote(final Class<M> dataClass) {
+        super(dataClass);
+    }
+
     @Override
     public String getId() throws NotAvailableException {
         try {

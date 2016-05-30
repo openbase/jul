@@ -101,15 +101,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     protected Scope scope;
     private M data;
     private boolean initialized;
-    private final Class<M> messageClass;
+    private final Class<M> dataClass;
     private final ObservableImpl<M> dataObservable = new ObservableImpl<>();
 
-    public RSBRemoteService() {
+    public RSBRemoteService(final Class<M> dataClass) {
+        this.dataClass = dataClass;
         this.mainHandler = new InternalUpdateHandler();
         this.initialized = false;
         this.remoteServer = new NotInitializedRSBRemoteServer();
         this.listener = new NotInitializedRSBListener();
-        this.messageClass = detectDataClass();
         this.connectionState = DISCONNECTED;
         this.connectionPing = -1;
         this.lastPingReceived = -1;
@@ -239,7 +239,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     @Override
     public Class<M> getDataClass() {
-        return messageClass;
+        return dataClass;
     }
 
     public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
@@ -630,10 +630,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private Class<M> detectDataClass() {
-        ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
-        return (Class<M>) parameterizedType.getActualTypeArguments()[0];
-    }
+ // does not work sometimes!
+//    private Class<M> detectDataClass() {
+//        ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
+//        return (Class<M>) parameterizedType.getActualTypeArguments()[0];
+//    }
 
     protected final Object getDataField(String name) throws CouldNotPerformException {
         try {

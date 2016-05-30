@@ -43,12 +43,13 @@ import rsb.converter.ProtocolBufferConverter;
 import rst.homeautomation.openhab.OpenhabCommandType;
 import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
 import rst.homeautomation.openhab.RSBBindingType;
+import rst.homeautomation.openhab.RSBBindingType.RSBBinding;
 
 /**
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingType.RSBBinding> implements OpenHABRemote {
+public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBinding> implements OpenHABRemote {
 
     public static final String ITEM_SUBSEGMENT_DELIMITER = "_";
     public static final String ITEM_SEGMENT_DELIMITER = "__";
@@ -74,6 +75,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
     private final boolean hardwareSimulationMode;
 
     public AbstractOpenHABRemote(final boolean hardwareSimulationMode) {
+        super(RSBBinding.class);
         this.hardwareSimulationMode = hardwareSimulationMode;
     }
 

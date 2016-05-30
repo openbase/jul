@@ -44,10 +44,13 @@ import rst.rsb.ScopeType;
  */
 public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG>, Configurable<String, CONFIG> {
 
+    private final Class<CONFIG> configClass;
     protected CONFIG config;
     private final ObservableImpl<CONFIG> configObservable;
 
-    public AbstractConfigurableRemote() {
+    public AbstractConfigurableRemote(final Class<M> dataClass, final Class<CONFIG> configClass) {
+        super(dataClass);
+        this.configClass = configClass;
         this.configObservable = new ObservableImpl<>(true);
     }
 
@@ -145,6 +148,10 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
             logger.warn("Config does not contain the remote id!");
         }
         return super.getId();
+    }
+
+    public Class<CONFIG> getConfigClass() {
+        return configClass;
     }
 
     @Override
