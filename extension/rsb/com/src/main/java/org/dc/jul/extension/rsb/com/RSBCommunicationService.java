@@ -347,7 +347,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * </pre> In this example the ClosableDataBuilder.close method is be called
      * in background after leaving the try brackets.
      *
-     * @param consumer
+     * @param consumer please specify the consumer of the data lock.
      * @return a new builder wrapper with a locked builder instance.
      */
     public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {

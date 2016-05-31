@@ -75,7 +75,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                 } catch (JPServiceException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
-                logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
+                logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
                 unlockRead("TimeoutHandler");
             }
         };
@@ -90,7 +90,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                 } catch (JPServiceException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
-                logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
+                logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
                 unlockWrite();
             }
         };

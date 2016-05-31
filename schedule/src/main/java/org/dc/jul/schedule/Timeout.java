@@ -24,11 +24,10 @@ package org.dc.jul.schedule;
  * #L%
  */
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Future;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
+import org.dc.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +41,7 @@ public abstract class Timeout {
     private static final Logger logger = LoggerFactory.getLogger(Timeout.class);
 
     private final Object lock = new Object();
-    private ForkJoinTask timerTask;
+    private Future timerTask;
     private long waitTime;
     private boolean expired;
 
@@ -60,7 +59,7 @@ public abstract class Timeout {
     }
 
     public void restart() {
-        logger.debug("Reset timer.");
+        logger.info("Reset timer.");
         cancel();
         start();
     }
@@ -85,37 +84,45 @@ public abstract class Timeout {
         }
     }
 
-    public void start(final long waitTime) {
-        this.waitTime = waitTime;
-        start();
+    public void start() {
+        internal_start(waitTime);
     }
 
-    public void start() {
+
+    public void start(final long waitTime) {
+        this.waitTime = waitTime;
+        internal_start(waitTime);
+    }
+
+    private void internal_start(final long waitTime) {
         synchronized (lock) {
+            expired = false;
             if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
-                logger.debug("Reject start, not interupted or expired.");
+                logger.info("Reject start, not interupted or expired.");
                 return;
             }
 
-            logger.debug("Create new timer");
-            timerTask = ForkJoinPool.commonPool().submit(new Callable<Void>() {
+            logger.info("Create new timer");
+            // TODO may a global scheduled executor service is more suitable.
+            timerTask = GlobalExecuterService.submit(new Callable<Void>() {
 
                 @Override
-                public Void call() {
+                public Void call() throws InterruptedException {
+                    logger.info("Wait for timeout TimeOut interrupted.");
                     try {
                         Thread.sleep(waitTime);
                     } catch (InterruptedException ex) {
-                        logger.debug("TimeOut interrupted.");
-                        return null;
+                        logger.info("TimeOut interrupted.");
+                        throw ex;
                     }
                     try {
-                        logger.debug("Expire...");
+                        logger.info("Expire...");
                         expired = true;
                         expired();
                     } catch (Exception ex) {
-                        logger.debug("Error during timeout handling!", ex);
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
                     }
-                    logger.debug("Worker finished.");
+                    logger.info("Worker finished.");
                     return null;
                 }
             });
@@ -125,9 +132,11 @@ public abstract class Timeout {
     public void cancel() {
         synchronized (lock) {
             if (timerTask != null) {
-                logger.debug("cancel timer.");
+                logger.info("cancel timer.");
                 timerTask.cancel(true);
                 timerTask = null;
+            } else {
+                logger.warn("timer was canceled but never started!");
             }
         }
     }
