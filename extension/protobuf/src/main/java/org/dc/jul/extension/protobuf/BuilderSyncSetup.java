@@ -36,6 +36,7 @@ import org.dc.jul.schedule.Timeout;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.dc.jps.preset.JPDebugMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             @Override
             public void expired() {
                 try {
-                    if (JPService.getProperty(JPTestMode.class).getValue()) {
+                    if (JPService.getProperty(JPDebugMode.class).getValue()) {
                         return;
                     }
                 } catch (JPServiceException ex) {
@@ -163,7 +164,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         boolean success = writeLock.tryLock(time, unit);
         if (success) {
             writeLockConsumer = consumer;
-            writeLockTimeout.start();
+            writeLockTimeout.restart();
         }
         return success;
     }
@@ -174,9 +175,9 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
     public void unlockWrite(boolean notifyChange) {
         logger.debug("order write unlock");
-        writeLockConsumer = "Unknown";
         writeLockTimeout.cancel();
         writeLock.unlock();
+        writeLockConsumer = "Unknown";
         logger.debug("write unlocked");
         if (notifyChange) {
             try {

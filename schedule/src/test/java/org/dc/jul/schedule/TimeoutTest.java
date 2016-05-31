@@ -63,6 +63,8 @@ public class TimeoutTest {
         System.out.println("getTimeToWait");
         final Stopwatch stopwatch = new Stopwatch();
         final long timeToWait = 200;
+        
+        // #### Test timeout expire ####
         Timeout timeout = new Timeout(timeToWait) {
 
             @Override
@@ -82,6 +84,8 @@ public class TimeoutTest {
         System.out.println("time: " + stopwatch.getTime());
         assertTrue("timer to fast!", Math.abs(stopwatch.getTime() - timeToWait) < 50);
 
+        
+        // #### Test timeout cancel ####
         stopwatch.reset();
 
         timeout.start(50);
@@ -95,5 +99,12 @@ public class TimeoutTest {
         } catch (CouldNotPerformException ex) {
             // there should be no result because timeout was canceled.
         }
+        // #### Test multi timeout start behaviour ####
+        
+        stopwatch.reset();
+        timeout.start(50);
+        timeout.start(50);
+        timeout.start(50);
+        
     }
 }

@@ -60,8 +60,10 @@ public abstract class Timeout {
 
     public void restart() {
         logger.info("Reset timer.");
-        cancel();
-        start();
+        synchronized (lock) {
+            cancel();
+            start();
+        }
     }
 
     /**
@@ -88,7 +90,6 @@ public abstract class Timeout {
         internal_start(waitTime);
     }
 
-
     public void start(final long waitTime) {
         this.waitTime = waitTime;
         internal_start(waitTime);
@@ -96,11 +97,11 @@ public abstract class Timeout {
 
     private void internal_start(final long waitTime) {
         synchronized (lock) {
-            expired = false;
             if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
-                logger.info("Reject start, not interupted or expired.");
+                logger.info("Reject start, not interrupted or expired.");
                 return;
             }
+            expired = false;
 
             logger.info("Create new timer");
             // TODO may a global scheduled executor service is more suitable.
@@ -130,6 +131,7 @@ public abstract class Timeout {
     }
 
     public void cancel() {
+        logger.info("try to cancel timer.");
         synchronized (lock) {
             if (timerTask != null) {
                 logger.info("cancel timer.");
