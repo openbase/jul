@@ -59,7 +59,7 @@ public abstract class Timeout {
     }
 
     public void restart() {
-        logger.info("Reset timer.");
+        logger.debug("Reset timer.");
         synchronized (lock) {
             cancel();
             start();
@@ -98,32 +98,32 @@ public abstract class Timeout {
     private void internal_start(final long waitTime) {
         synchronized (lock) {
             if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
-                logger.info("Reject start, not interrupted or expired.");
+                logger.debug("Reject start, not interrupted or expired.");
                 return;
             }
             expired = false;
 
-            logger.info("Create new timer");
+//            logger.info("Create new timer");
             // TODO may a global scheduled executor service is more suitable.
             timerTask = GlobalExecuterService.submit(new Callable<Void>() {
 
                 @Override
                 public Void call() throws InterruptedException {
-                    logger.info("Wait for timeout TimeOut interrupted.");
+                    logger.debug("Wait for timeout TimeOut interrupted.");
                     try {
                         Thread.sleep(waitTime);
                     } catch (InterruptedException ex) {
-                        logger.info("TimeOut interrupted.");
+                        logger.debug("TimeOut interrupted.");
                         throw ex;
                     }
                     try {
-                        logger.info("Expire...");
+                        logger.debug("Expire...");
                         expired = true;
                         expired();
                     } catch (Exception ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
                     }
-                    logger.info("Worker finished.");
+                    logger.debug("Worker finished.");
                     return null;
                 }
             });
@@ -131,14 +131,14 @@ public abstract class Timeout {
     }
 
     public void cancel() {
-        logger.info("try to cancel timer.");
+        logger.debug("try to cancel timer.");
         synchronized (lock) {
             if (timerTask != null) {
-                logger.info("cancel timer.");
+                logger.debug("cancel timer.");
                 timerTask.cancel(true);
                 timerTask = null;
             } else {
-                logger.warn("timer was canceled but never started!");
+                logger.debug("timer was canceled but never started!");
             }
         }
     }
