@@ -295,7 +295,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private void setConnectionState(final RemoteConnectionState connectionState) {
         synchronized (connectionMonitor) {
-            
+
             // filter unchanged events
             if (this.connectionState.equals(connectionState)) {
                 return;
@@ -611,6 +611,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
         try {
+            if (isDataAvailable()) {
+                return;
+            }
+            logger.info("Wait for " + this.toString() + " data...");
             getDataFuture().get();
         } catch (ExecutionException ex) {
             throw new CouldNotPerformException("Could not wait for data!", ex);
@@ -620,6 +624,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException {
         try {
+            if (isDataAvailable()) {
+                return;
+            }
             getDataFuture().get(timeout, timeUnit);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
@@ -629,12 +636,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new NotAvailableException("Data is not yet available!", ex);
         }
     }
-
- // does not work sometimes!
-//    private Class<M> detectDataClass() {
-//        ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
-//        return (Class<M>) parameterizedType.getActualTypeArguments()[0];
-//    }
 
     protected final Object getDataField(String name) throws CouldNotPerformException {
         try {
