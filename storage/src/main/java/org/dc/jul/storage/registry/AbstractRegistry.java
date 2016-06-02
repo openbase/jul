@@ -449,7 +449,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
             // Avoid triggering recursive consistency checks.
-            logger.info(getName() + " skipping consistency check check is already running by same thread. " + Thread.currentThread().getId());
+            logger.debug(getName() + " skipping consistency check because check is already running by same thread. " + Thread.currentThread().getId());
             return modificationCounter;
         }
 
@@ -635,6 +635,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         return name;
 
+    }
+
+    public boolean isSandbox() {
+        return false;
     }
 
     @Override

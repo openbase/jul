@@ -101,4 +101,9 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
             throw new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex);
         }
     }
+
+    @Override
+    public boolean isSandbox() {
+        return true;
+    }
 }
