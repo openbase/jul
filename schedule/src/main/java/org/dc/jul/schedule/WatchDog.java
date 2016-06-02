@@ -205,7 +205,7 @@ public class WatchDog implements Activatable {
                     try {
                         service.deactivate();
                         setServiceState(ServiceState.Finished);
-                    } catch (CouldNotPerformException ex) {
+                    } catch (IllegalStateException | CouldNotPerformException ex) {
                         logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
                         try {
                             waitWithinDelay();
