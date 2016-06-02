@@ -24,9 +24,7 @@ package org.dc.jul.schedule;
  * #L%
  */
 
-import org.dc.jul.schedule.WatchDog;
 import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.iface.Activatable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,6 +62,7 @@ public class WatchDogTest {
 
 	/**
 	 * Test of activate method, of class WatchDog.
+     * @throws java.lang.Exception
 	 */
 	@Test
 	public void testActivate() throws Exception {
@@ -77,6 +76,7 @@ public class WatchDogTest {
 
 	/**
 	 * Test of deactivate method, of class WatchDog.
+     * @throws java.lang.Exception
 	 */
 	@Test
 	public void testDeactivate() throws Exception {
@@ -91,9 +91,10 @@ public class WatchDogTest {
 
 	/**
 	 * Test of isActive method, of class WatchDog.
+     * @throws java.lang.Exception
 	 */
 	@Test
-	public void testIsActive() throws CouldNotPerformException, InterruptedException, InstantiationException {
+	public void testIsActive() throws Exception {
 		System.out.println("isActive");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
 		assertEquals(instance.isActive(), false);
@@ -105,9 +106,10 @@ public class WatchDogTest {
 
 	/**
 	 * Test of service error handling.
+     * @throws java.lang.Exception
 	 */
 	@Test
-	public void testServiceErrorHandling() throws CouldNotPerformException, InterruptedException, InstantiationException {
+	public void testServiceErrorHandling() throws Exception {
 		System.out.println("serviceErrorHandling");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
 		assertEquals(instance.isActive(), false);
@@ -119,9 +121,10 @@ public class WatchDogTest {
 
 	/**
 	 * Test of service deactivation if never active.
+     * @throws java.lang.Exception
 	 */
 	@Test(timeout = 3000)
-	public void testDeactivationInNonActiveState() throws CouldNotPerformException, InterruptedException, InstantiationException {
+	public void testDeactivationInNonActiveState() throws Exception {
 		System.out.println("testDeactivationInNonActiveState");
 		final WatchDog instance = new WatchDog(new TestBadService(), "TestBadService");
 		assertEquals(instance.isActive(), false);
@@ -135,7 +138,6 @@ public class WatchDogTest {
 					instance.deactivate();
 					assertEquals(false, instance.isActive());
 				} catch (InterruptedException ex) {
-					Logger.getLogger(WatchDogTest.class.getName()).log(Level.SEVERE, null, ex);
 				}
 			}
 		}.start();
@@ -170,7 +172,7 @@ public class WatchDogTest {
 
 		@Override
 		public void activate() throws CouldNotPerformException {
-			throw new NullPointerException("Could not activate, simulate internal Nullpointer...");
+			throw new NullPointerException("Simulate internal Nullpointer...");
 		}
 
 		@Override
