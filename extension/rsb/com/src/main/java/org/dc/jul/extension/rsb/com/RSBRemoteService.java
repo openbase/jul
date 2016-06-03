@@ -427,8 +427,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         });
     }
 
-    private static long time;
-
     /**
      * This method synchronizes this remote instance with the main controller
      * and returns the new data object. Normally, all server data changes are
@@ -814,7 +812,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     synchronized (connectionMonitor) {
                         if (connectionState == CONNECTED) {
                             logger.warn("Connection to Participant[" + ScopeTransformer.transform(getScope()) + "] lost!");
+                            
+                            // init reconnection
                             setConnectionState(CONNECTING);
+                            requestData();
                         }
                     }
                     throw ex;
