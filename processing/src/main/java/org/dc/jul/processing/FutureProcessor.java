@@ -67,7 +67,7 @@ public class FutureProcessor {
     }
 
     public static <I, O, R> ForkJoinTask<R> toForkJoinTask(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList) {
-        return GlobalExecutionService.submit(new Callable<R>() {
+        return ForkJoinPool.commonPool().submit(new Callable<R>() {
             @Override
             public R call() throws Exception {
                 MultiException.ExceptionStack exceptionStack = null;
