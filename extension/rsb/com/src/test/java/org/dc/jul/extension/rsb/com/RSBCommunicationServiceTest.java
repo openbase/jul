@@ -23,6 +23,7 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.concurrent.CompletableFuture;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -215,36 +216,48 @@ public class RSBCommunicationServiceTest {
      * 
      * @throws Exception 
      */
-//    @Test(timeout = 5000)
-//    public void testReconnection() throws Exception {
-//        String scope = "/test/reconnection";
-//        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-//        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
-//
-//        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
-//        remoteService.init(scope);
-//        remoteService.activate();
-//        
-//        communicationService = new RSBCommunicationServiceImpl(testData);
-//        communicationService.init(scope);
-//        communicationService.activate();
-//        
-//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
-//
-//        communicationService.deactivate();
-//        
-//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTING);
-//
-//        communicationService.activate();
-//        
-//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
-//
-//        remoteService.shutdown();
-//        
-//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
-//        
-//        communicationService.shutdown();
-//    }
+    @Test(timeout = 5000)
+    public void testWaitForData() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.init(scope);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        
+        remoteService.activate();
+        
+        CompletableFuture dataFuture = remoteService.getDataFuture();
+        
+        communicationService.activate();
+        
+        dataFuture.get();
+        
+        communicationService.shutdown();
+        remoteService.shutdown();
+    }
+    
+    @Test(timeout = 5000)
+    public void testRequestData() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.init(scope);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        
+        remoteService.activate();
+        communicationService.activate();
+        
+        remoteService.requestData().get();
+        
+        communicationService.shutdown();
+        remoteService.shutdown();
+    }
 
     public class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
 
