@@ -105,7 +105,7 @@ public abstract class Timeout {
 
 //            logger.info("Create new timer");
             // TODO may a global scheduled executor service is more suitable.
-            timerTask = GlobalExecuterService.submit(new Callable<Void>() {
+            timerTask = GlobalExecutionService.submit(new Callable<Void>() {
 
                 @Override
                 public Void call() throws InterruptedException {

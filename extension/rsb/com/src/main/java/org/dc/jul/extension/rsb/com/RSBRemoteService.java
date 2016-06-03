@@ -30,6 +30,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.dc.jps.core.JPService;
@@ -54,7 +55,7 @@ import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.pattern.Remote;
 import static org.dc.jul.pattern.Remote.RemoteConnectionState.*;
-import org.dc.jul.schedule.GlobalExecuterService;
+import org.dc.jul.schedule.GlobalExecutionService;
 import org.dc.jul.schedule.SyncObject;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -306,12 +307,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             if (connectionState == CONNECTED) {
                 logger.info("Connection established " + this);
             }
-            
+
             // init ping
             if (connectionState.equals(CONNECTED)) {
                 ping();
             }
-            
+
             this.connectionMonitor.notifyAll();
         }
     }
@@ -390,7 +391,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
 
         validateActivation();
-        return GlobalExecuterService.submit(new Callable<R>() {
+        return GlobalExecutionService.submit(new Callable<R>() {
 
             public Future<R> internalCallFuture;
 
@@ -479,7 +480,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             SyncTaskCallable syncCallable = new SyncTaskCallable();
 
-            final Future<M> currentSyncTask = GlobalExecuterService.submit(syncCallable);
+            final Future<M> currentSyncTask = GlobalExecutionService.submit(syncCallable);
             syncCallable.setRelatedFuture(currentSyncTask);
             return currentSyncTask;
         } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
@@ -799,7 +800,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     public Future<Long> ping() {
-        return GlobalExecuterService.submit(new Callable<Long>() {
+        return GlobalExecutionService.submit(new Callable<Long>() {
 
             @Override
             public Long call() throws Exception {
@@ -812,7 +813,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     synchronized (connectionMonitor) {
                         if (connectionState == CONNECTED) {
                             logger.warn("Connection to Participant[" + ScopeTransformer.transform(getScope()) + "] lost!");
-                            
+
                             // init reconnection
                             setConnectionState(CONNECTING);
                             requestData();

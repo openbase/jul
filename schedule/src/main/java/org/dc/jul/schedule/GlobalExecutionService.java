@@ -39,15 +39,15 @@ import org.slf4j.LoggerFactory;
  *
  * @author divine
  */
-public class GlobalExecuterService implements Shutdownable {
+public class GlobalExecutionService implements Shutdownable {
 
-    protected final org.slf4j.Logger logger = LoggerFactory.getLogger(GlobalExecuterService.class);
+    protected final org.slf4j.Logger logger = LoggerFactory.getLogger(GlobalExecutionService.class);
 
-    private static GlobalExecuterService instance;
+    private static GlobalExecutionService instance;
 
     private final ExecutorService executionService;
 
-    private GlobalExecuterService() {
+    private GlobalExecutionService() {
         this.executionService = Executors.newCachedThreadPool();
 
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -66,9 +66,9 @@ public class GlobalExecuterService implements Shutdownable {
         });
     }
 
-    public static synchronized GlobalExecuterService getInstance() {
+    public static synchronized GlobalExecutionService getInstance() {
         if (instance == null) {
-            instance = new GlobalExecuterService();
+            instance = new GlobalExecutionService();
         }
         return instance;
     }
