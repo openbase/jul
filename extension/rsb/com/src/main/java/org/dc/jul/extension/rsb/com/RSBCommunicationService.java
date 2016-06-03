@@ -55,6 +55,7 @@ import org.dc.jul.iface.Requestable;
 import org.dc.jul.pattern.Controller;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
+import org.dc.jul.schedule.GlobalExecuterService;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -211,7 +212,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     if (data == WatchDog.ServiceState.Running) {
 
                         // Sync data after service start.
-                        ForkJoinPool.commonPool().submit(() -> {
+                        GlobalExecuterService.submit(() -> {
                             try {
                                 serverWatchDog.waitForActivation();
                                 logger.debug("trigger initial sync");

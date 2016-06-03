@@ -197,15 +197,54 @@ public class RSBCommunicationServiceTest {
 
         communicationService.deactivate();
         
-        remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
-        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTING);
+
         communicationService.activate();
         
         remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
 
-        remoteService.deactivate();
-        communicationService.deactivate();
+        remoteService.shutdown();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
+        
+        communicationService.shutdown();
     }
+    
+    /**
+     * Test if a RemoteService will reconnect when the communication service restarts.
+     * 
+     * @throws Exception 
+     */
+//    @Test(timeout = 5000)
+//    public void testReconnection() throws Exception {
+//        String scope = "/test/reconnection";
+//        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+//        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+//
+//        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+//        remoteService.init(scope);
+//        remoteService.activate();
+//        
+//        communicationService = new RSBCommunicationServiceImpl(testData);
+//        communicationService.init(scope);
+//        communicationService.activate();
+//        
+//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+//
+//        communicationService.deactivate();
+//        
+//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTING);
+//
+//        communicationService.activate();
+//        
+//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+//
+//        remoteService.shutdown();
+//        
+//        remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
+//        
+//        communicationService.shutdown();
+//    }
 
     public class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
 

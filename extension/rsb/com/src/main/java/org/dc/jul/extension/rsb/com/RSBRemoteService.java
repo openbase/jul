@@ -301,6 +301,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 return;
             }
 
+            if (connectionState == CONNECTED) {
+                logger.info("Connection established " + this);
+            }
             // init ping
             if (connectionState.equals(CONNECTED)) {
                 ping();
