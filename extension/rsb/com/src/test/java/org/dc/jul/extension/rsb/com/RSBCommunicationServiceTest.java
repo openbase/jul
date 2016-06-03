@@ -174,6 +174,38 @@ public class RSBCommunicationServiceTest {
         informer.activate();
         informer.send("TestString");
     }
+    
+    /**
+     * Test if a RemoteService will reconnect when the communication service restarts.
+     * 
+     * @throws Exception 
+     */
+    //@Test(timeout = 5000)
+    public void testReconnection() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        communicationService.activate();
+
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.init(scope);
+        remoteService.activate();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+
+        communicationService.deactivate();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
+        
+        communicationService.activate();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+
+        remoteService.deactivate();
+        communicationService.deactivate();
+    }
 
     public class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
 
