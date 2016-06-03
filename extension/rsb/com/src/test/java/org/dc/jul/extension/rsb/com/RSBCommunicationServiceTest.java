@@ -180,7 +180,7 @@ public class RSBCommunicationServiceTest {
      * 
      * @throws Exception 
      */
-    //@Test(timeout = 5000)
+    @Test(timeout = 5000)
     public void testReconnection() throws Exception {
         String scope = "/test/reconnection";
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
