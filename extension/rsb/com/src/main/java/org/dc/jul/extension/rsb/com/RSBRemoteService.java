@@ -25,12 +25,10 @@ package org.dc.jul.extension.rsb.com;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import java.lang.reflect.ParameterizedType;
 import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.dc.jps.core.JPService;
@@ -446,7 +444,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
-        logger.debug("requestData...");
+        logger.info( this + " requestData...");
         validateInitialization();
         try {
             synchronized (syncMonitor) {
