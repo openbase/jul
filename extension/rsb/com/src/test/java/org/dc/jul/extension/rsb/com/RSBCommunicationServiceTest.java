@@ -258,6 +258,35 @@ public class RSBCommunicationServiceTest {
         communicationService.shutdown();
         remoteService.shutdown();
     }
+    
+    @Test(timeout = 5000)
+    public void testRemoteInterference() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+
+        RSBRemoteService remoteService1 = new RSBRemoteServiceImpl();
+        RSBRemoteService remoteService2 = new RSBRemoteServiceImpl();
+        remoteService1.init(scope);
+        remoteService2.init(scope);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        communicationService.activate();
+        
+        remoteService1.activate();
+        remoteService2.activate();
+        
+        remoteService1.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        remoteService2.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        
+        remoteService1.shutdown();
+        remoteService1.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
+        assertEquals("Remote connected to the same service got shutdown too", Remote.RemoteConnectionState.CONNECTED, remoteService2.getConnectionState());
+        remoteService2.requestData().get();
+        
+        communicationService.shutdown();
+        remoteService2.shutdown();
+    }
 
     public class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
 

@@ -301,16 +301,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 return;
             }
 
+            // update state and notify
+            this.connectionState = connectionState;
             if (connectionState == CONNECTED) {
                 logger.info("Connection established " + this);
             }
+            
             // init ping
             if (connectionState.equals(CONNECTED)) {
                 ping();
             }
-
-            // update state and notify
-            this.connectionState = connectionState;
+            
             this.connectionMonitor.notifyAll();
         }
     }
@@ -533,7 +534,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 if (relatedFuture == null || !relatedFuture.isCancelled()) {
                     applyDataUpdate(dataUpdate);
                 }
-                setConnectionState(CONNECTED);
                 return dataUpdate;
             } catch (InterruptedException ex) {
                 if (internalFuture != null) {
