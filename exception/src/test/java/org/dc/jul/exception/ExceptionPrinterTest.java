@@ -23,7 +23,6 @@ package org.dc.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.MultiException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
@@ -82,7 +81,7 @@ public class ExceptionPrinterTest {
         Exception ex6 = new CouldNotPerformException("No Way 6", ex5);
         Exception ex7 = new CouldNotPerformException("No Way 7", ex6);
 
-        Exception baseException1 = new CouldNotPerformException("Base Exception", ex7);
+        Exception baseException1 = new CouldNotPerformException("BaseException", ex7);
         stack = MultiException.push(this, ex1, stack);
         stack = MultiException.push(this, ex2, stack);
         stack = MultiException.push(this, ex3, stack);
@@ -100,7 +99,7 @@ public class ExceptionPrinterTest {
         stack2 = MultiException.push(this, baseException1, stack2);
 
         try {
-            MultiException.checkAndThrow("Multi Exception 1", stack);
+            MultiException.checkAndThrow("MultiException 1", stack);
         } catch (MultiException ex) {
             stack2 = MultiException.push(this, ex, stack2);
             ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
@@ -112,12 +111,14 @@ public class ExceptionPrinterTest {
         stack2 = MultiException.push(this, ex4, stack2);
 
         try {
-            MultiException.checkAndThrow("Multi Exception 2", stack2);
+            MultiException.checkAndThrow("MultiException 2", stack2);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
-            System.out.println("Test getHistory:");
-            System.out.println(ExceptionPrinter.getHistory(ex));
+            ExceptionPrinter.printHistory(new CouldNotPerformException("BaseException containing MultiException", ex), logger);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("BaseBaseException", new CouldNotPerformException("BaseException containing MultiException", ex)), logger);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("BaseBaseBaseException", new CouldNotPerformException("BaseBaseException", new CouldNotPerformException("BaseException containing MultiException", ex))), logger);
         }
+
     }
 
     @Override

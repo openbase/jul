@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.pattern;
 
 /*
@@ -45,20 +41,20 @@ public class ObservableImpl<T> implements Observable<T>{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObservableImpl.class);
 
-    private static final boolean DEFAULT_UNCHANGED_DATA_FILTER = true;
+    private static final boolean DEFAULT_UNCHANGED_VALUE_FILTER = true;
 
-    private final boolean unchangedDataFilter;
+    private final boolean unchangedValueFilter;
     private final Object LOCK = new Object();
     private final List<Observer<T>> observers;
     private T latestValue;
 
     public ObservableImpl() {
-        this(DEFAULT_UNCHANGED_DATA_FILTER);
+        this(DEFAULT_UNCHANGED_VALUE_FILTER);
     }
 
-    public ObservableImpl(final boolean unchangedDataFilter) {
+    public ObservableImpl(final boolean unchangedValueFilter) {
         this.observers = new ArrayList<>();
-        this.unchangedDataFilter = unchangedDataFilter;
+        this.unchangedValueFilter = unchangedValueFilter;
     }
 
     @Override

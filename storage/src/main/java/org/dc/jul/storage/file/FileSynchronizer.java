@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.storage.file;
 
 /*
@@ -121,7 +116,7 @@ public class FileSynchronizer<D> extends ObservableImpl<D> {
 
         try {
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                logger.warn("Skip data save because " + JPTestMode.class.getSimpleName() + " is enabled!");
+                logger.debug("Skip data save because " + JPTestMode.class.getSimpleName() + " is enabled!");
                 return file;
             }
         } catch (JPServiceException ex) {
@@ -155,7 +150,7 @@ public class FileSynchronizer<D> extends ObservableImpl<D> {
 
         try {
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                logger.warn("Skip file creation because " + JPTestMode.class.getSimpleName() + " is enabled!");
+                logger.debug("Skip file creation because " + JPTestMode.class.getSimpleName() + " is enabled!");
                 return file;
             }
         } catch (JPServiceException ex) {
@@ -179,7 +174,7 @@ public class FileSynchronizer<D> extends ObservableImpl<D> {
 
         try {
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                logger.warn("Skip file deletion because " + JPTestMode.class.getSimpleName() + " is enabled!");
+                logger.debug("Skip file deletion because " + JPTestMode.class.getSimpleName() + " is enabled!");
                 return;
             }
         } catch (JPServiceException ex) {

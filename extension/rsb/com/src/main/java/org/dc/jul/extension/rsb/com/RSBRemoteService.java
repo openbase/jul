@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -30,13 +25,10 @@ package org.dc.jul.extension.rsb.com;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.dc.jps.core.JPService;
@@ -47,7 +39,6 @@ import org.dc.jul.exception.InitializationException;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.NotAvailableException;
-import org.dc.jul.exception.RejectedException;
 import org.dc.jul.exception.TimeoutException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.printer.LogLevel;
@@ -61,6 +52,9 @@ import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.pattern.Remote;
+import static org.dc.jul.pattern.Remote.RemoteConnectionState.*;
+import org.dc.jul.schedule.GlobalExecutionService;
+import org.dc.jul.schedule.SyncObject;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,9 +70,14 @@ import rst.rsb.ScopeType;
  * @author mpohling
  * @param <M>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> extends ObservableImpl<M> implements Remote<M> {
+public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    public static final long REQUEST_TIMEOUT = 15000;
+    public static final long PING_TIMEOUT = 3000;
+    public static final long CONNECTION_TIMEOUT = 60000;
+    public static final long DATA_WAIT_TIMEOUT = 1000;
 
     static {
         RSBSharedConnectionConfig.load();
@@ -87,27 +86,40 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     private RSBListenerInterface listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private RSBRemoteServerInterface remoteServer;
+    private Remote.RemoteConnectionState connectionState;
+    private long connectionPing;
+    private long lastPingReceived;
     private final Handler mainHandler;
-    private final ExecutorService executorService;
-    private final List<Future<Void>> syncTasks;
+
+    private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
+    private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
+
+    private CompletableFuture<M> syncFuture;
+    private Future<M> syncTask;
 
     protected Scope scope;
     private M data;
     private boolean initialized;
+    private final Class<M> dataClass;
+    private final ObservableImpl<M> dataObservable = new ObservableImpl<>();
 
-    public RSBRemoteService() {
+    public RSBRemoteService(final Class<M> dataClass) {
+        this.dataClass = dataClass;
         this.mainHandler = new InternalUpdateHandler();
         this.initialized = false;
         this.remoteServer = new NotInitializedRSBRemoteServer();
         this.listener = new NotInitializedRSBListener();
-        this.executorService = Executors.newCachedThreadPool();
-        this.syncTasks = new ArrayList<>();
+        this.connectionState = DISCONNECTED;
+        this.connectionPing = -1;
+        this.lastPingReceived = -1;
     }
 
+    @Override
     public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    @Override
     public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
@@ -121,6 +133,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
+    @Override
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             init(ScopeTransformer.transform(scope), participantConfig);
@@ -130,8 +143,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     }
 
     /**
-     * Method is called after communication initialization.
-     * You can overwrite this method to trigger any component specific initialization.
+     * Method is called after communication initialization. You can overwrite
+     * this method to trigger any component specific initialization.
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -152,6 +166,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
     }
 
+    @Override
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             ParticipantConfig internalParticipantConfig = participantConfig;
@@ -207,28 +222,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
                 @Override
                 public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
+
+                    logger.debug("listener state update: " + data.name());
+                    // Sync data after service start.
                     if (data == WatchDog.ServiceState.Running) {
-
-                        // Sync data after service start.
-                        syncTasks.add(executorService.submit(new Callable<Void>() {
-
-                            @Override
-                            public Void call() throws Exception {
-                                try {
-                                    remoteServerWatchDog.waitForActivation();
-                                    sync();
-                                } catch (InterruptedException | CouldNotPerformException ex) {
-                                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
-                                }
-                                return null;
-                            }
-                        }));
+                        remoteServerWatchDog.waitForActivation();
+                        requestData();
                     }
                 }
             });
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope + "]!", ex);
         }
+    }
+
+    @Override
+    public Class<M> getDataClass() {
+        return dataClass;
     }
 
     public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
@@ -243,8 +253,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public void activate() throws InterruptedException, CouldNotPerformException {
         try {
             validateInitialization();
-            activateListener();
+            setConnectionState(CONNECTING);
             activateRemoteServer();
+            activateListener();
         } catch (CouldNotPerformException ex) {
             throw new InvalidStateException("Could not activate remote service!", ex);
         }
@@ -252,18 +263,20 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
+//        try {
         try {
             validateInitialization();
-            skipSyncTasks();
-            deactivateListener();
-            deactivateRemoteServer();
         } catch (InvalidStateException ex) {
-            throw new CouldNotPerformException("Could not deactivate " + getClass().getSimpleName() + "!", ex);
+            // was never initialized!
+            return;
         }
-    }
-
-    private void skipSyncTasks() {
-        syncTasks.forEach((Future<Void> task) -> task.cancel(true));
+        setConnectionState(DISCONNECTED);
+        skipSyncTasks();
+        deactivateListener();
+        deactivateRemoteServer();
+//        } catch (CouldNotPerformException ex) {
+//            throw new CouldNotPerformException("Could not deactivate " + getClass().getSimpleName() + "!", ex);
+//        }
     }
 
     private void activateListener() throws InterruptedException {
@@ -276,31 +289,40 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
 
     @Override
     public boolean isConnected() {
-        //TODO mpohling implement connection server check.
+        return connectionState == CONNECTED;
+    }
 
-        if (!isActive()) {
-            return false;
-        }
+    private void setConnectionState(final RemoteConnectionState connectionState) {
+        synchronized (connectionMonitor) {
 
-        if (data == null) {
-            try {
-                sync().get(500, TimeUnit.SECONDS);
-            } catch (Exception ex) {
-                // ignore if sync failed.
+            // filter unchanged events
+            if (this.connectionState.equals(connectionState)) {
+                return;
             }
-        }
 
-        return data != null;
+            // update state and notify
+            this.connectionState = connectionState;
+            if (connectionState == CONNECTED) {
+                logger.info("Connection established " + this);
+            }
+
+            // init ping
+            if (connectionState.equals(CONNECTED)) {
+                ping();
+            }
+
+            this.connectionMonitor.notifyAll();
+        }
+    }
+
+    @Override
+    public RemoteConnectionState getConnectionState() {
+        return connectionState;
     }
 
     @Override
     public boolean isActive() {
-        try {
-            validateInitialization();
-        } catch (InvalidStateException ex) {
-            return false;
-        }
-        return listenerWatchDog.isActive() && listener.isActive() && remoteServerWatchDog.isActive() && remoteServer.isActive();
+        return listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
     }
 
     private void activateRemoteServer() throws InterruptedException {
@@ -311,6 +333,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         remoteServerWatchDog.deactivate();
     }
 
+    //Timeout needed!
     @Override
     public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException {
         return callMethod(methodName, null);
@@ -321,17 +344,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         return callMethodAsync(methodName, null);
     }
 
-    public final static double START_TIMEOUT = 5;
+    public final static long START_TIMEOUT = 500;
     public final static double TIMEOUT_MULTIPLIER = 1.2;
-    public final static double MAX_TIMEOUT = 30;
+    public final static long MAX_TIMEOUT = 30000;
 
     @Override
-    public <R, T extends Object> R callMethod(String methodName, T type) throws CouldNotPerformException {
-        try {
-            logger.debug("Calling method [" + methodName + "(" + type + ")] on scope: " + remoteServer.getScope().toString());
-            validateConnectionState();
+    public <R, T extends Object> R callMethod(String methodName, T argument) throws CouldNotPerformException, InterruptedException {
 
-            double timeout = START_TIMEOUT;
+        validateActivation();
+        try {
+            logger.info("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
+            if (!isConnected()) {
+                waitForConnectionState(CONNECTED);
+            }
+
+            long timeout = START_TIMEOUT;
             while (true) {
 
                 if (!isActive()) {
@@ -339,95 +366,180 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 }
 
                 try {
-                    return remoteServer.call(methodName, type, timeout);
+                    logger.info("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
+                    return remoteServer.call(methodName, argument, timeout);
                 } catch (TimeoutException ex) {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                     timeout = generateTimeout(timeout);
-                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + type + ")]. Next timeout in " + ((int) timeout) + " seconds.");
+                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next timeout in " + ((int) timeout) + " seconds.");
                     Thread.yield();
                 }
             }
-        } catch (InterruptedException ex) {
-            //TODO mpohling: handle interrupted exception in paramite release
-            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
     public final static Random jitterRandom = new Random();
 
-    public static double generateTimeout(double currentTimeout) {
-        return Math.min(MAX_TIMEOUT, currentTimeout * TIMEOUT_MULTIPLIER + jitterRandom.nextDouble());
+    public static long generateTimeout(long currentTimeout) {
+        return Math.min(MAX_TIMEOUT, (long) (currentTimeout * TIMEOUT_MULTIPLIER + jitterRandom.nextDouble()));
     }
 
     @Override
-    public <R, T extends Object> Future<R> callMethodAsync(String methodName, T type) throws CouldNotPerformException {
-        try {
-            logger.debug("Calling method [" + methodName + "(" + (type != null ? type.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
-            validateConnectionState();
-            return remoteServer.callAsync(methodName, type);
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + type + ")] on Scope[" + remoteServer.getScope() + "].", ex);
-        }
-    }
+    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
 
-    protected Future<Object> sync() throws CouldNotPerformException {
-        final Future<Object> dataSyncFuture = callMethodAsync(RPC_REQUEST_STATUS);
+        validateActivation();
+        return GlobalExecutionService.submit(new Callable<R>() {
 
-        //TODO mpohling: switch to Future<M> return value by defining message class via construtor.
-        // sumbit task for result processing
-        executorService.submit(new Callable<Void>() {
+            public Future<R> internalCallFuture;
 
             @Override
-            public Void call() throws Exception {
+            public R call() throws Exception {
                 try {
-                    applyDataUpdate((M) dataSyncFuture.get(1, TimeUnit.MINUTES));
-                } catch (Exception ex) {
-                    dataSyncFuture.cancel(true);
-                    if (ex instanceof InterruptedException) {
-                        // BUG! InterruptedException is catched!!! // BUG BUG BUB BUG
-                        throw ex;
-//                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.DEBUG);
-                    } else {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Data sync failed!", ex), logger, LogLevel.ERROR);
+                    logger.debug("Calling method [" + methodName + "(" + (argument != null ? argument.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
+
+                    if (!isConnected()) {
+                        waitForConnectionState(CONNECTED);
                     }
+
+                    internalCallFuture = remoteServer.callAsync(methodName, argument);
+                    try {
+                        return internalCallFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                    } catch (java.util.concurrent.TimeoutException ex) {
+                        // validate connection
+                        try {
+                            ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                        } catch (ExecutionException | java.util.concurrent.TimeoutException exx) {
+                            // connection broken
+                            internalCallFuture.cancel(true);
+                        }
+                        return internalCallFuture.get();
+                    }
+                } catch (InterruptedException ex) {
+                    if (internalCallFuture != null) {
+                        internalCallFuture.cancel(true);
+                    }
+                    throw ex;
+                } catch (CouldNotPerformException ex) {
+                    throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
                 }
-                return null;
             }
         });
-        return dataSyncFuture;
     }
 
     /**
-     * Triggers a server - remote data sync and returns the new acquired data. All server data changes are synchronized automatically to all remote instances. In case you have triggered many server
-     * changes, you can use this method to get instantly a data object with all applied changes.
+     * This method synchronizes this remote instance with the main controller
+     * and returns the new data object. Normally, all server data changes are
+     * automatically synchronized to all remote instances. In case you have
+     * triggered many server changes, this changes are sequentially applied.
+     * With this method you can force the sync to get instantly a data object
+     * with all applied changes. This action can not be canceled! Use this
+     * method with caution because high frequently calls will reduce the network
+     * performance! The preferred by to access the data object
      *
-     * Note: This method blocks until the new data is acquired!
+     * @return A CompletableFuture which gives feedback about the successful
+     * synchronization.
+     * @throws CouldNotPerformException In case the sync could not be triggered
+     * an CouldNotPerformException will be thrown.
+     */
+    @Override
+    public CompletableFuture<M> requestData() throws CouldNotPerformException {
+        logger.info( this + " requestData...");
+        validateInitialization();
+        try {
+            synchronized (syncMonitor) {
+
+                // Check if sync is in process.
+                if (syncFuture != null) {
+                    return syncFuture;
+                }
+
+                // Create new sync process
+                syncFuture = new CompletableFuture();
+                syncTask = sync();
+                return syncFuture;
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not request data!", ex);
+        }
+    }
+
+    /**
+     * Method forces a server - remote data sync and returns the new acquired
+     * data. Can be useful for initial data sync or data sync after
+     * reconnection.
      *
      * @return fresh synchronized data object.
      * @throws CouldNotPerformException
      */
-    @Override
-    public M requestStatus() throws CouldNotPerformException {
+    private Future<M> sync() throws CouldNotPerformException {
+        logger.debug("Synchronization of Remote[" + this + "] triggered...");
+        validateInitialization();
         try {
-            logger.debug("requestStatus updated.");
+            SyncTaskCallable syncCallable = new SyncTaskCallable();
+
+            final Future<M> currentSyncTask = GlobalExecutionService.submit(syncCallable);
+            syncCallable.setRelatedFuture(currentSyncTask);
+            return currentSyncTask;
+        } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
+            throw new CouldNotPerformException("Could not request the current status.", ex);
+        }
+    }
+
+    private class SyncTaskCallable implements Callable<M> {
+
+        Future<M> relatedFuture;
+
+        public void setRelatedFuture(Future<M> relatedFuture) {
+            this.relatedFuture = relatedFuture;
+        }
+
+        @Override
+        public M call() throws Exception {
+
+            Future<Event> internalFuture = null;
             M dataUpdate;
             try {
-                dataUpdate = (M) callMethod(RPC_REQUEST_STATUS);
+                logger.debug("call request");
+
+                long timeout = START_TIMEOUT;
+                while (true) {
+
+                    if (!isActive()) {
+                        throw new InvalidStateException("Remote service is not active!");
+                    }
+
+                    try {
+                        internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
+                        dataUpdate = (M) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData();
+                        break;
+                    } catch (TimeoutException ex) {
+                        ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+                        timeout = generateTimeout(timeout);
+                        logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next timeout in " + ((int) timeout) + " seconds.");
+                        Thread.yield();
+                    }
+                }
+
+                logger.debug("got data!");
+
+                if (dataUpdate == null) {
+                    throw new InvalidStateException("Server result invalid!");
+                }
+
+                // skip if sync was already performed by global data update.
+                if (relatedFuture == null || !relatedFuture.isCancelled()) {
+                    applyDataUpdate(dataUpdate);
+                }
+                return dataUpdate;
             } catch (InterruptedException ex) {
-                // TODO mpohling: forward interupted exception in paramite release.
-                throw new RejectedException("Remote call was interrupted!", ex);
-//                throw ex;
+                if (internalFuture != null) {
+                    internalFuture.cancel(true);
+                }
+                throw ex;
+            } catch (CouldNotPerformException ex) {
+                throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
             }
-
-            if (dataUpdate == null) {
-                throw new InvalidStateException("Server result invalid!");
-            }
-
-            applyDataUpdate(dataUpdate);
-            return dataUpdate;
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not request the current status.", ex);
         }
     }
 
@@ -437,37 +549,95 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     @Override
     public void shutdown() {
         try {
-            deactivate();
-        } catch (CouldNotPerformException | InterruptedException ex) {
-            logger.error("Could not deactivate remote service!", ex);
+            dataObservable.shutdown();
+        } finally {
+            try {
+                deactivate();
+            } catch (CouldNotPerformException | InterruptedException ex) {
+                logger.error("Could not deactivate remote service!", ex);
+            }
         }
-        executorService.shutdownNow();
-        super.shutdown();
     }
 
     /**
-     * Returns the data object of the given remote.
+     * Returns a future of the data object. This method can be useful after
+     * remote initialization in case the data object was not received jet. The
+     * future can be used to wait for the data object.
      *
-     * @return
-     * @throws CouldNotPerformException
+     * @return a future object delivering the data if available.
+     * @throws CouldNotPerformException In case something went wrong a
+     * CouldNotPerformException is thrown.
      */
-    public M getData() throws CouldNotPerformException {
+    @Override
+    public CompletableFuture<M> getDataFuture() throws CouldNotPerformException {
         try {
             if (data == null) {
-                return requestStatus();
+                return requestData();
             }
-            return data;
+            return CompletableFuture.completedFuture(data);
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("data", ex);
         }
     }
 
-    public Class detectMessageClass() {
-        ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
-        return (Class) parameterizedType.getActualTypeArguments()[0];
+    /**
+     * Method returns the data object of this remote which is synchronized with
+     * the server data in background.
+     *
+     * In case the data was never received not available a NotAvailableException
+     * is thrown. Use method getDataFuture()
+     *
+     * @return
+     * @throws CouldNotPerformException
+     */
+    @Override
+    public M getData() throws CouldNotPerformException {
+        if (data == null) {
+            throw new NotAvailableException("data");
+        }
+        return data;
     }
 
-    protected final Object getField(String name) throws CouldNotPerformException {
+    /**
+     * Check if the data object is already available.
+     *
+     * @return
+     */
+    @Override
+    public boolean isDataAvailable() {
+        return data != null;
+    }
+
+    @Override
+    public void waitForData() throws CouldNotPerformException, InterruptedException {
+        try {
+            if (isDataAvailable()) {
+                return;
+            }
+            logger.info("Wait for " + this.toString() + " data...");
+            getDataFuture().get();
+        } catch (ExecutionException ex) {
+            throw new CouldNotPerformException("Could not wait for data!", ex);
+        }
+    }
+
+    @Override
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException {
+        try {
+            if (isDataAvailable()) {
+                return;
+            }
+            getDataFuture().get(timeout, timeUnit);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            // TODO mpohling: should the interrupted exception thrown instead?
+            throw new CouldNotPerformException("Interrupted while waiting for data!", ex);
+        } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
+            throw new NotAvailableException("Data is not yet available!", ex);
+        }
+    }
+
+    protected final Object getDataField(String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
             if (findFieldByName == null) {
@@ -479,11 +649,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    private void validateConnectionState() throws InvalidStateException {
-        validateInitialization();
-        //TODO mpohling: remove after connection handshake is implemented.
-        if (!isActive()) {
-            throw new InvalidStateException("Could not reach server! Remote is not activated!");
+    protected final boolean hasDataField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                return false;
+            }
+            return getData().hasField(findFieldByName);
+        } catch (Exception ex) {
+            return false;
         }
     }
 
@@ -492,10 +666,30 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
             throw new InvalidStateException("Remote communication service not initialized!");
         }
     }
+
+    private void validateActivation() throws InvalidStateException {
+        if (!isActive()) {
+            throw new InvalidStateException("Remote communication service not activated!");
+        }
+    }
+
+    public void waitForConnectionState(final RemoteConnectionState connectionState) throws InterruptedException {
+        synchronized (connectionMonitor) {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (this.connectionState.equals(connectionState)) {
+                    return;
+                }
+                // TODO: verify if this timeout is really neccessary
+                connectionMonitor.wait(1000);
+            }
+        }
+    }
+
+    @Override
     public ScopeType.Scope getScope() throws NotAvailableException {
         try {
             return ScopeTransformer.transform(scope);
-        } catch(CouldNotTransformException ex) {
+        } catch (CouldNotTransformException ex) {
             throw new NotAvailableException("scope", ex);
         }
     }
@@ -504,8 +698,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
     public String toString() {
         return getClass().getSimpleName() + "[scope:" + scope + "]";
     }
-
-    public abstract void notifyUpdated(M data) throws CouldNotPerformException;
 
     private class InternalUpdateHandler implements Handler {
 
@@ -516,7 +708,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
                 Object data = event.getData();
                 try {
                     applyDataUpdate((M) data);
-                    return;
                 } catch (ClassCastException ex) {
                     // Thats not the right internal data type. Skip update...
                 }
@@ -528,20 +719,137 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> extends Obser
         }
     }
 
-    private synchronized void applyDataUpdate(final M data) {
+    private void applyDataUpdate(final M data) {
         this.data = data;
+        CompletableFuture<M> currentSyncFuture = null;
+        Future<M> currentSyncTask = null;
+
+        // Check if sync is in process.
+        synchronized (syncMonitor) {
+            if (syncFuture != null) {
+                currentSyncFuture = syncFuture;
+                currentSyncTask = syncTask;
+                syncFuture = null;
+                syncTask = null;
+            }
+        }
+
+        // Notify data update
+        try {
+            notifyDataUpdate(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+        }
+
+        if (currentSyncFuture != null) {
+            currentSyncFuture.complete(data);
+        }
+
+        if (currentSyncTask != null && !currentSyncTask.isDone()) {
+            currentSyncTask.cancel(true);
+        }
+        setConnectionState(CONNECTED);
 
         try {
-            notifyUpdated(data);
+            dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger, LogLevel.ERROR);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
         }
-        try {
-            notifyObservers(data);
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger, LogLevel.ERROR);
+    }
+
+    /**
+     * Method can be overwritten to get internally informed about data updates.
+     *
+     * @param data new arrived data messages.
+     * @throws CouldNotPerformException
+     */
+    protected void notifyDataUpdate(M data) throws CouldNotPerformException {
+        // dummy method, please overwrite if needed.
+    }
+
+    /**
+     *
+     * @param observer
+     * @deprecated use addDataObserver(observer); instead!
+     */
+    @Deprecated
+    public void addObserver(Observer<M> observer) {
+        addDataObserver(observer);
+    }
+
+    /**
+     *
+     * @param observer
+     * @deprecated use removeDataObserver(observer); instead
+     */
+    @Deprecated
+    public void removeObserver(Observer<M> observer) {
+        removeDataObserver(observer);
+    }
+
+    @Override
+    public void addDataObserver(final Observer<M> observer) {
+        dataObservable.addObserver(observer);
+    }
+
+    @Override
+    public void removeDataObserver(final Observer<M> observer) {
+        dataObservable.removeObserver(observer);
+    }
+
+    public Future<Long> ping() {
+        return GlobalExecutionService.submit(new Callable<Long>() {
+
+            @Override
+            public Long call() throws Exception {
+                try {
+                    Long requestTime = (Long) callMethodAsync("ping", System.currentTimeMillis()).get(PING_TIMEOUT, TimeUnit.MILLISECONDS);
+                    lastPingReceived = System.currentTimeMillis();
+                    connectionPing = lastPingReceived - requestTime;
+                    return connectionPing;
+                } catch (java.util.concurrent.TimeoutException ex) {
+                    synchronized (connectionMonitor) {
+                        if (connectionState == CONNECTED) {
+                            logger.warn("Connection to Participant[" + ScopeTransformer.transform(getScope()) + "] lost!");
+
+                            // init reconnection
+                            setConnectionState(CONNECTING);
+                            requestData();
+                        }
+                    }
+                    throw ex;
+                } catch (CouldNotPerformException | ExecutionException ex) {
+                    throw new CouldNotPerformException("Could not compute ping!", ex);
+                }
+            }
+        });
+    }
+
+    public long getPing() {
+        return connectionPing;
+    }
+
+    private void skipSyncTasks() {
+        CompletableFuture<M> currentSyncFuture = null;
+        Future<M> currentSyncTask = null;
+
+        // Check if sync is in process.
+        synchronized (syncMonitor) {
+            if (syncFuture != null) {
+                currentSyncFuture = syncFuture;
+                currentSyncTask = syncTask;
+                syncFuture = null;
+                syncTask = null;
+            }
         }
 
-        skipSyncTasks();
+        // Notify sync cancelation
+        if (currentSyncFuture != null) {
+            currentSyncFuture.cancel(true);
+        }
+
+        if (currentSyncTask != null) {
+            currentSyncTask.cancel(true);
+        }
     }
 }

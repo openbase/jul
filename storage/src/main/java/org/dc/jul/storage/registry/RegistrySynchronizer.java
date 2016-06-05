@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.storage.registry;
 
 /*
@@ -213,7 +208,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     public ENTRY update(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
         ENTRY entry = localRegistry.get(remoteRegistry.getKey(config));
-        entry.updateConfig(config);
+        entry.applyConfigUpdate(config);
         return entry;
     }
 

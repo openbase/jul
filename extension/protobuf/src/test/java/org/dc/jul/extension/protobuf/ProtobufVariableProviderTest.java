@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.protobuf;
 
 /*
@@ -68,7 +63,7 @@ public class ProtobufVariableProviderTest {
     /**
      * Test of getName method, of class ProtobufVariableProvider.
      */
-    @Test(timeout = 60000)
+    @Test(timeout = 10000)
     public void testGetName() {
 
         UnitConfigType.UnitConfig config = UnitConfig.getDefaultInstance();
@@ -82,7 +77,7 @@ public class ProtobufVariableProviderTest {
     /**
      * Test of getValue method, of class ProtobufVariableProvider.
      */
-    @Test(timeout = 60000)
+    @Test(timeout = 10000)
     public void testGetValue() throws Exception {
         UnitConfigType.UnitConfig config = UnitConfig.getDefaultInstance();
         config = config.toBuilder().setLabel("TestLabel").build();

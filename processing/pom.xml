@@ -46,7 +46,7 @@
         <!-- Json protobuf processor-->
         <dependency>
             <groupId>org.dc</groupId>
-            <artifactId>jul.exception</artifactId>
+            <artifactId>jul.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -69,5 +69,6 @@
             <artifactId>vecmath</artifactId>
             <version>1.3.1</version>
         </dependency>
+        
     </dependencies>
 </project>

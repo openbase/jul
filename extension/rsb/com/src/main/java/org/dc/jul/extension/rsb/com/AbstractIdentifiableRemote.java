@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -41,10 +36,14 @@ import org.dc.jul.pattern.IdentifiableRemote;
  */
 public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {
 
+    public AbstractIdentifiableRemote(final Class<M> dataClass) {
+        super(dataClass);
+    }
+
     @Override
     public String getId() throws NotAvailableException {
         try {
-            String id = (String) getField(TYPE_FIELD_ID);
+            String id = (String) getDataField(TYPE_FIELD_ID);
             if (id.isEmpty()) {
                 throw new InvalidStateException("data.id is empty!");
             }

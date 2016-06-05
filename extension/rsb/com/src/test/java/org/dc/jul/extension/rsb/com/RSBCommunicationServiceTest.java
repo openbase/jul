@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -28,6 +23,7 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.concurrent.CompletableFuture;
 import org.dc.jps.core.JPService;
 import org.dc.jps.exception.JPServiceException;
 import org.dc.jul.exception.CouldNotPerformException;
@@ -35,6 +31,7 @@ import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
+import org.dc.jul.pattern.Remote;
 import org.dc.jul.schedule.SyncObject;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -90,9 +87,10 @@ public class RSBCommunicationServiceTest {
     private boolean secondSync = false;
     private RSBCommunicationService communicationService;
 
-    @Test(timeout = 20000)
+//    @Test(timeout = 20000)
+    @Test
     public void testInitialSync() throws Exception {
-        String scope = "/test/synchronistion";
+        String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
         LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
@@ -102,7 +100,7 @@ public class RSBCommunicationServiceTest {
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
-        remoteService.addObserver(new Observer<LocationRegistry>() {
+        remoteService.addDataObserver(new Observer<LocationRegistry>() {
 
             @Override
             public void update(final Observable<LocationRegistry> source, LocationRegistry data) throws Exception {
@@ -120,7 +118,6 @@ public class RSBCommunicationServiceTest {
                 }
             }
         });
-        
 
         synchronized (waitForDataSync) {
             if (firstSync == false) {
@@ -129,14 +126,13 @@ public class RSBCommunicationServiceTest {
                 waitForDataSync.wait();
             }
         }
-        assertTrue("Syncronisation after the start of the remote service has not been done", firstSync);
+        assertTrue("Synchronization after the start of the remote service has not been done", firstSync);
 
         communicationService.deactivate();
         LocationConfig location2 = LocationConfig.newBuilder().setId("Location2").build();
         testData.addLocationConfig(location2);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
-        
 
         synchronized (waitForDataSync) {
             if (secondSync == false) {
@@ -144,10 +140,19 @@ public class RSBCommunicationServiceTest {
                 waitForDataSync.wait();
             }
         }
-        assertTrue("Syncronisation after the restart of the communication service has not been done", secondSync);
+        assertTrue("Synchronization after the restart of the communication service has not been done", secondSync);
 
         communicationService.deactivate();
+
+        try {
+            remoteService.ping().get();
+            assertTrue("Pinging was not canceled after timeout.", false);
+        } catch (Exception ex) {
+            // ping canceled
+        }
+        assertEquals("Remote is still connected after remote service shutdown!", Remote.RemoteConnectionState.CONNECTING, remoteService.getConnectionState());
         remoteService.deactivate();
+        assertEquals("Remote is not disconnected after deactivation!", Remote.RemoteConnectionState.DISCONNECTED, remoteService.getConnectionState());
     }
 
     @Test
@@ -170,6 +175,118 @@ public class RSBCommunicationServiceTest {
         informer.activate();
         informer.send("TestString");
     }
+    
+    /**
+     * Test if a RemoteService will reconnect when the communication service restarts.
+     * 
+     * @throws Exception 
+     */
+    @Test(timeout = 5000)
+    public void testReconnection() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        communicationService.activate();
+
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.init(scope);
+        remoteService.activate();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+
+        communicationService.deactivate();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTING);
+
+        communicationService.activate();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+
+        remoteService.shutdown();
+        
+        remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
+        
+        communicationService.shutdown();
+    }
+    
+    /**
+     * Test if a RemoteService will reconnect when the communication service restarts.
+     * 
+     * @throws Exception 
+     */
+    @Test(timeout = 5000)
+    public void testWaitForData() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.init(scope);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        
+        remoteService.activate();
+        
+        CompletableFuture dataFuture = remoteService.getDataFuture();
+        
+        communicationService.activate();
+        
+        dataFuture.get();
+        
+        communicationService.shutdown();
+        remoteService.shutdown();
+    }
+    
+    @Test(timeout = 5000)
+    public void testRequestData() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.init(scope);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        
+        remoteService.activate();
+        communicationService.activate();
+        
+        remoteService.requestData().get();
+        
+        communicationService.shutdown();
+        remoteService.shutdown();
+    }
+    
+    @Test(timeout = 5000)
+    public void testRemoteInterference() throws Exception {
+        String scope = "/test/reconnection";
+        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
+        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+
+        RSBRemoteService remoteService1 = new RSBRemoteServiceImpl();
+        RSBRemoteService remoteService2 = new RSBRemoteServiceImpl();
+        remoteService1.init(scope);
+        remoteService2.init(scope);
+        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService.init(scope);
+        communicationService.activate();
+        
+        remoteService1.activate();
+        remoteService2.activate();
+        
+        remoteService1.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        remoteService2.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        
+        remoteService1.shutdown();
+        remoteService1.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
+        assertEquals("Remote connected to the same service got shutdown too", Remote.RemoteConnectionState.CONNECTED, remoteService2.getConnectionState());
+        remoteService2.requestData().get();
+        
+        communicationService.shutdown();
+        remoteService2.shutdown();
+    }
 
     public class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
 
@@ -184,8 +301,12 @@ public class RSBCommunicationServiceTest {
 
     public class RSBRemoteServiceImpl extends RSBRemoteService<LocationRegistry> {
 
+        public RSBRemoteServiceImpl() {
+            super(LocationRegistry.class);
+        }
+
         @Override
-        public void notifyUpdated(LocationRegistry data) throws CouldNotPerformException {
+        public void notifyDataUpdate(LocationRegistry data) throws CouldNotPerformException {
         }
     }
 }

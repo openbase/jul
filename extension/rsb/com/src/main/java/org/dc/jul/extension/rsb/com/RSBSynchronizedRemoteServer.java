@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -28,19 +23,19 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
-import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.InstantiationException;
-import org.dc.jul.exception.NotAvailableException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.InstantiationException;
+import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Factory;
 import rsb.InitializeException;
+import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.patterns.RemoteServer;
@@ -113,7 +108,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name, event);
             }
-        } catch (Exception ex) {
+        } catch (RSBException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
         }
     }
@@ -127,7 +122,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name);
             }
-        } catch (Exception ex) {
+        } catch (RSBException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
         }
     }
@@ -141,7 +136,7 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name, data);
             }
-        } catch (Exception ex) {
+        } catch (RSBException | CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
         }
     }

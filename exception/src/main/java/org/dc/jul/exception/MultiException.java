@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.exception;
 
 /*
@@ -28,7 +23,6 @@ package org.dc.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.ArrayList;
 import org.slf4j.LoggerFactory;
 
@@ -69,11 +63,11 @@ public class MultiException extends CouldNotPerformException {
         }
         throw new MultiException(message, exceptionStack);
     }
-	
-	public static boolean containsException(final ExceptionStack exceptionStack) {
-		return !(exceptionStack == null || exceptionStack.isEmpty());
-	}
-    
+
+    public static boolean containsException(final ExceptionStack exceptionStack) {
+        return !(exceptionStack == null || exceptionStack.isEmpty());
+    }
+
     public static int size(final ExceptionStack exceptionStack) {
         return exceptionStack == null ? 0 : exceptionStack.size();
     }

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.openhab.binding.interfaces;
 
 /*
@@ -29,31 +24,25 @@ package org.dc.jul.extension.openhab.binding.interfaces;
 import java.util.concurrent.Future;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
-import org.dc.jul.iface.Activatable;
-import org.dc.jul.iface.Shutdownable;
+import org.dc.jul.iface.Manageable;
 import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
 
 /**
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public interface OpenHABRemote extends Activatable, Shutdownable {
+public interface OpenHABRemote extends Manageable<String> {
 
+    @Override
     public void init(String itemFilter) throws InitializationException, InterruptedException;
-
-    @Override
-    public void activate() throws CouldNotPerformException, InterruptedException;
-
-    @Override
-    public void shutdown() throws InterruptedException;
 
     public void internalReceiveUpdate(final OpenhabCommand command) throws CouldNotPerformException;
 
     public void internalReceiveCommand(OpenhabCommand command) throws CouldNotPerformException;
 
-    public Future sendCommand(OpenhabCommand command) throws CouldNotPerformException;
+    public Future<Void> sendCommand(OpenhabCommand command) throws CouldNotPerformException;
 
-    public Future postCommand(final OpenhabCommand command) throws CouldNotPerformException;
+    public Future<Void> postCommand(final OpenhabCommand command) throws CouldNotPerformException;
 
-    public Future postUpdate(final OpenhabCommand command) throws CouldNotPerformException;
+    public Future<Void> postUpdate(final OpenhabCommand command) throws CouldNotPerformException;
 }

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -28,10 +23,12 @@ package org.dc.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.ExecutionException;
 import org.dc.jul.exception.CouldNotPerformException;
-import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import java.lang.reflect.Method;
 import java.util.concurrent.Future;
@@ -47,56 +44,61 @@ import rsb.patterns.Callback;
  */
 public class RPCHelper {
 
-    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
-
-    public static <T> void registerInterface(final Class<T> interfaceClass, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
-        final Logger logger = LoggerFactory.getLogger(instance.getClass());
-
+//    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
+    public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
         for (final Method method : interfaceClass.getMethods()) {
-            logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
-            server.addMethod(method.getName(), new Callback() {
-
-                @Override
-                public Event internalInvoke(final Event event) throws Throwable {
-                    try {
-                        if (event == null) {
-                            throw new NotAvailableException("event");
-                        }
-
-                        Object result;
-                        Class<?> payloadType;
-//                        
-                        if (event.getData() == null) {
-                            result = method.invoke(instance);
-                        } else {
-                            result = method.invoke(instance, event.getData());
-                        }
-
-                        // Implementation of Future support by resolving result to reache inner future object.
-//                        if (method.getReturnType().isAssignableFrom(Future.class)) {
-                        if (result instanceof Future) {
-                            result = ((Future) result).get();
-                        }
-
-                        if (result == null) {
-                            payloadType = Void.class;
-                        } else {
-                            payloadType = result.getClass();
-                        }
-                        return new Event(payloadType, result);
-                    } catch (Exception ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToString(event) + ")]!", ex), logger);
-                    }
-                }
-            });
+            registerMethod(method, instance, server);
         }
     }
 
-    public static Future callRemoteMethod(final Remote remote) throws CouldNotPerformException {
+    public static <I, T extends I> void registerMethod(final Method method, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
+        final Logger logger = LoggerFactory.getLogger(instance.getClass());
+        logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
+        server.addMethod(method.getName(), new Callback() {
+
+            @Override
+            public Event internalInvoke(final Event event) throws Callback.UserCodeException {
+                try {
+                    if (event == null) {
+                        throw new NotAvailableException("event");
+                    }
+
+                    Object result;
+                    Class<?> payloadType;
+//
+                    if (event.getData() == null) {
+                        result = method.invoke(instance);
+                    } else {
+                        result = method.invoke(instance, event.getData());
+                    }
+
+//                        if (method.getReturnType().isAssignableFrom(Future.class)) {
+                    // Implementation of Future support by resolving result to reache inner future object.
+                    if (result instanceof Future) {
+                        result = ((Future) result).get();
+                    }
+
+                    if (result == null) {
+                        payloadType = Void.class;
+                    } else {
+                        payloadType = result.getClass();
+                    }
+                    return new Event(payloadType, result);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new Callback.UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToString(event) + ")]!", ex)), logger);
+                }
+                return new Event(Void.class);
+            }
+        });
+    }
+
+    public static Future<Object> callRemoteMethod(final Remote remote) throws CouldNotPerformException {
         return callRemoteMethod(null, remote, Object.class, 3);
     }
 
-    public static Future callRemoteMethod(final Object argument, final Remote remote) throws CouldNotPerformException {
+    public static Future<Object> callRemoteMethod(final Object argument, final Remote remote) throws CouldNotPerformException {
         return callRemoteMethod(argument, remote, Object.class, 3);
     }
 
@@ -118,15 +120,15 @@ public class RPCHelper {
             } else if (stackTrace.length == 0) {
                 throw new InvalidStateException("Could not detect method stack!");
             }
-            
+
             try {
                 methodName = stackTrace[methodStackDepth].getMethodName();
-            } catch (Exception ex) {
+            } catch (NullPointerException | IndexOutOfBoundsException ex) {
                 throw new CouldNotPerformException("Could not detect method name!");
             }
-            return (Future<RETURN>) remote.callMethodAsync(methodName, argument);
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not call remote Message["+methodName+"]", ex);
+            return remote.callMethodAsync(methodName, argument);
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex);
         }
     }
 

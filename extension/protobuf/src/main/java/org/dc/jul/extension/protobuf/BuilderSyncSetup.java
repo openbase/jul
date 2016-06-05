@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.protobuf;
 
 /*
@@ -41,6 +36,7 @@ import org.dc.jul.schedule.Timeout;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.dc.jps.preset.JPDebugMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,13 +70,13 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             @Override
             public void expired() {
                 try {
-                    if (JPService.getProperty(JPTestMode.class).getValue()) {
+                    if (JPService.getProperty(JPDebugMode.class).getValue()) {
                         return;
                     }
                 } catch (JPServiceException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
-                logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
+                logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
                 unlockRead("TimeoutHandler");
             }
         };
@@ -95,7 +91,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                 } catch (JPServiceException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
-                logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
+                logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
                 unlockWrite();
             }
         };
@@ -168,7 +164,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         boolean success = writeLock.tryLock(time, unit);
         if (success) {
             writeLockConsumer = consumer;
-            writeLockTimeout.start();
+            writeLockTimeout.restart();
         }
         return success;
     }
@@ -179,9 +175,9 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
     public void unlockWrite(boolean notifyChange) {
         logger.debug("order write unlock");
-        writeLockConsumer = "Unknown";
         writeLockTimeout.cancel();
         writeLock.unlock();
+        writeLockConsumer = "Unknown";
         logger.debug("write unlocked");
         if (notifyChange) {
             try {

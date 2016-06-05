@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -30,6 +25,9 @@ package org.dc.jul.extension.rsb.com;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -52,13 +50,15 @@ import org.dc.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.dc.jul.extension.rsb.scope.ScopeGenerator;
 import org.dc.jul.extension.rsb.scope.ScopeTransformer;
 import org.dc.jul.extension.rst.iface.ScopeProvider;
+import org.dc.jul.iface.Pingable;
+import org.dc.jul.iface.Requestable;
 import org.dc.jul.pattern.Controller;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
+import org.dc.jul.schedule.GlobalExecutionService;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Event;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
@@ -75,8 +75,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     static {
         RSBSharedConnectionConfig.load();
     }
-
-
 
     public final static Scope SCOPE_SUFFIX_CONTROL = new Scope("/ctrl");
     public final static Scope SCOPE_SUFFIX_STATUS = new Scope("/status");
@@ -98,7 +96,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final WriteLock dataBuilderWriteLock;
 
     protected ScopeType.Scope scope;
-    private ConnectionState state;
+    private CommunicationServiceState state;
     private boolean initialized;
 
     public RSBCommunicationService(final MB builder) throws InstantiationException {
@@ -113,7 +111,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
-            this.messageClass = detectMessageClass();
+            this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
             this.initialized = false;
@@ -172,7 +170,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         ParticipantConfig internalParticipantConfig = participantConfig;
 
         try {
-            // activate transport communication set by the JPRSBTransport porperty.
+            // activate transport communication set by the JPRSBTransport property.
             enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
@@ -193,10 +191,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
-            server.addMethod(RPC_REQUEST_STATUS, (Event request) -> {
-                return new Event(messageClass, requestStatus());
-            });
+            RPCHelper.registerInterface(Pingable.class, this, server);
+            RPCHelper.registerInterface(Requestable.class, this, server);
 
+//            server.addMethod(RPC_REQUEST_STATUS, (Event request) -> {
+//                try {
+//                    logger.info("incomming data request...");
+//                    return new Event(messageClass, requestStatus());
+//                } catch (CouldNotPerformException ex) {
+//                    throw new Callback.UserCodeException(ex);
+//                }
+//            });
             registerMethods(server);
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
@@ -207,17 +212,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     if (data == WatchDog.ServiceState.Running) {
 
                         // Sync data after service start.
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    serverWatchDog.waitForActivation();
-                                    notifyChange();
-                                } catch (InterruptedException | CouldNotPerformException ex) {
-                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
-                                }
+                        GlobalExecutionService.submit(() -> {
+                            try {
+                                serverWatchDog.waitForActivation();
+                                logger.debug("trigger initial sync");
+                                notifyChange();
+                            } catch (InterruptedException | CouldNotPerformException ex) {
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
                             }
-                        }.start();
+                        });
                     }
                 }
             });
@@ -233,6 +236,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * Method is called after communication initialization.
      * You can overwrite this method to trigger any component specific initialization.
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -240,7 +244,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         // overwrite for specific post initialization tasks.
     }
 
-    private Class<M> detectMessageClass() throws CouldNotPerformException {
+    private Class<M> detectDataClass() throws CouldNotPerformException {
         try {
             @SuppressWarnings("unchecked")
             Class<M> clazz = (Class<M>) dataBuilder.getClass().getEnclosingClass();
@@ -254,25 +258,30 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @Override
-    public Class<M> getMessageClass() {
+    public Class<M> getDataClass() {
         return messageClass;
     }
 
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
-        checkInitialization();
+        validateInitialization();
         logger.debug("Activate RSBCommunicationService for: " + this);
         informerWatchDog.activate();
         serverWatchDog.activate();
-        state = ConnectionState.Online;
+        state = CommunicationServiceState.ONLINE;
     }
 
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
-        checkInitialization();
+        try {
+            validateInitialization();
+        } catch (InvalidStateException ex) {
+            // was never initialized!
+            return;
+        }
         informerWatchDog.deactivate();
         serverWatchDog.deactivate();
-        state = ConnectionState.Offline;
+        state = CommunicationServiceState.OFFLINE;
     }
 
     @Override
@@ -287,7 +296,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public boolean isActive() {
         try {
-            checkInitialization();
+            validateInitialization();
         } catch (InvalidStateException ex) {
             return false;
         }
@@ -339,7 +348,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * </pre> In this example the ClosableDataBuilder.close method is be called
      * in background after leaving the try brackets.
      *
-     * @param consumer
+     * @param consumer please specify the consumer of the data lock.
      * @return a new builder wrapper with a locked builder instance.
      */
     public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
@@ -362,19 +371,19 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public void notifyChange() throws CouldNotPerformException {
         logger.debug("Notify data change of " + this);
-        checkInitialization();
+        validateInitialization();
         if (!informer.isActive()) {
             logger.debug("Skip update notification because connection not established.");
             return;
         }
         try {
-                informer.send(getData());
+            informer.send(getData());
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
     }
 
-    protected final void setField(int fieldNumber, Object value) throws CouldNotPerformException {
+    protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
         try {
             try {
                 dataBuilderWriteLock.lock();
@@ -392,7 +401,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final void setField(String fieldName, Object value) throws CouldNotPerformException {
+    protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
         try {
             try {
                 dataBuilderWriteLock.lock();
@@ -410,7 +419,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final Object getField(String name) throws NotAvailableException {
+    protected final Object getDataField(String name) throws NotAvailableException {
         try {
             MB dataClone = cloneDataBuilder();
             Descriptors.FieldDescriptor findFieldByName = dataClone.getDescriptorForType().findFieldByName(name);
@@ -423,7 +432,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final boolean hasField(final String name) throws CouldNotPerformException {
+    protected final boolean hasDataField(final String name) throws CouldNotPerformException {
         try {
             MB dataClone = cloneDataBuilder();
             Descriptors.FieldDescriptor findFieldByName = dataClone.getDescriptorForType().findFieldByName(name);
@@ -436,7 +445,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final boolean supportsField(final String name) throws CouldNotPerformException {
+    protected final boolean supportsDataField(final String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByName(name);
             return findFieldByName != null;
@@ -445,24 +454,35 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    protected final Descriptors.FieldDescriptor getFieldDescriptor(int fieldId) {
+    protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
         return cloneDataBuilder().getDescriptorForType().findFieldByNumber(fieldId);
     }
 
     @Override
-    public ConnectionState getState() {
+    public CommunicationServiceState getState() {
         return state;
     }
 
-    private void checkInitialization() throws NotInitializedException {
+    private void validateInitialization() throws NotInitializedException {
         if (!initialized) {
             throw new NotInitializedException("communication service");
         }
     }
 
+    /**
+     * Method can be used to calculate connection ping.
+     * The given timestamp argument is just returned from the local server to calculate the delay on client side.
+     *
+     * @param timestemp
+     * @return
+     */
+    @Override
+    public Future<Long> ping(Long timestemp) {
+        return CompletableFuture.completedFuture(timestemp);
+    }
+
     @Override
     public M requestStatus() throws CouldNotPerformException {
-        //TODO switch to debug later
         logger.debug("requestStatus of " + this);
         try {
             return getData();

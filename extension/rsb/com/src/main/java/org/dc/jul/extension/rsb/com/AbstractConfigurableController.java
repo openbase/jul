@@ -58,32 +58,33 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
         try {
-            if(config == null) {
+            if (config == null) {
                 throw new NotAvailableException("config");
             }
-            updateConfig(config);
+            applyConfigUpdate(config);
             super.init(detectScope());
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
+    /**
+     *
+     * @param config
+     * @return
+     * @throws CouldNotPerformException
+     * @throws InterruptedException
+     */
     @Override
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        if (this.config == null) {
-            this.config = config;
-        } else {
-            // merge fails when lists are updated because then entries are added and not replaced
-            // this.config = (CONFIG) this.config.toBuilder().mergeFrom(config).build();
-            this.config = config;
+    public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
+        this.config = config;
+
+        if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
+            setDataField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
         }
 
-        if (supportsField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
-            setField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
-        }
-
-        if (supportsField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
-            setField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
+        if (supportsDataField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
+            setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
         }
 
         return this.config;

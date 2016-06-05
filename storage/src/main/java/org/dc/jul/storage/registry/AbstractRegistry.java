@@ -65,6 +65,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private String name;
+
     protected final MAP entryMap;
 
     protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
@@ -395,12 +397,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return false;
     }
 
-    protected void notifyObservers() {
+    protected final void notifyObservers() {
         try {
-            if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
-                logger.info("Notification of registry change skipped because of running consistency check!");
-                return;
-            }
+            // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
+//            if (registryLock.isWriteLockedByCurrentThread()) {
+//                logger.info("Notification of registry change skipped because of running write operations!");
+//                return;
+//            }
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
@@ -437,7 +440,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public final int checkConsistency() throws CouldNotPerformException {
-
         int modificationCounter = 0;
 
         if (consistencyHandlerList.isEmpty()) {
@@ -447,6 +449,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
             // Avoid triggering recursive consistency checks.
+            logger.debug(getName() + " skipping consistency check because check is already running by same thread. " + Thread.currentThread().getId());
             return modificationCounter;
         }
 
@@ -506,7 +509,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
-                                        logger.info("Inconsisteny detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
+                                        logger.debug("Inconsisteny detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
                                         exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry.getId() + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
                                     }
                                 }
@@ -523,7 +526,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             lastModifieredEntry = ex.getEntry();
 
                             // inform about modifications
-                            logger.info("Consistency modification applied: " + ex.getMessage());
+                            logger.debug("Consistency modification applied: " + ex.getMessage());
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {
@@ -538,6 +541,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         break;
                     }
                     consistent = true;
+
+                    if (modificationCounter > 0) {
+                        consistencyFeedbackEventFilter.trigger("100% of consistency checks passed after " + modificationCounter + " applied modifications.");
+                    }
                     return modificationCounter;
 
                 } catch (CouldNotPerformException ex) {
@@ -591,13 +598,47 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * Method can be used to register any compatible registry plugin for this
+     * registry.
+     *
+     * @param plugin the plugin to register.
+     * @throws CouldNotPerformException is thrown in case the plugin could not
+     * be registered.
+     * @throws InterruptedException is thrown if the thread is externally
+     * interrupted.
+     */
     public void registerPlugin(P plugin) throws CouldNotPerformException, InterruptedException {
         pluginPool.addPlugin(plugin);
     }
 
+    /**
+     * Method defines the name of this registry.
+     *
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Method returns the name of this registry. In case the name was never set
+     * for this registry the simple class name of the registry class is returned
+     * instead.
+     *
+     * @return the name of the registry.
+     */
     @Override
     public String getName() {
-        return getClass().getSimpleName();
+        if (name == null) {
+            return getClass().getSimpleName();
+        }
+        return name;
+
+    }
+
+    public boolean isSandbox() {
+        return false;
     }
 
     @Override

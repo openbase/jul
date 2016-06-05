@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.extension.rsb.com;
 
 /*
@@ -30,8 +25,12 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.InitializationException;
+import org.dc.jul.exception.InvalidStateException;
 import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
 import static org.dc.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
+import org.dc.jul.iface.Configurable;
+import static org.dc.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.dc.jul.pattern.ConfigurableRemote;
 import org.dc.jul.pattern.ObservableImpl;
 import org.dc.jul.pattern.Observer;
@@ -43,12 +42,15 @@ import rst.rsb.ScopeType;
  * @param <M>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG> {
+public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG>, Configurable<String, CONFIG> {
 
+    private final Class<CONFIG> configClass;
     protected CONFIG config;
     private final ObservableImpl<CONFIG> configObservable;
 
-    public AbstractConfigurableRemote() {
+    public AbstractConfigurableRemote(final Class<M> dataClass, final Class<CONFIG> configClass) {
+        super(dataClass);
+        this.configClass = configClass;
         this.configObservable = new ObservableImpl<>(true);
     }
 
@@ -63,17 +65,32 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
     }
 
     @Override
-    public CONFIG updateConfig(final CONFIG config) throws CouldNotPerformException {
+    public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         this.config = (CONFIG) config.toBuilder().mergeFrom(config).build();
-        this.configObservable.notifyObservers(config);
+        configObservable.notifyObservers(config);
+        try {
+            notifyConfigUpdate(config);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify config update!", ex), logger);
+        }
         return this.config;
+    }
+
+    /**
+     * Method can be overwritten to get internally informed about config updates.
+     *
+     * @param config new arrived config messages.
+     * @throws CouldNotPerformException
+     */
+    protected void notifyConfigUpdate(final CONFIG config) throws CouldNotPerformException {
+        // dummy method, please overwrite if needed.
     }
 
     private ScopeType.Scope detectScope() throws NotAvailableException {
         try {
             return (ScopeType.Scope) getConfigField(FIELD_SCOPE);
         } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException(scope);
+            throw new NotAvailableException(scope, ex);
         }
     }
 
@@ -90,6 +107,27 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         }
     }
 
+    protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                return false;
+            }
+            return config.hasField(findFieldByName);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+
+    protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            return findFieldByName != null;
+        } catch (NullPointerException ex) {
+            return false;
+        }
+    }
+
     @Override
     public CONFIG getConfig() throws NotAvailableException {
         if (config == null) {
@@ -98,11 +136,37 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         return config;
     }
 
+    @Override
+    public String getId() throws NotAvailableException {
+        try {
+            String tmpId = (String) getConfigField(TYPE_FIELD_ID);
+            if (tmpId.isEmpty()) {
+                throw new InvalidStateException("config.id is empty!");
+            }
+            return tmpId;
+        } catch (CouldNotPerformException ex) {
+            logger.warn("Config does not contain the remote id!");
+        }
+        return super.getId();
+    }
+
+    public Class<CONFIG> getConfigClass() {
+        return configClass;
+    }
+
+    @Override
     public void addConfigObserver(final Observer<CONFIG> observer) {
         configObservable.addObserver(observer);
     }
 
+    @Override
     public void removeConfigObserver(final Observer<CONFIG> observer) {
         configObservable.removeObserver(observer);
+    }
+
+    @Override
+    public void shutdown() {
+        configObservable.shutdown();
+        super.shutdown();
     }
 }

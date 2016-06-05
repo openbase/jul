@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.storage.registry;
 
 /*
@@ -60,7 +55,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         super(internalMap);
     }
 
-    public synchronized void notifyRegistryUpdated(final Collection<M> values) throws CouldNotPerformException {
+    public synchronized void notifyRegistryUpdate(final Collection<M> values) throws CouldNotPerformException {
         Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
         for (M value : values) {
             IdentifiableMessage<KEY, M, MB> data = new IdentifiableMessage<>(value);

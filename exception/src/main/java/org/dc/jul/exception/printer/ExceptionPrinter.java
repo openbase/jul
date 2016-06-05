@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.exception.printer;
 
 /*
@@ -28,7 +23,6 @@ package org.dc.jul.exception.printer;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.exception.MultiException;
 import org.dc.jul.exception.MultiException.SourceExceptionEntry;
 import java.util.ArrayList;
@@ -42,6 +36,8 @@ import org.slf4j.Logger;
 public class ExceptionPrinter {
 
     private static final String SEPARATOR = "=====================================";
+    private static final ElementGenerator<MultiException.SourceExceptionEntry> MULTI_EXCEPTION_ELEMENT_GENERATOR = new MultiExceptionElementGenerator();
+    private static final ElementGenerator<Throwable> THROWABLE_ELEMENT_GENERATOR = new ThrowableElementGenerator();
 
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
@@ -55,7 +51,7 @@ public class ExceptionPrinter {
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final Logger logger) {
         return printHistoryAndReturnThrowable(th, logger, LogLevel.ERROR);
     }
-    
+
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
@@ -84,7 +80,6 @@ public class ExceptionPrinter {
         printHistory(th, new LogPrinter(logger, level));
     }
 
-    
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
@@ -125,7 +120,7 @@ public class ExceptionPrinter {
         // Print normal stacktrace in debug mode for all errors.
         if (printer.isDebugEnabled()) {
             printer.print(SEPARATOR);
-            printer.print(removeNewLines(th), th);
+            printer.print(getContext(th), th);
         }
         printer.print(SEPARATOR);
     }
@@ -142,48 +137,11 @@ public class ExceptionPrinter {
         return printer.getMessages();
     }
 
-    private static void printHistory(final Throwable th, final Printer printer, String rootPrefix, final String childPrefix) {
-
-        ElementGenerator<SourceExceptionEntry> sourceExceptionEntryGenerator = new ElementGenerator<SourceExceptionEntry>() {
-
-            @Override
-            public String generateRoot(final SourceExceptionEntry element) {
-                return removeNewLines(element.getException());
-            }
-
-            @Override
-            public void printRootElement(final SourceExceptionEntry element, final Printer printer, final String rootPrefix, final String childPrefix) {
-                printer.print(rootPrefix + " " + generateRoot(element));
-            }
-
-            @Override
-            public void printElement(final SourceExceptionEntry element, final Printer printer, final String rootPrefix, final String childPrefix) {
-                printHistory(element.getException(), printer, rootPrefix, childPrefix);
-            }
-        };
-
-        ElementGenerator<Throwable> throwableGenerator = new ElementGenerator<Throwable>() {
-
-            @Override
-            public String generateRoot(Throwable element) {
-                return removeNewLines(element);
-            }
-
-            @Override
-            public void printRootElement(Throwable element, final Printer printer, String rootPrefix, final String childPrefix) {
-                printElement(element, printer, rootPrefix, childPrefix);
-            }
-
-            @Override
-            public void printElement(Throwable element, final Printer printer, String rootPrefix, final String childPrefix) {
-                printer.print(rootPrefix + " " + generateRoot(element));
-            }
-        };
-
+    static void printHistory(final Throwable th, final Printer printer, String rootPrefix, final String childPrefix) {
         if (th instanceof MultiException) {
-            printFlatTree(new SourceExceptionEntry(ExceptionPrinter.class, th), ((MultiException) th).getExceptionStack(), sourceExceptionEntryGenerator, printer, rootPrefix, childPrefix);
+            printFlatTree(new SourceExceptionEntry(ExceptionPrinter.class, th), ((MultiException) th).getExceptionStack(), MULTI_EXCEPTION_ELEMENT_GENERATOR, printer, rootPrefix, childPrefix);
         } else {
-            printSequenze(buildThrowableList(th), throwableGenerator, printer, rootPrefix, childPrefix);
+            printSequenze(buildThrowableList(th), THROWABLE_ELEMENT_GENERATOR, printer, rootPrefix, childPrefix);
         }
     }
 
@@ -212,17 +170,18 @@ public class ExceptionPrinter {
             generator.printElement(elementList.get(0), printer, rootPrefix + "═╦═", childPrefix);
         }
 
-        String localPrefix = "";
+        String offset = "";
 
         for (int i = 1; i < elementList.size(); i++) {
 
-            localPrefix += " ";
+            // update offset
+            offset += " ";
 
             // check if i is last element
             if (i + 1 == elementList.size()) {
-                generator.printElement(elementList.get(i), printer, childPrefix + localPrefix + "╚══", childPrefix + " ");
+                generator.printElement(elementList.get(i), printer, childPrefix + offset + "╚══", childPrefix + offset);
             } else {
-                generator.printElement(elementList.get(i), printer, childPrefix + localPrefix + "╚╦═", childPrefix + " ");
+                generator.printElement(elementList.get(i), printer, childPrefix + offset + "╚╦═", childPrefix + offset);
             }
         }
     }
@@ -242,24 +201,14 @@ public class ExceptionPrinter {
         for (int i = 0; i < elementList.size(); i++) {
             // check if i is last element
             if (i + 1 == elementList.size()) {
-                generator.printElement(elementList.get(i), printer, childPrefix + " ╚═", childPrefix + "   ");
+                generator.printElement(elementList.get(i), printer, childPrefix  + " ╚═", childPrefix + "   ");
             } else {
-                generator.printElement(elementList.get(i), printer, childPrefix + " ╠═", childPrefix + " ║ ");
+                generator.printElement(elementList.get(i), printer, childPrefix  + " ╠═", childPrefix + " ║ ");
             }
         }
     }
 
-    private interface ElementGenerator<E> {
-
-        public String generateRoot(final E element);
-
-        public void printRootElement(final E element, final Printer printer, final String rootPrefix, final String childPrefix);
-
-        public void printElement(final E element, final Printer printer, final String rootPrefix, final String childPrefix);
-
-    }
-
-    private static String removeNewLines(final Throwable throwable) {
+    public static String getContext(final Throwable throwable) {
         if (throwable == null) {
             return "";
         }

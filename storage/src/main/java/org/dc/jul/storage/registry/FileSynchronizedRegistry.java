@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.storage.registry;
 
 /*
@@ -265,6 +260,11 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
 
     @Override
     public void saveRegistry() throws MultiException {
+
+        if (JPService.testMode()) {
+            return;
+        }
+
         logger.info("Save registry into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
@@ -283,31 +283,29 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
         FileSynchronizer<ENTRY> newFileSynchronizer;
         File newFile;
 
-        if (!JPService.testMode()) {
-            for (Entry<KEY, FileSynchronizer<ENTRY>> entry : fileSynchronizerMap.entrySet()) {
-                fileSynchronizer = entry.getValue();
-                try {
-                    generatedFileName = fileProvider.getFileName(fileSynchronizer.getData());
-                    if (!fileSynchronizer.getFile().getName().equals(generatedFileName)) {
-                        try {
-                            // rename file
-                            newFile = new File(fileSynchronizer.getFile().getParent(), generatedFileName);
-                            if (!fileSynchronizer.getFile().renameTo(newFile)) {
-                                throw new CouldNotPerformException("Rename failed without explicit error code, please rename file manually after registry shutdown!");
-                            }
-                            newFileSynchronizer = new FileSynchronizer<>(fileSynchronizer.getData(), newFile, FileSynchronizer.InitMode.AUTO, fileProcessor);
-                            fileSynchronizerMap.replace(entry.getKey(), fileSynchronizer, newFileSynchronizer);
-                        } catch (CouldNotPerformException ex) {
-                            exceptionStack = MultiException.push(this, new CouldNotPerformException("Could not apply db Entry[" + fileSynchronizer.getFile().getName() + "] renaming to Entry[" + generatedFileName + "]!", ex), exceptionStack);
+        for (Entry<KEY, FileSynchronizer<ENTRY>> entry : fileSynchronizerMap.entrySet()) {
+            fileSynchronizer = entry.getValue();
+            try {
+                generatedFileName = fileProvider.getFileName(fileSynchronizer.getData());
+                if (!fileSynchronizer.getFile().getName().equals(generatedFileName)) {
+                    try {
+                        // rename file
+                        newFile = new File(fileSynchronizer.getFile().getParent(), generatedFileName);
+                        if (!fileSynchronizer.getFile().renameTo(newFile)) {
+                            throw new CouldNotPerformException("Rename failed without explicit error code, please rename file manually after registry shutdown!");
                         }
+                        newFileSynchronizer = new FileSynchronizer<>(fileSynchronizer.getData(), newFile, FileSynchronizer.InitMode.AUTO, fileProcessor);
+                        fileSynchronizerMap.replace(entry.getKey(), fileSynchronizer, newFileSynchronizer);
+                    } catch (CouldNotPerformException ex) {
+                        exceptionStack = MultiException.push(this, new CouldNotPerformException("Could not apply db Entry[" + fileSynchronizer.getFile().getName() + "] renaming to Entry[" + generatedFileName + "]!", ex), exceptionStack);
                     }
-                } catch (CouldNotPerformException ex) {
-                    exceptionStack = MultiException.push(this, new CouldNotPerformException("Could not reconstruct filename of db Entry[" + fileSynchronizer.getFile().getName() + "]!", ex), exceptionStack);
                 }
+            } catch (CouldNotPerformException ex) {
+                exceptionStack = MultiException.push(this, new CouldNotPerformException("Could not reconstruct filename of db Entry[" + fileSynchronizer.getFile().getName() + "]!", ex), exceptionStack);
             }
-
-            MultiException.checkAndThrow("Could not save all registry entries!", exceptionStack);
         }
+
+        MultiException.checkAndThrow("Could not save all registry entries!", exceptionStack);
     }
 
     @Override
@@ -360,7 +358,7 @@ public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP 
     public boolean isOutdated() {
         return databaseState == DatabaseState.OUTDATED;
     }
-    
+
     public DatabaseState getDatabaseState() {
         return databaseState;
     }

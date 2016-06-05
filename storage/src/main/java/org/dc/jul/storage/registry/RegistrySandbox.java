@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.storage.registry;
 
 /*
@@ -95,15 +90,7 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
 
     @Override
     public void addObserver(Observer<Map<KEY, ENTRY>> observer) {
-        logger.warn("Observer registration on sandbox instance!");
-        super.addObserver(observer);
-    }
-    
-    
-
-    @Override
-    protected void notifyObservers() {
-        //skip sandbox notifications.
+        logger.warn("Observer registration on sandbox instance skiped!");
     }
 
     @Override
@@ -113,5 +100,10 @@ public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends M
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex);
         }
+    }
+
+    @Override
+    public boolean isSandbox() {
+        return true;
     }
 }

@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.schedule;
 
 /*
@@ -28,7 +23,6 @@ package org.dc.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.dc.jul.exception.CouldNotPerformException;
 import org.dc.jul.exception.MultiException;
 import org.dc.jul.pattern.ObservableImpl;
@@ -37,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.dc.jul.exception.InstantiationException;
 import org.dc.jul.exception.NotAvailableException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
 import org.dc.jul.iface.Activatable;
 import org.dc.jul.pattern.Observable;
 
@@ -193,7 +188,7 @@ public class WatchDog implements Activatable {
                                 service.activate();
                                 setServiceState(ServiceState.Running);
                             } catch (CouldNotPerformException | NullPointerException ex) {
-                                logger.error("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex);
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex), logger);
                                 setServiceState(ServiceState.Failed);
                                 logger.info("Try again in " + (DELAY / 1000) + " seconds...");
                             }
@@ -210,7 +205,7 @@ public class WatchDog implements Activatable {
                     try {
                         service.deactivate();
                         setServiceState(ServiceState.Finished);
-                    } catch (CouldNotPerformException ex) {
+                    } catch (IllegalStateException | CouldNotPerformException ex) {
                         logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
                         try {
                             waitWithinDelay();
@@ -246,8 +241,7 @@ public class WatchDog implements Activatable {
             logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
             serviceStateObserable.notifyObservers(serviceState);
         } catch (MultiException ex) {
-            logger.warn("Could not notify state change to all instances!", ex);
-            ex.printExceptionStack();
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify state change to all instances!", ex), logger);
         }
     }
 

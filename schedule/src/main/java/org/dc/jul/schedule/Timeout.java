@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.schedule;
 
 /*
@@ -27,9 +23,11 @@ package org.dc.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.printer.ExceptionPrinter;
+import org.dc.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,15 +40,13 @@ public abstract class Timeout {
 
     private static final Logger logger = LoggerFactory.getLogger(Timeout.class);
 
-    private final ExecutorService executorService;
     private final Object lock = new Object();
-    private Thread timerThread;
+    private Future timerTask;
     private long waitTime;
     private boolean expired;
 
     public Timeout(final long waitTime) {
         this.waitTime = waitTime;
-        this.executorService = Executors.newCachedThreadPool();
     }
 
     public long getTimeToWait() {
@@ -64,8 +60,10 @@ public abstract class Timeout {
 
     public void restart() {
         logger.debug("Reset timer.");
-        cancel();
-        start();
+        synchronized (lock) {
+            cancel();
+            start();
+        }
     }
 
     /**
@@ -84,57 +82,63 @@ public abstract class Timeout {
      */
     public boolean isActive() {
         synchronized (lock) {
-            return timerThread != null && timerThread.isAlive();
+            return timerTask != null && !timerTask.isDone();
         }
+    }
+
+    public void start() {
+        internal_start(waitTime);
     }
 
     public void start(final long waitTime) {
         this.waitTime = waitTime;
-        start();
+        internal_start(waitTime);
     }
 
-    public void start() {
+    private void internal_start(final long waitTime) {
         synchronized (lock) {
-            if (timerThread != null && !timerThread.isInterrupted() && timerThread.isAlive()) {
-                logger.debug("Cancel start, not interupted or expired.");
+            if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
+                logger.debug("Reject start, not interrupted or expired.");
                 return;
             }
+            expired = false;
 
-            logger.debug("Create new timer");
-            timerThread = new Thread(getClass().getSimpleName() + "[wait:" + waitTime + "]") {
+//            logger.info("Create new timer");
+            // TODO may a global scheduled executor service is more suitable.
+            timerTask = GlobalExecutionService.submit(new Callable<Void>() {
 
                 @Override
-                public void run() {
+                public Void call() throws InterruptedException {
+                    logger.debug("Wait for timeout TimeOut interrupted.");
                     try {
                         Thread.sleep(waitTime);
                     } catch (InterruptedException ex) {
                         logger.debug("TimeOut interrupted.");
-                        return;
+                        throw ex;
                     }
                     try {
                         logger.debug("Expire...");
                         expired = true;
-                        //TODO mpohling: good idea but depending unit tests are failing. Please check!
-//                        executorService.submit(() -> {
-                            expired();
-//                        });
-
+                        expired();
                     } catch (Exception ex) {
-                        logger.debug("Error during timeout handling!", ex);
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
                     }
                     logger.debug("Worker finished.");
+                    return null;
                 }
-            };
-            timerThread.start();
+            });
         }
     }
 
     public void cancel() {
+        logger.debug("try to cancel timer.");
         synchronized (lock) {
-            if (timerThread != null) {
-                logger.debug("interrupt timer.");
-                timerThread.interrupt();
-                timerThread = null;
+            if (timerTask != null) {
+                logger.debug("cancel timer.");
+                timerTask.cancel(true);
+                timerTask = null;
+            } else {
+                logger.debug("timer was canceled but never started!");
             }
         }
     }

@@ -43,12 +43,13 @@ import rsb.converter.ProtocolBufferConverter;
 import rst.homeautomation.openhab.OpenhabCommandType;
 import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
 import rst.homeautomation.openhab.RSBBindingType;
+import rst.homeautomation.openhab.RSBBindingType.RSBBinding;
 
 /**
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingType.RSBBinding> implements OpenHABRemote {
+public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBinding> implements OpenHABRemote {
 
     public static final String ITEM_SUBSEGMENT_DELIMITER = "_";
     public static final String ITEM_SEGMENT_DELIMITER = "__";
@@ -74,6 +75,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
     private final boolean hardwareSimulationMode;
 
     public AbstractOpenHABRemote(final boolean hardwareSimulationMode) {
+        super(RSBBinding.class);
         this.hardwareSimulationMode = hardwareSimulationMode;
     }
 
@@ -122,7 +124,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
     }
 
     @Override
-    public void notifyUpdated(final RSBBindingType.RSBBinding data) {
+    public void notifyDataUpdate(final RSBBindingType.RSBBinding data) {
         switch (data.getState().getState()) {
         case ACTIVE:
             logger.info("Active dal binding state!");
@@ -182,41 +184,41 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBindingT
     }
 
     @Override
-    public Future postCommand(final OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> postCommand(final OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
                 internalReceiveUpdate(command);
                 return CompletableFuture.completedFuture(null);
             }
-            return RPCHelper.callRemoteMethod(command, this);
+            return (Future) RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not post Command[" + command + "]!", ex);
         }
     }
 
     @Override
-    public Future sendCommand(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> sendCommand(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
                 internalReceiveUpdate(command);
                 return CompletableFuture.completedFuture(null);
             }
-            return RPCHelper.callRemoteMethod(command, this);
+            return (Future) RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not send Command[" + command + "]!", ex);
         }
     }
 
     @Override
-    public Future postUpdate(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> postUpdate(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
                 return CompletableFuture.completedFuture(null);
             }
-            return RPCHelper.callRemoteMethod(command, this);
+            return (Future) RPCHelper.callRemoteMethod(command, this);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not post Update[" + command + "]!", ex);
         }

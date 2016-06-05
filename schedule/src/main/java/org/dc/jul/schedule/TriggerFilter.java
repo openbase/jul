@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.dc.jul.schedule;
 
 /*
@@ -27,13 +22,10 @@ package org.dc.jul.schedule;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-/**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  */
-public abstract class TriggerFilter extends LastValueHandler<Void>{
+public abstract class TriggerFilter extends LastValueHandler<Void> {
 
     public TriggerFilter(String name) {
         super(name);
@@ -42,17 +34,17 @@ public abstract class TriggerFilter extends LastValueHandler<Void>{
     public TriggerFilter(String name, long delayUntilNext) {
         super(name, delayUntilNext);
     }
-    
+
     @Override
     public void handle(Void value) {
         internalTrigger();
     }
-    
+
     public void trigger() {
         setValue(null);
         forceValueChange();
     }
-    
+
     public abstract void internalTrigger();
-    
+
 }

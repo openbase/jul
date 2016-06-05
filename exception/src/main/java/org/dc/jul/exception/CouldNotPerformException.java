@@ -1,14 +1,9 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package org.dc.jul.exception;
 
 /*
  * #%L
  * JUL Exception
- * $Id:$
- * $HeadURL:$
  * %%
  * Copyright (C) 2015 - 2016 DivineCooperation
  * %%
@@ -27,6 +22,7 @@ package org.dc.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 
 /**
  *
