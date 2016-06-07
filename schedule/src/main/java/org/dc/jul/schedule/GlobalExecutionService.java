@@ -154,4 +154,30 @@ public class GlobalExecutionService implements Shutdownable {
         });
     }
 
+    public static <T> Future<T> allOf(final Collection<Future> futureCollection, T returnValue) {
+        return GlobalExecutionService.submit(new Callable<T>() {
+            @Override
+            public T call() throws Exception {
+                MultiException.ExceptionStack exceptionStack = null;
+                try {
+                    for (Future future : futureCollection) {
+                        try {
+                            future.get();
+                        } catch (ExecutionException ex) {
+                            exceptionStack = MultiException.push(this, ex, exceptionStack);
+                        }
+                    }
+                } catch (InterruptedException ex) {
+                    // cancel all pending actions.
+                    futureCollection.stream().forEach((future) -> {
+                        future.cancel(true);
+                    });
+                    throw ex;
+                }
+                MultiException.checkAndThrow("Could not apply all actions!", exceptionStack);
+                return returnValue;
+            }
+        });
+    }
+
 }
