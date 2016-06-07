@@ -26,12 +26,20 @@ package org.dc.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.dc.jul.exception.CouldNotPerformException;
+import org.dc.jul.exception.MultiException;
 import org.dc.jul.exception.printer.ExceptionPrinter;
+import org.dc.jul.iface.Processable;
 import org.dc.jul.iface.Shutdownable;
 import org.slf4j.LoggerFactory;
 
@@ -80,10 +88,70 @@ public class GlobalExecutionService implements Shutdownable {
     public static Future<?> submit(Runnable task) {
         return getInstance().executionService.submit(task);
     }
+    
+    /**
+     * This method applies an error handler to the given future object.
+     * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
+     * The receive a future should be submitted to any execution service or handled externally.
+     *
+     * @param future the future on which is the error processor is registered.
+     * @param timeout the timeout.
+     * @param errorProcessor the processable which handles thrown exceptions
+     * @param timeUnit the unit of the timeout.
+     * @throws CouldNotPerformException thrown by the errorProcessor
+     */
+    public static void applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException {
+        GlobalExecutionService.submit(() -> {
+            try {
+                future.get(timeout, timeUnit);
+            } catch (ExecutionException | InterruptedException | TimeoutException ex) {
+                errorProcessor.process(ex);
+            }
+            return null;
+        });
+    }
 
     @Override
     public void shutdown() throws InterruptedException {
         executionService.shutdownNow();
+    }
+
+    public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {
+        return allOf(actionProcessor, (Collection<Future<Void>> input) -> null, inputList);
+    }
+
+    public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList) {
+        return GlobalExecutionService.submit(new Callable<R>() {
+            @Override
+            public R call() throws Exception {
+                MultiException.ExceptionStack exceptionStack = null;
+                List<Future<O>> futureList = new ArrayList<>();
+                for (I input : inputList) {
+                    try {
+                        futureList.add(actionProcessor.process(input));
+                    } catch (CouldNotPerformException ex) {
+                        exceptionStack = MultiException.push(this, ex, exceptionStack);
+                    }
+                }
+                try {
+                    for (Future<O> future : futureList) {
+                        try {
+                            future.get();
+                        } catch (ExecutionException ex) {
+                            exceptionStack = MultiException.push(this, ex, exceptionStack);
+                        }
+                    }
+                } catch (InterruptedException ex) {
+                    // cancel all pending actions.
+                    futureList.stream().forEach((future) -> {
+                        future.cancel(true);
+                    });
+                    throw ex;
+                }
+                MultiException.checkAndThrow("Could not apply all actions!", exceptionStack);
+                return resultProcessor.process(futureList);
+            }
+        });
     }
 
 }

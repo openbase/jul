@@ -255,6 +255,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             registryLock.readLock().lock();
             if (!entryMap.containsKey(key)) {
+
+                if (entryMap.isEmpty()) {
+                    throw new NotAvailableException("Entry", key.toString(), new InvalidStateException(this + " is empty!"));
+                }
+
                 TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>((KEY o1, KEY o2) -> {
                     if (o1 instanceof String && o2 instanceof String) {
                         return ((String) o1).toLowerCase().compareTo(((String) o2).toLowerCase());
@@ -272,7 +277,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 } else if (sortedMap.ceilingKey(key) != null) {
                     throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is Entry[" + sortedMap.ceilingKey(key) + "].");
                 } else {
-                    throw new NotAvailableException("Entry", key.toString(), new InvalidStateException("Registry is empty!"));
+                    throw new InvalidStateException("Implementation error, case not handled.");
                 }
             }
             pluginPool.beforeGet(key);

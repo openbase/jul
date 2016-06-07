@@ -37,7 +37,7 @@ import org.dc.jul.iface.Shutdownable;
 public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable, Pingable, Requestable<M> {
 
     // TODO mpohling: Should be moved to rst and reimplement for rsb 14.
-    public enum CommunicationServiceState {
+    public enum ControllerAvailabilityState {
         ONLINE, OFFLINE
     };
 
@@ -75,12 +75,16 @@ public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable
 //    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
 
     /**
-     * 
-     * @return 
+     * Method returns the class of the internal data object which is used for remote synchronization.
+     * @return data class
      */
     public Class<M> getDataClass();
 
-    public CommunicationServiceState getState();
+    /**
+     * Method returns the availability state of this controller.
+     * @return OFFLINE / ONLINE
+     */
+    public ControllerAvailabilityState getControllerAvailabilityState();
 
     /**
      * Synchronize all registered remote instances about a data change.
