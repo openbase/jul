@@ -26,7 +26,6 @@ package org.dc.jul.extension.rsb.com;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
@@ -56,9 +55,11 @@ import org.dc.jul.pattern.Controller;
 import org.dc.jul.pattern.Observable;
 import org.dc.jul.pattern.Observer;
 import org.dc.jul.schedule.GlobalExecutionService;
+import org.dc.jul.schedule.SyncObject;
 import org.dc.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rsb.Event;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
@@ -96,7 +97,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final WriteLock dataBuilderWriteLock;
 
     protected ScopeType.Scope scope;
-    private CommunicationServiceState state;
+
+    private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
+    private ControllerAvailabilityState controllerAvailabilityState;
     private boolean initialized;
 
     public RSBCommunicationService(final MB builder) throws InstantiationException {
@@ -108,6 +111,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 throw new NotAvailableException("builder");
             }
 
+            this.controllerAvailabilityState = ControllerAvailabilityState.OFFLINE;
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
@@ -115,6 +119,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
             this.initialized = false;
+
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -268,7 +273,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         logger.debug("Activate RSBCommunicationService for: " + this);
         informerWatchDog.activate();
         serverWatchDog.activate();
-        state = CommunicationServiceState.ONLINE;
+        setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
     }
 
     @Override
@@ -279,9 +284,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // was never initialized!
             return;
         }
+        setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
         informerWatchDog.deactivate();
         serverWatchDog.deactivate();
-        state = CommunicationServiceState.OFFLINE;
     }
 
     @Override
@@ -310,6 +315,53 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             return (M) cloneDataBuilder().build();
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not build message!", ex);
+        }
+    }
+
+    private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) {
+        synchronized (controllerAvailabilityMonitor) {
+
+            // filter unchanged events
+            if (this.controllerAvailabilityState.equals(controllerAvailability)) {
+                return;
+            }
+
+            // update state and notify
+            this.controllerAvailabilityState = controllerAvailability;
+            logger.info(this + " is now " + controllerAvailability.name());
+
+            // notify remotes about controller shutdown
+            if(controllerAvailabilityState.equals(ControllerAvailabilityState.OFFLINE)) {
+                try {
+                    logger.debug("Notify data change of " + this);
+                    validateInitialization();
+                    if (!informer.isActive()) {
+                        logger.debug("Skip update notification because connection not established.");
+                        return;
+                    }
+                    try {
+                        informer.send(new Event(informer.getScope(), getDataClass(), null));
+                    } catch (Exception ex) {
+                        throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+                    }
+                } catch (CouldNotPerformException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update communication service state in internal data object!", ex), logger);
+                }
+            }
+            
+            // wakeup listener.
+            this.controllerAvailabilityMonitor.notifyAll();
+        }
+    }
+
+    public void waitForConnectionState(final ControllerAvailabilityState communicationServiceState) throws InterruptedException {
+        synchronized (controllerAvailabilityMonitor) {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (this.controllerAvailabilityState.equals(communicationServiceState)) {
+                    return;
+                }
+                controllerAvailabilityMonitor.wait();
+            }
         }
     }
 
@@ -459,8 +511,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     @Override
-    public CommunicationServiceState getState() {
-        return state;
+    public ControllerAvailabilityState getControllerAvailabilityState() {
+        return controllerAvailabilityState;
     }
 
     private void validateInitialization() throws NotInitializedException {

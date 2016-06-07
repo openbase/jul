@@ -444,7 +444,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
-        logger.info( this + " requestData...");
+        logger.info(this + " requestData...");
         validateInitialization();
         try {
             synchronized (syncMonitor) {
@@ -521,10 +521,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
                 }
 
-                logger.debug("got data!");
+                logger.info("got data!");
 
                 if (dataUpdate == null) {
-                    throw new InvalidStateException("Server result invalid!");
+                    // controller shutdown or error detected!
+                    logger.info("Remote controller shutdown detected!");
+                    setConnectionState(CONNECTING);
+                    return data;
                 }
 
                 // skip if sync was already performed by global data update.
@@ -674,13 +677,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     public void waitForConnectionState(final RemoteConnectionState connectionState) throws InterruptedException {
+        System.out.println("waitForConnectionMonitor...");
         synchronized (connectionMonitor) {
             while (!Thread.currentThread().isInterrupted()) {
                 if (this.connectionState.equals(connectionState)) {
                     return;
                 }
                 // TODO: verify if this timeout is really neccessary
-                connectionMonitor.wait(1000);
+                System.out.println("waitForConnection...");
+                connectionMonitor.wait();
+                System.out.println("waitForConnection continue");
             }
         }
     }
@@ -705,9 +711,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         public void internalNotify(Event event) {
             try {
                 logger.debug("Internal notification: " + event.toString());
-                Object data = event.getData();
+                Object dataUpdate = event.getData();
+                
+                if (dataUpdate == null) {
+                    // controller shutdown or error detected!
+                    logger.info("Remote controller shutdown detected!");
+                    setConnectionState(CONNECTING);
+                    return;
+                }
+                
                 try {
-                    applyDataUpdate((M) data);
+                    applyDataUpdate((M) dataUpdate);
                 } catch (ClassCastException ex) {
                     // Thats not the right internal data type. Skip update...
                 }
@@ -814,8 +828,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                             // init reconnection
                             setConnectionState(CONNECTING);
-                            requestData();
                         }
+                        requestData();
+
                     }
                     throw ex;
                 } catch (CouldNotPerformException | ExecutionException ex) {

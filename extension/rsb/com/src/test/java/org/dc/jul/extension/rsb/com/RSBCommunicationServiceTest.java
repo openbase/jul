@@ -87,8 +87,7 @@ public class RSBCommunicationServiceTest {
     private boolean secondSync = false;
     private RSBCommunicationService communicationService;
 
-//    @Test(timeout = 20000)
-    @Test
+    @Test(timeout = 5000)
     public void testInitialSync() throws Exception {
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
@@ -175,13 +174,14 @@ public class RSBCommunicationServiceTest {
         informer.activate();
         informer.send("TestString");
     }
-    
+
     /**
      * Test if a RemoteService will reconnect when the communication service restarts.
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
-    @Test(timeout = 5000)
+//    @Test(timeout = 5000)
+    @Test
     public void testReconnection() throws Exception {
         String scope = "/test/reconnection";
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
@@ -193,28 +193,30 @@ public class RSBCommunicationServiceTest {
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
         remoteService.activate();
-        
+        System.out.println("wait for inital connection...");
         remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
 
         communicationService.deactivate();
-        
+        System.out.println("wait for connection lost after controller shutdown...");
         remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTING);
 
         communicationService.activate();
-        
+
+        System.out.println("wait for reconnection lost after controller start...");
         remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
 
         remoteService.shutdown();
-        
+
+        System.out.println("wait for remote shutdown...");
         remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
-        
+
         communicationService.shutdown();
     }
-    
+
     /**
      * Test if a RemoteService will reconnect when the communication service restarts.
-     * 
-     * @throws Exception 
+     *
+     * @throws Exception
      */
     @Test(timeout = 5000)
     public void testWaitForData() throws Exception {
@@ -226,19 +228,19 @@ public class RSBCommunicationServiceTest {
         remoteService.init(scope);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
-        
+
         remoteService.activate();
-        
+
         CompletableFuture dataFuture = remoteService.getDataFuture();
-        
+
         communicationService.activate();
-        
+
         dataFuture.get();
-        
+
         communicationService.shutdown();
         remoteService.shutdown();
     }
-    
+
     @Test(timeout = 5000)
     public void testRequestData() throws Exception {
         String scope = "/test/reconnection";
@@ -249,16 +251,16 @@ public class RSBCommunicationServiceTest {
         remoteService.init(scope);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
-        
+
         remoteService.activate();
         communicationService.activate();
-        
+
         remoteService.requestData().get();
-        
+
         communicationService.shutdown();
         remoteService.shutdown();
     }
-    
+
     @Test(timeout = 5000)
     public void testRemoteInterference() throws Exception {
         String scope = "/test/reconnection";
@@ -272,18 +274,18 @@ public class RSBCommunicationServiceTest {
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
-        
+
         remoteService1.activate();
         remoteService2.activate();
-        
+
         remoteService1.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
         remoteService2.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
-        
+
         remoteService1.shutdown();
         remoteService1.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
         assertEquals("Remote connected to the same service got shutdown too", Remote.RemoteConnectionState.CONNECTED, remoteService2.getConnectionState());
         remoteService2.requestData().get();
-        
+
         communicationService.shutdown();
         remoteService2.shutdown();
     }

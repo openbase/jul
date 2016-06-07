@@ -104,9 +104,6 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
     public Event send(final DT data) throws CouldNotPerformException {
         synchronized (participantLock) {
             try {
-                if (data == null) {
-                    throw new NotAvailableException("data");
-                }
                 return getParticipant().send(data);
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not send Data[" + data + "]!", ex);
