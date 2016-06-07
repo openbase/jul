@@ -88,25 +88,27 @@ public class GlobalExecutionService implements Shutdownable {
     public static Future<?> submit(Runnable task) {
         return getInstance().executionService.submit(task);
     }
-
+    
     /**
-     * This method has to receive a future which is already submitted to a
-     * thread and waits for it with a timeout. If an exception occurs during get
-     * process with the exception as an argument is called on the
-     * errorProcessor.
+     * This method applies an error handler to the given future object.
+     * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
+     * The receive a future should be submitted to any execution service or handled externally.
      *
-     * @param future the future on which is waited with the timeout
-     * @param timeout the timeout in seconds
+     * @param future the future on which is the error processor is registered.
+     * @param timeout the timeout.
      * @param errorProcessor the processable which handles thrown exceptions
+     * @param timeUnit the unit of the timeout.
      * @throws CouldNotPerformException thrown by the errorProcessor
-     * @throws InterruptedException thrown by the errorProcessor
      */
-    public static void applyErrorHandling(final Future future, long timeout, Processable<Exception, Void> errorProcessor) throws CouldNotPerformException, InterruptedException {
-        try {
-            future.get(timeout, TimeUnit.SECONDS);
-        } catch (ExecutionException | InterruptedException | TimeoutException ex) {
-            errorProcessor.process(ex);
-        }
+    public static void applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException {
+        GlobalExecutionService.submit(() -> {
+            try {
+                future.get(timeout, timeUnit);
+            } catch (ExecutionException | InterruptedException | TimeoutException ex) {
+                errorProcessor.process(ex);
+            }
+            return null;
+        });
     }
 
     @Override
