@@ -75,7 +75,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final long REQUEST_TIMEOUT = 15000;
-    public static final long PING_TIMEOUT = 10000;
+    public static final long PING_TIMEOUT = 5000;
     public static final long CONNECTION_TIMEOUT = 60000;
     public static final long DATA_WAIT_TIMEOUT = 1000;
 
