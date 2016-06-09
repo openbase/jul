@@ -75,7 +75,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final long REQUEST_TIMEOUT = 15000;
-    public static final long PING_TIMEOUT = 3000;
+    public static final long PING_TIMEOUT = 5000;
     public static final long CONNECTION_TIMEOUT = 60000;
     public static final long DATA_WAIT_TIMEOUT = 1000;
 
@@ -371,7 +371,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 } catch (TimeoutException ex) {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                     timeout = generateTimeout(timeout);
-                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next timeout in " + ((int) timeout) + " seconds.");
+                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next timeout in " + ((int) (timeout/1000)) + " seconds.");
                     Thread.yield();
                 }
             }
@@ -495,7 +495,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         @Override
-        public M call() throws Exception {
+        public M call() throws InterruptedException, CouldNotPerformException {
 
             Future<Event> internalFuture = null;
             M dataUpdate;
@@ -513,7 +513,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                         dataUpdate = (M) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData();
                         break;
-                    } catch (TimeoutException ex) {
+                    } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                         timeout = generateTimeout(timeout);
                         logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next timeout in " + ((int) timeout) + " seconds.");
@@ -712,14 +712,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             try {
                 logger.debug("Internal notification: " + event.toString());
                 Object dataUpdate = event.getData();
-                
+
                 if (dataUpdate == null) {
                     // controller shutdown or error detected!
                     logger.info("Remote controller shutdown detected!");
                     setConnectionState(CONNECTING);
                     return;
                 }
-                
+
                 try {
                     applyDataUpdate((M) dataUpdate);
                 } catch (ClassCastException ex) {
@@ -828,9 +828,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                             // init reconnection
                             setConnectionState(CONNECTING);
+                            requestData();
                         }
-                        requestData();
-
                     }
                     throw ex;
                 } catch (CouldNotPerformException | ExecutionException ex) {
