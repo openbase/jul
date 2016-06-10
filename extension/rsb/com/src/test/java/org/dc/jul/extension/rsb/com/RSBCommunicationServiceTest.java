@@ -184,7 +184,8 @@ public class RSBCommunicationServiceTest {
     }
 
     /**
-     * Test if a RemoteService will reconnect when the communication service restarts.
+     * Test if a RemoteService will reconnect when the communication service
+     * restarts.
      *
      * @throws Exception
      */
@@ -222,7 +223,8 @@ public class RSBCommunicationServiceTest {
     }
 
     /**
-     * Test if a RemoteService will reconnect when the communication service restarts.
+     * Test if a RemoteService will reconnect when the communication service
+     * restarts.
      *
      * @throws Exception
      */
@@ -268,6 +270,7 @@ public class RSBCommunicationServiceTest {
         communicationService.shutdown();
         remoteService.shutdown();
     }
+
 
     @Test(timeout = 5000)
     public void testRemoteInterference() throws Exception {

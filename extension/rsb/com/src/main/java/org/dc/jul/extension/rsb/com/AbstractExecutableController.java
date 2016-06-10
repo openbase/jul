@@ -85,7 +85,6 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
 //        } catch (Exception ex) {
 //            throw new CouldNotPerformException("Could not apply data change!", ex);
 //        }
-
         try {
             if (activation.getValue().equals(ActivationState.State.ACTIVE)) {
                 if (!executing) {

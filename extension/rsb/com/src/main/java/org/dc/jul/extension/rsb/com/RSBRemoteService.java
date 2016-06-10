@@ -371,7 +371,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 } catch (TimeoutException ex) {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                     timeout = generateTimeout(timeout);
-                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next timeout in " + ((int) (timeout/1000)) + " seconds.");
+                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next timeout in " + ((int) (timeout / 1000)) + " seconds.");
                     Thread.yield();
                 }
             }
@@ -382,7 +382,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public final static Random jitterRandom = new Random();
 
     public static long generateTimeout(long currentTimeout) {
-        return Math.min(MAX_TIMEOUT, (long) (currentTimeout * TIMEOUT_MULTIPLIER + jitterRandom.nextDouble()));
+        return Math.min(MAX_TIMEOUT, (long) (currentTimeout * TIMEOUT_MULTIPLIER + (jitterRandom.nextDouble() * 1000)));
     }
 
     @Override
