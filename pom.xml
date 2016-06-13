@@ -143,7 +143,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>-->
-        <dependency.jps.version>[3.0,3.1-SNAPSHOT)</dependency.jps.version>
+        <dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>
         <dependency.rst.sandbox.artifact>rst-sandbox-csra</dependency.rst.sandbox.artifact>
         <!--dependency.rst.sandbox.version>[0.12,0.13-SNAPSHOT)</dependency.rst.sandbox.version-->
         <!--<dependency.rst.sandbox.artifact>rst-sandbox-csra-ha-paramite</dependency.rst.sandbox.artifact>-->
