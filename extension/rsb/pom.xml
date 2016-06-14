@@ -1,19 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.dc</groupId>
+    <groupId>org.openbase</groupId>
     <artifactId>jul.extension.rsb</artifactId>
     <packaging>pom</packaging>
 
     <name>JUL Extension RSB</name>
     
     <parent>
-        <groupId>org.dc</groupId>
+        <groupId>org.openbase</groupId>
         <artifactId>jul.extension</artifactId>
         <version>1.1-SNAPSHOT</version>
     </parent>    
     
-    <url>https://github.com/divinecooperation/jul/wiki</url>
+    <url>https://github.com/openbase/jul/wiki</url>
     <build>
         <plugins>
             <plugin>
@@ -44,7 +44,7 @@
             <version>${dependency.rsb.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.exception</artifactId>
             <version>${project.version}</version>
         </dependency>

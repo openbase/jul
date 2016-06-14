@@ -7,12 +7,12 @@
     <name>JUL Extension RST Storage</name>
     
     <parent>
-        <groupId>org.dc</groupId>
+        <groupId>org.openbase</groupId>
         <artifactId>jul.extension.rst</artifactId>
         <version>1.1-SNAPSHOT</version>
     </parent>    
     
-    <url>https://github.com/divinecooperation/jul/wiki</url>
+    <url>https://github.com/openbase/jul/wiki</url>
     <build>
         <plugins>
             <plugin>
@@ -29,7 +29,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.storage</artifactId>
             <version>${project.version}</version>
         </dependency>

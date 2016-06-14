@@ -7,12 +7,12 @@
     <name>JUL Extension RSB Container</name>
     
     <parent>
-        <groupId>org.dc</groupId>
+        <groupId>org.openbase</groupId>
         <artifactId>jul.extension.rsb</artifactId>
         <version>1.1-SNAPSHOT</version>
     </parent>    
     
-    <url>https://github.com/divinecooperation/jul/wiki</url>
+    <url>https://github.com/openbase/jul/wiki</url>
     <build>
         <plugins>
             <plugin>
@@ -29,32 +29,32 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.exception</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.pattern</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.extension.rsb.util</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.extension.rsb.processing</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.extension.protobuf</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.dc</groupId>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
