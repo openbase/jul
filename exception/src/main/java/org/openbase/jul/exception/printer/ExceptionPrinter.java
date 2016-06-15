@@ -38,7 +38,11 @@ public class ExceptionPrinter {
     private static final String SEPARATOR = "=====================================";
     private static final ElementGenerator<MultiException.SourceExceptionEntry> MULTI_EXCEPTION_ELEMENT_GENERATOR = new MultiExceptionElementGenerator();
     private static final ElementGenerator<Throwable> THROWABLE_ELEMENT_GENERATOR = new ThrowableElementGenerator();
+    private static Boolean beQuiet = false;
 
+    public static void setBeQuit(Boolean beQuiet) {
+        ExceptionPrinter.beQuiet = beQuiet;
+    }
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
@@ -115,6 +119,9 @@ public class ExceptionPrinter {
      * @param th exception stack to print.
      */
     public static <T extends Throwable> void printHistory(final T th, final Printer printer) {
+        if(beQuiet) {
+            return;
+        }
         printHistory(th, printer, "", "");
 
         // Print normal stacktrace in debug mode for all errors.
@@ -138,6 +145,9 @@ public class ExceptionPrinter {
     }
 
     static void printHistory(final Throwable th, final Printer printer, String rootPrefix, final String childPrefix) {
+        if(beQuiet) {
+            return;
+        }
         if (th instanceof MultiException) {
             printFlatTree(new SourceExceptionEntry(ExceptionPrinter.class, th), ((MultiException) th).getExceptionStack(), MULTI_EXCEPTION_ELEMENT_GENERATOR, printer, rootPrefix, childPrefix);
         } else {

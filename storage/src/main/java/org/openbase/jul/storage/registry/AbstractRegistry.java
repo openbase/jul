@@ -554,7 +554,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
-                    throw new CouldNotPerformException("Consistency process aborted!", ex);
+                    throw new CouldNotPerformException("Consistency process of " + getName() + " aborted!", ex);
                 }
             } finally {
                 consistencyCheckLock.writeLock().unlock();
