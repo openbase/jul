@@ -194,11 +194,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>-->
         <dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>
-        <dependency.rst.sandbox.artifact>rst-sandbox-csra</dependency.rst.sandbox.artifact>
+        <dependency.rst.sandbox.artifact>rst-sandbox-csra-ha</dependency.rst.sandbox.artifact>
         <!--dependency.rst.sandbox.version>[0.12,0.13-SNAPSHOT)</dependency.rst.sandbox.version-->
         <!--<dependency.rst.sandbox.artifact>rst-sandbox-csra-ha-paramite</dependency.rst.sandbox.artifact>-->
         <dependency.rst.sandbox.version>0.13-SNAPSHOT</dependency.rst.sandbox.version>
-        <dependency.rst.stable.artifact>rst-csra</dependency.rst.stable.artifact>
+        <dependency.rst.stable.artifact>rst-csra-ha</dependency.rst.stable.artifact>
         <dependency.rst.stable.version>0.13-SNAPSHOT</dependency.rst.stable.version>
         <!--<dependency.rst.stable.artifact>rst-csra-ha-paramite</dependency.rst.stable.artifact>-->
         <!--<dependency.rst.stable.version>0.12-SNAPSHOT</dependency.rst.stable.version>-->
