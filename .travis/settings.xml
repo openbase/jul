@@ -29,7 +29,7 @@
             <repositories>
                 <repository>
                     <id>sonatype-oss-public</id>
-                    <url></url>
+                    <url>https://oss.sonatype.org/content/groups/public/</url>
                     <releases>
                         <enabled>true</enabled>
                         <updatePolicy>always</updatePolicy>
