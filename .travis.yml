@@ -10,6 +10,9 @@ before_install:
   - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
   - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
 
+notifications:
+      slack: openbase-org:$SLACK_TOKEN
+
 deploy:
   - provider: script
     script: .travis/deploy.sh
