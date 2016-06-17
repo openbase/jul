@@ -32,7 +32,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Snapshotable<T> {
 
-    public Future<T> recordSnaphot() throws CouldNotPerformException, InterruptedException;
+    public Future<T> recordSnapshot() throws CouldNotPerformException, InterruptedException;
 
     public Future<Void> restoreSnapshot(final T snapshot) throws CouldNotPerformException, InterruptedException;
 }
