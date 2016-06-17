@@ -21,7 +21,6 @@
         <developer>
             <id>DivineThreepwood</id>
             <name>Marian Pohling</name>
-
             <email>divinethreepwood@gmail.com</email>
             <url>https://github.com/DivineThreepwood</url>
             <organization>openbase.org</organization>
@@ -129,7 +128,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.10.3</version>
+                        <version>2.10.4</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -189,9 +188,9 @@
     
     <properties>
         <skipTests>false</skipTests>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>-->
         <dependency.jps.version>3.1-SNAPSHOT</dependency.jps.version>
         <dependency.rst.sandbox.artifact>rst-sandbox-csra-ha</dependency.rst.sandbox.artifact>
