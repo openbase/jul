@@ -444,7 +444,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
-        logger.info(this + " requestData...");
+        logger.debug(this + " requestData...");
         validateInitialization();
         try {
             synchronized (syncMonitor) {
@@ -520,8 +520,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         Thread.yield();
                     }
                 }
-
-                logger.info("got data!");
 
                 if (dataUpdate == null) {
                     // controller shutdown or error detected!
@@ -677,16 +675,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     public void waitForConnectionState(final RemoteConnectionState connectionState) throws InterruptedException {
-        System.out.println("waitForConnectionMonitor...");
         synchronized (connectionMonitor) {
             while (!Thread.currentThread().isInterrupted()) {
                 if (this.connectionState.equals(connectionState)) {
                     return;
                 }
-                // TODO: verify if this timeout is really neccessary
-                System.out.println("waitForConnection...");
+                logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[scope:" + scope + "] connection...");
                 connectionMonitor.wait();
-                System.out.println("waitForConnection continue");
             }
         }
     }
