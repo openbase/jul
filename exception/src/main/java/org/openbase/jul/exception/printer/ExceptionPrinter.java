@@ -23,6 +23,7 @@ package org.openbase.jul.exception.printer;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.io.PrintStream;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
 import java.util.ArrayList;
@@ -94,6 +95,32 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistory(final T th, final Logger logger) {
         printHistory(th, logger, LogLevel.ERROR);
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history.
+     *
+     * @param <T> Exception type
+     * @param th exception stack to print.
+     * @param stream the stream used for printing the message history e.g. System.out or. System.err
+     */
+    public static <T extends Throwable> void printHistory(final T th, final PrintStream stream) {
+        printHistory(th, new SystemPrinter(stream));
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history.
+     *
+     * @param <T> Exception type
+     * @param th exception stack to print.
+     * @param stream the stream used for printing the message history e.g. System.out or. System.err
+     * * @return the related Throwable returned for further exception handling.
+     */
+    public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final PrintStream stream) {
+        printHistory(th, new SystemPrinter(stream));
+        return th;
     }
 
     /**

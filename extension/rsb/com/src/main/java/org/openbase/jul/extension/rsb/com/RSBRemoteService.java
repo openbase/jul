@@ -371,7 +371,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 } catch (TimeoutException ex) {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                     timeout = generateTimeout(timeout);
-                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next timeout in " + ((int) (timeout / 1000)) + " seconds.");
+                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                     Thread.yield();
                 }
             }
