@@ -34,6 +34,11 @@ import org.openbase.jul.iface.Manageable;
  */
 public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID, M>, Manageable<CONFIG> {
 
+    /**
+     * Method returns the current configuration of this remote instance.
+     * @return
+     * @throws NotAvailableException 
+     */
     public CONFIG getConfig() throws NotAvailableException;
     
     

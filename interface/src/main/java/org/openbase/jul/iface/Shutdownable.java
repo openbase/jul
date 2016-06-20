@@ -28,5 +28,13 @@ package org.openbase.jul.iface;
  */
 public interface Shutdownable {
 
+    /**
+     * This method initializes the shutdown phrase of this instance.
+     * 
+     * * All resources will be released. 
+     * * In case of any errors no exception will be thrown and the method will not block.
+     * 
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     */
     public void shutdown() throws InterruptedException;
 }

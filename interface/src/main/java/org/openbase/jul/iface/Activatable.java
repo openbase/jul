@@ -32,9 +32,29 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Activatable {
 
+    /**
+     * This method activates this instance.
+     * 
+     * Needed resources will be allocated and communication instances instantiated and started.
+     *
+     * @throws CouldNotPerformException is thrown in case the instance could not be activated.
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     */
 	public void activate() throws CouldNotPerformException, InterruptedException;
 
+    /**
+     * This method deactivates this instance.
+     * 
+     * Owned resources will be released and communication instances will be stopped.
+     *
+     * @throws CouldNotPerformException is thrown in case the instance could not be deactivated.
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     */
 	public void deactivate() throws CouldNotPerformException, InterruptedException;
 
+    /**
+     * Method return if this instance is currently activate.
+     * @return is true if the instance is active and false if not. 
+     */
 	public boolean isActive();
 }
