@@ -516,8 +516,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                         timeout = generateTimeout(timeout);
-                        logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next timeout in " + ((int) timeout) + " seconds.");
-                        Thread.yield();
+                        logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                     }
                 }
 
@@ -618,7 +617,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             logger.info("Wait for " + this.toString() + " data...");
             getDataFuture().get();
         } catch (ExecutionException ex) {
-            throw new CouldNotPerformException("Could not wait for data!", ex);
+            throw new TimeoutException("Could not wait for data!", ex);
         }
     }
 
@@ -674,18 +673,41 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    public void waitForConnectionState(final RemoteConnectionState connectionState) throws InterruptedException {
+    /**
+     * Method blocks until the remote reaches the desired connection state or the timeout is expired.
+     *
+     * @param connectionState the desired connection state
+     * @param timeout the timeout until the method returns even if the connection state was not reached.
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     */
+    public void waitForConnectionState(final RemoteConnectionState connectionState, long timeout) throws InterruptedException {
         synchronized (connectionMonitor) {
             while (!Thread.currentThread().isInterrupted()) {
                 if (this.connectionState.equals(connectionState)) {
                     return;
                 }
                 logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[scope:" + scope + "] connection...");
-                connectionMonitor.wait();
+                connectionMonitor.wait(timeout);
             }
         }
     }
 
+    /**
+     * Method blocks until the remote reaches the desired connection state.
+     *
+     * @param connectionState the desired connection state
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     */
+    public void waitForConnectionState(final RemoteConnectionState connectionState) throws InterruptedException {
+        waitForConnectionState(connectionState, 0);
+    }
+
+    /**
+     * Method returns the scope of this remote connection.
+     *
+     * @return the remote controller scope.
+     * @throws NotAvailableException
+     */
     @Override
     public ScopeType.Scope getScope() throws NotAvailableException {
         try {
@@ -695,6 +717,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * Method prints a class instance representation.
+     *
+     * @return
+     */
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[scope:" + scope + "]";
@@ -728,6 +755,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * Method is used to internally update the data object.
+     *
+     * @param data
+     */
     private void applyDataUpdate(final M data) {
         this.data = data;
         CompletableFuture<M> currentSyncFuture = null;
@@ -796,11 +828,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         removeDataObserver(observer);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void addDataObserver(final Observer<M> observer) {
         dataObservable.addObserver(observer);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void removeDataObserver(final Observer<M> observer) {
         dataObservable.removeObserver(observer);

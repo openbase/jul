@@ -36,19 +36,72 @@ import org.openbase.jul.iface.Shutdownable;
  */
 public interface Remote<M> extends Shutdownable, Activatable {
 
-    // TODO mpohling: Should be moved to rst and reimplement for rsb 14.
+    // TODO mpohling: Should be moved to rst and reimplement for rsb 15.
     public enum RemoteConnectionState {
-        CONNECTING, CONNECTED, DISCONNECTED
+
+        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED
     };
-    
-    public Object callMethod(final String methodName) throws CouldNotPerformException, InterruptedException;
 
-    public <R, T extends Object> R callMethod(final String methodName, final T type) throws CouldNotPerformException, InterruptedException;
+    /**
+     * Method synchronously calls the given method without any arguments on the main controller.
+     *
+     * The method call will block until the call is successfully processed.
+     * Even if the main controller instance is currently not reachable, successively retry will be triggered.
+     * The only way to cancel the call is an externally interruption of the invoking thread.
+     *
+     * @param <R> the return type of the method declaration.
+     * @param methodName the method name.
+     * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
+     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     */
+    public <R> R callMethod(final String methodName) throws CouldNotPerformException, InterruptedException;
 
-    public Future<Object> callMethodAsync(final String methodName) throws CouldNotPerformException;
+    /**
+     * Method synchronously calls the given method on the main controller.
+     *
+     * The method call will block until the call is successfully processed.
+     * Even if the main controller instance is currently not reachable, successively retry will be triggered.
+     * The only way to cancel the call is an externally interruption of the invoking thread.
+     *
+     * @param <R> the return type of the method declaration.
+     * @param <T> the argument type of the method.
+     * @param methodName the method name.
+     * @param argument the method argument.
+     * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
+     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     */
+    public <R, T extends Object> R callMethod(final String methodName, final T argument) throws CouldNotPerformException, InterruptedException;
 
-    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T type) throws CouldNotPerformException;
+    /**
+     * Method asynchronously calls the given method without any arguments on the main controller.
+     *
+     * @param <R> the return type of the method declaration.
+     * @param methodName the method name.
+     * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
+     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
+     */
+    public <R> Future<R> callMethodAsync(final String methodName) throws CouldNotPerformException;
 
+    /**
+     * Method asynchronously calls the given method on the main controller.
+     *
+     * @param <R> the return type of the method declaration.
+     * @param <T> the argument type of the method.
+     * @param methodName the method name.
+     * @param argument the method argument.
+     * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
+     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
+     */
+    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException;
+
+    /**
+     *
+     * @param scope
+     * @throws InitializationException
+     * @throws InterruptedException
+     */
     public void init(final String scope) throws InitializationException, InterruptedException;
 
     /**
@@ -102,29 +155,35 @@ public interface Remote<M> extends Shutdownable, Activatable {
      */
     public CompletableFuture<M> getDataFuture() throws CouldNotPerformException;
 
-    
     /**
      * Method blocks until an initial data message was received from the remote controller.
-     * 
-     * @throws CouldNotPerformException
-     * @throws InterruptedException 
+     *
+     * @throws CouldNotPerformException is thrown if any error occurs.
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
     public void waitForData() throws CouldNotPerformException, InterruptedException;
-    
+
     /**
-     * Method blocks until an initial data message was received from the remote controller or it times out.
-     * 
-     * @throws CouldNotPerformException
+     * Method blocks until an initial data message was received from the main controller or the given timeout is reached.
+     *
+     * @param timeout maximal time to wait for the main controller data. After the timeout is reached a TimeoutException is thrown.
+     * @param timeUnit the time unit of the timeout.
+     * @throws CouldNotPerformException is thrown in case the any error occurs, or if the given timeout is reached. In this case a TimeoutException is thrown.
      */
     public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException;
-    
+
     /**
      * Checks if a server connection is established.
      *
-     * @return
+     * @return is true in case the connection is established.
      */
     public boolean isConnected();
-    
+
+    /**
+     * Method returns the current connection state between this remote and its main controller.
+     *
+     * @return the current connection state.
+     */
     public RemoteConnectionState getConnectionState();
 
     /**
