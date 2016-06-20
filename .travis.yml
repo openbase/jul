@@ -15,7 +15,7 @@ before_install:
   - echo $GPG_OWNERTRUST | base64 --decode | $GPG_EXECUTABLE --import-ownertrust
 
 notifications:
-      slack: openbase-org:$SLACK_TOKEN
+      slack: openbase-org:$SLACK_ACCESS_TOCKEN
 
 deploy:
   - provider: script
