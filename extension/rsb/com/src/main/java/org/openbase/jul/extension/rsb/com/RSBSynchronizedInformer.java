@@ -26,6 +26,7 @@ package org.openbase.jul.extension.rsb.com;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.rsb.iface.RSBInformerInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,8 +94,13 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
                     throw new NotAvailableException("event");
                 }
                 return getParticipant().publish(event);
-            } catch (CouldNotPerformException | RSBException | IllegalStateException ex) {
-                throw new CouldNotPerformException("Could not send Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
+            } catch (IllegalStateException ex) {
+                // TODO Hack for finding Inactive send in case informer was marked as active bug.
+                ExceptionPrinter.printHistory(ex, logger);
+                System.exit(255);
+                throw ex;
+            } catch (CouldNotPerformException | RSBException ex) {
+                throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
             }
         }
     }
@@ -104,8 +110,13 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
         synchronized (participantLock) {
             try {
                 return getParticipant().publish(data);
-            } catch (CouldNotPerformException | RSBException | IllegalStateException ex) {
-                throw new CouldNotPerformException("Could not send Data[" + data + "]!", ex);
+            } catch (IllegalStateException ex) {
+                // TODO Hack for finding Inactive send in case informer was marked as active bug.
+                ExceptionPrinter.printHistory(ex, logger);
+                System.exit(255);
+                throw ex;
+            } catch (CouldNotPerformException | RSBException ex) {
+                throw new CouldNotPerformException("Could not publish Data[" + data + "]!", ex);
             }
         }
     }
