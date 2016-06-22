@@ -47,13 +47,13 @@ public class NotInitializedRSBInformer<M extends GeneratedMessage> extends NotIn
     }
     
     @Override
-    public Event send(Event event) throws CouldNotPerformException {
-        throw new CouldNotPerformException("Could send event!", new InvalidStateException("Informer not initialized!"));
+    public Event publish(Event event) throws CouldNotPerformException {
+        throw new CouldNotPerformException("Could publish event!", new InvalidStateException("Informer not initialized!"));
     }
 
     @Override
-    public Event send(M data) throws CouldNotPerformException {
-        throw new CouldNotPerformException("Could send data!", new InvalidStateException("Informer not initialized!"));
+    public Event publish(M data) throws CouldNotPerformException {
+        throw new CouldNotPerformException("Could publish data!", new InvalidStateException("Informer not initialized!"));
     }
 
     @Override

@@ -23,7 +23,6 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -34,6 +33,7 @@ import rsb.Event;
 import rsb.Factory;
 import rsb.Informer;
 import rsb.InitializeException;
+import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 
@@ -47,7 +47,6 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
     protected final Logger logger = LoggerFactory.getLogger(RSBSynchronizedInformer.class);
 
     private final Class<DT> type;
-
 
     /**
      * Creates an informer for a specific data type with a given scop..
@@ -86,26 +85,26 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
     }
 
     @Override
-    public Event send(final Event event) throws CouldNotPerformException {
+    public Event publish(final Event event) throws CouldNotPerformException, InterruptedException {
         synchronized (participantLock) {
             logger.debug("Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]");
             try {
                 if (event == null) {
                     throw new NotAvailableException("event");
                 }
-                return getParticipant().send(event);
-            } catch (Exception ex) {
+                return getParticipant().publish(event);
+            } catch (CouldNotPerformException | RSBException | IllegalStateException ex) {
                 throw new CouldNotPerformException("Could not send Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
             }
         }
     }
 
     @Override
-    public Event send(final DT data) throws CouldNotPerformException {
+    public Event publish(final DT data) throws CouldNotPerformException, InterruptedException {
         synchronized (participantLock) {
             try {
-                return getParticipant().send(data);
-            } catch (Exception ex) {
+                return getParticipant().publish(data);
+            } catch (CouldNotPerformException | RSBException | IllegalStateException ex) {
                 throw new CouldNotPerformException("Could not send Data[" + data + "]!", ex);
             }
         }

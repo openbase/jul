@@ -318,7 +318,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) {
+    private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) throws InterruptedException {
         synchronized (controllerAvailabilityMonitor) {
 
             // filter unchanged events
@@ -340,8 +340,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                         return;
                     }
                     try {
-                        informer.send(new Event(informer.getScope(), getDataClass(), null));
-                    } catch (Exception ex) {
+                        informer.publish(new Event(informer.getScope(), getDataClass(), null));
+                    } catch (CouldNotPerformException ex) {
                         throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
                     }
                 } catch (CouldNotPerformException ex) {
@@ -429,7 +429,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             return;
         }
         try {
-            informer.send(getData());
+            informer.publish(getData());
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
