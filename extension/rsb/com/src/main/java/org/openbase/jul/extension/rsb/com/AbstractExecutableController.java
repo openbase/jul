@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rsb.com;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -61,13 +62,13 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         return (ActivationState) getDataField(ACTIVATION_STATE);
     }
 
-    public void setActivationState(final ActivationState activation) throws CouldNotPerformException {
+    public Future<Void> setActivationState(final ActivationState activation) throws CouldNotPerformException {
         if (activation.getValue().equals(ActivationState.State.UNKNOWN)) {
             throw new InvalidStateException("Unknown is not a valid state!");
         }
 
         if (activation.getValue().equals(getActivationState().getValue())) {
-            return;
+            return null;
         }
 
         try (ClosableDataBuilder<MB> dataBuilder = getDataBuilder(this)) {
@@ -100,6 +101,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         } catch (CouldNotPerformException | InterruptedException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update execution state!", ex), logger);
         }
+        return null;
     }
 
     public boolean isExecuting() {
