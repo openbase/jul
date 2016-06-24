@@ -95,10 +95,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
                 }
                 return getParticipant().publish(event);
             } catch (IllegalStateException ex) {
-                // TODO Hack for finding Inactive send in case informer was marked as active bug.
-                ExceptionPrinter.printHistory(ex, logger);
-                System.exit(255);
-                throw ex;
+                throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Fatal error occured!", ex), logger);
             } catch (CouldNotPerformException | RSBException ex) {
                 throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
             }
@@ -111,10 +108,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
             try {
                 return getParticipant().publish(data);
             } catch (IllegalStateException ex) {
-                // TODO Hack for finding Inactive send in case informer was marked as active bug.
-                ExceptionPrinter.printHistory(ex, logger);
-                System.exit(255);
-                throw ex;
+                throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Fatal error occured!", ex), logger);
             } catch (CouldNotPerformException | RSBException ex) {
                 throw new CouldNotPerformException("Could not publish Data[" + data + "]!", ex);
             }
