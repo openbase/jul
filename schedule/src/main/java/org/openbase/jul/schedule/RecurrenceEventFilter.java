@@ -45,7 +45,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(RecurrenceEventFilter.class);
 
     public static final long DEFAULT_TIMEOUT = 1000;
-    public static final long DEFAULT_TEST_TIMEOUT = 500;
+    public static final long DEFAULT_TEST_TIMEOUT = 100;
 
     private Timeout timeout;
     private VALUE lastValue;
