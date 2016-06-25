@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Shutdownable;
 
@@ -51,7 +52,7 @@ public interface Remote<M> extends Shutdownable, Activatable {
      *
      * @param <R> the return type of the method declaration.
      * @param methodName the method name.
-     * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
+     * @return the return value of the remote method.
      * @throws CouldNotPerformException is thrown in case any error occurred during processing.
      * @throws InterruptedException is thrown in case the thread was externally interrupted.
      */
@@ -68,11 +69,45 @@ public interface Remote<M> extends Shutdownable, Activatable {
      * @param <T> the argument type of the method.
      * @param methodName the method name.
      * @param argument the method argument.
-     * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
+     * @return the return value of the remote method.
      * @throws CouldNotPerformException is thrown in case any error occurred during processing.
      * @throws InterruptedException is thrown in case the thread was externally interrupted.
      */
     public <R, T extends Object> R callMethod(final String methodName, final T argument) throws CouldNotPerformException, InterruptedException;
+
+    /**
+     * Method synchronously calls the given method on the main controller.
+     *
+     * The method call will block until the call is successfully processed or the given timeout is expired.
+     * Even if the main controller instance is currently not reachable, successively retry will be triggered.
+     *
+     * @param <R> the return type of the method declaration.
+     * @param methodName the method name.
+     * @param timeout the RPC call timeout in milliseconds.
+     * @return the return value of the remote method.
+     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
+     * @throws org.openbase.jul.exception.TimeoutException is thrown in case the given timeout is expired before the RPC was successfully processed.
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     */
+    public <R> R callMethod(final String methodName, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
+
+    /**
+     * Method synchronously calls the given method on the main controller.
+     *
+     * The method call will block until the call is successfully processed or the given timeout is expired.
+     * Even if the main controller instance is currently not reachable, successively retry will be triggered.
+     *
+     * @param <R> the return type of the method declaration.
+     * @param <T> the argument type of the method.
+     * @param methodName the method name.
+     * @param argument the method argument.
+     * @param timeout the RPC call timeout in milliseconds.
+     * @return the return value of the remote method.
+     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
+     * @throws org.openbase.jul.exception.TimeoutException is thrown in case the given timeout is expired before the RPC was successfully processed.
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     */
+    public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
 
     /**
      * Method asynchronously calls the given method without any arguments on the main controller.

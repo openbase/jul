@@ -45,5 +45,11 @@ public interface RSBRemote<M extends GeneratedMessage> extends Remote<M>{
 
     public void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException;
 
+    /**
+     * Method returns the scope of this remote connection.
+     *
+     * @return the remote controller scope.
+     * @throws NotAvailableException
+     */
     public ScopeType.Scope getScope() throws NotAvailableException;
 }
