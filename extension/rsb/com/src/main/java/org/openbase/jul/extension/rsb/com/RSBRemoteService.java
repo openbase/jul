@@ -522,7 +522,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 if (dataUpdate == null) {
                     // controller shutdown or error detected!
-                    logger.info("Remote controller shutdown detected!");
                     setConnectionState(CONNECTING);
                     return data;
                 }
@@ -737,7 +736,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 if (dataUpdate == null) {
                     // controller shutdown or error detected!
-                    logger.info("Remote controller shutdown detected!");
                     setConnectionState(CONNECTING);
                     return;
                 }
