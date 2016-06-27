@@ -452,6 +452,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return modificationCounter;
         }
 
+        if (isEmpty()) {
+            logger.debug("Skip consistency check because registry is empty.");
+            return modificationCounter;
+        }
+
         if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
             // Avoid triggering recursive consistency checks.
             logger.debug(getName() + " skipping consistency check because check is already running by same thread. " + Thread.currentThread().getId());
@@ -474,7 +479,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                     while (true) {
 
+                        // do not burn cpu
                         Thread.yield();
+
+                        // init next interation
+                        iterationCounter++;
 
                         // handle handler interference
                         maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
@@ -484,7 +493,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         }
 
                         // prepare for next iteraction
-                        iterationCounter++;
                         if (exceptionStack != null) {
                             errorCounter = exceptionStack.size();
                             exceptionStack.clear();

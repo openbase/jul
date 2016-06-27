@@ -24,7 +24,6 @@ package org.openbase.jul.schedule;
  * #L%
  */
 
-import org.openbase.jul.schedule.RecurrenceEventFilter;
 import static org.openbase.jul.schedule.RecurrenceEventFilterTest.RecurrenceEventFilterImpl.TIMEOUT;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -60,6 +59,7 @@ public class RecurrenceEventFilterTest {
 
     /**
      * Test of trigger method, of class RecurrenceEventFilter.
+     * @throws java.lang.InterruptedException
      */
     @Test
     public void testRecurrenceEventFilter() throws InterruptedException {
@@ -69,13 +69,13 @@ public class RecurrenceEventFilterTest {
         for (int i = 0; i < 100; i++) {
             instance.trigger();
         }
-        Thread.sleep(TIMEOUT + 10);
+        Thread.sleep(TIMEOUT + 20);
         assertEquals(2, instance.getRelayCounter());
     }
 
     public class RecurrenceEventFilterImpl extends RecurrenceEventFilter {
 
-        public static final long TIMEOUT = 500;
+        public static final long TIMEOUT = 50;
 
         private int relayCounter = 0;
 

@@ -79,6 +79,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public static final long PING_TIMEOUT = 5000;
     public static final long CONNECTION_TIMEOUT = 60000;
     public static final long DATA_WAIT_TIMEOUT = 1000;
+    public static final long METHOD_CALL_START_TIMEOUT = 500;
+    public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
+    public static final long METHOD_CALL_MAX_TIMEOUT = 30000;
+
+    private static final Random jitterRandom = new Random();
 
     static {
         RSBSharedConnectionConfig.load();
@@ -115,16 +120,36 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.lastPingReceived = -1;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param scope {@inheritDoc}
+     * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
     @Override
     public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param scope {@inheritDoc}
+     * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
     @Override
     public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
     @Override
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
@@ -134,6 +159,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param scope {@inheritDoc}
+     * @param participantConfig {@inheritDoc}
+     * @throws InitializationException {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     */
     @Override
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
@@ -167,6 +200,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param scope {@inheritDoc}
+     * @param participantConfig {@inheritDoc}
+     * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
     @Override
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
@@ -237,11 +278,24 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
     @Override
     public Class<M> getDataClass() {
         return dataClass;
     }
 
+    /**
+     * Method adds an handler to the internal rsb listener.
+     *
+     * @param handler
+     * @param wait
+     * @throws InterruptedException
+     * @throws CouldNotPerformException
+     */
     public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
         try {
             listener.addHandler(handler, wait);
@@ -250,6 +304,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws InterruptedException {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
         try {
@@ -262,9 +322,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws InterruptedException {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
-//        try {
         try {
             validateInitialization();
         } catch (InvalidStateException ex) {
@@ -275,9 +340,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         skipSyncTasks();
         deactivateListener();
         deactivateRemoteServer();
-//        } catch (CouldNotPerformException ex) {
-//            throw new CouldNotPerformException("Could not deactivate " + getClass().getSimpleName() + "!", ex);
-//        }
     }
 
     private void activateListener() throws InterruptedException {
@@ -288,6 +350,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         listenerWatchDog.deactivate();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isConnected() {
         return connectionState == CONNECTED;
@@ -316,11 +381,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public RemoteConnectionState getConnectionState() {
         return connectionState;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean isActive() {
         return listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
@@ -334,24 +405,59 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         remoteServerWatchDog.deactivate();
     }
 
-    //Timeout needed!
+    /**
+     * {@inheritDoc}
+     *
+     * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
+     */
     @Override
-    public Object callMethod(String methodName) throws CouldNotPerformException, InterruptedException {
-        return callMethod(methodName, null);
-    }
-
-    @Override
-    public Future<Object> callMethodAsync(String methodName) throws CouldNotPerformException {
+    public <R> Future<R> callMethodAsync(final String methodName) throws CouldNotPerformException {
         return callMethodAsync(methodName, null);
     }
 
-    public final static long START_TIMEOUT = 500;
-    public final static double TIMEOUT_MULTIPLIER = 1.2;
-    public final static long MAX_TIMEOUT = 30000;
-
+    /**
+     * {@inheritDoc}
+     *
+     * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
     @Override
-    public <R, T extends Object> R callMethod(String methodName, T argument) throws CouldNotPerformException, InterruptedException {
+    public <R> R callMethod(final String methodName) throws CouldNotPerformException, InterruptedException {
+        return callMethod(methodName, null);
+    }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
+    @Override
+    public <R, T extends Object> R callMethod(final String methodName, final T argument) throws CouldNotPerformException, InterruptedException {
+        return callMethod(methodName, argument, -1);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
+    @Override
+    public <R> R callMethod(String methodName, long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
+        return callMethod(methodName, null, timeout);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
+     */
+    @Override
+    public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
+
+        long validTimeout = timeout;
         validateActivation();
         try {
             logger.info("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
@@ -359,7 +465,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 waitForConnectionState(CONNECTED);
             }
 
-            long timeout = START_TIMEOUT;
+            long retryTimeout = Math.min(METHOD_CALL_START_TIMEOUT, validTimeout);
             while (true) {
 
                 if (!isActive()) {
@@ -368,31 +474,47 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 try {
                     logger.info("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
-                    return remoteServer.call(methodName, argument, timeout);
+                    return remoteServer.call(methodName, argument, retryTimeout);
                 } catch (TimeoutException ex) {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                    timeout = generateTimeout(timeout);
-                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+
+                    // check if timeout is set and handle
+                    if (timeout != -1) {
+                        validTimeout -= retryTimeout;
+                        if (validTimeout <= 0) {
+                            throw new TimeoutException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
+                        }
+                    }
+                    retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
+
+                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     Thread.yield();
                 }
             }
+        } catch (TimeoutException ex) {
+            throw ex;
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
-    public final static Random jitterRandom = new Random();
 
-    public static long generateTimeout(long currentTimeout) {
-        return Math.min(MAX_TIMEOUT, (long) (currentTimeout * TIMEOUT_MULTIPLIER + (jitterRandom.nextDouble() * 1000)));
-    }
-
+    /**
+     * {@inheritDoc}
+     *
+     * @param <R> {@inheritDoc}
+     * @param <T> {@inheritDoc}
+     * @param methodName {@inheritDoc}
+     * @param argument {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
 
         validateActivation();
         return GlobalExecutionService.submit(new Callable<R>() {
 
-            public Future<R> internalCallFuture;
+            private Future<R> internalCallFuture;
 
             @Override
             public R call() throws Exception {
@@ -429,19 +551,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * This method synchronizes this remote instance with the main controller
-     * and returns the new data object. Normally, all server data changes are
-     * automatically synchronized to all remote instances. In case you have
-     * triggered many server changes, this changes are sequentially applied.
-     * With this method you can force the sync to get instantly a data object
-     * with all applied changes. This action can not be canceled! Use this
-     * method with caution because high frequently calls will reduce the network
-     * performance! The preferred by to access the data object
+     * {@inheritDoc}
      *
-     * @return A CompletableFuture which gives feedback about the successful
-     * synchronization.
-     * @throws CouldNotPerformException In case the sync could not be triggered
-     * an CouldNotPerformException will be thrown.
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
@@ -503,7 +616,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             try {
                 logger.debug("call request");
 
-                long timeout = START_TIMEOUT;
+                long timeout = METHOD_CALL_START_TIMEOUT;
                 while (true) {
 
                     if (!isActive()) {
@@ -523,7 +636,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 if (dataUpdate == null) {
                     // controller shutdown or error detected!
-                    logger.info("Remote controller shutdown detected!");
                     setConnectionState(CONNECTING);
                     return data;
                 }
@@ -561,13 +673,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Returns a future of the data object. This method can be useful after
-     * remote initialization in case the data object was not received jet. The
-     * future can be used to wait for the data object.
+     * {@inheritDoc}
      *
-     * @return a future object delivering the data if available.
-     * @throws CouldNotPerformException In case something went wrong a
-     * CouldNotPerformException is thrown.
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public CompletableFuture<M> getDataFuture() throws CouldNotPerformException {
@@ -582,14 +691,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method returns the data object of this remote which is synchronized with
-     * the server data in background.
+     * {@inheritDoc}
      *
-     * In case the data was never received not available a NotAvailableException
-     * is thrown. Use method getDataFuture()
-     *
-     * @return
-     * @throws CouldNotPerformException
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public M getData() throws CouldNotPerformException {
@@ -600,15 +705,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Check if the data object is already available.
+     * {@inheritDoc}
      *
-     * @return
+     * @return {@inheritDoc}
      */
     @Override
     public boolean isDataAvailable() {
         return data != null;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     */
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
         try {
@@ -622,6 +733,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param timeout {@inheritDoc}
+     * @param timeUnit {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         try {
@@ -700,10 +818,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method returns the scope of this remote connection.
+     * {@inheritDoc}
      *
-     * @return the remote controller scope.
-     * @throws NotAvailableException
+     * @throws org.openbase.jul.exception.NotAvailableException {@inheritDoc}
      */
     @Override
     public ScopeType.Scope getScope() throws NotAvailableException {
@@ -717,7 +834,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * Method prints a class instance representation.
      *
-     * @return
+     * @return the class string representation.
      */
     @Override
     public String toString() {
@@ -734,7 +851,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 if (dataUpdate == null) {
                     // controller shutdown or error detected!
-                    logger.info("Remote controller shutdown detected!");
                     setConnectionState(CONNECTING);
                     return;
                 }
@@ -796,7 +912,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method can be overwritten to get internally informed about data updates.
+     * Overwrite this method to get informed about data updates.
      *
      * @param data new arrived data messages.
      * @throws CouldNotPerformException
@@ -841,6 +957,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         dataObservable.removeObserver(observer);
     }
 
+    /**
+     * Method triggers a ping between this remote and its main controller and returns the calculated connection delay.
+     * This method is triggered automatically in background to check if the main controller is still available.
+     *
+     * @return the connection delay in milliseconds.
+     */
     public Future<Long> ping() {
         return GlobalExecutionService.submit(new Callable<Long>() {
 
@@ -869,6 +991,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         });
     }
 
+    /**
+     * Method returns the result of the latest connection ping between this remote and its main controller.
+     *
+     * @return the latest connection delay in milliseconds.
+     */
     public long getPing() {
         return connectionPing;
     }
@@ -895,5 +1022,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (currentSyncTask != null) {
             currentSyncTask.cancel(true);
         }
+    }
+
+    private static long generateTimeout(long currentTimeout) {
+        return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (jitterRandom.nextDouble() * 1000)));
     }
 }
