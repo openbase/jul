@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Shutdownable;
@@ -171,13 +172,13 @@ public interface Remote<M> extends Shutdownable, Activatable {
      * Method returns the data object of this remote which is synchronized with
      * the server data in background.
      *
-     * In case the data was never received not available a NotAvailableException
-     * is thrown. Use method getDataFuture()
+     * In case the data was never received not available a NotAvailableException is thrown. 
+     * Use method getDataFuture() to get feedback about the synchronization state, or use method waitForData() to block until the needed data is synchronized.
      *
-     * @return
-     * @throws CouldNotPerformException
+     * @return the data object of the remote.
+     * @throws NotAvailableException is thrown in case the data is not yet synchronized with the main controller instance.
      */
-    public M getData() throws CouldNotPerformException;
+    public M getData() throws NotAvailableException;
 
     /**
      * Returns a future of the data object. This method can be useful after

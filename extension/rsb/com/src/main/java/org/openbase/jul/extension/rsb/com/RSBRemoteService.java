@@ -694,10 +694,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
-    public M getData() throws CouldNotPerformException {
+    public M getData() throws NotAvailableException {
         if (data == null) {
             throw new NotAvailableException("data");
         }
@@ -776,15 +776,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void validateInitialization() throws InvalidStateException {
+    public void validateInitialization() throws InvalidStateException {
         if (!initialized) {
-            throw new InvalidStateException("Remote communication service not initialized!");
+            throw new InvalidStateException(this + " not initialized!");
         }
     }
 
-    private void validateActivation() throws InvalidStateException {
+    public void validateActivation() throws InvalidStateException {
         if (!isActive()) {
-            throw new InvalidStateException("Remote communication service not activated!");
+            throw new InvalidStateException(this + " not activated!");
+        }
+    }
+
+    public void validateData() throws InvalidStateException {
+        if (!isDataAvailable()) {
+            throw new InvalidStateException(this + " not synchronized yet!", new NotAvailableException("data"));
         }
     }
 
@@ -829,16 +835,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (CouldNotTransformException ex) {
             throw new NotAvailableException("scope", ex);
         }
-    }
-
-    /**
-     * Method prints a class instance representation.
-     *
-     * @return the class string representation.
-     */
-    @Override
-    public String toString() {
-        return getClass().getSimpleName() + "[scope:" + scope + "]";
     }
 
     private class InternalUpdateHandler implements Handler {
@@ -1022,6 +1018,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (currentSyncTask != null) {
             currentSyncTask.cancel(true);
         }
+    }
+
+    /**
+     * Method prints a class instance representation.
+     *
+     * @return the class string representation.
+     */
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[scope:" + scope + "]";
     }
 
     private static long generateTimeout(long currentTimeout) {
