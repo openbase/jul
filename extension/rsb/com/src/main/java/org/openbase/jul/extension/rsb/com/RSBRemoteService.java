@@ -31,6 +31,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -622,16 +623,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     @Override
-    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException {
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         try {
             if (isDataAvailable()) {
                 return;
             }
             getDataFuture().get(timeout, timeUnit);
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            // TODO mpohling: should the interrupted exception thrown instead?
-            throw new CouldNotPerformException("Interrupted while waiting for data!", ex);
         } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
             throw new NotAvailableException("Data is not yet available!", ex);
         }

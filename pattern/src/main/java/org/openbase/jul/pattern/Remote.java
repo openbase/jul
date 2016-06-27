@@ -169,8 +169,9 @@ public interface Remote<M> extends Shutdownable, Activatable {
      * @param timeout maximal time to wait for the main controller data. After the timeout is reached a TimeoutException is thrown.
      * @param timeUnit the time unit of the timeout.
      * @throws CouldNotPerformException is thrown in case the any error occurs, or if the given timeout is reached. In this case a TimeoutException is thrown.
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
-    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException;
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Checks if a server connection is established.

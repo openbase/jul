@@ -27,6 +27,7 @@ package org.openbase.jul.pattern;
 /**
  *
  * @author divine
+ * @param <T> the observable data type
  */
 public interface Observer<T> {
     /**
@@ -35,6 +36,8 @@ public interface Observer<T> {
      * <code>notifyObservers</code> method to have all the object's
      * observers notified of the change.
      *
+     * @param source
+     * @param data
      * @throws java.lang.Exception
      */
     public void update(final Observable<T> source, final T data ) throws Exception;

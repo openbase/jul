@@ -23,7 +23,6 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.NotAvailableException;
@@ -37,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @author divine
  * @param <T>
  */
-public class ObservableImpl<T> implements Observable<T>{
+public class ObservableImpl<T> implements Observable<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObservableImpl.class);
 
@@ -64,14 +63,7 @@ public class ObservableImpl<T> implements Observable<T>{
                 LOGGER.warn("Skip observer registration. Observer[" + observer + "] is already registered!");
                 return;
             }
-
             observers.add(observer);
-            //TODO mpohling: check if this is usefull and does not interfere with any usage.
-//            try {
-//                observer.update(this, latestValue);
-//            } catch (Exception ex) {
-//                ExceptionPrinter.printHistory(new CouldNotPerformException("Initial Observer[" + observer + "] sync failed!", ex), logger, LogLevel.ERROR);
-//            }
         }
     }
 
@@ -93,19 +85,13 @@ public class ObservableImpl<T> implements Observable<T>{
         ExceptionStack exceptionStack = null;
 
         synchronized (LOCK) {
-            //TODO mpohling: check why this is not working!
-//            if (observable == null) {
-//                logger.debug("Skip notification because observable is null!");
-//                return;
-//            }
-//
-//            if (unchangedDataFilter && latestValue != null && latestValue.equals(observable) && latestValue.toString().equals(observable.toString())) {
-//                try {
-//                    Thread.sleep(100);
-//                } catch (InterruptedException ex) {
-//                    java.util.logging.Logger.getLogger(Observable.class.getName()).log(Level.SEVERE, null, ex);
-//                }
-//                logger.debug("Skip notification because observable has not changed!");
+            if (observable == null) {
+                LOGGER.debug("Skip notification because observable is null!");
+                return;
+            }
+//            //TODO mpohling: check why this is not working!
+//            if (unchangedValueFilter && latestValue != null && latestValue.equals(observable)) {
+//                LOGGER.info("#+# Skip notification because observable has not been changed!");
 //                return;
 //            }
 
