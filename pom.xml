@@ -224,26 +224,6 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-       <repository>
-            <id>scabb-releases</id>
-            <name>Releases</name>
-            <url>http://bone.no-ip.biz:53538/nexus/content/repositories/releases/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>interval:60</updatePolicy>
-            </releases>
-        </repository>
-        <repository>
-            <id>scabb-snapshots</id>
-            <name>Snapshots</name>
-            <url>http://bone.no-ip.biz:53538/nexus/content/repositories/snapshots/</url>
-            <layout>default</layout>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>interval:10</updatePolicy>
-            </snapshots>
-        </repository> 
     </repositories>
 
     <dependencies>
