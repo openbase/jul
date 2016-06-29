@@ -31,10 +31,9 @@ public interface Shutdownable {
     /**
      * This method initializes the shutdown phrase of this instance.
      * 
-     * * All resources will be released. 
-     * * In case of any errors no exception will be thrown and the method will not block.
-     * 
-     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     * All resources will be released. 
+     * In case of any errors no exception will/should be thrown and the method will/should not block.
+     * These behavior guarantees a proper component shutdown without skipping any parts because of exception handling.
      */
-    public void shutdown() throws InterruptedException;
+    public void shutdown();
 }

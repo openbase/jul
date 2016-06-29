@@ -32,5 +32,5 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Changeable {
 
-    public void notifyChange() throws CouldNotPerformException;
+    public void notifyChange() throws CouldNotPerformException, InterruptedException;
 }

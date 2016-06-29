@@ -63,12 +63,7 @@ public class GlobalExecutionService implements Shutdownable {
             @Override
             public void run() {
                 if (instance != null) {
-                    try {
-                        instance.shutdown();
-                    } catch (InterruptedException ex) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("ExecutionService shutdown was interruped!", ex), logger);
-                        Thread.currentThread().interrupt();
-                    }
+                    instance.shutdown();
                 }
             }
         });
@@ -88,7 +83,7 @@ public class GlobalExecutionService implements Shutdownable {
     public static Future<?> submit(Runnable task) {
         return getInstance().executionService.submit(task);
     }
-    
+
     /**
      * This method applies an error handler to the given future object.
      * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
@@ -112,7 +107,7 @@ public class GlobalExecutionService implements Shutdownable {
     }
 
     @Override
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         executionService.shutdownNow();
     }
 

@@ -374,6 +374,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+
         }
 
         try {
@@ -403,12 +404,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     protected final void notifyObservers() {
+        System.out.println("notifyObservers:"+entryMap);
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
-//            if (registryLock.isWriteLockedByCurrentThread()) {
-//                logger.info("Notification of registry change skipped because of running write operations!");
-//                return;
-//            }
+            if (registryLock.isWriteLockedByCurrentThread()) {
+                logger.info("Notification of registry change skipped because of running write operations!");
+                System.out.println("skip notify");
+                return;
+            }
             super.notifyObservers(entryMap);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
@@ -444,6 +447,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         sandbox.removeConsistencyHandler(consistencyHandler);
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     public final int checkConsistency() throws CouldNotPerformException {
         int modificationCounter = 0;
 
@@ -551,6 +555,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         }
 
                         logger.debug("Registry consistend.");
+                        System.out.println("consistency check finished.");
                         break;
                     }
                     consistent = true;
@@ -647,7 +652,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return getClass().getSimpleName();
         }
         return name;
-
     }
 
     public boolean isSandbox() {

@@ -38,7 +38,7 @@ public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable
 
     // TODO mpohling: Should be moved to rst and reimplement for rsb 14.
     public enum ControllerAvailabilityState {
-        ONLINE, OFFLINE
+        LAUNCH, ONLINE, SHUTDOWN, OFFLINE
     };
 
     public MB cloneDataBuilder();
@@ -90,8 +90,9 @@ public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable
      * Synchronize all registered remote instances about a data change.
      *
      * @throws CouldNotPerformException
+     * @throws java.lang.InterruptedException
      */
     @Override
-    public void notifyChange() throws CouldNotPerformException;
+    public void notifyChange() throws CouldNotPerformException, InterruptedException;
 
 }

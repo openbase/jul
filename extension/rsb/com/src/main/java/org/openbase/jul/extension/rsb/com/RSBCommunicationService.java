@@ -102,6 +102,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private ControllerAvailabilityState controllerAvailabilityState;
     private boolean initialized;
 
+    /**
+     * 
+     * @param builder
+     * @throws InstantiationException 
+     */
     public RSBCommunicationService(final MB builder) throws InstantiationException {
         logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + ".");
         this.dataBuilder = builder;
@@ -125,14 +130,32 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * 
+     * @param scope
+     * @throws InitializationException
+     * @throws InterruptedException 
+     */
     public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    /**
+     * 
+     * @param scope
+     * @throws InitializationException
+     * @throws InterruptedException 
+     */
     public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
+    /**
+     * 
+     * @param scope
+     * @throws InitializationException
+     * @throws InterruptedException 
+     */
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
             init(new Scope(scope));
@@ -141,6 +164,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * 
+     * @param label
+     * @param type
+     * @param location
+     * @throws InitializationException
+     * @throws InterruptedException 
+     */
     public void init(final String label, final String type, final ScopeProvider location) throws InitializationException, InterruptedException {
         try {
             init(ScopeGenerator.generateScope(label, type, location.getScope()));
@@ -149,6 +180,13 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * 
+     * @param scope
+     * @param participantConfig
+     * @throws InitializationException
+     * @throws InterruptedException 
+     */
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             init(ScopeTransformer.transform(scope), participantConfig);
@@ -170,6 +208,13 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
     }
 
+    /**
+     * 
+     * @param scope
+     * @param participantConfig
+     * @throws InitializationException
+     * @throws InterruptedException 
+     */
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         this.scope = scope;
         ParticipantConfig internalParticipantConfig = participantConfig;
@@ -198,16 +243,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // register rpc methods.
             RPCHelper.registerInterface(Pingable.class, this, server);
             RPCHelper.registerInterface(Requestable.class, this, server);
-
-//            server.addMethod(RPC_REQUEST_STATUS, (Event request) -> {
-//                try {
-//                    logger.info("incomming data request...");
-//                    return new Event(messageClass, requestStatus());
-//                } catch (CouldNotPerformException ex) {
-//                    throw new Callback.UserCodeException(ex);
-//                }
-//            });
             registerMethods(server);
+
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
             this.serverWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
@@ -215,6 +252,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 @Override
                 public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
                     if (data == WatchDog.ServiceState.Running) {
+
+                        setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
 
                         // Sync data after service start.
                         GlobalExecutionService.submit(() -> {
@@ -262,20 +301,34 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public Class<M> getDataClass() {
         return messageClass;
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
         validateInitialization();
         logger.debug("Activate RSBCommunicationService for: " + this);
+        setControllerAvailabilityState(ControllerAvailabilityState.LAUNCH);
         informerWatchDog.activate();
         serverWatchDog.activate();
-        setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
         try {
@@ -284,20 +337,28 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // was never initialized!
             return;
         }
-        setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
+        setControllerAvailabilityState(ControllerAvailabilityState.SHUTDOWN);
         informerWatchDog.deactivate();
         serverWatchDog.deactivate();
+        setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         try {
             deactivate();
-        } catch (CouldNotPerformException ex) {
+        } catch (CouldNotPerformException | InterruptedException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isActive() {
         try {
@@ -308,6 +369,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return informerWatchDog.isActive() && serverWatchDog.isActive();
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @SuppressWarnings("unchecked")
     @Override
     public M getData() throws CouldNotPerformException {
@@ -318,6 +384,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * 
+     * @param controllerAvailability
+     * @throws InterruptedException 
+     */
     private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) throws InterruptedException {
         synchronized (controllerAvailabilityMonitor) {
 
@@ -331,7 +402,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             logger.info(this + " is now " + controllerAvailability.name());
 
             // notify remotes about controller shutdown
-            if(controllerAvailabilityState.equals(ControllerAvailabilityState.OFFLINE)) {
+            if (controllerAvailabilityState.equals(ControllerAvailabilityState.SHUTDOWN)) {
                 try {
                     logger.debug("Notify data change of " + this);
                     validateInitialization();
@@ -348,12 +419,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update communication service state in internal data object!", ex), logger);
                 }
             }
-            
+
             // wakeup listener.
             this.controllerAvailabilityMonitor.notifyAll();
         }
     }
 
+    /**
+     * 
+     * @param communicationServiceState
+     * @throws InterruptedException 
+     */
     public void waitForConnectionState(final ControllerAvailabilityState communicationServiceState) throws InterruptedException {
         synchronized (controllerAvailabilityMonitor) {
             while (!Thread.currentThread().isInterrupted()) {
@@ -365,6 +441,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public MB cloneDataBuilder() {
         try {
@@ -375,6 +455,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * 
+     * @return 
+     */
     protected BuilderSyncSetup<MB> getBuilderSetup() {
         return new BuilderSyncSetup<>(dataBuilder, dataBuilderReadLock, dataBuilderWriteLock, this);
     }
@@ -407,6 +491,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return new ClosableDataBuilder<>(getBuilderSetup(), consumer);
     }
 
+    /**
+     * {@inheritDoc} 
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public ScopeType.Scope getScope() throws NotAvailableException {
         if (scope == null) {
@@ -419,9 +508,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * Synchronize all registered remote instances about a data change.
      *
      * @throws CouldNotPerformException
+     * @throws java.lang.InterruptedException
      */
     @Override
-    public void notifyChange() throws CouldNotPerformException {
+    public void notifyChange() throws CouldNotPerformException, InterruptedException {
         logger.debug("Notify data change of " + this);
         validateInitialization();
         if (!informer.isActive()) {
@@ -430,11 +520,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
         try {
             informer.publish(getData());
-        } catch (Exception ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
     }
 
+    /**
+     * 
+     * @param fieldNumber
+     * @param value
+     * @throws CouldNotPerformException 
+     */
     protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
         try {
             try {
@@ -443,16 +539,21 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 if (findFieldByName == null) {
                     throw new NotAvailableException("Field[" + fieldNumber + "] does not exist for type " + dataBuilder.getClass().getName());
                 }
-
                 dataBuilder.setField(findFieldByName, value);
             } finally {
                 dataBuilderWriteLock.unlock();
             }
-        } catch (Exception ex) {
+        } catch (CouldNotPerformException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not set field [" + fieldNumber + "=" + value + "] for " + this, ex);
         }
     }
 
+    /**
+     * 
+     * @param fieldName
+     * @param value
+     * @throws CouldNotPerformException 
+     */
     protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
         try {
             try {
@@ -471,6 +572,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     * @throws NotAvailableException
+     */
     protected final Object getDataField(String name) throws NotAvailableException {
         try {
             MB dataClone = cloneDataBuilder();
@@ -484,6 +591,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     * @throws CouldNotPerformException
+     */
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
         try {
             MB dataClone = cloneDataBuilder();
@@ -497,6 +610,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     *
+     * @param name
+     * @return
+     * @throws CouldNotPerformException
+     */
     protected final boolean supportsDataField(final String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByName(name);
@@ -506,16 +625,29 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * 
+     * @param fieldId
+     * @return 
+     */
     protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
         return cloneDataBuilder().getDescriptorForType().findFieldByNumber(fieldId);
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public ControllerAvailabilityState getControllerAvailabilityState() {
         return controllerAvailabilityState;
     }
 
-    private void validateInitialization() throws NotInitializedException {
+    /**
+     * 
+     * @throws NotInitializedException 
+     */
+    public void validateInitialization() throws NotInitializedException {
         if (!initialized) {
             throw new NotInitializedException("communication service");
         }
@@ -533,6 +665,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return CompletableFuture.completedFuture(timestemp);
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public M requestStatus() throws CouldNotPerformException {
         logger.debug("requestStatus of " + this);
@@ -545,6 +682,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * 
+     * @param server
+     * @throws CouldNotPerformException 
+     */
     public abstract void registerMethods(final RSBLocalServerInterface server) throws CouldNotPerformException;
 
     @Override

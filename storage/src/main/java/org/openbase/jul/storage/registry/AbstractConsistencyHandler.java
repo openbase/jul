@@ -45,9 +45,12 @@ public abstract class AbstractConsistencyHandler<KEY, VALUE extends Identifiable
     public void reset() {
     }
 
+    /**
+     * Overwrite method to free resources or perform any special shutdown phrases.
+     */
     @Override
-    public boolean shutdown() {
-        return true;
+    public void shutdown() {
+        reset();
     }
 
     @Override

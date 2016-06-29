@@ -129,6 +129,10 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
+        
+        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("location scope");
+        }
 
         // add location scope
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
@@ -160,6 +164,10 @@ public class ScopeGenerator {
             throw new NotAvailableException("location");
         }
 
+        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("location scope");
+        }
+        
         // add location scope
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
@@ -193,6 +201,10 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
+        
+        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("location scope");
+        }
 
         // add location scope
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
@@ -222,6 +234,10 @@ public class ScopeGenerator {
 
         if (locationConfig == null) {
             throw new NotAvailableException("location");
+        }
+        
+        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("location scope");
         }
 
         // add location scope
@@ -253,6 +269,10 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
+        
+        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("location scope");
+        }
 
         // add location scope
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
@@ -282,6 +302,10 @@ public class ScopeGenerator {
 
         if (locationConfig == null) {
             throw new NotAvailableException("location");
+        }
+        
+        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("location scope");
         }
 
         // add location scope

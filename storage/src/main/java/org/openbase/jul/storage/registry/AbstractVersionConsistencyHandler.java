@@ -48,7 +48,7 @@ public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<K
     }
 
     @Override
-    public boolean shutdown() {
+    public void shutdown() {
         if(registry.isConsistent()) {
             try {
                 versionControl.registerConsistencyHandlerExecution(this);
@@ -56,6 +56,6 @@ public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<K
                 ExceptionPrinter.printHistory(ex, logger);
             }
         }
-        return super.shutdown();
+        super.shutdown();
     }
 }

@@ -25,13 +25,11 @@ package org.openbase.jul.extension.rsb.com;
  */
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServerInterface;
-import org.openbase.jul.pattern.Controller;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
@@ -42,6 +40,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
+import org.openbase.jul.pattern.Remote.RemoteConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
@@ -152,14 +152,14 @@ public class RSBCommunicationServiceTest {
         } catch (ExecutionException ex) {
             // ping canceled
         }
-        assertEquals("Remote is still connected after remote service shutdown!", Remote.RemoteConnectionState.CONNECTING, remoteService.getConnectionState());
+        assertEquals("Remote is still connected after remote service shutdown!", RemoteConnectionState.CONNECTING, remoteService.getConnectionState());
         communicationService.activate();
-        communicationService.waitForConnectionState(Controller.ControllerAvailabilityState.ONLINE);
-        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        communicationService.waitForConnectionState(ControllerAvailabilityState.ONLINE);
+        remoteService.waitForConnectionState(RemoteConnectionState.CONNECTED);
         remoteService.shutdown();
         communicationService.shutdown();
-        assertEquals("Remote is not disconnected after shutdown!", Controller.ControllerAvailabilityState.OFFLINE, communicationService.getControllerAvailabilityState());
-        assertEquals("Remote is not disconnected after shutdown!", Remote.RemoteConnectionState.DISCONNECTED, remoteService.getConnectionState());
+        assertEquals("Remote is not disconnected after shutdown!", ControllerAvailabilityState.OFFLINE, communicationService.getControllerAvailabilityState());
+        assertEquals("Remote is not disconnected after shutdown!", RemoteConnectionState.DISCONNECTED, remoteService.getConnectionState());
     }
 
     @Test

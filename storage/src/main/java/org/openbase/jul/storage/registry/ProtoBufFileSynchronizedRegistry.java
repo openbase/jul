@@ -138,7 +138,10 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public M register(final M message) throws CouldNotPerformException {
-        return super.register(new IdentifiableMessage<>(message, idGenerator)).getMessage();
+        System.out.println("register: "+message);
+        M message1 = super.register(new IdentifiableMessage<>(message, idGenerator)).getMessage();
+        System.out.println("register finished: "+message1);
+        return message1;
     }
 
     @Override

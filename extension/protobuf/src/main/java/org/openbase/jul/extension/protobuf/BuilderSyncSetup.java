@@ -98,8 +98,8 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     /**
-     * Returns the internal builder instance. Use builder with care of read and
-     * write locks.
+     * Returns the internal builder instance.
+     * Use builder with care of read and write locks.
      *
      * @return
      */
@@ -169,10 +169,20 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         return success;
     }
 
+    /**
+     * Method unlocks the write lock.
+     */
     public void unlockWrite() {
         unlockWrite(true);
     }
 
+    /**
+     * Method unlocks the write lock and notifies the change to the internal data holder.
+     * In case the thread is externally interrupted, no InterruptedException is thrown but instead the interrupted flag is set for the corresponding thread.
+     * Please use the service method Thread.currentThread().isInterrupted() to get informed about any external interruption.
+     *
+     * @param notifyChange
+     */
     public void unlockWrite(boolean notifyChange) {
         logger.debug("order write unlock");
         writeLockTimeout.cancel();
@@ -181,10 +191,13 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         logger.debug("write unlocked");
         if (notifyChange) {
             try {
-                holder.notifyChange();
-            } catch (NotInitializedException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.DEBUG);
-            } catch (CouldNotPerformException ex) {
+                try {
+                    holder.notifyChange();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw ex;
+                }
+            } catch (CouldNotPerformException | InterruptedException ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
             }
         }
