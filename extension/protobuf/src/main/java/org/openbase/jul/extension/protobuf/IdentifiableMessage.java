@@ -135,7 +135,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             if (verifyId()) {
                 return;
             }
-            if(generator == null) {
+            if (generator == null) {
                 throw new NotAvailableException("idGenerator");
             }
             setId(generator.generateId(internalMessage));
@@ -199,9 +199,9 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     @Override
     public String toString() {
         try {
-            if (debugMode) {
-                return getClass().getSimpleName() + "[" + getId().toString() + "] = [" + internalMessage + "]";
-            }
+            //if (debugMode) {
+            //    return getClass().getSimpleName() + "[" + getId().toString() + "] = [" + internalMessage + "]";
+            //}
             return getClass().getSimpleName() + "[" + getId().toString() + "]";
         } catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);
@@ -211,30 +211,18 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 
     @Override
     public int hashCode() {
-        try {
-            return new HashCodeBuilder()
-                    .append(getId())
-                    .toHashCode();
-        } catch (CouldNotPerformException ex) {
-            return new HashCodeBuilder()
-                    .append(internalMessage)
-                    .toHashCode();
-        }
+        return new HashCodeBuilder()
+                .append(internalMessage)
+                .toHashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
         if (obj instanceof IdentifiableMessage) {
             final IdentifiableMessage other = (IdentifiableMessage) obj;
-            try {
-                return new EqualsBuilder()
-                        .append(getId(), other.getId())
-                        .isEquals();
-            } catch (CouldNotPerformException ex) {
-                return new EqualsBuilder()
-                        .append(internalMessage, other.internalMessage)
-                        .isEquals();
-            }
+            return new EqualsBuilder()
+                    .append(internalMessage, other.internalMessage)
+                    .isEquals();
         } else {
             return false;
         }

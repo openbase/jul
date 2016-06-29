@@ -85,24 +85,20 @@ public class ObservableImpl<T> implements Observable<T> {
 
     public void notifyObservers(Observable<T> source, T observable) throws MultiException {
         ExceptionStack exceptionStack = null;
-        
+
         synchronized (LOCK) {
             if (observable == null) {
                 LOGGER.debug("Skip notification because observable is null!");
                 return;
             }
-            //TODO mpohling: check why this is not working!
             if (unchangedValueFilter && latestValue != null && observable.hashCode() == latestValueHash) {
-                LOGGER.info("#+# Skip notification because observable has not been changed!");
-                System.out.println("skip notify["+observable.hashCode()+"] because was already send["+latestValueHash+"]: "+observable);
+                LOGGER.debug("#+# Skip notification because observable has not been changed!");
                 return;
             }
 
             latestValue = observable;
             latestValueHash = latestValue.hashCode();
 
-            System.out.println("notify["+latestValueHash+"]: "+observable);
-            
             for (Observer<T> observer : observers) {
                 try {
                     observer.update(source, observable);

@@ -404,12 +404,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     protected final void notifyObservers() {
-        System.out.println("notifyObservers:"+entryMap);
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
             if (registryLock.isWriteLockedByCurrentThread()) {
                 logger.info("Notification of registry change skipped because of running write operations!");
-                System.out.println("skip notify");
                 return;
             }
             super.notifyObservers(entryMap);
@@ -555,7 +553,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         }
 
                         logger.debug("Registry consistend.");
-                        System.out.println("consistency check finished.");
                         break;
                     }
                     consistent = true;
