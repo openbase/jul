@@ -57,7 +57,7 @@ public class StringProcessorTest {
     public void tearDown() {
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testFormatHumanReadable() {
         System.out.println("insertSpaceBetweenCamelCase");
         assertEquals("My Farm", StringProcessor.formatHumanReadable("MyFarm"));
@@ -70,7 +70,7 @@ public class StringProcessorTest {
     /**
      * Test of removeDoubleWhiteSpaces method, of class StringProcessor.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testRemoveDoubleWhiteSpaces() {
         System.out.println("insertSpaceBetweenCamelCase");
         assertEquals("My Farm", StringProcessor.removeDoubleWhiteSpaces("My	 		Farm"));
@@ -83,7 +83,7 @@ public class StringProcessorTest {
     /**
      * Test of insertSpaceBetweenCamelCase method, of class StringProcessor.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testInsertSpaceBetweenCamelCase() {
         System.out.println("insertSpaceBetweenCamelCase");
         assertEquals("My Farm", StringProcessor.insertSpaceBetweenCamelCase("MyFarm"));
@@ -96,7 +96,7 @@ public class StringProcessorTest {
     /**
      * Test of transformUpperCaseToCamelCase method, of class StringProcessor.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testTransformUpperCaseToCamelCase() {
         System.out.println("transformUpperCaseToCamelCase");
         assertEquals("MyFarm", StringProcessor.transformUpperCaseToCamelCase("My Farm"));
@@ -106,7 +106,7 @@ public class StringProcessorTest {
         assertEquals("Final", StringProcessor.transformUpperCaseToCamelCase("final"));
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testTransformToUpperCase() {
         System.out.println("insertSpaceBetweenCamelCase");
         assertEquals("MY_FARM", StringProcessor.transformToUpperCase("MyFarm"));
@@ -116,7 +116,7 @@ public class StringProcessorTest {
         assertEquals("FINAL", StringProcessor.transformToUpperCase("final"));
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testfillWithSpaces() {
         assertEquals("MyFarm    ", StringProcessor.fillWithSpaces("MyFarm", 10));
         assertEquals(" 1234 ", StringProcessor.fillWithSpaces(" 1234", 6));

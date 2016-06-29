@@ -65,7 +65,7 @@ public class ExceptionPrinterTest {
     /**
      * Test of printHistory method, of class ExceptionPrinter.
      */
-    @Test
+    @Test(timeout = 30000)
     public void testPrintHistory() {
         System.out.println("printHistory");
         Logger logger = LoggerFactory.getLogger(ExceptionPrinterTest.class);

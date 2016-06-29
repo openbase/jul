@@ -162,7 +162,7 @@ public class RSBCommunicationServiceTest {
         assertEquals("Remote is not disconnected after shutdown!", RemoteConnectionState.DISCONNECTED, remoteService.getConnectionState());
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testInProcessCommunication() throws Exception {
         ParticipantConfig config = Factory.getInstance().getDefaultParticipantConfig();
 //        config = config.copy();
@@ -189,8 +189,7 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-//    @Test(timeout = 5000)
-    @Test
+    @Test(timeout = 30000)
     public void testReconnection() throws Exception {
         String scope = "/test/reconnection";
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();

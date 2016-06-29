@@ -65,7 +65,7 @@ public class ScopeTransformerTest {
     /**
      * Test of transform method, of class ScopeTransformer.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testTransform_ScopeTypeScope() throws Exception {
         System.out.println("transform");
 
@@ -82,7 +82,7 @@ public class ScopeTransformerTest {
     /**
      * Test of transform method, of class ScopeTransformer.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testTransform_Scope() throws Exception {
         System.out.println("transform");
         List<String> components = new ArrayList<>();

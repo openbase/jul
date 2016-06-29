@@ -61,7 +61,7 @@ public class RecurrenceEventFilterTest {
      * Test of trigger method, of class RecurrenceEventFilter.
      * @throws java.lang.InterruptedException
      */
-    @Test
+    @Test(timeout = 5000)
     public void testRecurrenceEventFilter() throws InterruptedException {
         System.out.println("trigger");
         RecurrenceEventFilterImpl instance = new RecurrenceEventFilterImpl();

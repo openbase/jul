@@ -63,7 +63,7 @@ public class QuaternionTransformTest {
      * Test of transformTaitBryanToQuaternion method, of class
      * QuaternionTransform.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testNeutralTransformTaitBryanToQuaternion() {
         System.out.println("testNeutralTransformTaitBryanToQuaternion");
         double roll = 0.0;
@@ -77,7 +77,7 @@ public class QuaternionTransformTest {
      * Test of transformTaitBryanToQuaternion method, of class
      * QuaternionTransform.
      */
-    @Test
+    @Test(timeout = 5000)
     public void test90rTransformTaitBryanToQuaternion() {
         System.out.println("testNeutralTransformTaitBryanToQuaternion");
         double roll = Math.toRadians(90);
@@ -93,7 +93,7 @@ public class QuaternionTransformTest {
      * Test of transformTaitBryanToQuaternion method, of class
      * QuaternionTransform.
      */
-    @Test
+    @Test(timeout = 5000)
     public void test90pTransformTaitBryanToQuaternion() {
         System.out.println("testNeutralTransformTaitBryanToQuaternion");
         double roll = Math.toRadians(0);
@@ -109,7 +109,7 @@ public class QuaternionTransformTest {
      * Test of transformTaitBryanToQuaternion method, of class
      * QuaternionTransform.
      */
-    @Test
+    @Test(timeout = 5000)
     public void test90yTransformTaitBryanToQuaternion() {
         System.out.println("testNeutralTransformTaitBryanToQuaternion");
         double roll = Math.toRadians(0);
@@ -125,7 +125,7 @@ public class QuaternionTransformTest {
      * Test of transformTaitBryanToQuaternion method, of class
      * QuaternionTransform.
      */
-    @Test
+    @Test(timeout = 5000)
     public void test() {
         System.out.println("testNeutralTransformTaitBryanToQuaternion");
         double roll = Math.toRadians(40);
@@ -167,7 +167,7 @@ public class QuaternionTransformTest {
      *
      * @throws Exception
      */
-    @Test
+    @Test(timeout = 5000)
     public void testTransformation() throws Exception {
         System.out.println("Test transformations");
 //        double roll = Math.toRadians(30);
@@ -183,7 +183,7 @@ public class QuaternionTransformTest {
         assertArrayEquals(toDoubleArray(input), toDoubleArray(QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(input))), 0.1d);
     }
 
-    @Test
+    @Test(timeout = 5000)
     public void testTransformation180Yaw() throws Exception {
         System.out.println("Test transformations 180 yaw");
 

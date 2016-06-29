@@ -74,7 +74,7 @@ public class ScopeGeneratorTest {
     /**
      * Test of generateStringRep method, of class ScopeGenerator.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testGenerateStringRep_Scope() {
         System.out.println("generateStringRep");
         Scope scope = new Scope(scopeStringRep);
@@ -85,7 +85,7 @@ public class ScopeGeneratorTest {
     /**
      * Test of generateStringRep method, of class ScopeGenerator.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testGenerateStringRep_ScopeTypeScope() {
         System.out.println("generateStringRep");
         ScopeType.Scope scope = ScopeType.Scope.newBuilder().addAllComponent(components).build();
@@ -97,7 +97,7 @@ public class ScopeGeneratorTest {
     /**
      * Test of generateStringRep method, of class ScopeGenerator.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testGenerateStringRep_Collection() {
         System.out.println("generateStringRep");
         String expResult = scopeStringRep;

@@ -97,7 +97,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
      * Test of verifyAndUpdatePlacement method, of class
      * AbstractTransformationFrameConsistencyHandler.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testVerifyAndUpdatePlacement() throws Exception {
         System.out.println("verifyAndUpdatePlacement");
         PlacementConfig.Builder placementConfigA = PlacementConfigType.PlacementConfig.newBuilder()
@@ -117,7 +117,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
      * Test of generateFrameId method, of class
      * AbstractTransformationFrameConsistencyHandler.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testGenerateFrameId() throws Exception {
         System.out.println("generateFrameId");
         PlacementConfig placementConfigA = PlacementConfigType.PlacementConfig.newBuilder()

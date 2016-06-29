@@ -72,7 +72,7 @@ public class ProtobufListDiffTest {
     /**
      * Test of getNewMessages method, of class ProtobufListDiff.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testGetNewMessages() {
         System.out.println("getNewMessages");
         
@@ -93,7 +93,7 @@ public class ProtobufListDiffTest {
     /**
      * Test of getUpdatedMessages method, of class ProtobufListDiff.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testGetUpdatedMessages() {
         System.out.println("getUpdatedMessages");
         DeviceConfig updatedDeviceConfig = DeviceConfig.newBuilder().setId("2").setDescription("updated").build();
@@ -118,7 +118,7 @@ public class ProtobufListDiffTest {
     /**
      * Test of getRemovedMessages method, of class ProtobufListDiff.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testGetRemovedMessages() {
         System.out.println("getRemovedMessages");
         DeviceConfig removedDeviceConfig = DeviceConfig.newBuilder().setId("1").build();

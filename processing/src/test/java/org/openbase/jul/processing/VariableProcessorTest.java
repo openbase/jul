@@ -67,7 +67,7 @@ public class VariableProcessorTest {
     /**
      * Test of resolveVariables method, of class VariableProcessor.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testResolveVariables() throws Exception {
         System.out.println("resolveVariables");
         String context = "${VAR_A} : Hey Mr ${VAR_B} is happy today because of Mrs ${VAR_C}. ${VAR_W}${VAR_O}${VAR_W}";
@@ -80,7 +80,7 @@ public class VariableProcessorTest {
     /**
      * Test of resolveVariables method, of class VariableProcessor.
      */
-    @Test
+    @Test(timeout = 5000)
     public void testResolveVariablesErrorCase() throws Exception {
         System.out.println("resolveVariables");
         String context = "${VAR_A} : Hey Mr ${VAR_D} is happy today because of Mrs ${VAR_C}. ${VAR_W}${VAR_Y}${VAR_W}";

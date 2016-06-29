@@ -64,7 +64,7 @@ public class WatchDogTest {
 	 * Test of activate method, of class WatchDog.
      * @throws java.lang.Exception
 	 */
-	@Test
+	@Test(timeout = 5000)
 	public void testActivate() throws Exception {
 		System.out.println("isActive");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
@@ -78,7 +78,7 @@ public class WatchDogTest {
 	 * Test of deactivate method, of class WatchDog.
      * @throws java.lang.Exception
 	 */
-	@Test
+	@Test(timeout = 5000)
 	public void testDeactivate() throws Exception {
 		System.out.println("deactivate");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
@@ -93,7 +93,7 @@ public class WatchDogTest {
 	 * Test of isActive method, of class WatchDog.
      * @throws java.lang.Exception
 	 */
-	@Test
+	@Test(timeout = 5000)
 	public void testIsActive() throws Exception {
 		System.out.println("isActive");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
@@ -108,7 +108,7 @@ public class WatchDogTest {
 	 * Test of service error handling.
      * @throws java.lang.Exception
 	 */
-	@Test
+	@Test(timeout = 5000)
 	public void testServiceErrorHandling() throws Exception {
 		System.out.println("serviceErrorHandling");
 		WatchDog instance = new WatchDog(new TestService(), "TestService");
