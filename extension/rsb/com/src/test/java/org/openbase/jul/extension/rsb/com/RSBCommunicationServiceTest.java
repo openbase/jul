@@ -300,7 +300,7 @@ public class RSBCommunicationServiceTest {
         remoteService2.shutdown();
     }
 
-    public class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
+    public static class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
 
         public RSBCommunicationServiceImpl(LocationRegistry.Builder builder) throws InstantiationException {
             super(builder);
@@ -311,7 +311,7 @@ public class RSBCommunicationServiceTest {
         }
     }
 
-    public class RSBRemoteServiceImpl extends RSBRemoteService<LocationRegistry> {
+    public static class RSBRemoteServiceImpl extends RSBRemoteService<LocationRegistry> {
 
         public RSBRemoteServiceImpl() {
             super(LocationRegistry.class);

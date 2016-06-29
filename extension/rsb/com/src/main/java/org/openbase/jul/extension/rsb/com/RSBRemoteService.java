@@ -795,13 +795,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method blocks until the remote reaches the desired connection state or the timeout is expired.
+     * Method blocks until the remote reaches the desired connection state.
+     * In case the timeout is expired an TimeoutException will be thrown.
      *
      * @param connectionState the desired connection state
-     * @param timeout the timeout until the method returns even if the connection state was not reached.
+     * @param timeout the timeout in milliseconds until the method throw a TimeoutException in case the connection state was not reached.
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     * @throws org.openbase.jul.exception.TimeoutException is thrown in case the timeout is expired without reaching the connection state.
      */
-    public void waitForConnectionState(final RemoteConnectionState connectionState, long timeout) throws InterruptedException {
+    public void waitForConnectionState(final RemoteConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException {
         synchronized (connectionMonitor) {
             while (!Thread.currentThread().isInterrupted()) {
                 if (this.connectionState.equals(connectionState)) {
@@ -809,6 +811,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
                 logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[scope:" + scope + "] connection...");
                 connectionMonitor.wait(timeout);
+                if (timeout != 0 && !this.connectionState.equals(connectionState)) {
+                    throw new TimeoutException("Timeout expired!");
+                }
             }
         }
     }
@@ -820,7 +825,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
     public void waitForConnectionState(final RemoteConnectionState connectionState) throws InterruptedException {
-        waitForConnectionState(connectionState, 0);
+        try {
+            waitForConnectionState(connectionState, 0);
+        } catch (TimeoutException ex) {
+            assert false;
+        }
     }
 
     /**
