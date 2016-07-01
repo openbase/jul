@@ -84,7 +84,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected RSBInformerInterface<M> informer;
+    protected RSBInformerInterface<Object> informer;
     protected RSBLocalServerInterface server;
     protected WatchDog informerWatchDog;
     protected WatchDog serverWatchDog;
@@ -234,7 +234,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             Scope internalScope = new Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
 
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-            this.informer = new RSBSynchronizedInformer<>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), messageClass, internalParticipantConfig);
+            this.informer = new RSBSynchronizedInformer<>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
             // Get local server object which allows to expose remotely callable methods.
@@ -411,7 +411,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                         return;
                     }
                     try {
-                        informer.publish(new Event(informer.getScope(), getDataClass(), null));
+                        informer.publish(new Event(informer.getScope(), Void.class, null));
                     } catch (CouldNotPerformException ex) {
                         throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
                     }

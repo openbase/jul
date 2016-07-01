@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.preset.JPDebugMode;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                 } catch (JPServiceException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
-                logger.error("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Fatal implementation error!", new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
                 unlockRead("TimeoutHandler");
             }
         };
@@ -91,7 +92,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                 } catch (JPServiceException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
                 }
-                logger.error("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Fatal implementation error!", new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!")), logger);
                 unlockWrite();
             }
         };

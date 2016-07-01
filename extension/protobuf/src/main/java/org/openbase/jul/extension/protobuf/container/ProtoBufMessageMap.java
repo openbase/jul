@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.pattern.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +87,7 @@ public class ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends Generated
     @Override
     public IdentifiableMessage<KEY, M, MB> put(KEY key, IdentifiableMessage<KEY, M, MB> value) {
         if (value == null) {
-            logger.error("Could not add value!", new NotAvailableException("value"));
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not add value!", new NotAvailableException("value")), logger);
             return value;
         }
         IdentifiableMessage<KEY, M, MB> oldValue = super.put(key, value);
