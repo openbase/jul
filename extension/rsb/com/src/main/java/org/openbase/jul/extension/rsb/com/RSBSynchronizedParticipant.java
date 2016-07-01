@@ -23,7 +23,6 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.extension.rsb.iface.RSBParticipantInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
@@ -82,7 +81,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             synchronized (participantLock) {
                 return getParticipant().getId();
             }
-        } catch (Exception ex) {
+        } catch (IllegalStateException | NullPointerException ex) {
             throw new NotAvailableException("id", ex);
         }
     }
@@ -102,7 +101,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             synchronized (participantLock) {
                 return getParticipant().getConfig();
             }
-        } catch (Exception ex) {
+        } catch (IllegalStateException | NullPointerException ex) {
             throw new NotAvailableException("config", ex);
         }
     }
@@ -113,7 +112,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             synchronized (participantLock) {
                 getParticipant().setObserverManager(observerManager);
             }
-        } catch (Exception ex) {
+        } catch (IllegalStateException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not regitser observer manager " + observerManager + "!", ex);
         }
     }
@@ -124,7 +123,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             synchronized (participantLock) {
                 return getParticipant().getKind();
             }
-        } catch (Exception ex) {
+        } catch (IllegalStateException | NullPointerException ex) {
             throw new NotAvailableException("kind", ex);
         }
     }
@@ -135,7 +134,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             synchronized (participantLock) {
                 return getParticipant().getDataType();
             }
-        } catch (Exception ex) {
+        } catch (IllegalStateException | NullPointerException ex) {
             throw new NotAvailableException("data type", ex);
         }
     }
@@ -162,7 +161,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 active = true;
                 logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activated.");
             }
-        } catch (Exception ex) {
+        } catch (IllegalStateException | RSBException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not activate listener!", ex);
         }
     }
@@ -172,7 +171,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
         try {
             synchronized (participantLock) {
 
-                // ignore request if participant is already inactive.
+                // ignore request if participant is already or still inactive.
                 if (!isActive()) {
                     return;
                 }
@@ -188,7 +187,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] deactivated.");
                 participant = null;
             }
-        } catch (RSBException | NullPointerException ex) {
+        } catch (IllegalStateException | RSBException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not deactivate listener!", ex);
         }
     }

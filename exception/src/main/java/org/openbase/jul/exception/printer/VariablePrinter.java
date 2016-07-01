@@ -60,7 +60,7 @@ public class VariablePrinter implements Printer {
         try {
             sw.close();
         } catch (IOException ex) {
-            logger.error("Could not print stacktrace!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not print stacktrace!", ex), logger);
         }
     }
 

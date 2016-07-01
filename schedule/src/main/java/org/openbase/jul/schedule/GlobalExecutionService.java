@@ -36,6 +36,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -48,6 +50,8 @@ import org.slf4j.LoggerFactory;
  * @author divine
  */
 public class GlobalExecutionService implements Shutdownable {
+
+    public static final long DEFAULT_SHUTDOWN_TIME = 1000;
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(GlobalExecutionService.class);
 
@@ -84,6 +88,10 @@ public class GlobalExecutionService implements Shutdownable {
         return getInstance().executionService.submit(task);
     }
 
+    public static void execute(final Runnable runnable) {
+        getInstance().executionService.execute(runnable);
+    }
+
     /**
      * This method applies an error handler to the given future object.
      * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
@@ -108,7 +116,25 @@ public class GlobalExecutionService implements Shutdownable {
 
     @Override
     public void shutdown() {
-        executionService.shutdownNow();
+        shutdown(DEFAULT_SHUTDOWN_TIME, TimeUnit.MILLISECONDS);
+    }
+
+    public void shutdown(final long shutdownTimeout, final TimeUnit timeUnit) {
+        executionService.shutdown();
+        try {
+            if (!executionService.awaitTermination(shutdownTimeout, timeUnit)) {
+                logger.error("Executor did not terminate before shutdown timeout expired!");
+                forceShutdown();
+            }
+        } catch (InterruptedException ex) {
+            forceShutdown();
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void forceShutdown() {
+        List<Runnable> droppedTasks = executionService.shutdownNow();
+        ExceptionPrinter.printHistory(new CouldNotPerformException("Global executor shutdown forced:" + droppedTasks.size() + " tasks will be skipped..."), logger);
     }
 
     public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {

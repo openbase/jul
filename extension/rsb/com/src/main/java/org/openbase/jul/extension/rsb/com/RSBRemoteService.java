@@ -672,7 +672,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             try {
                 deactivate();
             } catch (CouldNotPerformException | InterruptedException ex) {
-                logger.error("Could not deactivate remote service!", ex);
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not deactivate remote service!", ex), logger);
             }
         }
     }

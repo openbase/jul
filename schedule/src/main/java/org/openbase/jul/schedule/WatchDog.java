@@ -24,6 +24,7 @@ package org.openbase.jul.schedule;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -79,7 +80,7 @@ public class WatchDog implements Activatable {
                     try {
                         deactivate();
                     } catch (InterruptedException ex) {
-                        logger.error("Could not shutdown " + serviceName + "!", ex);
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown " + serviceName + "!", ex), logger);
                     }
                 }
             });
@@ -206,7 +207,7 @@ public class WatchDog implements Activatable {
                         service.deactivate();
                         setServiceState(ServiceState.Finished);
                     } catch (IllegalStateException | CouldNotPerformException ex) {
-                        logger.error("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex);
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex), logger);
                         try {
                             waitWithinDelay();
                         } catch (InterruptedException exx) {
@@ -216,7 +217,7 @@ public class WatchDog implements Activatable {
                     }
                 }
             } catch (Throwable tr) {
-                logger.error("Fatal watchdog execution error! Release all locks...", tr);
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Fatal watchdog execution error! Release all locks...", tr), logger);
                 skipActivation();
             }
         }
