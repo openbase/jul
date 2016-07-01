@@ -457,15 +457,19 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
 
-        long validTimeout = timeout;
         validateActivation();
+        long retryTimeout = METHOD_CALL_START_TIMEOUT;
+        long validTimeout = timeout;
         try {
             logger.info("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
             if (!isConnected()) {
                 waitForConnectionState(CONNECTED);
             }
 
-            long retryTimeout = Math.min(METHOD_CALL_START_TIMEOUT, validTimeout);
+            if (timeout > -1) {
+                retryTimeout = Math.min(METHOD_CALL_START_TIMEOUT, validTimeout);
+            }
+            
             while (true) {
 
                 if (!isActive()) {
@@ -484,9 +488,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         if (validTimeout <= 0) {
                             throw new TimeoutException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
                         }
+                        retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
+                    } else {
+                        retryTimeout = generateTimeout(retryTimeout);
                     }
-                    retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
-
                     logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     Thread.yield();
                 }
@@ -795,13 +800,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method blocks until the remote reaches the desired connection state.
-     * In case the timeout is expired an TimeoutException will be thrown.
+     * Method blocks until the remote reaches the desired connection state. In
+     * case the timeout is expired an TimeoutException will be thrown.
      *
      * @param connectionState the desired connection state
-     * @param timeout the timeout in milliseconds until the method throw a TimeoutException in case the connection state was not reached.
-     * @throws InterruptedException is thrown in case the thread is externally interrupted.
-     * @throws org.openbase.jul.exception.TimeoutException is thrown in case the timeout is expired without reaching the connection state.
+     * @param timeout the timeout in milliseconds until the method throw a
+     * TimeoutException in case the connection state was not reached.
+     * @throws InterruptedException is thrown in case the thread is externally
+     * interrupted.
+     * @throws org.openbase.jul.exception.TimeoutException is thrown in case the
+     * timeout is expired without reaching the connection state.
      */
     public void waitForConnectionState(final RemoteConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException {
         synchronized (connectionMonitor) {
@@ -822,7 +830,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Method blocks until the remote reaches the desired connection state.
      *
      * @param connectionState the desired connection state
-     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     * @throws InterruptedException is thrown in case the thread is externally
+     * interrupted.
      */
     public void waitForConnectionState(final RemoteConnectionState connectionState) throws InterruptedException {
         try {
@@ -963,8 +972,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method triggers a ping between this remote and its main controller and returns the calculated connection delay.
-     * This method is triggered automatically in background to check if the main controller is still available.
+     * Method triggers a ping between this remote and its main controller and
+     * returns the calculated connection delay. This method is triggered
+     * automatically in background to check if the main controller is still
+     * available.
      *
      * @return the connection delay in milliseconds.
      */
@@ -997,7 +1008,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method returns the result of the latest connection ping between this remote and its main controller.
+     * Method returns the result of the latest connection ping between this
+     * remote and its main controller.
      *
      * @return the latest connection delay in milliseconds.
      */
