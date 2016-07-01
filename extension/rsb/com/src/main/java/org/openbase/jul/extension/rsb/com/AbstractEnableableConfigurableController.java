@@ -21,15 +21,16 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Enableable;
+import org.openbase.jul.schedule.SyncObject;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
+ * Threepwood</a>
  * @param <M>
  * @param <MB>
  * @param <CONFIG>
@@ -37,6 +38,7 @@ import org.openbase.jul.iface.Enableable;
 public abstract class AbstractEnableableConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractConfigurableController<M, MB, CONFIG> implements Enableable {
 
     private boolean enabled;
+    private final SyncObject enablingLock = new SyncObject(AbstractEnableableConfigurableController.class);
 
     public AbstractEnableableConfigurableController(final MB builder) throws InstantiationException {
         super(builder);
@@ -44,14 +46,18 @@ public abstract class AbstractEnableableConfigurableController<M extends Generat
 
     @Override
     public void enable() throws CouldNotPerformException, InterruptedException {
-        enabled = true;
-        activate();
+        synchronized (enablingLock) {
+            enabled = true;
+            activate();
+        }
     }
 
     @Override
     public void disable() throws CouldNotPerformException, InterruptedException {
-        enabled = false;
-        deactivate();
+        synchronized (enablingLock) {
+            enabled = false;
+            deactivate();
+        }
     }
 
     @Override
