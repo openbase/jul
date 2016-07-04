@@ -33,6 +33,7 @@ import rst.homeautomation.control.app.AppConfigType.AppConfig;
 import rst.homeautomation.control.scene.SceneConfigType.SceneConfig;
 import rst.homeautomation.device.DeviceConfigType.DeviceConfig;
 import rst.homeautomation.unit.UnitConfigType.UnitConfig;
+import rst.homeautomation.unit.UnitGroupConfigType.UnitGroupConfig;
 import rst.rsb.ScopeType;
 import rst.spatial.ConnectionConfigType.ConnectionConfig;
 import rst.spatial.LocationConfigType.LocationConfig;
@@ -219,6 +220,44 @@ public class ScopeGenerator {
 
         // add unit label
         scope.addComponent(convertIntoValidScopeComponent(unitConfig.getLabel()));
+
+        return scope.build();
+    }
+    
+    public static ScopeType.Scope generateUnitGroupScope(final UnitGroupConfig unitGroupConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+
+        if (unitGroupConfig == null) {
+            throw new NotAvailableException("unitConfig");
+        }
+
+        if (!unitGroupConfig.hasLabel()) {
+            throw new NotAvailableException("unitConfig.label");
+        }
+
+        if (unitGroupConfig.getLabel().isEmpty()) {
+            throw new NotAvailableException("Field unitConfig.label isEmpty");
+        }
+//
+        if (!unitGroupConfig.hasPlacementConfig()) {
+            throw new NotAvailableException("placement config");
+        }
+
+        if (locationConfig == null) {
+            throw new NotAvailableException("location");
+        }
+        
+        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("location scope");
+        }
+
+        // add location scope
+        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
+
+        // add unit type
+        scope.addComponent(convertIntoValidScopeComponent("UnitGroup"));
+
+        // add unit label
+        scope.addComponent(convertIntoValidScopeComponent(unitGroupConfig.getLabel()));
 
         return scope.build();
     }
