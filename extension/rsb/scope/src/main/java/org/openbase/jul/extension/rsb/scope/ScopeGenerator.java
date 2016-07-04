@@ -76,6 +76,11 @@ public class ScopeGenerator {
     public static ScopeType.Scope generateScope(final String scope) throws CouldNotPerformException {
         ScopeType.Scope.Builder generatedScope = ScopeType.Scope.newBuilder();
         for (String component : scope.split("/")) {
+            
+            // check for empty components (/a//b/ = /a/b/)
+            if(component.isEmpty()) {
+                continue;
+            }
             generatedScope.addComponent(convertIntoValidScopeComponent(component));
         }
         return generatedScope.build();

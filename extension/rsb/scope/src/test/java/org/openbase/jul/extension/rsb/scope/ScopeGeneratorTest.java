@@ -23,8 +23,6 @@ package org.openbase.jul.extension.rsb.scope;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -33,6 +31,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.openbase.jul.exception.CouldNotPerformException;
 import rsb.Scope;
 import rst.rsb.ScopeType;
 
@@ -69,8 +68,6 @@ public class ScopeGeneratorTest {
     public void tearDown() {
     }
 
-
-
     /**
      * Test of generateStringRep method, of class ScopeGenerator.
      */
@@ -103,6 +100,25 @@ public class ScopeGeneratorTest {
         String expResult = scopeStringRep;
         String result = ScopeGenerator.generateStringRep(components);
         assertEquals(expResult, result);
+    }
+
+    @Test(timeout = 5000)
+    public void testGenerateScope() throws CouldNotPerformException {
+        System.out.println("testGenerateScope");
+        ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
+        ScopeType.Scope result = ScopeGenerator.generateScope("/paradise/room/device/test");
+        assertEquals("Scope not fully generated!", expected, result);
+    }
+
+    @Test(timeout = 5000)
+    public void testScopeTransfromationChain() throws CouldNotPerformException {
+        System.out.println("testGenerateScope");
+
+        ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
+        ScopeType.Scope result_1 = ScopeGenerator.generateScope(ScopeGenerator.generateStringRep(expected));
+        assertEquals("Scope not fully generated!", expected, result_1);
+        String result_2 = ScopeGenerator.generateStringRep(result_1);
+        assertEquals("Scope not fully generated!", "/paradise/room/device/test/", result_2);
     }
 
     /**
