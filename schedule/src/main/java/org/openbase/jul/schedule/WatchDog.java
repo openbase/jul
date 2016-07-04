@@ -197,8 +197,13 @@ public class WatchDog implements Activatable {
                         waitWithinDelay();
                     }
                 } catch (InterruptedException ex) {
-                    logger.debug("Catch Service[" + serviceName + "] interruption.");
-                    interrupt();
+                    /**
+                     * An iterrupted exception was caught triggered by the deactivate() method of the watchdog.
+                     * The minder shutdown will be initiated now.
+                     * 
+                     * !!! Do not recover the interrupted state to grantee a proper shutdown !!!
+                     */
+                    logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
                 }
 
                 while (service.isActive()) {
