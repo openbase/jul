@@ -23,8 +23,6 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.preset.JPTestMode;
 import rsb.Factory;
 import rsb.config.ParticipantConfig;
 import rsb.transport.spread.InPushConnectorFactoryRegistry;
