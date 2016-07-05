@@ -38,6 +38,8 @@ import org.openbase.jul.pattern.Controller;
 /**
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
+ * @param <KEY>
+ * @param <ENTRY>
  */
 public class ControllerRegistry<KEY, ENTRY extends Controller & Identifiable<KEY>> extends RegistryImpl<KEY, ENTRY> {
 
