@@ -70,7 +70,7 @@ public class RSBRemoteServiceTest {
         System.out.println("waitForConnectionState");
         RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
         try {
-            instance.waitForConnectionState(Remote.RemoteConnectionState.CONNECTING, 10);
+            instance.waitForConnectionState(Remote.ConnectionState.CONNECTING, 10);
             Assert.fail("No exception thrown.");
         } catch (TimeoutException e) {
             // should be thrown...

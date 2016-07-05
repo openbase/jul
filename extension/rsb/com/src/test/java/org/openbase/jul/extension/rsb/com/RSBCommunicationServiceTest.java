@@ -41,7 +41,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
-import org.openbase.jul.pattern.Remote.RemoteConnectionState;
+import org.openbase.jul.pattern.Remote.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
@@ -152,14 +152,14 @@ public class RSBCommunicationServiceTest {
         } catch (ExecutionException ex) {
             // ping canceled
         }
-        assertEquals("Remote is still connected after remote service shutdown!", RemoteConnectionState.CONNECTING, remoteService.getConnectionState());
+        assertEquals("Remote is still connected after remote service shutdown!", ConnectionState.CONNECTING, remoteService.getConnectionState());
         communicationService.activate();
         communicationService.waitForConnectionState(ControllerAvailabilityState.ONLINE);
-        remoteService.waitForConnectionState(RemoteConnectionState.CONNECTED);
+        remoteService.waitForConnectionState(ConnectionState.CONNECTED);
         remoteService.shutdown();
         communicationService.shutdown();
         assertEquals("Remote is not disconnected after shutdown!", ControllerAvailabilityState.OFFLINE, communicationService.getControllerAvailabilityState());
-        assertEquals("Remote is not disconnected after shutdown!", RemoteConnectionState.DISCONNECTED, remoteService.getConnectionState());
+        assertEquals("Remote is not disconnected after shutdown!", ConnectionState.DISCONNECTED, remoteService.getConnectionState());
     }
 
     @Test(timeout = 5000)
@@ -202,21 +202,21 @@ public class RSBCommunicationServiceTest {
         remoteService.init(scope);
         remoteService.activate();
         System.out.println("wait for inital connection...");
-        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        remoteService.waitForConnectionState(Remote.ConnectionState.CONNECTED);
 
         communicationService.deactivate();
         System.out.println("wait for connection lost after controller shutdown...");
-        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTING);
+        remoteService.waitForConnectionState(Remote.ConnectionState.CONNECTING);
 
         communicationService.activate();
 
         System.out.println("wait for reconnection lost after controller start...");
-        remoteService.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        remoteService.waitForConnectionState(Remote.ConnectionState.CONNECTED);
 
         remoteService.shutdown();
 
         System.out.println("wait for remote shutdown...");
-        remoteService.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
+        remoteService.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
 
         communicationService.shutdown();
     }
@@ -288,12 +288,12 @@ public class RSBCommunicationServiceTest {
         remoteService1.activate();
         remoteService2.activate();
 
-        remoteService1.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
-        remoteService2.waitForConnectionState(Remote.RemoteConnectionState.CONNECTED);
+        remoteService1.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+        remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED);
 
         remoteService1.shutdown();
-        remoteService1.waitForConnectionState(Remote.RemoteConnectionState.DISCONNECTED);
-        assertEquals("Remote connected to the same service got shutdown too", Remote.RemoteConnectionState.CONNECTED, remoteService2.getConnectionState());
+        remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
+        assertEquals("Remote connected to the same service got shutdown too", Remote.ConnectionState.CONNECTED, remoteService2.getConnectionState());
         remoteService2.requestData().get();
 
         communicationService.shutdown();

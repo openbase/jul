@@ -39,7 +39,7 @@ import org.openbase.jul.iface.Shutdownable;
 public interface Remote<M> extends Shutdownable, Activatable {
 
     // TODO mpohling: Should be moved to rst and reimplement for rsb 15.
-    public enum RemoteConnectionState {
+    public enum ConnectionState {
 
         UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED
     };
@@ -141,6 +141,20 @@ public interface Remote<M> extends Shutdownable, Activatable {
     public void init(final String scope) throws InitializationException, InterruptedException;
 
     /**
+     * This method allows the registration of connection state observers to get informed about connection state changes.
+     *
+     * @param observer
+     */
+    public void addConnectionStateObserver(final Observer<ConnectionState> observer);
+    
+    /**
+     * This method removes already registered connection state observers.
+     *
+     * @param observer
+     */
+    public void removeConnectionStateObserver(final Observer<ConnectionState> observer);
+    
+    /**
      * This method allows the registration of data observers to get informed about data updates.
      *
      * @param observer
@@ -221,7 +235,7 @@ public interface Remote<M> extends Shutdownable, Activatable {
      *
      * @return the current connection state.
      */
-    public RemoteConnectionState getConnectionState();
+    public ConnectionState getConnectionState();
 
     /**
      * This method synchronizes this remote instance with the main controller
