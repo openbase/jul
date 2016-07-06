@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GlobalExecutionService implements Shutdownable {
 
-    public static final long DEFAULT_SHUTDOWN_TIME = 1000;
+    public static final long DEFAULT_SHUTDOWN_TIME = 5000;
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(GlobalExecutionService.class);
 
