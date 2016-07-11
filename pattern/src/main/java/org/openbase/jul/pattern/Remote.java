@@ -141,6 +141,19 @@ public interface Remote<M> extends Shutdownable, Activatable {
     public void init(final String scope) throws InitializationException, InterruptedException;
 
     /**
+     * Method activates the remote instance and blocks until the first data synchronization is done.
+     * 
+     * Equivalent of: activate(); waitForData(0);
+     * 
+     * Caution: Method can blocks forever if the related main controller instance will be never available! 
+     *
+     * @param waitForData if this flag is true the method will block until the first data synchronization is done.
+     * @throws CouldNotPerformException
+     * @throws InterruptedException 
+     */
+    public void activate(boolean waitForData) throws CouldNotPerformException, InterruptedException;
+    
+    /**
      * This method allows the registration of connection state observers to get informed about connection state changes.
      *
      * @param observer

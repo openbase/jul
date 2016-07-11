@@ -251,7 +251,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
                 @Override
                 public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
-                    if (data == WatchDog.ServiceState.Running) {
+                    if (data == WatchDog.ServiceState.RUNNING) {
 
                         setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
 
