@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.pattern.Observable;
 
@@ -49,7 +50,7 @@ public class WatchDog implements Activatable {
 
     public enum ServiceState {
 
-        Unknown, Constructed, Initializing, Running, Terminating, Finished, Failed
+        UNKNWON, CONSTRUCTED, INITIALIZING, RUNNING, TERMINATING, FINISHED, FAILED, INTERRUPTED
     };
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -57,7 +58,7 @@ public class WatchDog implements Activatable {
     private final Activatable service;
     private final String serviceName;
     private Minder minder;
-    private ServiceState serviceState = ServiceState.Unknown;
+    private ServiceState serviceState = ServiceState.UNKNWON;
 
     private final ObservableImpl<ServiceState> serviceStateObserable;
 
@@ -85,7 +86,7 @@ public class WatchDog implements Activatable {
                 }
             });
 
-            setServiceState(ServiceState.Constructed);
+            setServiceState(ServiceState.CONSTRUCTED);
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -145,7 +146,7 @@ public class WatchDog implements Activatable {
     public void waitForActivation() throws InterruptedException {
 
         synchronized (activationLock) {
-            if (serviceState == ServiceState.Running) {
+            if (serviceState == ServiceState.RUNNING) {
                 return;
             }
 
@@ -153,7 +154,7 @@ public class WatchDog implements Activatable {
 
                 @Override
                 public void update(final Observable<ServiceState> source, ServiceState data) throws Exception {
-                    if (data == ServiceState.Running) {
+                    if (data == ServiceState.RUNNING) {
                         synchronized (activationLock) {
                             activationLock.notifyAll();
                         }
@@ -174,7 +175,7 @@ public class WatchDog implements Activatable {
 
         private Minder(String name) {
             super(name);
-            setServiceState(ServiceState.Initializing);
+            setServiceState(ServiceState.INITIALIZING);
         }
 
         @Override
@@ -183,14 +184,14 @@ public class WatchDog implements Activatable {
                 try {
                     while (!isInterrupted()) {
                         if (!service.isActive()) {
-                            setServiceState(ServiceState.Initializing);
+                            setServiceState(ServiceState.INITIALIZING);
                             try {
                                 logger.debug("Service activate: " + service.hashCode() + " : " + serviceName);
                                 service.activate();
-                                setServiceState(ServiceState.Running);
+                                setServiceState(ServiceState.RUNNING);
                             } catch (CouldNotPerformException | NullPointerException ex) {
                                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex), logger);
-                                setServiceState(ServiceState.Failed);
+                                setServiceState(ServiceState.FAILED);
                                 logger.info("Try again in " + (DELAY / 1000) + " seconds...");
                             }
                         }
@@ -198,27 +199,28 @@ public class WatchDog implements Activatable {
                     }
                 } catch (InterruptedException ex) {
                     /**
-                     * An iterrupted exception was caught triggered by the deactivate() method of the watchdog.
+                     * An interrupted exception was caught triggered by the deactivate() method of the watchdog.
                      * The minder shutdown will be initiated now.
-                     * 
+                     *
                      * !!! Do not recover the interrupted state to grantee a proper shutdown !!!
                      */
                     logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
                 }
 
                 while (service.isActive()) {
-                    setServiceState(ServiceState.Terminating);
+                    setServiceState(ServiceState.TERMINATING);
                     try {
-                        service.deactivate();
-                        setServiceState(ServiceState.Finished);
-                    } catch (IllegalStateException | CouldNotPerformException ex) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex), logger);
                         try {
+                            service.deactivate();
+                            setServiceState(ServiceState.FINISHED);
+                        } catch (IllegalStateException | CouldNotPerformException ex) {
+                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex), logger);
                             waitWithinDelay();
-                        } catch (InterruptedException exx) {
-                            logger.debug("Catch Service[" + serviceName + "] interruption during shutdown!");
-                            interrupt();
                         }
+                    } catch (InterruptedException ex) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not terminate Service[" + serviceName + "] because termination was externaly interrupted.", ex), logger, LogLevel.WARN);
+                        setServiceState(ServiceState.INTERRUPTED);
+                        break;
                     }
                 }
             } catch (Throwable tr) {
