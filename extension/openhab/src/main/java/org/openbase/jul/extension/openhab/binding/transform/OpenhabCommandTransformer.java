@@ -59,7 +59,7 @@ public final class OpenhabCommandTransformer {
             case HSB:
                 switch (serviceType) {
                     case COLOR_STATE_SERVICE:
-                        return HSVColorTransformer.transform(command.getHsb());
+                        return HSBColorTransformer.transform(command.getHsb());
                     default:
                         throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
                 }

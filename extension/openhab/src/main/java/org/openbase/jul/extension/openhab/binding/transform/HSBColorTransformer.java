@@ -29,7 +29,7 @@ import rst.homeautomation.openhab.HSBType;
  *
  * @author thuxohl
  */
-public class HSVColorTransformer {
+public class HSBColorTransformer {
 
     public static HSBColor transform(HSBType.HSB color) throws CouldNotTransformException {
         try {
