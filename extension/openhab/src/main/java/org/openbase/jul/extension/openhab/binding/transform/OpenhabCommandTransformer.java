@@ -39,18 +39,18 @@ public final class OpenhabCommandTransformer {
         switch (command.getType()) {
             case DECIMAL:
                 switch (serviceType) {
-                    case POWER_CONSUMPTION_PROVIDER:
+                    case POWER_CONSUMPTION_STATE_SERVICE:
                         return PowerConsumptionStateTransformer.transform(command.getDecimal());
-                    case MOTION_PROVIDER:
+                    case MOTION_STATE_SERVICE:
                         return MotionStateTransformer.transform(command.getDecimal());
-                    case TAMPER_PROVIDER:
+                    case TAMPER_STATE_SERVICE:
                         return TamperStateTransformer.transform(command.getDecimal());
-                    case BATTERY_PROVIDER:
+                    case BATTERY_STATE_SERVICE:
                         return BatteryStateTransformer.transform(command.getDecimal());
-                    case TEMPERATURE_ALARM_STATE_PROVIDER:
-                    case SMOKE_ALARM_STATE_PROVIDER:
+                    case TEMPERATURE_ALARM_STATE_SERVICE:
+                    case SMOKE_ALARM_STATE_SERVICE:
                         return AlarmStateTransformer.transform(command.getDecimal());
-                    case SMOKE_STATE_PROVIDER:
+                    case SMOKE_STATE_SERVICE:
                         return SmokeStateTransformer.transform(command.getDecimal());
                     default:
                         // native double type
@@ -58,8 +58,7 @@ public final class OpenhabCommandTransformer {
                 }
             case HSB:
                 switch (serviceType) {
-                    case COLOR_PROVIDER:
-                    case COLOR_SERVICE:
+                    case COLOR_STATE_SERVICE:
                         return HSVColorTransformer.transform(command.getHsb());
                     default:
                         throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
@@ -69,10 +68,9 @@ public final class OpenhabCommandTransformer {
                 throw new NotSupportedException(command.getType(), OpenhabCommandTransformer.class);
             case ONOFF:
                 switch (serviceType) {
-                    case BUTTON_PROVIDER:
+                    case BUTTON_STATE_SERVICE:
                         return ButtonStateTransformer.transform(command.getOnOff().getState());
-                    case POWER_PROVIDER:
-                    case POWER_SERVICE:
+                    case POWER_STATE_SERVICE:
                         return PowerStateTransformer.transform(command.getOnOff().getState());
                     default:
                         throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
@@ -85,7 +83,7 @@ public final class OpenhabCommandTransformer {
                 return StopMoveStateTransformer.transform(command.getStopMove().getState());
             case STRING:
                 switch (serviceType) {
-                    case HANDLE_PROVIDER:
+                    case HANDLE_STATE_SERVICE:
                         return HandleStateTransformer.transform(command.getText());
                     default:
                         // native string type

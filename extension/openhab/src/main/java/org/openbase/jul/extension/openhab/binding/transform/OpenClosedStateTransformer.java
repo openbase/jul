@@ -25,8 +25,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.state.ReedSwitchStateType.ReedSwitchState;
-import rst.homeautomation.openhab.OpenClosedHolderType;
+import rst.homeautomation.state.ContactStateType.ContactState;
+import rst.homeautomation.openhab.OpenClosedHolderType.OpenClosedHolder;
 
 /**
  *
@@ -34,31 +34,31 @@ import rst.homeautomation.openhab.OpenClosedHolderType;
  */
 public class OpenClosedStateTransformer {
 
-    public static ReedSwitchState.State transform(OpenClosedHolderType.OpenClosedHolder.OpenClosed openClosedType) throws CouldNotTransformException {
+    public static ContactState transform(OpenClosedHolder.OpenClosed openClosedType) throws CouldNotTransformException {
         switch (openClosedType) {
             case CLOSED:
-                return ReedSwitchState.State.CLOSED;
+                return ContactState.newBuilder().setValue(ContactState.State.CLOSED).build();
             case OPEN:
-                return ReedSwitchState.State.OPEN;
+                return ContactState.newBuilder().setValue(ContactState.State.OPEN).build();
             default:
-                throw new CouldNotTransformException("Could not transform " + OpenClosedHolderType.OpenClosedHolder.OpenClosed.class.getName() + "! " + OpenClosedHolderType.OpenClosedHolder.OpenClosed.class.getSimpleName() + "[" + openClosedType.name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + OpenClosedHolder.OpenClosed.class.getName() + "! " + OpenClosedHolder.OpenClosed.class.getSimpleName() + "[" + openClosedType.name() + "] is unknown!");
         }
     }
 
-    public static OpenClosedHolderType.OpenClosedHolder transform(ReedSwitchState.State reedSwitchState) throws CouldNotTransformException {
+    public static OpenClosedHolder transform(ContactState contactState) throws CouldNotTransformException {
         try {
-            switch (reedSwitchState) {
+            switch (contactState.getValue()) {
                 case CLOSED:
-                    return OpenClosedHolderType.OpenClosedHolder.newBuilder().setState(OpenClosedHolderType.OpenClosedHolder.OpenClosed.CLOSED).build();
+                    return OpenClosedHolder.newBuilder().setState(OpenClosedHolder.OpenClosed.CLOSED).build();
                 case OPEN:
-                    return OpenClosedHolderType.OpenClosedHolder.newBuilder().setState(OpenClosedHolderType.OpenClosedHolder.OpenClosed.OPEN).build();
+                    return OpenClosedHolder.newBuilder().setState(OpenClosedHolder.OpenClosed.OPEN).build();
                 case UNKNOWN:
                     throw new InvalidStateException("Unknown state is invalid!");
                 default:
-                    throw new TypeNotSupportedException(reedSwitchState, OpenClosedHolderType.OpenClosedHolder.class);
+                    throw new TypeNotSupportedException(contactState, OpenClosedHolder.class);
             }
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotTransformException("Could not transform " + ReedSwitchState.State.class.getName() + "!", ex);
+            throw new CouldNotTransformException("Could not transform " + ContactState.class.getName() + "!", ex);
         }
 
     }

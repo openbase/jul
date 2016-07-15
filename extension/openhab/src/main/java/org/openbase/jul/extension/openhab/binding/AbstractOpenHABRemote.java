@@ -33,23 +33,19 @@ import org.openbase.jul.extension.rsb.com.RPCHelper;
 import org.openbase.jul.extension.rsb.com.RSBFactory;
 import org.openbase.jul.extension.rsb.com.RSBRemoteService;
 import org.openbase.jul.extension.rsb.iface.RSBListenerInterface;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.homeautomation.openhab.OpenhabCommandType;
 import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
-import rst.homeautomation.openhab.RSBBindingType;
-import rst.homeautomation.openhab.RSBBindingType.RSBBinding;
+import rst.homeautomation.openhab.OpenhabStateType.OpenhabState;
 
 /**
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
  */
-public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBinding> implements OpenHABRemote {
+public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabState> implements OpenHABRemote {
 
     public static final String ITEM_SUBSEGMENT_DELIMITER = "_";
     public static final String ITEM_SEGMENT_DELIMITER = "__";
@@ -62,20 +58,18 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBinding>
     public static final Scope SCOPE_OPENHAB_UPDATE = SCOPE_OPENHAB.concat(new Scope("/update"));
     public static final Scope SCOPE_OPENHAB_COMMAND = SCOPE_OPENHAB.concat(new Scope("/command"));
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractOpenHABRemote.class);
-
     private String itemFilter;
 
     static {
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(OpenhabCommandType.OpenhabCommand.getDefaultInstance()));
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(RSBBindingType.RSBBinding.getDefaultInstance()));
+        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(OpenhabCommand.getDefaultInstance()));
+        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(OpenhabState.getDefaultInstance()));
     }
 
     private RSBListenerInterface openhabCommandListener, openhabUpdateListener;
     private final boolean hardwareSimulationMode;
 
     public AbstractOpenHABRemote(final boolean hardwareSimulationMode) {
-        super(RSBBinding.class);
+        super(OpenhabState.class);
         this.hardwareSimulationMode = hardwareSimulationMode;
     }
 
@@ -120,21 +114,6 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBinding>
             }, true);
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);
-        }
-    }
-
-    @Override
-    public void notifyDataUpdate(final RSBBindingType.RSBBinding data) {
-        switch (data.getState().getState()) {
-        case ACTIVE:
-            logger.info("Active dal binding state!");
-            break;
-        case DEACTIVE:
-            logger.info("Deactive dal binding state!");
-            break;
-        case UNKNOWN:
-            logger.info("Unkown dal binding state!");
-            break;
         }
     }
 
@@ -198,7 +177,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBinding>
     }
 
     @Override
-    public Future<Void> sendCommand(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> sendCommand(OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {
@@ -212,7 +191,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<RSBBinding>
     }
 
     @Override
-    public Future<Void> postUpdate(OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
+    public Future<Void> postUpdate(OpenhabCommand command) throws CouldNotPerformException {
         try {
             validateCommand(command);
             if (hardwareSimulationMode) {

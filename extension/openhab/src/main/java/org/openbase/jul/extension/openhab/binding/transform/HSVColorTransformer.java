@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.openhab.binding.transform;
+ package org.openbase.jul.extension.openhab.binding.transform;
 
 /*
  * #%L
@@ -22,7 +22,7 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotTransformException;
-import rst.vision.HSVColorType.HSVColor;
+import rst.vision.HSBColorType.HSBColor;
 import rst.homeautomation.openhab.HSBType;
 
 /**
@@ -31,19 +31,19 @@ import rst.homeautomation.openhab.HSBType;
  */
 public class HSVColorTransformer {
 
-    public static HSVColor transform(HSBType.HSB color) throws CouldNotTransformException {
+    public static HSBColor transform(HSBType.HSB color) throws CouldNotTransformException {
         try {
-            return HSVColor.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation()).setValue(color.getBrightness()).build();
+            return HSBColor.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation()).setBrightness(color.getBrightness()).build();
         } catch (Exception ex) {
-            throw new CouldNotTransformException("Could not transform " + HSBType.HSB.class.getName() + " to " + HSBType.HSB.class.getName() + "!", ex);
+            throw new CouldNotTransformException("Could not transform " + HSBType.HSB.class.getName() + " to " + HSBColor.class.getName() + "!", ex);
         }
     }
 
-    public static HSBType.HSB transform(HSVColor color) throws CouldNotTransformException {
+    public static HSBType.HSB transform(HSBColor color) throws CouldNotTransformException {
         try {
-            return HSBType.HSB.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation()).setBrightness(color.getValue()).build();
+            return HSBType.HSB.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation()).setBrightness(color.getBrightness()).build();
         } catch (Exception ex) {
-            throw new CouldNotTransformException("Could not transform " + HSVColor.class.getName() + " to " + HSBType.class.getName() + "!", ex);
+            throw new CouldNotTransformException("Could not transform " + HSBColor.class.getName() + " to " + HSBType.class.getName() + "!", ex);
         }
     }
 }

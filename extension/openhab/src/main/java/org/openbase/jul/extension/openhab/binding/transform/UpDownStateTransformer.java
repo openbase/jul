@@ -23,8 +23,8 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.openhab.UpDownHolderType;
-import rst.homeautomation.state.ShutterStateType.ShutterState;
+import rst.homeautomation.openhab.UpDownHolderType.UpDownHolder;
+import rst.homeautomation.state.BlindStateType.BlindState;
 
 /**
  *
@@ -32,27 +32,27 @@ import rst.homeautomation.state.ShutterStateType.ShutterState;
  */
 public class UpDownStateTransformer {
 
-    public static ShutterState.State transform(final UpDownHolderType.UpDownHolder.UpDown upDownType) throws CouldNotTransformException {
+    public static BlindState transform(final UpDownHolder.UpDown upDownType) throws CouldNotTransformException {
         switch (upDownType) {
             case DOWN:
-                return ShutterState.State.DOWN;
+                return BlindState.newBuilder().setMovementState(BlindState.MovementState.DOWN).build();
             case UP:
-                return ShutterState.State.UP;
+                return BlindState.newBuilder().setMovementState(BlindState.MovementState.UP).build();
             default:
-                throw new CouldNotTransformException("Could not transform " + UpDownHolderType.UpDownHolder.UpDown.class.getName() + "! " + UpDownHolderType.UpDownHolder.UpDown.class.getSimpleName() + "[" + upDownType.name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + UpDownHolder.UpDown.class.getName() + "! " + UpDownHolder.UpDown.class.getSimpleName() + "[" + upDownType.name() + "] is unknown!");
         }
     }
 
-    public static UpDownHolderType.UpDownHolder transform(final ShutterState.State shutterState) throws TypeNotSupportedException, CouldNotTransformException {
-        switch (shutterState) {
+    public static UpDownHolder transform(final BlindState blindState) throws TypeNotSupportedException, CouldNotTransformException {
+        switch (blindState.getMovementState()) {
             case DOWN:
-                return UpDownHolderType.UpDownHolder.newBuilder().setState(UpDownHolderType.UpDownHolder.UpDown.DOWN).build();
+                return UpDownHolder.newBuilder().setState(UpDownHolder.UpDown.DOWN).build();
             case UP:
-                return UpDownHolderType.UpDownHolder.newBuilder().setState(UpDownHolderType.UpDownHolder.UpDown.DOWN).build();
+                return UpDownHolder.newBuilder().setState(UpDownHolder.UpDown.DOWN).build();
             case UNKNOWN:
-                throw new TypeNotSupportedException(shutterState, UpDownHolderType.UpDownHolder.UpDown.class);
+                throw new TypeNotSupportedException(blindState, UpDownHolder.UpDown.class);
             default:
-                throw new CouldNotTransformException("Could not transform " + ShutterState.State.class.getName() + "! " + ShutterState.State.class.getSimpleName() + "[" + shutterState.name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + BlindState.class.getName() + "! " + BlindState.class.getSimpleName() + "[" + blindState.getMovementState().name() + "] is unknown!");
         }
     }
 }

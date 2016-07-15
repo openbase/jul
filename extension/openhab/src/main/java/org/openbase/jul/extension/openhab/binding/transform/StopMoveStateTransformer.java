@@ -23,9 +23,8 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.openhab.StopMoveHolderType;
-import static rst.homeautomation.openhab.StopMoveHolderType.StopMoveHolder.StopMove.STOP;
-import rst.homeautomation.state.ShutterStateType.ShutterState;
+import rst.homeautomation.openhab.StopMoveHolderType.StopMoveHolder;
+import rst.homeautomation.state.BlindStateType.BlindState;
 
 /**
  *
@@ -33,29 +32,29 @@ import rst.homeautomation.state.ShutterStateType.ShutterState;
  */
 public class StopMoveStateTransformer {
 
-    public static ShutterState.State transform(final StopMoveHolderType.StopMoveHolder.StopMove stopMoveType) throws CouldNotTransformException {
+    public static BlindState transform(final StopMoveHolder.StopMove stopMoveType) throws CouldNotTransformException {
         switch (stopMoveType) {
             case STOP:
-                return ShutterState.State.STOP;
+                return BlindState.newBuilder().setMovementState(BlindState.MovementState.STOP).build();
             case MOVE:
-                return ShutterState.State.UNKNOWN;
+                return BlindState.newBuilder().setMovementState(BlindState.MovementState.UNKNOWN).build();
             default:
-                throw new CouldNotTransformException("Could not transform " + StopMoveHolderType.StopMoveHolder.StopMove.class.getName() + "! " + StopMoveHolderType.StopMoveHolder.StopMove.class.getSimpleName() + "[" + stopMoveType.name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + StopMoveHolder.StopMove.class.getName() + "! " + StopMoveHolder.StopMove.class.getSimpleName() + "[" + stopMoveType.name() + "] is unknown!");
         }
     }
 
-    public static StopMoveHolderType.StopMoveHolder transform(ShutterState.State shutterState) throws TypeNotSupportedException, CouldNotTransformException {
-        switch (shutterState) {
+    public static StopMoveHolder transform(BlindState blindState) throws TypeNotSupportedException, CouldNotTransformException {
+        switch (blindState.getMovementState()) {
             case STOP:
-                return StopMoveHolderType.StopMoveHolder.newBuilder().setState(StopMoveHolderType.StopMoveHolder.StopMove.STOP).build();
+                return StopMoveHolder.newBuilder().setState(StopMoveHolder.StopMove.STOP).build();
             case UP:
-                return StopMoveHolderType.StopMoveHolder.newBuilder().setState(StopMoveHolderType.StopMoveHolder.StopMove.MOVE).build();
+                return StopMoveHolder.newBuilder().setState(StopMoveHolder.StopMove.MOVE).build();
             case DOWN:
-                return StopMoveHolderType.StopMoveHolder.newBuilder().setState(StopMoveHolderType.StopMoveHolder.StopMove.MOVE).build();
+                return StopMoveHolder.newBuilder().setState(StopMoveHolder.StopMove.MOVE).build();
             case UNKNOWN:
-                throw new TypeNotSupportedException(shutterState, StopMoveHolderType.StopMoveHolder.StopMove.class);
+                throw new TypeNotSupportedException(blindState, StopMoveHolder.StopMove.class);
             default:
-                throw new CouldNotTransformException("Could not transform " + ShutterState.State.class.getName() + "! " + ShutterState.State.class.getSimpleName() + "[" + shutterState.name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + BlindState.class.getName() + "! " + BlindState.class.getSimpleName() + "[" + blindState.getMovementState().name() + "] is unknown!");
         }
     }
 }

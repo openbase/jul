@@ -51,7 +51,7 @@ import rsb.config.TransportConfig;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import rst.spatial.LocationConfigType.LocationConfig;
-import rst.spatial.LocationRegistryType.LocationRegistry;
+import rst.spatial.LocationRegistryDataType.LocationRegistryData;
 
 /**
  *
@@ -60,7 +60,7 @@ import rst.spatial.LocationRegistryType.LocationRegistry;
 public class RSBCommunicationServiceTest {
 
     static {
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(LocationRegistry.getDefaultInstance()));
+        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(LocationRegistryData.getDefaultInstance()));
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(LocationConfig.getDefaultInstance()));
     }
 
@@ -95,17 +95,17 @@ public class RSBCommunicationServiceTest {
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
-        remoteService.addDataObserver(new Observer<LocationRegistry>() {
+        remoteService.addDataObserver(new Observer<LocationRegistryData>() {
 
             @Override
-            public void update(final Observable<LocationRegistry> source, LocationRegistry data) throws Exception {
+            public void update(final Observable<LocationRegistryData> source, LocationRegistryData data) throws Exception {
                 if (data.getLocationConfigCount() == 1 && data.getLocationConfig(0).getId().equals("Location1")) {
                     firstSync = true;
                     synchronized (waitForDataSync) {
@@ -193,7 +193,7 @@ public class RSBCommunicationServiceTest {
     public void testReconnection() throws Exception {
         String scope = "/test/reconnection";
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
@@ -231,7 +231,7 @@ public class RSBCommunicationServiceTest {
     public void testWaitForData() throws Exception {
         String scope = "/test/reconnection";
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
@@ -254,7 +254,7 @@ public class RSBCommunicationServiceTest {
     public void testRequestData() throws Exception {
         String scope = "/test/reconnection";
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
@@ -275,7 +275,7 @@ public class RSBCommunicationServiceTest {
     public void testRemoteInterference() throws Exception {
         String scope = "/test/reconnection";
         LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistry.Builder testData = LocationRegistry.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
 
         RSBRemoteService remoteService1 = new RSBRemoteServiceImpl();
         RSBRemoteService remoteService2 = new RSBRemoteServiceImpl();
@@ -300,9 +300,9 @@ public class RSBCommunicationServiceTest {
         remoteService2.shutdown();
     }
 
-    public static class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistry, LocationRegistry.Builder> {
+    public static class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistryData, LocationRegistryData.Builder> {
 
-        public RSBCommunicationServiceImpl(LocationRegistry.Builder builder) throws InstantiationException {
+        public RSBCommunicationServiceImpl(LocationRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
 
@@ -311,14 +311,14 @@ public class RSBCommunicationServiceTest {
         }
     }
 
-    public static class RSBRemoteServiceImpl extends RSBRemoteService<LocationRegistry> {
+    public static class RSBRemoteServiceImpl extends RSBRemoteService<LocationRegistryData> {
 
         public RSBRemoteServiceImpl() {
-            super(LocationRegistry.class);
+            super(LocationRegistryData.class);
         }
 
         @Override
-        public void notifyDataUpdate(LocationRegistry data) throws CouldNotPerformException {
+        public void notifyDataUpdate(LocationRegistryData data) throws CouldNotPerformException {
         }
     }
 }

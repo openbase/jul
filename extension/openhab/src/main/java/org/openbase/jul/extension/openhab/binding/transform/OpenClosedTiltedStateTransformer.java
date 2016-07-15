@@ -23,7 +23,6 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
-import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TypeNotSupportedException;
 import rst.homeautomation.state.HandleStateType.HandleState;
 
@@ -33,30 +32,33 @@ import rst.homeautomation.state.HandleStateType.HandleState;
  */
 public class OpenClosedTiltedStateTransformer {
 
-    public static HandleState.State transform(final String stringType) throws CouldNotTransformException {
-        try {
-            return HandleState.State.valueOf(stringType);
-        } catch (Exception ex) {
-            throw new CouldNotTransformException("Could not transform " + String.class.getName() + "! " + String.class.getSimpleName() + "[" + stringType + "] is unknown!", ex);
+    public static HandleState transform(final String stringType) throws CouldNotTransformException {
+        switch (stringType) {
+            case "CLOSED":
+                return HandleState.newBuilder().setPosition(0).build();
+            case "OPEN":
+                return HandleState.newBuilder().setPosition(90).build();
+            case "TILTED":
+                return HandleState.newBuilder().setPosition(180).build();
+            default:
+                throw new CouldNotTransformException("Could not transform " + String.class.getName() + "! " + String.class.getSimpleName() + "[" + stringType + "] is unknown!");
         }
     }
 
-    public static String transform(final HandleState.State handleState) throws CouldNotTransformException {
+    public static String transform(final HandleState handleState) throws CouldNotTransformException {
         try {
-            switch (handleState) {
-                case CLOSED:
+            switch (handleState.getPosition()) {
+                case 0:
                     return "CLOSED";
-                case OPEN:
+                case 90:
                     return "OPEN";
-                case TILTED:
+                case 180:
                     return "TILTED";
-                case UNKNOWN:
-                    throw new InvalidStateException("Unknown state is invalid!");
                 default:
                     throw new TypeNotSupportedException(handleState, String.class);
             }
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotTransformException("Could not transform " + HandleState.State.class.getName() + "!", ex);
+            throw new CouldNotTransformException("Could not transform " + HandleState.class.getName() + "!", ex);
         }
     }
 }

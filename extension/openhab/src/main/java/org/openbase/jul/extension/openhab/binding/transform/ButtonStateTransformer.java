@@ -38,7 +38,7 @@ public class ButtonStateTransformer {
             case OFF:
                 return ButtonState.newBuilder().setValue(State.RELEASED).build();
             case ON:
-                return ButtonState.newBuilder().setValue(State.CLICKED).build();
+                return ButtonState.newBuilder().setValue(State.PRESSED).build();
             default:
                 throw new CouldNotTransformException("Could not transform " + OnOffHolderType.OnOffHolder.OnOff.class.getName() + "! " + OnOffHolderType.OnOffHolder.OnOff.class.getSimpleName() + "[" + onOffType.name() + "] is unknown!");
         }
@@ -48,7 +48,7 @@ public class ButtonStateTransformer {
         switch (buttonState.getValue()) {
             case RELEASED:
                 return OnOffHolderType.OnOffHolder.newBuilder().setState(OnOffHolderType.OnOffHolder.OnOff.OFF).build();
-            case CLICKED:
+            case PRESSED:
                 return OnOffHolderType.OnOffHolder.newBuilder().setState(OnOffHolderType.OnOffHolder.OnOff.ON).build();
             case UNKNOWN:
                 throw new TypeNotSupportedException(buttonState, OnOffHolderType.OnOffHolder.OnOff.class);

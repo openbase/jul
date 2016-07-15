@@ -26,26 +26,32 @@ import org.openbase.jul.processing.StringProcessor;
 import rst.homeautomation.state.HandleStateType.HandleState;
 
 /**
+ * TODO: rethink handle state: if position makes sense
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
  * Threepwood</a>
  */
 public class HandleStateTransformer {
 
-    public static HandleState.State transform(final String value) throws CouldNotTransformException {
-        try {
-            return HandleState.State.valueOf(StringProcessor.transformToUpperCase(value));
-        } catch (Exception ex) {
-            throw new CouldNotTransformException("Could not transform " + String.class.getName() + "! " + String.class.getSimpleName() + "[" + value + "] is not a valid " + HandleState.State.class.getSimpleName() + "!", ex);
+    public static HandleState transform(final String value) throws CouldNotTransformException {
+        switch (StringProcessor.transformToUpperCase(value)) {
+            case "CLOSED":
+                return HandleState.newBuilder().setPosition(0).build();
+            case "OPEN":
+                return HandleState.newBuilder().setPosition(90).build();
+            default:
+                throw new CouldNotTransformException("Could not transform " + String.class.getName() + "! " + String.class.getSimpleName() + "[" + value + "] is not a valid " + HandleState.class.getSimpleName() + "!");
         }
     }
 
-    public static String transform(final HandleState.State value) throws CouldNotTransformException {
-
-        try {
-            return StringProcessor.transformToUpperCase(value.name());
-        } catch (Exception ex) {
-            throw new CouldNotTransformException("Could not transform " + HandleState.State.class.getName() + "[" + value + "] to " + String.class.getSimpleName() + "!", ex);
+    public static String transform(final HandleState value) throws CouldNotTransformException {
+        switch (value.getPosition()) {
+            case 0:
+                return "CLOSED";
+            case 90:
+                return "OPEN";
+            default:
+                throw new CouldNotTransformException("Could not transform " + HandleState.class.getName() + "[" + value + "] to " + String.class.getSimpleName() + "!");
         }
     }
 }
