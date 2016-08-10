@@ -77,7 +77,7 @@ public class ScopeGenerator {
     public static ScopeType.Scope generateScope(final String scope) throws CouldNotPerformException {
         ScopeType.Scope.Builder generatedScope = ScopeType.Scope.newBuilder();
         for (String component : scope.split("/")) {
-            
+
             // check for empty components (/a//b/ = /a/b/)
             if(component.isEmpty()) {
                 continue;
@@ -135,7 +135,7 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
-        
+
         if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
@@ -173,7 +173,7 @@ public class ScopeGenerator {
         if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
-        
+
         // add location scope
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
@@ -207,7 +207,7 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
-        
+
         if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
@@ -223,7 +223,7 @@ public class ScopeGenerator {
 
         return scope.build();
     }
-    
+
     public static ScopeType.Scope generateUnitGroupScope(final UnitGroupConfig unitGroupConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
 
         if (unitGroupConfig == null) {
@@ -245,7 +245,7 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
-        
+
         if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
@@ -279,7 +279,7 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
-        
+
         if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
@@ -288,7 +288,7 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add agent type
-        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getType().name().replace("_", "")));
+        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getAgentClassId().replace("_", "")));
 
         // add unit label
         scope.addComponent(convertIntoValidScopeComponent(agentConfig.getLabel()));
@@ -313,7 +313,7 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
-        
+
         if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
@@ -347,7 +347,7 @@ public class ScopeGenerator {
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
-        
+
         if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
