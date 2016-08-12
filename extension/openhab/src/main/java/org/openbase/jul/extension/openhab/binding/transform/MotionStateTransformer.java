@@ -21,15 +21,14 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TypeNotSupportedException;
 import rst.homeautomation.state.MotionStateType.MotionState;
 import rst.homeautomation.state.MotionStateType.MotionState.State;
-import static rst.homeautomation.state.MotionStateType.MotionState.State.MOVEMENT;
-import static rst.homeautomation.state.MotionStateType.MotionState.State.NO_MOVEMENT;
+import static rst.homeautomation.state.MotionStateType.MotionState.State.MOTION;
+import static rst.homeautomation.state.MotionStateType.MotionState.State.NO_MOTION;
 
 /**
  *
@@ -41,9 +40,9 @@ public class MotionStateTransformer {
         MotionState.Builder motionState = MotionState.newBuilder();
         try {
             if (decimalType.intValue() == 0) {
-                motionState.setValue(State.NO_MOVEMENT);
+                motionState.setValue(State.NO_MOTION);
             } else {
-                motionState.setValue(State.MOVEMENT);
+                motionState.setValue(State.MOTION);
             }
             return motionState.build();
         } catch (Exception ex) {
@@ -54,9 +53,9 @@ public class MotionStateTransformer {
     public static Double transform(final MotionState motionState) throws CouldNotTransformException {
         try {
             switch (motionState.getValue()) {
-                case NO_MOVEMENT:
+                case NO_MOTION:
                     return 0d;
-                case MOVEMENT:
+                case MOTION:
                     return 1d;
                 case UNKNOWN:
                     throw new InvalidStateException("Unknown state is invalid!");
