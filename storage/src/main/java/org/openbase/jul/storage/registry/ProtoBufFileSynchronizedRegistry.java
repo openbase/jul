@@ -68,7 +68,8 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             this.idGenerator = idGenerator;
             this.messageClass = messageClass;
             this.protobufMessageMap = internalMap;
-            
+            this.setName(messageClass.getSimpleName() + "Registry");
+
             try {
                 if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
                     registerPlugin(new GitRegistryPlugin<>(this));
