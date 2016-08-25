@@ -183,6 +183,7 @@
         <module>processing</module>
         <module>interface</module>
         <module>storage</module>
+        <module>audio</module>
         <module>extension</module>
     </modules>
     

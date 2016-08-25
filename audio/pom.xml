@@ -27,4 +27,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.exception</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
 </project>
