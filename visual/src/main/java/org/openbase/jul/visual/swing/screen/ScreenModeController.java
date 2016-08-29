@@ -1,4 +1,4 @@
-package org.openbase.jul.visual.swing.layout.screen;
+package org.openbase.jul.visual.swing.screen;
 
 /*
  * #%L
