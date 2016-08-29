@@ -1,5 +1,10 @@
 language: java
 
+branches:
+  only:
+  - master
+  - latest-stable
+
 jdk:
   - oraclejdk8
   
