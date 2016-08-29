@@ -33,8 +33,7 @@ import java.util.Map;
 
 /**
  *
- * @author @author <a href="mailto:DivineThreepwood@gmail.com">Divine
- * Threepwood</a>
+ * @author @author <a href="mailto:DivineThreepwood@gmail.com">DivineThreepwood</a>
  */
 public class ProtobufVariableProvider implements VariableProvider {
 
@@ -53,8 +52,10 @@ public class ProtobufVariableProvider implements VariableProvider {
     @Override
     public String getValue(String variable) throws NotAvailableException {
 
+        String key;
         for (Map.Entry<Descriptors.FieldDescriptor, Object> fieldEntry : message.getAllFields().entrySet()) {
-            if (StringProcessor.transformToUpperCase(fieldEntry.getKey().getName()).equals(variable)) {
+            key  = StringProcessor.transformToUpperCase(fieldEntry.getKey().getName());
+            if (key.equals(variable) || (StringProcessor.transformToUpperCase(message.getClass().getSimpleName()) + "/" + key).equals(variable)) {
                 if (!fieldEntry.getValue().toString().isEmpty()) {
                     return fieldEntry.getValue().toString();
                 }
