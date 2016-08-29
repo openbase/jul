@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class LayoutGenerator {
 
-    protected static final org.slf4j.Logger logger = LoggerFactory.getLogger(LayoutGenerator.class);
+    protected static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LayoutGenerator.class);
 
     public static final int DEFAULT_GAP_TYPE = -1;
     public static final int ZERO_GAP_TYPE = -2;
@@ -101,7 +101,7 @@ public final class LayoutGenerator {
                 });
             }
         } catch (InterruptedException | InvocationTargetException ex) {
-            ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+            ExceptionPrinter.printHistory(ex, LOGGER, LogLevel.WARN);
         }
         return listLayout;
     }
@@ -149,7 +149,7 @@ public final class LayoutGenerator {
                 });
             }
         } catch (InterruptedException | InvocationTargetException ex) {
-            ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+            ExceptionPrinter.printHistory(ex, LOGGER, LogLevel.WARN);
         }
         return lineLayout;
     }
