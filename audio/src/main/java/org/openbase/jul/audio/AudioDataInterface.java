@@ -26,7 +26,7 @@ import javax.sound.sampled.AudioFormat;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface AudioDataInterface extends AudioSource {
 	public byte[] getData();

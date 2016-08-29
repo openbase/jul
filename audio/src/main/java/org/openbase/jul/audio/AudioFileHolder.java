@@ -26,7 +26,7 @@ import java.io.File;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface AudioFileHolder extends AudioSource {
 	public File getFile();

@@ -33,7 +33,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class AudioData implements AudioDataInterface {
 
