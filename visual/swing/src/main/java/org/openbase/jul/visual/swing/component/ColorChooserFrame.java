@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Divine <DivineThreepwood@gmail.com>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ColorChooserFrame extends javax.swing.JFrame {
 

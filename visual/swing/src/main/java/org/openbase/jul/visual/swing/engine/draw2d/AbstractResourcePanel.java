@@ -31,7 +31,6 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.VolatileImage;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import javax.swing.JComponent;
@@ -48,6 +47,9 @@ import org.slf4j.LoggerFactory;
 /**
  *
  * @author divine
+ * @param <R>
+ * @param <RP>
+ * @param <PRP>
  */
 public abstract class AbstractResourcePanel<R extends NameProvider, RP extends AbstractResourcePanel, PRP extends RP> {
 
@@ -104,7 +106,6 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
      *
      * @param resource
      * @param placementPolygon
-     * @param objectType
      * @param parentPanel
      * @param imageURI
      * @deprecated use public AbstractResourcePanel(R resource, Polygon
@@ -195,8 +196,8 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
         this.placementPolygon = placementPolygon;
         this.boundingBox = placementPolygon.getBounds2D();
         this.transformedBoundingBox = new Rectangle2D.Double();
-        this.jComponents = new ArrayList<JComponent>();
-        this.childrens = new LinkedList<RP>();
+        this.jComponents = new ArrayList<>();
+        this.childrens = new LinkedList<>();
         this.parentResourcePanel.addChild(this, drawLayer);
         assert (placementPolygon != null);
     }
