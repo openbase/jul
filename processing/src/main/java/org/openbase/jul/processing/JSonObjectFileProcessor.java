@@ -85,7 +85,7 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
             JsonParser parser = jsonFactory.createParser(file);
             return mapper.readValue(parser, clazz);
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not serialize " + clazz.getSimpleName() + " into " + file + "!", ex);
+            throw new CouldNotPerformException("Could not deserialize " + clazz.getSimpleName() + " from " + file + "!", ex);
         }
     }
 }
