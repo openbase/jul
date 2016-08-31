@@ -60,12 +60,8 @@ public class RSBSharedConnectionConfig {
 
     }
 
-    //TODO: should be replaced with a the copy version at the bottom which does not work at the moment
     public static ParticipantConfig getParticipantConfig() {
-//        participantConfig = Factory.getInstance().getDefaultParticipantConfig();
-//        participantConfig.getOrCreateTransport("spread");
-//        return participantConfig;
-        if(!init) {
+        if (!init) {
             load();
         }
         return participantConfig.copy();
