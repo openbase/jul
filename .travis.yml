@@ -45,4 +45,5 @@ after_deploy:
          sh trigger-travis.sh openbase generic-display $TRAVIS_ACCESS_TOKEN
          sh trigger-travis.sh openbase openhab-binding-rsb $TRAVIS_ACCESS_TOKEN
          sh trigger-travis.sh openbase bco.registry $TRAVIS_ACCESS_TOKEN
+         sh trigger-travis.sh openbase planetsudo $TRAVIS_ACCESS_TOKEN
        fi
