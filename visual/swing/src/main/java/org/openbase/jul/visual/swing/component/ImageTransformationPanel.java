@@ -40,6 +40,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.visual.swing.image.ImageLoader;
 
 /**
@@ -60,11 +61,11 @@ public class ImageTransformationPanel extends javax.swing.JPanel {
 		holdRazio = false;
 	}
 	
-	public ImageTransformationPanel(String imageURI) throws IOException {
+	public ImageTransformationPanel(String imageURI) throws CouldNotPerformException {
 		setImage(imageURI);
 	}
 	
-	public final void setImage(String imageURI) throws IOException {
+	public final void setImage(String imageURI) throws CouldNotPerformException {
 		setImage(ImageLoader.getInstance().loadImage(imageURI));
 	}
 	

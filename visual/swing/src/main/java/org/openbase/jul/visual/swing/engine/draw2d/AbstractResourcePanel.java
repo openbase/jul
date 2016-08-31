@@ -38,6 +38,7 @@ import javax.swing.JComponent;
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.visual.swing.image.ImageLoader;
@@ -125,8 +126,8 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
         if (imageURI != NO_IMAGE) {
             try {
                 this.image = ImageLoader.getInstance().loadVolatileImage(imageURI);
-            } catch (IOException ex) {
-                LOGGER.error("Could not load " + this + " image.", ex);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not load " + this + " image.", ex), LOGGER);
             }
         }
     }
@@ -174,8 +175,8 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
         if (imageURI != NO_IMAGE) {
             try {
                 this.image = ImageLoader.getInstance().loadVolatileImage(imageURI);
-            } catch (IOException ex) {
-                LOGGER.warn("Could not load " + this + " image.", ex);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not load " + this + " image.", ex), LOGGER);
             }
         }
     }
