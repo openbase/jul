@@ -23,7 +23,6 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -34,13 +33,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.openbase.jul.exception.CouldNotPerformException;
 import java.io.File;
+import java.io.IOException;
 
 /**
  *
  * @author mpohling
  * @param <DT>
  */
-public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor<DT>  {
+public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor<DT> {
 
     private final ObjectMapper mapper;
     private final JsonFactory jsonFactory;
@@ -65,11 +65,11 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
             generator.setPrettyPrinter(new DefaultPrettyPrinter());
             mapper.writeValue(generator, data);
             return file;
-        } catch (Exception ex) {
+        } catch (IOException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not serialize " + data.getClass().getSimpleName() + " into " + file + "!", ex);
         }
     }
-    
+
     @Override
     public DT deserialize(File file, DT message) throws CouldNotPerformException {
         return deserialize(file);
@@ -79,12 +79,12 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
     public DT deserialize(File file) throws CouldNotPerformException {
         return deserialize(file, dataTypeClass);
     }
-    
+
     public <T extends Object> T deserialize(final File file, final Class<T> clazz) throws CouldNotPerformException {
         try {
             JsonParser parser = jsonFactory.createParser(file);
             return mapper.readValue(parser, clazz);
-        } catch (Exception ex) {
+        } catch (IOException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not deserialize " + clazz.getSimpleName() + " from " + file + "!", ex);
         }
     }
