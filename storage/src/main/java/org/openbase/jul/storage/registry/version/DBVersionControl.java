@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry.version;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -40,9 +39,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
@@ -75,6 +76,7 @@ public class DBVersionControl {
     private final JsonParser parser;
     private final Gson gson;
     private int latestDBVersion;
+    private int versionOnStart;
     private final Package converterPackage;
     private final List<DBVersionConverter> converterPipeline;
     private final FileProvider entryFileProvider;
@@ -101,7 +103,7 @@ public class DBVersionControl {
         this(entryType, entryFileProvider, converterPackage, databaseDirectory, new Writable() {
             @Override
             public void checkWriteAccess() throws RejectedException {
-                if(!databaseDirectory.canWrite()) {
+                if (!databaseDirectory.canWrite()) {
                     throw new RejectedException("db directory not writable!");
                 }
             }
@@ -109,17 +111,17 @@ public class DBVersionControl {
     }
 
     public void validateAndUpgradeDBVersion() throws CouldNotPerformException {
-        int currentVersion = detectCurrentDBVersion();
+        versionOnStart = detectCurrentDBVersion();
         int latestVersion = getLatestDBVersion();
 
-        if (currentVersion == latestVersion) {
+        if (versionOnStart == latestVersion) {
             logger.info("Database[" + databaseDirectory.getName() + "] is up-to-date.");
             return;
-        } else if (currentVersion > latestVersion) {
-            throw new InvalidStateException("DB Version[" + currentVersion + "] is newer than the latest supported version[" + latestVersion + "]!");
+        } else if (versionOnStart > latestVersion) {
+            throw new InvalidStateException("DB Version[" + versionOnStart + "] is newer than the latest supported version[" + latestVersion + "]!");
         }
 
-        upgradeDB(currentVersion, latestVersion);
+        upgradeDB(versionOnStart, latestVersion);
     }
 
     public void upgradeDB(final int currentVersion, final int targetVersion) throws CouldNotPerformException {
@@ -130,9 +132,8 @@ public class DBVersionControl {
             Map<File, JsonObject> dbSnapshot;
             final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
 
-
             // check if upgrade is needed and write access is permitted.
-            if(!currentToTargetConverterPipeline.isEmpty()) {
+            if (!currentToTargetConverterPipeline.isEmpty()) {
                 databaseWriteAccess.checkWriteAccess();
             }
 
@@ -267,14 +268,21 @@ public class DBVersionControl {
                 if (!versionFile.createNewFile()) {
                     throw new CouldNotPerformException("Could not create db version file!");
                 }
+                JsonObject versionJsonObject = new JsonObject();
+                versionJsonObject.addProperty(VERSION_FIELD, latestDBVersion);
+                FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
+                return;
             }
 
             // upgrade version
             try {
-                JsonObject versionJsonObject = new JsonObject();
+                String versionAsString = FileUtils.readFileToString(versionFile, "UTF-8");
+                versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
+                JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
+                versionJsonObject.remove(VERSION_FIELD);
                 versionJsonObject.addProperty(VERSION_FIELD, latestDBVersion);
                 FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
-            } catch (Exception ex) {
+            } catch (IOException | JsonSyntaxException | CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Could not write Field[" + VERSION_FIELD + "]!", ex);
             }
 
@@ -331,18 +339,18 @@ public class DBVersionControl {
         List<ConsistencyHandler> consistencyHandlerList = new ArrayList<>();
         String consistencyHandlerPackage = converterPackage.getName() + ".consistency";
 
-        List<String> executedHandlerList = detectExecutedVersionConsistencyHandler();
+        Set<String> executedHandlerList = detectExecutedVersionConsistencyHandler();
 
         String consistencyHandlerName = null;
         Class<? extends AbstractVersionConsistencyHandler> consistencyHandlerClass;
         Constructor<? extends ConsistencyHandler> constructor;
         try {
-            for (int version = 0; version <= latestDBVersion; version++) {
+            for (int version = versionOnStart; version <= latestDBVersion; version++) {
                 try {
                     consistencyHandlerName = entryType + "_" + version + "_VersionConsistencyHandler";
 
                     // filter already applied handler
-                    if(executedHandlerList.contains(consistencyHandlerName)) {
+                    if (executedHandlerList.contains(consistencyHandlerName)) {
                         continue;
                     }
 
@@ -357,7 +365,7 @@ public class DBVersionControl {
                 consistencyHandlerList.add(newInstance);
             }
             return consistencyHandlerList;
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException |java.lang.InstantiationException | IllegalArgumentException ex) {
+        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | java.lang.InstantiationException | IllegalArgumentException ex) {
             throw new CouldNotPerformException("Could not load consistencyHandler of Package[" + consistencyHandlerPackage + "]!", ex);
         }
     }
@@ -392,7 +400,7 @@ public class DBVersionControl {
                 JsonArray consistencyHandlerJsonArray = versionJsonObject.getAsJsonArray(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD);
 
                 // create if not exists.
-                if(consistencyHandlerJsonArray == null) {
+                if (consistencyHandlerJsonArray == null) {
                     consistencyHandlerJsonArray = new JsonArray();
                     versionJsonObject.add(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD, consistencyHandlerJsonArray);
                 }
@@ -404,7 +412,7 @@ public class DBVersionControl {
             }
 
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not register ConsistencyHandler["+versionConsistencyHandler.getClass().getSimpleName()+"] in current db version config of Database[" + databaseDirectory.getName() + "]!", ex);
+            throw new CouldNotPerformException("Could not register ConsistencyHandler[" + versionConsistencyHandler.getClass().getSimpleName() + "] in current db version config of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
 
@@ -414,7 +422,7 @@ public class DBVersionControl {
      * @return
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
-    public List<String> detectExecutedVersionConsistencyHandler() throws CouldNotPerformException {
+    public Set<String> detectExecutedVersionConsistencyHandler() throws CouldNotPerformException {
         try {
             // detect file
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
@@ -428,9 +436,9 @@ public class DBVersionControl {
                 String versionAsString = FileUtils.readFileToString(versionFile, "UTF-8");
                 versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
                 JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
-                List<String> handlerList = new ArrayList<>();
+                Set<String> handlerList = new HashSet<>();
                 JsonArray consistencyHandlerJsonArray = versionJsonObject.getAsJsonArray(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD);
-                if(consistencyHandlerJsonArray != null) {
+                if (consistencyHandlerJsonArray != null) {
                     consistencyHandlerJsonArray.forEach(entry -> handlerList.add(entry.getAsString()));
                 }
                 return handlerList;
