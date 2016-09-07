@@ -23,12 +23,11 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import java.util.List;
+import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -132,6 +131,11 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     @Override
     public boolean isConsistent() {
+        return true;
+    }
+
+    @Override
+    public boolean isSandbox() {
         return true;
     }
 }

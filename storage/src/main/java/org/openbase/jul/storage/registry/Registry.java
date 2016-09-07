@@ -1,4 +1,3 @@
-
 package org.openbase.jul.storage.registry;
 
 /*
@@ -24,7 +23,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Identifiable;
@@ -64,5 +62,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>, R extends Regist
     public boolean isReadOnly();
 
     public boolean isConsistent();
+
+    public boolean isSandbox();
 
 }
