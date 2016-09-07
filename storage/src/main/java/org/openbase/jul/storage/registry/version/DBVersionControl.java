@@ -405,6 +405,12 @@ public class DBVersionControl {
                     versionJsonObject.add(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD, consistencyHandlerJsonArray);
                 }
 
+                String versionConsistencyHandlerName = versionConsistencyHandler.getClass().getSimpleName();
+                for (int i = 0; i < consistencyHandlerJsonArray.size(); ++i) {
+                    if (consistencyHandlerJsonArray.get(i).getAsString().equals(versionConsistencyHandlerName)) {
+                        return;
+                    }
+                }
                 consistencyHandlerJsonArray.add(versionConsistencyHandler.getClass().getSimpleName());
                 FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
             } catch (CouldNotPerformException | IOException ex) {
