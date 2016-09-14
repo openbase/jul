@@ -55,7 +55,7 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
  * @param <MAP>
  * @param <R>
  */
-public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY, R>> extends AbstractRegistry<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY, R> {
+public class FileSynchronizedRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistryInterface<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistryInterface<KEY, ENTRY> {
 
     public enum DatabaseState {
 

@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -40,16 +39,16 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
 public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
 
     protected final DBVersionControl versionControl;
-    protected final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> registry;
+    protected final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>> registry;
 
-    public AbstractVersionConsistencyHandler(final DBVersionControl versionControl, final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> registry) throws org.openbase.jul.exception.InstantiationException {
+    public AbstractVersionConsistencyHandler(final DBVersionControl versionControl, final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>> registry) throws org.openbase.jul.exception.InstantiationException {
         this.versionControl = versionControl;
         this.registry = registry;
     }
 
     @Override
     public void shutdown() {
-        if(registry.isConsistent()) {
+        if (registry.isConsistent() && !registry.isSandbox()) {
             try {
                 versionControl.registerConsistencyHandlerExecution(this);
             } catch (CouldNotPerformException ex) {

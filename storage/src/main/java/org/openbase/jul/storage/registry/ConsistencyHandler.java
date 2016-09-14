@@ -23,9 +23,9 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Identifiable;
-import java.util.Map;
 import org.openbase.jul.iface.Shutdownable;
 
 /**
@@ -38,7 +38,7 @@ import org.openbase.jul.iface.Shutdownable;
  * @param <MAP>
  * @param <R>
  */
-public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE, R>> extends Shutdownable {
+public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE>> extends Shutdownable {
 
     /**
      * Method for establishing a registry data consistency.
@@ -54,11 +54,11 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP ex
     public void processData(final KEY id, final VALUE entry, final MAP entryMap, final R registry) throws CouldNotPerformException, EntryModification;
 
     /**
-     * Method can be internally used to clear any temporally maps or other caches which are only used for one consistency check iterations.
-     * This method will called each time the registry consistency check starts a new iteration.
+     * Method can be internally used to clear any temporally maps or other caches which are only used for one consistency check iteration.
+     * This method is called each time the registry consistency check starts a new iteration.
      *
      * In some cases it makes sense to cache any properties e.g. scopes or ids which should be globally unique. This check can be performed by caching these values within a map.
-     * To make sure these maps does not interfere between different consistency check iterations this method can be used to clear these kind of caches.
+     * To make sure these maps do not interfere between different consistency check iterations this method can be used to clear these kind of caches.
      *
      */
     public void reset();

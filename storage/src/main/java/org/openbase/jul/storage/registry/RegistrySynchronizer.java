@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import java.util.Map;
 import org.openbase.jps.core.JPService;
@@ -57,14 +56,14 @@ import org.slf4j.LoggerFactory;
 public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Registry<KEY, ENTRY, ?> localRegistry;
+    private final Registry<KEY, ENTRY> localRegistry;
     private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
     private final Factory<ENTRY, CONFIG_M> factory;
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry;
 
-    public RegistrySynchronizer(final Registry<KEY, ENTRY, ?> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
+    public RegistrySynchronizer(final Registry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.localRegistry = registry;
             this.remoteRegistry = remoteRegistry;
@@ -166,32 +165,32 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
             MultiException.ExceptionStack exceptionStack = null;
             int counter;
             try {
-                if(removeExceptionStack != null) {
+                if (removeExceptionStack != null) {
                     counter = removeExceptionStack.size();
                 } else {
                     counter = 0;
                 }
-                MultiException.checkAndThrow("Could not remove "+counter+" entries!", removeExceptionStack);
+                MultiException.checkAndThrow("Could not remove " + counter + " entries!", removeExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
             try {
-                if(updateExceptionStack != null) {
+                if (updateExceptionStack != null) {
                     counter = updateExceptionStack.size();
                 } else {
                     counter = 0;
                 }
-                MultiException.checkAndThrow("Could not update "+counter+" entries!", updateExceptionStack);
+                MultiException.checkAndThrow("Could not update " + counter + " entries!", updateExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
             try {
-                if(registerExceptionStack != null) {
+                if (registerExceptionStack != null) {
                     counter = registerExceptionStack.size();
                 } else {
                     counter = 0;
                 }
-                MultiException.checkAndThrow("Could not register "+counter+" entries!", registerExceptionStack);
+                MultiException.checkAndThrow("Could not register " + counter + " entries!", registerExceptionStack);
             } catch (CouldNotPerformException ex) {
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
@@ -207,17 +206,16 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     }
 
     public ENTRY update(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
-        ENTRY entry = localRegistry.get(remoteRegistry.getKey(config));
+        ENTRY entry = localRegistry.get(remoteRegistry.getId(config));
         entry.applyConfigUpdate(config);
         return entry;
     }
 
     public ENTRY remove(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
-        return localRegistry.remove(getKey(config));
+        return localRegistry.remove(getId(config));
     }
-    
-    // TODO: move to interface or a util class. Redundant method - also used in RemoteRegistry and IdentifiableMessage
-    public KEY getKey(final CONFIG_M entry) throws CouldNotPerformException {
+
+    public KEY getId(final CONFIG_M entry) throws CouldNotPerformException {
         KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
         if (!localRegistry.contains(key)) {
             throw new CouldNotPerformException("Entry for given Key[" + key + "] is not available for local registry!");

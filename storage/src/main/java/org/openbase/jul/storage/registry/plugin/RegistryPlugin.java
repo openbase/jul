@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
@@ -37,7 +36,7 @@ import org.openbase.jul.storage.registry.Registry;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Initializable<Registry<KEY, ENTRY, ?>>, Shutdownable {
+public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Initializable<Registry<KEY, ENTRY>>, Shutdownable {
 
     public void beforeRegister(final ENTRY entry) throws RejectedException;
 

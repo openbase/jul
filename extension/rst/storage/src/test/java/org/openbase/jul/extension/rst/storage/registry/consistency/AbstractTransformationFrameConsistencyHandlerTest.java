@@ -25,20 +25,21 @@ package org.openbase.jul.extension.rst.storage.registry.consistency;
  */
 import java.util.List;
 import java.util.Map;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.RejectedException;
-import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.storage.registry.EntryModification;
-import org.openbase.jul.storage.registry.ProtoBufRegistryInterface;
-import org.openbase.jul.storage.registry.Registry;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.RejectedException;
+import org.openbase.jul.extension.protobuf.IdentifiableMessage;
+import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.storage.registry.EntryModification;
+import org.openbase.jul.storage.registry.ProtoBufRegistryInterface;
+import org.openbase.jul.storage.registry.Registry;
 import rst.spatial.LocationConfigType;
 import rst.spatial.LocationConfigType.LocationConfig;
 import rst.spatial.PlacementConfigType;
@@ -264,6 +265,31 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public boolean isConsistent() {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public boolean isSandbox() {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>> getLatestValue() throws NotAvailableException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void addObserver(Observer<Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void removeObserver(Observer<Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void shutdown() {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 

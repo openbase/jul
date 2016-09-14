@@ -64,7 +64,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         replaceInternalMap(newRegistryMap);
     }
 
-    public KEY getKey(final M entry) throws CouldNotPerformException {
+    public KEY getId(final M entry) throws CouldNotPerformException {
         KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
         if (!contains(key)) {
             throw new CouldNotPerformException("Entry for given Key[" + key + "] is not available!");
@@ -101,7 +101,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public boolean contains(final M entry) throws CouldNotPerformException {
         KEY key;
         try {
-            key = getKey(entry);
+            key = getId(entry);
         } catch (CouldNotPerformException ex) {
             return false;
         }

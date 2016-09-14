@@ -23,12 +23,13 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.RejectedException;
-import org.openbase.jul.iface.Identifiable;
 import java.util.List;
 import java.util.Map;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.RejectedException;
+import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.pattern.Observer;
 
 /**
  *
@@ -38,7 +39,7 @@ import java.util.Map;
  * @param <MAP>
  * @param <R>
  */
-public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
+public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
 
     @Override
     public ENTRY register(ENTRY entry) throws CouldNotPerformException {
@@ -52,14 +53,17 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     @Override
     public void sync(MAP map) {
+        // Not needed for mock sandbox!
     }
 
     @Override
     public void registerConsistencyHandler(ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
+        // Not needed for mock sandbox!
     }
 
     @Override
     public void removeConsistencyHandler(ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
+        // Not needed for mock sandbox!
     }
 
     @Override
@@ -94,10 +98,12 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     @Override
     public void clear() throws CouldNotPerformException {
+        // Not needed for mock sandbox!
     }
 
     @Override
     public void checkWriteAccess() throws RejectedException {
+        // Not needed for mock sandbox!
     }
 
     @Override
@@ -107,7 +113,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     @Override
     public void replaceInternalMap(Map<KEY, ENTRY> map) {
-
+        // Not needed for mock sandbox!
     }
 
     @Override
@@ -132,6 +138,31 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     @Override
     public boolean isConsistent() {
+        return true;
+    }
+
+    @Override
+    public void addObserver(Observer<Map<KEY, ENTRY>> observer) {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
+    }
+
+    @Override
+    public void removeObserver(Observer<Map<KEY, ENTRY>> observer) {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
+    }
+
+    @Override
+    public Map<KEY, ENTRY> getLatestValue() throws NotAvailableException {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
+    }
+
+    @Override
+    public void shutdown() {
+        // Not needed for mock sandbox!
+    }
+
+    @Override
+    public boolean isSandbox() {
         return true;
     }
 }
