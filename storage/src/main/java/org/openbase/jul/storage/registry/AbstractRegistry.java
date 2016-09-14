@@ -26,6 +26,7 @@ package org.openbase.jul.storage.registry;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -44,7 +45,10 @@ import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.iface.Shutdownable;
+import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
+import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.RegistryPluginPool;
@@ -76,6 +80,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private final ReentrantReadWriteLock registryLock, consistencyCheckLock;
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
+    private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
 
     private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
 
@@ -93,6 +98,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.pluginPool.init(this);
             this.sandbox = new MockRegistrySandbox<>();
             this.consistencyHandlerList = new ArrayList<>();
+            this.dependingRegistryMap = new HashMap<>();
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
 
                 @Override
@@ -385,12 +391,54 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
+        if (!isDependingOnConsistentRegistries()) {
+            throw new RejectedException("At least one depending registry is inconsistent!");
+        }
+
         pluginPool.checkAccess();
 
         if (!consistent) {
             logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
             throw new RejectedException("Registry is inconsistent!");
         }
+    }
+
+    /**
+     * If this registry depends on other registries, this method can be used to tell this registry if all depending registries are consistent.
+     *
+     * @return The method returns should return false if at least one depending registry is not consistent!
+     */
+    protected boolean isDependingOnConsistentRegistries() {
+        return dependingRegistryMap.keySet().stream().noneMatch((registry) -> (!registry.isConsistent()));
+    }
+
+    /**
+     * If this registry depends on other registries, this method can be used to tell this registry all depending registries.
+     * For instance this is used to switch to read only mode in case one depending registry is not consistent.
+     * Consistency checks are skipped as well if at least one depending registry is not consistent.
+     *
+     * @param registry the dependency of these registry.
+     */
+    public void registerDependency(final Registry registry) {
+        // check if already registered
+        if (dependingRegistryMap.containsKey(registry)) {
+            return;
+        }
+        dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
+
+    }
+
+    /**
+     * This method allows the removal of a registered registry dependency.
+     *
+     * @param registry the dependency to remove.
+     */
+    public void removeDependency(final Registry registry) {
+        if (!dependingRegistryMap.containsKey(registry)) {
+            logger.warn("Could not remove a dependency which was never registered!");
+            return;
+        }
+        dependingRegistryMap.remove(registry).shutdown();
     }
 
     @Override
@@ -456,6 +504,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         if (isEmpty()) {
             logger.debug("Skip consistency check because registry is empty.");
+            return modificationCounter;
+        }
+
+        if (!isDependingOnConsistentRegistries()) {
+            logger.warn("Skip consistency check because registry is depending on at least one inconsistent registry!");
             return modificationCounter;
         }
 
@@ -659,5 +712,27 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public String toString() {
         return getName();
+    }
+
+    private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
+
+        private final Registry dependency;
+
+        public DependencyConsistencyCheckTrigger(final Registry dependency) {
+            this.dependency = dependency;
+            addObserver(this);
+        }
+
+        @Override
+        public void update(Observable source, Object data) throws Exception {
+            if (dependency.isConsistent()) {
+                checkConsistency();
+            }
+        }
+
+        @Override
+        public void shutdown() {
+            removeObserver(this);
+        }
     }
 }

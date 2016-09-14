@@ -36,6 +36,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.storage.registry.EntryModification;
 import org.openbase.jul.storage.registry.ProtoBufRegistryInterface;
 import org.openbase.jul.storage.registry.Registry;
@@ -269,6 +270,26 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public boolean isSandbox() {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>> getLatestValue() throws NotAvailableException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void addObserver(Observer<Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void removeObserver(Observer<Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void shutdown() {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 

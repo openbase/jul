@@ -24,9 +24,11 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import java.util.List;
+import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Writable;
+import org.openbase.jul.pattern.Observable;
 
 /**
  *
@@ -35,7 +37,7 @@ import org.openbase.jul.iface.Writable;
  * @param <ENTRY>
  * @param <R>
  */
-public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable {
+public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>> {
 
     public String getName();
 
