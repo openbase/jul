@@ -39,9 +39,9 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
 public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
 
     protected final DBVersionControl versionControl;
-    protected final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> registry;
+    protected final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>> registry;
 
-    public AbstractVersionConsistencyHandler(final DBVersionControl versionControl, final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> registry) throws org.openbase.jul.exception.InstantiationException {
+    public AbstractVersionConsistencyHandler(final DBVersionControl versionControl, final FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>> registry) throws org.openbase.jul.exception.InstantiationException {
         this.versionControl = versionControl;
         this.registry = registry;
     }

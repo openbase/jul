@@ -23,11 +23,10 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
+import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import java.util.List;
 
 /**
  *
@@ -36,21 +35,21 @@ import java.util.List;
  * @param <M>
  * @param <MB>
  */
-public interface ProtoBufRegistryInterface<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> {
+public interface ProtoBufRegistryInterface<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistryInterface<KEY, IdentifiableMessage<KEY, M, MB>> {
 
-    public M register(final M entry) throws CouldNotPerformException ;
-    
-    public boolean contains(final M key) throws CouldNotPerformException ;
+    public M register(final M entry) throws CouldNotPerformException;
 
-    public M update(final M entry) throws CouldNotPerformException ;
+    public boolean contains(final M key) throws CouldNotPerformException;
 
-    public M remove(final M entry) throws CouldNotPerformException ;
+    public M update(final M entry) throws CouldNotPerformException;
+
+    public M remove(final M entry) throws CouldNotPerformException;
 
     public M getMessage(final KEY key) throws CouldNotPerformException;
 
     public List<M> getMessages() throws CouldNotPerformException;
 
     public MB getBuilder(final KEY key) throws CouldNotPerformException;
-    
+
 //    public IdGenerator<KEY, M> getIdGenerator();
 }

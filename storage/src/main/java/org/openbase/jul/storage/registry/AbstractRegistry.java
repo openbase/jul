@@ -61,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * @param <R> Registry
  * @param <P> RegistryPluginType
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY, R> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

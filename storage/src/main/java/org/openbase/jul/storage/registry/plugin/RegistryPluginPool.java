@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.ArrayList;
 import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -48,14 +47,14 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     protected final Logger logger = LoggerFactory.getLogger(RegistryPluginPool.class);
 
     protected final List<P> pluginList;
-    protected Registry<KEY, ENTRY, ?> registry;
+    protected Registry<KEY, ENTRY> registry;
 
     public RegistryPluginPool() {
         this.pluginList = new ArrayList<>();
     }
 
     @Override
-    public void init(Registry<KEY, ENTRY, ?> registry) throws InitializationException {
+    public void init(Registry<KEY, ENTRY> registry) throws InitializationException {
         this.registry = registry;
     }
 

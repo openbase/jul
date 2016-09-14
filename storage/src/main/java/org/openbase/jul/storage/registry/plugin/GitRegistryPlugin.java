@@ -26,6 +26,13 @@ package org.openbase.jul.storage.registry.plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.DetachedHeadException;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPTestMode;
@@ -41,13 +48,6 @@ import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.openbase.jul.storage.registry.Registry;
 import org.openbase.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
 import org.openbase.jul.storage.registry.jp.JPInitializeDB;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.DetachedHeadException;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +78,7 @@ public class GitRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Fil
     }
 
     @Override
-    public void init(Registry<KEY, ENTRY, ?> config) throws InitializationException, InterruptedException {
+    public void init(Registry<KEY, ENTRY> config) throws InitializationException, InterruptedException {
     }
 
     private void initialSync() throws CouldNotPerformException {

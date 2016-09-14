@@ -38,7 +38,7 @@ import org.openbase.jul.iface.Shutdownable;
  * @param <MAP>
  * @param <R>
  */
-public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE, R>> extends Shutdownable {
+public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE>> extends Shutdownable {
 
     /**
      * Method for establishing a registry data consistency.

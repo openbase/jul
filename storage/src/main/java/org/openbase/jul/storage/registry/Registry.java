@@ -35,7 +35,7 @@ import org.openbase.jul.iface.Writable;
  * @param <ENTRY>
  * @param <R>
  */
-public interface Registry<KEY, ENTRY extends Identifiable<KEY>, R extends Registry<KEY, ENTRY, R>> extends Writable {
+public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable {
 
     public String getName();
 

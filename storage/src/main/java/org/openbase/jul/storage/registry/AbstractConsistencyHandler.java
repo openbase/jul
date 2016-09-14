@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.Map;
 import org.openbase.jul.iface.Identifiable;
 import org.slf4j.Logger;
@@ -37,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * @param <MAP>
  * @param <R>
  */
-public abstract class AbstractConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE, R>> implements ConsistencyHandler<KEY, VALUE, MAP, R> {
+public abstract class AbstractConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP extends Map<KEY, VALUE>, R extends Registry<KEY, VALUE>> implements ConsistencyHandler<KEY, VALUE, MAP, R> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

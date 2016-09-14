@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
@@ -33,13 +32,12 @@ import org.openbase.jul.iface.Identifiable;
  * @author mpohling
  * @param <KEY>
  * @param <VALUE>
- * @param <R>
  */
-public interface FileSynchronizedRegistryInterface<KEY, VALUE extends Identifiable<KEY>, R extends FileSynchronizedRegistryInterface<KEY, VALUE, R>> extends Registry<KEY, VALUE, R> {
+public interface FileSynchronizedRegistryInterface<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
 
     public void loadRegistry() throws CouldNotPerformException;
 
     public void saveRegistry() throws CouldNotPerformException;
-    
-    public Integer getDBVersion() throws NotAvailableException;;
+
+    public Integer getDBVersion() throws NotAvailableException;
 }

@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Identifiable;
@@ -41,7 +40,7 @@ import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
  * @param <R>
  * @param <P>
  */
-public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY, R>, P extends RegistryPlugin<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
+public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
 
     private RegistryCloner<KEY, ENTRY, MAP> cloner;
 
