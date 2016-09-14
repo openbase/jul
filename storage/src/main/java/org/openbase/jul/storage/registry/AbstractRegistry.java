@@ -704,6 +704,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return name;
     }
 
+    @Override
     public boolean isSandbox() {
         return false;
     }

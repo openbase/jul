@@ -65,4 +65,6 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>, R extends Regist
 
     public boolean isConsistent();
 
+    public boolean isSandbox();
+
 }

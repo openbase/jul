@@ -57,7 +57,7 @@ public abstract class LastValueHandler<V> implements Runnable {
         this.name = name;
         this.delayUntilNext = delayUntilNext;
         this.value = null;
-        this.valueChanged = true;
+        this.valueChanged = false;
         this.oldValue = null;
         this.executer = null;
     }

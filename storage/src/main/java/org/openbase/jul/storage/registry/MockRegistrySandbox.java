@@ -160,4 +160,9 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     public void shutdown() {
         // Not needed for mock sandbox!
     }
+
+    @Override
+    public boolean isSandbox() {
+        return true;
+    }
 }

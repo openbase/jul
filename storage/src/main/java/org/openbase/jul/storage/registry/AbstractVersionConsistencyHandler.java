@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -49,7 +48,7 @@ public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<K
 
     @Override
     public void shutdown() {
-        if(registry.isConsistent()) {
+        if (registry.isConsistent() && !registry.isSandbox()) {
             try {
                 versionControl.registerConsistencyHandlerExecution(this);
             } catch (CouldNotPerformException ex) {
