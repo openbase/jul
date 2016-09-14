@@ -28,10 +28,10 @@ import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 import java.util.HashMap;
 import java.util.Map;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
@@ -40,7 +40,7 @@ import java.util.Map;
  * @param <M>
  * @param <MB>
  */
-public class ProtoBufCloner<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> implements RegistryCloner<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>> {
+public class ProtoBufCloner<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> implements RegistryCloner<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>> {
 
     private final IdGenerator<KEY, M> idGenerator;
 
@@ -72,9 +72,9 @@ public class ProtoBufCloner<KEY extends Comparable<KEY>, M extends GeneratedMess
     }
 
     @Override
-    public ProtoBufMessageMapInterface<KEY, M, MB> deepCloneRegistryMap(ProtoBufMessageMapInterface<KEY, M, MB> map) throws CouldNotPerformException {
+    public ProtoBufMessageMap<KEY, M, MB> deepCloneRegistryMap(ProtoBufMessageMap<KEY, M, MB> map) throws CouldNotPerformException {
         try {
-            ProtoBufMessageMapInterface<KEY, M, MB> mapClone = new ProtoBufMessageMapWrapper<>();
+            ProtoBufMessageMap<KEY, M, MB> mapClone = new ProtoBufMessageMapWrapper<>();
 
             for (Map.Entry<KEY, IdentifiableMessage<KEY, M, MB>> entry : map.entrySet()) {
                 mapClone.put(entry.getKey(), deepCloneEntry(entry.getValue()));

@@ -38,12 +38,12 @@ import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.storage.registry.EntryModification;
-import org.openbase.jul.storage.registry.ProtoBufRegistryInterface;
 import org.openbase.jul.storage.registry.Registry;
 import rst.spatial.LocationConfigType;
 import rst.spatial.LocationConfigType.LocationConfig;
 import rst.spatial.PlacementConfigType;
 import rst.spatial.PlacementConfigType.PlacementConfig;
+import org.openbase.jul.storage.registry.ProtoBufRegistry;
 
 /**
  *
@@ -138,7 +138,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
     public class AbstractTransformationFrameConsistencyHandlerImpl extends AbstractTransformationFrameConsistencyHandler {
 
         public AbstractTransformationFrameConsistencyHandlerImpl() {
-            super(new ProtoBufRegistryInterface<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder>() {
+            super(new ProtoBufRegistry<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder>() {
 
                 @Override
                 public void checkWriteAccess() throws RejectedException {

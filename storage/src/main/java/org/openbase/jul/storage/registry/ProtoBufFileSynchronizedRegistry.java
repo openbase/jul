@@ -35,14 +35,14 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapImpl;
 import org.openbase.jul.extension.protobuf.container.transformer.IdentifiableMessageTransformer;
 import org.openbase.jul.extension.protobuf.processing.ProtoBufFileProcessor;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileProvider;
 import org.openbase.jul.storage.registry.jp.JPGitRegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.GitRegistryPlugin;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
@@ -52,17 +52,17 @@ import org.openbase.jul.storage.registry.plugin.GitRegistryPlugin;
  * @param <MB> Message Builder
  * @param <SIB> Synchronized internal builder
  */
-public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> implements ProtoBufRegistryInterface<KEY, M, MB> {
+public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends FileSynchronizedRegistryImpl<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistry<KEY, M, MB> {
 
-    private final ProtoBufMessageMap<KEY, M, MB, SIB> protobufMessageMap;
+    private final ProtoBufMessageMapImpl<KEY, M, MB, SIB> protobufMessageMap;
     private final IdGenerator<KEY, M> idGenerator;
     private final Class<M> messageClass;
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
-        this(messageClass, new ProtoBufMessageMap<>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
+        this(messageClass, new ProtoBufMessageMapImpl<>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
     }
 
-    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMap<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMapImpl<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new IdentifiableMessageTransformer<>(messageClass, idGenerator)), fileProvider);
         try {
             this.idGenerator = idGenerator;

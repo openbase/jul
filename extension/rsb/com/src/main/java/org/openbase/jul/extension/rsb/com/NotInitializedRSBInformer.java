@@ -24,19 +24,19 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBInformerInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import rsb.Event;
 import rsb.Scope;
+import org.openbase.jul.extension.rsb.iface.RSBInformer;
 
 /**
  *
  * @author mpohling
  * @param <M>
  */
-public class NotInitializedRSBInformer<M extends Object> extends NotInitializedRSBParticipant implements RSBInformerInterface<M> {
+public class NotInitializedRSBInformer<M extends Object> extends NotInitializedRSBParticipant implements RSBInformer<M> {
 
     public NotInitializedRSBInformer() {
     }

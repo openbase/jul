@@ -56,10 +56,10 @@ import org.openbase.jul.iface.Writable;
 import org.openbase.jul.storage.file.FileProvider;
 import org.openbase.jul.storage.registry.AbstractVersionConsistencyHandler;
 import org.openbase.jul.storage.registry.ConsistencyHandler;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistryInterface;
 import org.openbase.jul.storage.registry.jp.JPInitializeDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 
 /**
  *
@@ -335,7 +335,7 @@ public class DBVersionControl {
      * @return the consistency handler list.
      * @throws CouldNotPerformException
      */
-    public List<ConsistencyHandler> loadDBVersionConsistencyHandlers(final FileSynchronizedRegistryInterface registry) throws CouldNotPerformException {
+    public List<ConsistencyHandler> loadDBVersionConsistencyHandlers(final FileSynchronizedRegistry registry) throws CouldNotPerformException {
         List<ConsistencyHandler> consistencyHandlerList = new ArrayList<>();
         String consistencyHandlerPackage = converterPackage.getName() + ".consistency";
 
@@ -360,7 +360,7 @@ public class DBVersionControl {
                     logger.debug("No ConsistencyHandler[" + consistencyHandlerName + "] implemented for Version[" + version + "].", ex);
                     continue;
                 }
-                constructor = consistencyHandlerClass.getConstructor(getClass(), FileSynchronizedRegistryInterface.class);
+                constructor = consistencyHandlerClass.getConstructor(getClass(), FileSynchronizedRegistry.class);
                 ConsistencyHandler newInstance = constructor.newInstance(this, registry);
                 consistencyHandlerList.add(newInstance);
             }

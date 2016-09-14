@@ -33,7 +33,7 @@ import rsb.Event;
  * @author Divine Threepwood
  * @param <DataType>
  */
-public interface RSBInformerInterface<DataType extends Object> extends RSBParticipantInterface {
+public interface RSBInformer<DataType extends Object> extends RSBParticipant {
 
     /**
      * Send an {@link Event} to all subscribed participants.

@@ -24,7 +24,6 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBListenerInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -33,12 +32,13 @@ import java.util.List;
 import rsb.Handler;
 import rsb.Scope;
 import rsb.filter.Filter;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public class NotInitializedRSBListener extends NotInitializedRSBParticipant implements RSBListenerInterface {
+public class NotInitializedRSBListener extends NotInitializedRSBParticipant implements RSBListener {
 
     public NotInitializedRSBListener() {
     }

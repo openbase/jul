@@ -29,7 +29,6 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
@@ -52,6 +51,7 @@ import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import rst.spatial.LocationConfigType.LocationConfig;
 import rst.spatial.LocationRegistryDataType.LocationRegistryData;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 
 /**
  *
@@ -307,7 +307,7 @@ public class RSBCommunicationServiceTest {
         }
 
         @Override
-        public void registerMethods(RSBLocalServerInterface server) throws CouldNotPerformException {
+        public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
         }
     }
 

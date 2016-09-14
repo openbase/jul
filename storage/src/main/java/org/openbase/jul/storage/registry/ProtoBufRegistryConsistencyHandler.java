@@ -26,7 +26,7 @@ package org.openbase.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
@@ -37,6 +37,6 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapInterface
  * @param <M>
  * @param <MB>
  */
-public interface ProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> {
+public interface ProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> {
     
 }

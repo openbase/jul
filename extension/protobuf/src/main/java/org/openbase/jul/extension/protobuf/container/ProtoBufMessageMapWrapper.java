@@ -39,12 +39,12 @@ import org.openbase.jul.extension.protobuf.IdentifiableMessage;
  * @param <MB>
  * @param <SIB>
  */
-public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends HashMap<KEY, IdentifiableMessage<KEY, M, MB>> implements ProtoBufMessageMapInterface<KEY, M, MB> {
+public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends HashMap<KEY, IdentifiableMessage<KEY, M, MB>> implements ProtoBufMessageMap<KEY, M, MB> {
 
     public ProtoBufMessageMapWrapper() {
     }
 
-    public ProtoBufMessageMapWrapper(final ProtoBufMessageMapInterface<KEY, M, MB> entryMap) {
+    public ProtoBufMessageMapWrapper(final ProtoBufMessageMap<KEY, M, MB> entryMap) {
         putAll(entryMap);
     }
 

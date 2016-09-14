@@ -23,7 +23,6 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.extension.rsb.iface.RSBParticipantInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -37,13 +36,14 @@ import rsb.ParticipantId;
 import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
+import org.openbase.jul.extension.rsb.iface.RSBParticipant;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  * @param <P>
  */
-public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipantInterface {
+public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipant {
 
     private final Logger logger = LoggerFactory.getLogger(RSBSynchronizedParticipant.class);
 

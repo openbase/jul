@@ -24,16 +24,19 @@ package org.openbase.jul.extension.rsb.iface;
  * #L%
  */
 
-import org.openbase.jul.exception.CouldNotPerformException;
-import rsb.patterns.Callback;
+import org.openbase.jul.exception.NotAvailableException;
+import java.util.Collection;
+import rsb.patterns.Method;
 
 /**
  *
- * @author mpohling
+ * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public interface RSBLocalServerInterface extends RSBServerInterface {
+public interface RSBServer extends RSBParticipant {
 
-    public void addMethod(String name, Callback callback) throws CouldNotPerformException;
+    public Collection<? extends Method> getMethods() throws NotAvailableException;
 
-    public void waitForShutdown() throws CouldNotPerformException, InterruptedException;
+    public Method getMethod(String name) throws NotAvailableException;
+
+    public boolean hasMethod(String name);
 }

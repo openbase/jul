@@ -23,7 +23,6 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.InstantiationException;
@@ -41,12 +40,13 @@ import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.patterns.Callback;
 import rsb.patterns.LocalServer;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 
 /**
  *
  * @author mpohling
  */
-public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServer> implements RSBLocalServerInterface {
+public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServer> implements RSBLocalServer {
 
     protected final Logger logger = LoggerFactory.getLogger(RSBSynchronizedLocalServer.class);
 

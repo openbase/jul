@@ -29,7 +29,6 @@ import java.util.concurrent.TimeoutException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -39,12 +38,13 @@ import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.patterns.RemoteServer;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteServer> implements RSBRemoteServerInterface {
+public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteServer> implements RSBRemoteServer {
 
     protected final Logger logger = LoggerFactory.getLogger(RSBSynchronizedLocalServer.class);
 

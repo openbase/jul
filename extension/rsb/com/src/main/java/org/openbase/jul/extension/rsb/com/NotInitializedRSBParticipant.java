@@ -24,7 +24,6 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBParticipantInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -32,12 +31,13 @@ import rsb.Factory;
 import rsb.ParticipantId;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
+import org.openbase.jul.extension.rsb.iface.RSBParticipant;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public abstract class NotInitializedRSBParticipant implements RSBParticipantInterface {
+public abstract class NotInitializedRSBParticipant implements RSBParticipant {
 
     private final Scope scope;
 

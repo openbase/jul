@@ -23,27 +23,33 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.Map;
+import com.google.protobuf.GeneratedMessage;
+import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author mpohling
  * @param <KEY>
- * @param <ENTRY>
- * @param <MAP>
- * @param <R>
+ * @param <M>
+ * @param <MB>
  */
-public interface RegistrySandboxInterface<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>> extends Registry<KEY, ENTRY> {
+public interface ProtoBufRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> {
 
-    public void sync(final MAP map) throws CouldNotPerformException;
+    public M register(final M entry) throws CouldNotPerformException;
 
-    public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
+    public boolean contains(final M key) throws CouldNotPerformException;
 
-    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
+    public M update(final M entry) throws CouldNotPerformException;
 
-    void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException;
+    public M remove(final M entry) throws CouldNotPerformException;
 
-    public ENTRY load(final ENTRY entry) throws CouldNotPerformException;
+    public M getMessage(final KEY key) throws CouldNotPerformException;
+
+    public List<M> getMessages() throws CouldNotPerformException;
+
+    public MB getBuilder(final KEY key) throws CouldNotPerformException;
+
+//    public IdGenerator<KEY, M> getIdGenerator();
 }

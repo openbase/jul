@@ -27,7 +27,6 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.extension.rsb.iface.RSBInformerInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -37,13 +36,14 @@ import rsb.InitializeException;
 import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
+import org.openbase.jul.extension.rsb.iface.RSBInformer;
 
 /**
  *
  * @author Divine Threepwood
  * @param <DT>
  */
-public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedParticipant<Informer<DT>> implements RSBInformerInterface<DT> {
+public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedParticipant<Informer<DT>> implements RSBInformer<DT> {
 
     protected final Logger logger = LoggerFactory.getLogger(RSBSynchronizedInformer.class);
 

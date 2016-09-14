@@ -30,9 +30,8 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.openhab.binding.interfaces.OpenHABRemote;
 import org.openbase.jul.extension.rsb.com.RPCHelper;
-import org.openbase.jul.extension.rsb.com.RSBFactory;
+import org.openbase.jul.extension.rsb.com.RSBFactoryImpl;
 import org.openbase.jul.extension.rsb.com.RSBRemoteService;
-import org.openbase.jul.extension.rsb.iface.RSBListenerInterface;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -40,6 +39,7 @@ import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
 import rst.homeautomation.openhab.OpenhabStateType.OpenhabState;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**
  *
@@ -65,7 +65,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabStat
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(OpenhabState.getDefaultInstance()));
     }
 
-    private RSBListenerInterface openhabCommandListener, openhabUpdateListener;
+    private RSBListener openhabCommandListener, openhabUpdateListener;
     private final boolean hardwareSimulationMode;
 
     public AbstractOpenHABRemote(final boolean hardwareSimulationMode) {
@@ -82,8 +82,8 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabStat
     @Override
     protected void postInit() throws InitializationException, InterruptedException {
         try {
-            openhabCommandListener = RSBFactory.getInstance().createSynchronizedListener(SCOPE_OPENHAB_COMMAND);
-            openhabUpdateListener = RSBFactory.getInstance().createSynchronizedListener(SCOPE_OPENHAB_UPDATE);
+            openhabCommandListener = RSBFactoryImpl.getInstance().createSynchronizedListener(SCOPE_OPENHAB_COMMAND);
+            openhabUpdateListener = RSBFactoryImpl.getInstance().createSynchronizedListener(SCOPE_OPENHAB_UPDATE);
 
             openhabCommandListener.addHandler((Event event) -> {
                 try {
