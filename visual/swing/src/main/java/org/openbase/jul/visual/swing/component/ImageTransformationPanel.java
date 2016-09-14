@@ -39,13 +39,12 @@ import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.visual.swing.image.ImageLoader;
 
 /**
  *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ImageTransformationPanel extends javax.swing.JPanel {
 

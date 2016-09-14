@@ -32,7 +32,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface Pingable {
     /**

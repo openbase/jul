@@ -26,7 +26,7 @@ package org.openbase.jul.exception;
 
 /**
  *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class VerificationFailedException extends CouldNotPerformException {
 
