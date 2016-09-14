@@ -23,12 +23,11 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.ArrayList;
+import java.util.List;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.NotAvailableException;
-import java.util.ArrayList;
-import java.util.List;
-import org.openbase.jul.iface.Shutdownable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
