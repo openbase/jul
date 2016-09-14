@@ -720,7 +720,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         public DependencyConsistencyCheckTrigger(final Registry dependency) {
             this.dependency = dependency;
-            addObserver(this);
+            dependency.addObserver(this);
         }
 
         @Override
