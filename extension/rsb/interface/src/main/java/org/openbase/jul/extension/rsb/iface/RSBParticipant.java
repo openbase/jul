@@ -36,7 +36,7 @@ import rsb.config.ParticipantConfig;
  *
  * @author mpohling
  */
-public interface RSBParticipantInterface extends Activatable {
+public interface RSBParticipant extends Activatable {
 
     public String getKind() throws NotAvailableException;
 

@@ -26,19 +26,28 @@ package org.openbase.jul.extension.rsb.iface;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import java.util.Collection;
-import rsb.patterns.Callback;
-import rsb.patterns.Method;
+import java.util.Iterator;
+import java.util.List;
+import rsb.Handler;
+import rsb.filter.Filter;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * @author mpohling
  */
-public interface RSBServerInterface extends RSBParticipantInterface {
+public interface RSBListener extends RSBParticipant {
 
-    public Collection<? extends Method> getMethods() throws NotAvailableException;
+    public List<Filter> getFilters() throws NotAvailableException;
 
-    public Method getMethod(String name) throws NotAvailableException;
+    public Iterator<Filter> getFilterIterator() throws NotAvailableException;
 
-    public boolean hasMethod(String name);
+    public void addFilter(Filter filter) throws CouldNotPerformException;
+
+    public List<Handler> getHandlers() throws NotAvailableException;
+
+    public Iterator<Handler> getHandlerIterator() throws CouldNotPerformException;
+
+    public void addHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
+
+    public void removeHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
 }

@@ -39,7 +39,7 @@ import org.openbase.jul.pattern.Observer;
  * @param <MAP>
  * @param <R>
  */
-public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
+public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>> implements RegistrySandbox<KEY, ENTRY, MAP, R> {
 
     @Override
     public ENTRY register(ENTRY entry) throws CouldNotPerformException {

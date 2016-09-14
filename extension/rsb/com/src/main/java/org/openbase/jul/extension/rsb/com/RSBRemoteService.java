@@ -44,8 +44,6 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
-import org.openbase.jul.extension.rsb.iface.RSBListenerInterface;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.pattern.Observable;
@@ -64,6 +62,8 @@ import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
 import rst.rsb.ScopeType;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 
 /**
  *
@@ -88,9 +88,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         RSBSharedConnectionConfig.load();
     }
 
-    private RSBListenerInterface listener;
+    private RSBListener listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
-    private RSBRemoteServerInterface remoteServer;
+    private RSBRemoteServer remoteServer;
     private Remote.ConnectionState connectionState;
     private long connectionPing;
     private long lastPingReceived;
@@ -250,7 +250,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private void initListener(final Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
-            this.listener = RSBFactory.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
+            this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
         } catch (InstantiationException ex) {
             throw new CouldNotPerformException("Could not create Listener on scope [" + scope + "]!", ex);
@@ -259,7 +259,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private void initRemoteServer(final Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
-            this.remoteServer = RSBFactory.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
+            this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
             this.listenerWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
 

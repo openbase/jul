@@ -24,7 +24,6 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBServerInterface;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import java.util.Collection;
@@ -34,13 +33,14 @@ import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.patterns.Method;
 import rsb.patterns.Server;
+import org.openbase.jul.extension.rsb.iface.RSBServer;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  * @param <P>
  */
-public abstract class RSBSynchronizedServer<P extends Server> extends RSBSynchronizedParticipant<P> implements RSBServerInterface {
+public abstract class RSBSynchronizedServer<P extends Server> extends RSBSynchronizedParticipant<P> implements RSBServer {
 
     private final Logger logger = LoggerFactory.getLogger(RSBSynchronizedServer.class);
 

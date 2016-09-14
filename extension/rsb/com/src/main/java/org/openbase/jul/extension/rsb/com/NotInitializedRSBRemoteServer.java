@@ -24,19 +24,19 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServerInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import java.util.concurrent.Future;
 import rsb.Event;
 import rsb.Scope;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public class NotInitializedRSBRemoteServer extends NotInitializedRSBServer implements RSBRemoteServerInterface {
+public class NotInitializedRSBRemoteServer extends NotInitializedRSBServer implements RSBRemoteServer {
 
     public NotInitializedRSBRemoteServer() {
     }

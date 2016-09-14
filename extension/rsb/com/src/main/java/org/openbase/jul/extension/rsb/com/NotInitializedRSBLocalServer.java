@@ -24,17 +24,17 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import rsb.Scope;
 import rsb.patterns.Callback;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public class NotInitializedRSBLocalServer extends NotInitializedRSBServer implements RSBLocalServerInterface {
+public class NotInitializedRSBLocalServer extends NotInitializedRSBServer implements RSBLocalServer {
 
     public NotInitializedRSBLocalServer() {
     }

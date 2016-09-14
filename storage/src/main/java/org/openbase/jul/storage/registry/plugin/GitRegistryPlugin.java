@@ -44,7 +44,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileSynchronizer;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistryImpl;
 import org.openbase.jul.storage.registry.Registry;
 import org.openbase.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
 import org.openbase.jul.storage.registry.jp.JPInitializeDB;
@@ -61,11 +61,11 @@ public class GitRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Fil
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final FileSynchronizedRegistry registry;
+    private final FileSynchronizedRegistryImpl registry;
     private final Git git;
     private boolean detached;
 
-    public GitRegistryPlugin(FileSynchronizedRegistry registry) throws org.openbase.jul.exception.InstantiationException {
+    public GitRegistryPlugin(FileSynchronizedRegistryImpl registry) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.detached = false;
             this.registry = registry;

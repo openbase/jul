@@ -44,8 +44,6 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
-import org.openbase.jul.extension.rsb.iface.RSBInformerInterface;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.rst.iface.ScopeProvider;
@@ -64,6 +62,8 @@ import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
 import rst.rsb.ScopeType;
+import org.openbase.jul.extension.rsb.iface.RSBInformer;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 
 /**
  *
@@ -84,8 +84,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected RSBInformerInterface<Object> informer;
-    protected RSBLocalServerInterface server;
+    protected RSBInformer<Object> informer;
+    protected RSBLocalServer server;
     protected WatchDog informerWatchDog;
     protected WatchDog serverWatchDog;
 
@@ -238,7 +238,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
             // Get local server object which allows to expose remotely callable methods.
-            server = RSBFactory.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
+            server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
             RPCHelper.registerInterface(Pingable.class, this, server);
@@ -687,7 +687,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @param server
      * @throws CouldNotPerformException 
      */
-    public abstract void registerMethods(final RSBLocalServerInterface server) throws CouldNotPerformException;
+    public abstract void registerMethods(final RSBLocalServer server) throws CouldNotPerformException;
 
     @Override
     public String toString() {

@@ -26,10 +26,6 @@ package org.openbase.jul.storage.registry;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.pattern.Observer;
-import org.openbase.jul.storage.registry.clone.RITSCloner;
-import org.openbase.jul.storage.registry.clone.RegistryCloner;
-import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
 
 /**
  *
@@ -38,71 +34,16 @@ import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
  * @param <ENTRY>
  * @param <MAP>
  * @param <R>
- * @param <P>
  */
-public class RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandboxInterface<KEY, ENTRY, MAP, R> {
+public interface RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>> extends Registry<KEY, ENTRY> {
 
-    private RegistryCloner<KEY, ENTRY, MAP> cloner;
+    public void sync(final MAP map) throws CouldNotPerformException;
 
-    public RegistrySandbox(final MAP entryMap) throws CouldNotPerformException, InterruptedException {
-        this(entryMap, new RITSCloner<>());
-    }
+    public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
 
-    public RegistrySandbox(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException, InterruptedException {
-        super(cloner.deepCloneRegistryMap(entryMap));
-        this.cloner = cloner;
-    }
+    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
 
-    @Override
-    public void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException {
-        super.replaceInternalMap(cloner.deepCloneMap(map));
-    }
+    void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException;
 
-    @Override
-    public ENTRY superRemove(ENTRY entry) throws CouldNotPerformException {
-        return super.superRemove(cloner.deepCloneEntry(entry));
-    }
-
-    @Override
-    public ENTRY update(ENTRY entry) throws CouldNotPerformException {
-        return super.update(cloner.deepCloneEntry(entry));
-    }
-
-    @Override
-    public ENTRY register(ENTRY entry) throws CouldNotPerformException {
-        return super.register(cloner.deepCloneEntry(entry));
-    }
-
-    @Override
-    public void sync(MAP map) throws CouldNotPerformException {
-        try {
-            entryMap.clear();
-            for (Map.Entry<KEY, ENTRY> entry : map.entrySet()) {
-                ENTRY deepClone = cloner.deepCloneEntry(entry.getValue());
-                entryMap.put(deepClone.getId(), deepClone);
-            }
-            consistent = true;
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("FATAL: Sandbox sync failed!", ex);
-        }
-    }
-
-    @Override
-    public void addObserver(Observer<Map<KEY, ENTRY>> observer) {
-        logger.warn("Observer registration on sandbox instance skiped!");
-    }
-
-    @Override
-    protected void finishTransaction() throws CouldNotPerformException {
-        try {
-            checkConsistency();
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex);
-        }
-    }
-
-    @Override
-    public boolean isSandbox() {
-        return true;
-    }
+    public ENTRY load(final ENTRY entry) throws CouldNotPerformException;
 }

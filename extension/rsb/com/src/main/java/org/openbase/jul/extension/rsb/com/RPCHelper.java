@@ -31,12 +31,12 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServerInterface;
 import org.openbase.jul.pattern.Remote;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.patterns.Callback;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 
 /**
  *
@@ -45,13 +45,13 @@ import rsb.patterns.Callback;
 public class RPCHelper {
 
 //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
-    public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
+    public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
         for (final Method method : interfaceClass.getMethods()) {
             registerMethod(method, instance, server);
         }
     }
 
-    public static <I, T extends I> void registerMethod(final Method method, final T instance, final RSBLocalServerInterface server) throws CouldNotPerformException {
+    public static <I, T extends I> void registerMethod(final Method method, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
         logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
         server.addMethod(method.getName(), new Callback() {

@@ -24,18 +24,18 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBServerInterface;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import java.util.Collection;
 import rsb.Scope;
 import rsb.patterns.Method;
+import org.openbase.jul.extension.rsb.iface.RSBServer;
 
 /**
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public abstract class NotInitializedRSBServer extends NotInitializedRSBParticipant implements RSBServerInterface {
+public abstract class NotInitializedRSBServer extends NotInitializedRSBParticipant implements RSBServer {
 
     public NotInitializedRSBServer() {
     }

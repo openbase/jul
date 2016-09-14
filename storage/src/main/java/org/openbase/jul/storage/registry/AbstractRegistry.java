@@ -74,7 +74,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected final MAP entryMap;
 
     protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
-    protected RegistrySandboxInterface<KEY, ENTRY, MAP, R> sandbox;
+    protected RegistrySandbox<KEY, ENTRY, MAP, R> sandbox;
 
     protected boolean consistent;
     private final ReentrantReadWriteLock registryLock, consistencyCheckLock;
@@ -117,8 +117,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    public <S extends AbstractRegistry<KEY, ENTRY, MAP, R, P> & RegistrySandboxInterface<KEY, ENTRY, MAP, R>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
-        final RegistrySandboxInterface<KEY, ENTRY, MAP, R> oldSandbox = sandbox;
+    public <S extends AbstractRegistry<KEY, ENTRY, MAP, R, P> & RegistrySandbox<KEY, ENTRY, MAP, R>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
+        final RegistrySandbox<KEY, ENTRY, MAP, R> oldSandbox = sandbox;
         try {
             this.sandbox = sandbox;
             this.sandbox.sync(entryMap);

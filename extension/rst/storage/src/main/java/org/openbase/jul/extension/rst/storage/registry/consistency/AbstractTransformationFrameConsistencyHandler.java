@@ -32,9 +32,9 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.storage.registry.AbstractProtoBufRegistryConsistencyHandler;
 import org.openbase.jul.storage.registry.EntryModification;
-import org.openbase.jul.storage.registry.ProtoBufRegistryInterface;
 import rst.spatial.LocationConfigType;
 import rst.spatial.PlacementConfigType.PlacementConfig;
+import org.openbase.jul.storage.registry.ProtoBufRegistry;
 
 /**
  *
@@ -46,9 +46,9 @@ import rst.spatial.PlacementConfigType.PlacementConfig;
 public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
 
     private final List<String> labelCollisionList;
-    private final ProtoBufRegistryInterface<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> locationRegistry;
+    private final ProtoBufRegistry<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> locationRegistry;
 
-    public AbstractTransformationFrameConsistencyHandler(final ProtoBufRegistryInterface<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> locationRegistry) {
+    public AbstractTransformationFrameConsistencyHandler(final ProtoBufRegistry<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> locationRegistry) {
         this.labelCollisionList = new ArrayList<>();
         this.locationRegistry = locationRegistry;
     }

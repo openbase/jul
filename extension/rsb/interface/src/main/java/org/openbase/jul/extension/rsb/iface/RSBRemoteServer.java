@@ -34,7 +34,7 @@ import rsb.Event;
  *
  * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public interface RSBRemoteServerInterface extends RSBServerInterface {
+public interface RSBRemoteServer extends RSBServer {
 
     public double getTimeout() throws NotAvailableException;
 

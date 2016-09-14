@@ -24,7 +24,6 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.rsb.iface.RSBListenerInterface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -41,12 +40,13 @@ import rsb.Listener;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.filter.Filter;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**
  *
  * @author mpohling
  */
-public class RSBSynchronizedListener extends RSBSynchronizedParticipant<Listener> implements RSBListenerInterface {
+public class RSBSynchronizedListener extends RSBSynchronizedParticipant<Listener> implements RSBListener {
 
     protected final Logger logger = LoggerFactory.getLogger(RSBSynchronizedListener.class);
 

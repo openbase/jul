@@ -30,9 +30,9 @@ import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapInterface;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 import org.openbase.jul.storage.registry.clone.ProtoBufCloner;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
@@ -42,7 +42,7 @@ import org.openbase.jul.storage.registry.clone.ProtoBufCloner;
  * @param <MB> Message Builder
  * @param <SIB> Synchronized internal builder
  */
-public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends FileSynchronizedRegistrySandbox<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMapInterface<KEY, M, MB>, ProtoBufRegistryInterface<KEY, M, MB>> implements ProtoBufRegistryInterface<KEY, M, MB> {
+public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends FileSynchronizedRegistrySandbox<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistry<KEY, M, MB> {
 
     private final IdGenerator<KEY, M> idGenerator;
 
@@ -91,7 +91,7 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
     }
 
     @Override
-    public void sync(ProtoBufMessageMapInterface<KEY, M, MB> map) throws CouldNotPerformException {
+    public void sync(ProtoBufMessageMap<KEY, M, MB> map) throws CouldNotPerformException {
         try {
             entryMap.clear();
             for (Map.Entry<KEY, IdentifiableMessage<KEY, M, MB>> entry : map.entrySet()) {
