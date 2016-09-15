@@ -35,7 +35,6 @@ import org.openbase.jul.pattern.Observable;
  * @author mpohling
  * @param <KEY>
  * @param <ENTRY>
- * @param <R>
  */
 public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>> {
 
