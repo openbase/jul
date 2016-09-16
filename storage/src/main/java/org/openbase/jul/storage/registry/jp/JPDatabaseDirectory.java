@@ -26,7 +26,9 @@ package org.openbase.jul.storage.registry.jp;
 import java.io.File;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
-import org.openbase.jps.preset.JPPrefix;
+import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jps.preset.JPShareDirectory;
+import org.openbase.jps.preset.JPVarDirectory;
 
 /**
  *
@@ -34,20 +36,38 @@ import org.openbase.jps.preset.JPPrefix;
  */
 public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
 
-    public final static String[] COMMAND_IDENTIFIERS = {"--db", "--database"};
+    public static final String DEFAULT_DB_PATH = "bco/registry/db";
+
+    public static final String[] COMMAND_IDENTIFIERS = {"--db", "--database"};
 
     public JPDatabaseDirectory() {
         super(COMMAND_IDENTIFIERS);
     }
 
     @Override
-    public File getParentDirectory() throws JPNotAvailableException {
-        return JPService.getProperty(JPPrefix.class).getValue();
+    public File getParentDirectory() throws JPServiceException {
+        try {
+            if (new File(JPService.getProperty(JPVarDirectory.class).getValue(), DEFAULT_DB_PATH).exists()) {
+                return JPService.getProperty(JPVarDirectory.class).getValue();
+            }
+        } catch (JPNotAvailableException ex) {
+            JPService.printError("Could not detect global var directory!", ex);
+        }
+
+        try {
+            if (new File(JPService.getProperty(JPShareDirectory.class).getValue(), DEFAULT_DB_PATH).exists()) {
+                return JPService.getProperty(JPShareDirectory.class).getValue();
+            }
+        } catch (JPNotAvailableException ex) {
+            JPService.printError("Could not detect global share directory!", ex);
+        }
+
+        throw new JPServiceException("Could not detect db location!");
     }
 
     @Override
     protected File getPropertyDefaultValue() {
-        return new File("var/bco.registry/db");
+        return new File(DEFAULT_DB_PATH);
     }
 
     @Override
