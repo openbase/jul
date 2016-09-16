@@ -35,9 +35,9 @@ import rst.rsb.ScopeType.Scope;
  *
  * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
  * Threepwood</a>
- * @param <M>
- * @param <MB>
- * @param <CONFIG>
+ * @param <M> the message type
+ * @param <MB> builder of the message M
+ * @param <CONFIG> the configuration data type
  */
 public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
 
@@ -50,10 +50,11 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     }
 
     /**
+     * Initialize the controller with a configuration.
      *
-     * @param config
-     * @throws InitializationException
-     * @throws java.lang.InterruptedException
+     * @param config the configuration
+     * @throws InitializationException if the initialization fails
+     * @throws java.lang.InterruptedException if the initialization is interrupted
      */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
@@ -69,11 +70,12 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     }
 
     /**
+     * Apply an update to the configuration of this controller.
      *
-     * @param config
-     * @return
-     * @throws CouldNotPerformException
-     * @throws InterruptedException
+     * @param config the updated configuration
+     * @return the updated configuration
+     * @throws CouldNotPerformException if the update could not be performed
+     * @throws InterruptedException if the update has been interrupted
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {

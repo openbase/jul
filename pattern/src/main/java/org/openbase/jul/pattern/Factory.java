@@ -23,7 +23,6 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.InstantiationException;
 
 /**
@@ -39,10 +38,11 @@ public interface Factory<INSTANCE, CONFIG> {
 
     /**
      * Creates a new instance with the given configuration.
-     * @param config
-     * @return
-     * @throws org.openbase.jul.exception.InstantiationException
-     * @throws java.lang.InterruptedException
+     *
+     * @param config the configuration for the instance
+     * @return the created instance
+     * @throws org.openbase.jul.exception.InstantiationException if the initialization fails
+     * @throws java.lang.InterruptedException if the initialization is interrupted
      */
     public INSTANCE newInstance(final CONFIG config) throws InstantiationException, InterruptedException;
 }

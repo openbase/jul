@@ -21,14 +21,13 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.iface.Identifiable;
 
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
- * @param <ID>
- * @param <M>
+ * @param <ID> the id type of the remote
+ * @param <M> the data type of the remote
  */
 public interface IdentifiableRemote<ID, M> extends Identifiable<ID>, Remote<M> {
 

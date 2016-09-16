@@ -21,14 +21,13 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Shutdownable;
 
 /**
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
- * @param <T>
+ * @param <T> the data type on whose changes is notified
  */
 public interface Observable<T> extends Shutdownable {
 

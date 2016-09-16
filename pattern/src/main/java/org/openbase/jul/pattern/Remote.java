@@ -34,7 +34,7 @@ import org.openbase.jul.iface.Shutdownable;
 /**
  *
  * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
- * @param <M>
+ * @param <M> the data type of the remote
  */
 public interface Remote<M> extends Shutdownable, Activatable {
 
@@ -133,65 +133,66 @@ public interface Remote<M> extends Shutdownable, Activatable {
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException;
 
     /**
+     * Initialize the remote on a scope.
      *
-     * @param scope
-     * @throws InitializationException
-     * @throws InterruptedException
+     * @param scope the scope where the remote communicates
+     * @throws InitializationException if the initialization fails
+     * @throws InterruptedException if the initialization is interrupted
      */
     public void init(final String scope) throws InitializationException, InterruptedException;
 
     /**
      * Method activates the remote instance and blocks until the first data synchronization is done.
-     * 
+     *
      * Equivalent of: activate(); waitForData(0);
-     * 
-     * Caution: Method can blocks forever if the related main controller instance will be never available! 
+     *
+     * Caution: Method can blocks forever if the related main controller instance will be never available!
      *
      * @param waitForData if this flag is true the method will block until the first data synchronization is done.
-     * @throws CouldNotPerformException
-     * @throws InterruptedException 
+     * @throws CouldNotPerformException if the activation could not be performed
+     * @throws InterruptedException if the activation is interrupted
      */
     public void activate(boolean waitForData) throws CouldNotPerformException, InterruptedException;
-    
+
     /**
      * This method allows the registration of connection state observers to get informed about connection state changes.
      *
-     * @param observer
+     * @param observer the observer added
      */
     public void addConnectionStateObserver(final Observer<ConnectionState> observer);
-    
+
     /**
      * This method removes already registered connection state observers.
      *
-     * @param observer
+     * @param observer the observer removed
      */
     public void removeConnectionStateObserver(final Observer<ConnectionState> observer);
-    
+
     /**
      * This method allows the registration of data observers to get informed about data updates.
      *
-     * @param observer
+     * @param observer the observer added
      */
     public void addDataObserver(final Observer<M> observer);
 
     /**
      * This method removes already registered data observers.
      *
-     * @param observer
+     * @param observer the observer removed
      */
     public void removeDataObserver(final Observer<M> observer);
 
     /**
      * Check if the data object is already available.
      *
-     * @return
+     * @return if data is available
      */
     public boolean isDataAvailable();
 
     /**
      * Method returns the class of the data object.
      *
-     * @return
+     * @return the class of the data object
      */
     public Class<M> getDataClass();
 
@@ -199,7 +200,7 @@ public interface Remote<M> extends Shutdownable, Activatable {
      * Method returns the data object of this remote which is synchronized with
      * the server data in background.
      *
-     * In case the data was never received not available a NotAvailableException is thrown. 
+     * In case the data was never received not available a NotAvailableException is thrown.
      * Use method getDataFuture() to get feedback about the synchronization state, or use method waitForData() to block until the needed data is synchronized.
      *
      * @return the data object of the remote.
