@@ -23,22 +23,22 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <T> the observable data type
  */
 public interface Observer<T> {
+
     /**
      * This method is called whenever the observed object is changed. An
      * application calls an <tt>Observable</tt> object's
      * <code>notifyObservers</code> method to have all the object's
      * observers notified of the change.
      *
-     * @param source
-     * @param data
-     * @throws java.lang.Exception
+     * @param source the source of the update
+     * @param data the updated data
+     * @throws java.lang.Exception a possibly thrown exception
      */
-    public void update(final Observable<T> source, final T data ) throws Exception;
+    public void update(final Observable<T> source, final T data) throws Exception;
 }

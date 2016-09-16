@@ -69,8 +69,8 @@ import rst.rsb.ScopeType;
 /**
  *
  * @author mpohling
- * @param <M>
- * @param <MB>
+ * @param <M> the message type of the communication service
+ * @param <MB> the builder for message M
  */
 public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider {
 
@@ -104,9 +104,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private boolean initialized;
 
     /**
+     * Create a communication service.
      *
-     * @param builder
-     * @throws InstantiationException
+     * @param builder the initial data builder
+     * @throws InstantiationException if the creation fails
      */
     public RSBCommunicationService(final MB builder) throws InstantiationException {
         logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + ".");
@@ -434,7 +435,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * {@inheritDoc}
      *
-     * @return {@inheritDoc}
      * @throws InterruptedException {@inheritDoc}
      */
     @Override

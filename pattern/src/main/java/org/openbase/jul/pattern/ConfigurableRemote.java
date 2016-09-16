@@ -21,7 +21,6 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Manageable;
 
@@ -36,23 +35,23 @@ public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID
 
     /**
      * Method returns the current configuration of this remote instance.
-     * @return
-     * @throws NotAvailableException 
+     *
+     * @return the current configuration
+     * @throws NotAvailableException if the configuration is not available
      */
     public CONFIG getConfig() throws NotAvailableException;
-    
-    
+
     /**
      * This method allows the registration of config observers to get informed about config updates.
      *
-     * @param observer
+     * @param observer the observer added
      */
     public void addConfigObserver(final Observer<CONFIG> observer);
 
     /**
      * This method removes already registered config observers.
      *
-     * @param observer
+     * @param observer the observer removed
      */
     public void removeConfigObserver(final Observer<CONFIG> observer);
 }

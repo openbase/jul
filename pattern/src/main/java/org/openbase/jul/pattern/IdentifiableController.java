@@ -26,8 +26,8 @@ import org.openbase.jul.iface.Identifiable;
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
- * @param <ID>
- * @param <M>
+ * @param <ID> the id type of the controller
+ * @param <M> the data type of the controller
  */
 public interface IdentifiableController<ID, M> extends Identifiable<ID>, Controller<M> {
 

@@ -59,17 +59,18 @@ public interface Controller<M> extends Shutdownable, Activatable, Changeable, Pi
     public ControllerAvailabilityState getControllerAvailabilityState();
 
     /**
+     * Wait until the controller reached a given availability state.
      *
-     * @param communicationServiceState
-     * @throws InterruptedException
+     * @param controllerAvailabilityState the state on which is waited
+     * @throws InterruptedException if the waiting is interrupted
      */
     public void waitForAvailabilityState(final ControllerAvailabilityState controllerAvailabilityState) throws InterruptedException;
 
     /**
      * Synchronize all registered remote instances about a data change.
      *
-     * @throws CouldNotPerformException
-     * @throws java.lang.InterruptedException
+     * @throws CouldNotPerformException if the notification could not be performed
+     * @throws java.lang.InterruptedException if the notification has been interrupted
      */
     @Override
     public void notifyChange() throws CouldNotPerformException, InterruptedException;

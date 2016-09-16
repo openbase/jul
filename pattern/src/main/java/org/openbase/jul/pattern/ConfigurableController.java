@@ -27,10 +27,9 @@ import org.openbase.jul.iface.Manageable;
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
- * @param <ID>
- * @param <M>
- * @param <MB>
- * @param <CONFIG>
+ * @param <ID> the identifier type
+ * @param <M> the data type
+ * @param <CONFIG> the configuration type
  */
 public interface ConfigurableController<ID, M, CONFIG> extends IdentifiableController<ID, M>, Manageable<CONFIG>, Configurable<ID, CONFIG> {
 
