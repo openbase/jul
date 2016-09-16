@@ -154,7 +154,7 @@ public class RSBCommunicationServiceTest {
         }
         assertEquals("Remote is still connected after remote service shutdown!", ConnectionState.CONNECTING, remoteService.getConnectionState());
         communicationService.activate();
-        communicationService.waitForConnectionState(ControllerAvailabilityState.ONLINE);
+        communicationService.waitForAvailabilityState(ControllerAvailabilityState.ONLINE);
         remoteService.waitForConnectionState(ConnectionState.CONNECTED);
         remoteService.shutdown();
         communicationService.shutdown();

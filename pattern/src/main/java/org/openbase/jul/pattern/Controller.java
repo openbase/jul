@@ -32,59 +32,38 @@ import org.openbase.jul.iface.Shutdownable;
  *
  * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  * @param <M> Message
- * @param <MB> Message Builder
  */
-public interface Controller<M, MB> extends Shutdownable, Activatable, Changeable, Pingable, Requestable<M> {
+public interface Controller<M> extends Shutdownable, Activatable, Changeable, Pingable, Requestable<M> {
 
     // TODO mpohling: Should be moved to rst and reimplement for rsb 14.
     public enum ControllerAvailabilityState {
+
         LAUNCH, ONLINE, SHUTDOWN, OFFLINE
     };
-
-    public MB cloneDataBuilder();
 
     @SuppressWarnings(value = "unchecked")
     public M getData() throws CouldNotPerformException;
 
     /**
-     * This method generates a closable data builder wrapper including the
-     * internal builder instance. Be informed that the internal builder is
-     * directly locked and all internal builder operations are queued. Therefore please
-     * call the close method soon as possible to release the builder lock after
-     * you builder modifications, otherwise the overall processing pipeline is
-     * delayed.
-     *
-     *
-     * <pre>
-     * {@code Usage Example:
-     *
-     *     try (ClosableDataBuilder<MotionSensor.Builder> dataBuilder = getDataBuilder(this)) {
-     *         dataBuilder.getInternalBuilder().setMotionState(motion);
-     *     } catch (Exception ex) {
-     *         throw new CouldNotPerformException("Could not apply data change!", ex);
-     *     }
-     * }
-     * </pre> In this example the ClosableDataBuilder.close method is be called
-     * in background after leaving the try brackets.
-     *
-//     * @param consumer
-//     * @return a new builder wrapper with a locked builder instance.
-     * @return 
-     */
-    //TODO: Should be implemented as interface.
-//    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
-
-    /**
      * Method returns the class of the internal data object which is used for remote synchronization.
+     *
      * @return data class
      */
     public Class<M> getDataClass();
 
     /**
      * Method returns the availability state of this controller.
+     *
      * @return OFFLINE / ONLINE
      */
     public ControllerAvailabilityState getControllerAvailabilityState();
+
+    /**
+     *
+     * @param communicationServiceState
+     * @throws InterruptedException
+     */
+    public void waitForAvailabilityState(final ControllerAvailabilityState controllerAvailabilityState) throws InterruptedException;
 
     /**
      * Synchronize all registered remote instances about a data change.

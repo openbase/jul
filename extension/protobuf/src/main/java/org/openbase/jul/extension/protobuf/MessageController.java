@@ -1,8 +1,13 @@
-package org.openbase.jul.pattern;
-
 /*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package org.openbase.jul.extension.protobuf;
+
+/*-
  * #%L
- * JUL Pattern
+ * JUL Extension Protobuf
  * %%
  * Copyright (C) 2015 - 2016 openbase.org
  * %%
@@ -21,14 +26,16 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.iface.Identifiable;
+import com.google.protobuf.GeneratedMessage;
+import org.openbase.jul.extension.protobuf.iface.DataBuilderProvider;
+import org.openbase.jul.pattern.Controller;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
- * @param <ID>
- * @param <M>
+ * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.com">Tamino Huxohl</a>
+ * @param <M> Message
+ * @param <MB> Builder
  */
-public interface IdentifiableController<ID, M> extends Identifiable<ID>, Controller<M> {
+public interface MessageController<M extends GeneratedMessage, MB extends M.Builder<MB>> extends Controller<M>, DataBuilderProvider<M, MB> {
 
 }

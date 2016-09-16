@@ -43,13 +43,16 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
+import org.openbase.jul.extension.protobuf.MessageController;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
+import org.openbase.jul.extension.rsb.iface.RSBInformer;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Requestable;
-import org.openbase.jul.pattern.Controller;
+import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.schedule.GlobalExecutionService;
@@ -62,8 +65,6 @@ import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
 import rst.rsb.ScopeType;
-import org.openbase.jul.extension.rsb.iface.RSBInformer;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 
 /**
  *
@@ -71,7 +72,7 @@ import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
  * @param <M>
  * @param <MB>
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements Controller<M, MB>, ScopeProvider {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider {
 
     static {
         RSBSharedConnectionConfig.load();
@@ -103,9 +104,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private boolean initialized;
 
     /**
-     * 
+     *
      * @param builder
-     * @throws InstantiationException 
+     * @throws InstantiationException
      */
     public RSBCommunicationService(final MB builder) throws InstantiationException {
         logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + ".");
@@ -131,30 +132,30 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param scope
      * @throws InitializationException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
     /**
-     * 
+     *
      * @param scope
      * @throws InitializationException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
     /**
-     * 
+     *
      * @param scope
      * @throws InitializationException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
@@ -165,12 +166,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param label
      * @param type
      * @param location
      * @throws InitializationException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public void init(final String label, final String type, final ScopeProvider location) throws InitializationException, InterruptedException {
         try {
@@ -181,11 +182,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param scope
      * @param participantConfig
      * @throws InitializationException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
@@ -209,11 +210,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param scope
      * @param participantConfig
      * @throws InitializationException
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         this.scope = scope;
@@ -303,6 +304,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -312,6 +314,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @throws InterruptedException {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
@@ -326,6 +329,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @throws InterruptedException {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
@@ -357,6 +361,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -371,6 +376,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
@@ -385,9 +391,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param controllerAvailability
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) throws InterruptedException {
         synchronized (controllerAvailabilityMonitor) {
@@ -426,14 +432,16 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
-     * @param communicationServiceState
-     * @throws InterruptedException 
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
      */
-    public void waitForConnectionState(final ControllerAvailabilityState communicationServiceState) throws InterruptedException {
+    @Override
+    public void waitForAvailabilityState(final ControllerAvailabilityState controllerAvailabilityState) throws InterruptedException {
         synchronized (controllerAvailabilityMonitor) {
             while (!Thread.currentThread().isInterrupted()) {
-                if (this.controllerAvailabilityState.equals(communicationServiceState)) {
+                if (this.controllerAvailabilityState.equals(controllerAvailabilityState)) {
                     return;
                 }
                 controllerAvailabilityMonitor.wait();
@@ -443,6 +451,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -456,43 +465,29 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
-     * @return 
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
      */
-    protected BuilderSyncSetup<MB> getBuilderSetup() {
+    @Override
+    public BuilderSyncSetup<MB> getBuilderSetup() {
         return new BuilderSyncSetup<>(dataBuilder, dataBuilderReadLock, dataBuilderWriteLock, this);
     }
 
     /**
-     * This method generates a closable data builder wrapper including the
-     * internal builder instance. Be informed that the internal builder is
-     * directly locked and all internal builder operations are queued. Therefore please
-     * call the close method soon as possible to release the builder lock after
-     * you builder modifications, otherwise the overall processing pipeline is
-     * delayed.
+     * {@inheritDoc}
      *
-     *
-     * <pre>
-     * {@code Usage Example:
-     *
-     *     try (ClosableDataBuilder<MotionSensor.Builder> dataBuilder = getDataBuilder(this)) {
-     *         dataBuilder.getInternalBuilder().setMotionState(motion);
-     *     } catch (Exception ex) {
-     *         throw new CouldNotPerformException("Could not apply data change!", ex);
-     *     }
-     * }
-     * </pre> In this example the ClosableDataBuilder.close method is be called
-     * in background after leaving the try brackets.
-     *
-     * @param consumer please specify the consumer of the data lock.
-     * @return a new builder wrapper with a locked builder instance.
+     * @param consumer {@inheritDoc}
+     * @return {@inheritDoc}
      */
+    @Override
     public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
         return new ClosableDataBuilder<>(getBuilderSetup(), consumer);
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      * @throws NotAvailableException {@inheritDoc}
      */
@@ -526,10 +521,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param fieldNumber
      * @param value
-     * @throws CouldNotPerformException 
+     * @throws CouldNotPerformException
      */
     protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
         try {
@@ -549,10 +544,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param fieldName
      * @param value
-     * @throws CouldNotPerformException 
+     * @throws CouldNotPerformException
      */
     protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
         try {
@@ -626,9 +621,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param fieldId
-     * @return 
+     * @return
      */
     protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
         return cloneDataBuilder().getDescriptorForType().findFieldByNumber(fieldId);
@@ -636,6 +631,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -644,8 +640,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
-     * @throws NotInitializedException 
+     *
+     * @throws NotInitializedException
      */
     public void validateInitialization() throws NotInitializedException {
         if (!initialized) {
@@ -667,6 +663,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
@@ -683,9 +680,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * 
+     *
      * @param server
-     * @throws CouldNotPerformException 
+     * @throws CouldNotPerformException
      */
     public abstract void registerMethods(final RSBLocalServer server) throws CouldNotPerformException;
 

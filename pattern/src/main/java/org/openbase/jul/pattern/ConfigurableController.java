@@ -32,6 +32,6 @@ import org.openbase.jul.iface.Manageable;
  * @param <MB>
  * @param <CONFIG>
  */
-public interface ConfigurableController<ID, M, MB, CONFIG> extends IdentifiableController<ID, M, MB>, Manageable<CONFIG>, Configurable<ID, CONFIG> {
+public interface ConfigurableController<ID, M, CONFIG> extends IdentifiableController<ID, M>, Manageable<CONFIG>, Configurable<ID, CONFIG> {
 
 }

@@ -39,7 +39,7 @@ import rst.rsb.ScopeType.Scope;
  * @param <MB>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, MB, CONFIG> {
+public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
 
     public static final String FIELD_SCOPE = "scope";
 
