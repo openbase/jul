@@ -23,11 +23,10 @@ package org.openbase.jul.storage.registry.jp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import java.io.File;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPPrefix;
-import java.io.File;
 
 /**
  *
@@ -48,7 +47,7 @@ public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
 
     @Override
     protected File getPropertyDefaultValue() {
-        return new File("var/registry-manager/db");
+        return new File("var/bco.registry/db");
     }
 
     @Override
