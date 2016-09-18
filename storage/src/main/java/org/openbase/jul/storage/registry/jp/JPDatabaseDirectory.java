@@ -27,8 +27,10 @@ import java.io.File;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.JPShareDirectory;
 import org.openbase.jps.preset.JPVarDirectory;
+import org.openbase.jps.tools.FileHandler;
 
 /**
  *
@@ -47,7 +49,7 @@ public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
     @Override
     public File getParentDirectory() throws JPServiceException {
         try {
-            if (new File(JPService.getProperty(JPVarDirectory.class).getValue(), DEFAULT_DB_PATH).exists()) {
+            if (new File(JPService.getProperty(JPVarDirectory.class).getValue(), DEFAULT_DB_PATH).exists() || JPService.testMode()) {
                 return JPService.getProperty(JPVarDirectory.class).getValue();
             }
         } catch (JPNotAvailableException ex) {
@@ -68,6 +70,15 @@ public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
     @Override
     protected File getPropertyDefaultValue() {
         return new File(DEFAULT_DB_PATH);
+    }
+    
+    @Override
+    public void validate() throws JPValidationException {
+        if (JPService.testMode()) {
+            setAutoCreateMode(FileHandler.AutoMode.On);
+            setExistenceHandling(FileHandler.ExistenceHandling.Must);
+        }
+        super.validate();
     }
 
     @Override
