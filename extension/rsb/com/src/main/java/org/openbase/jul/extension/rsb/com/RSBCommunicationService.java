@@ -336,7 +336,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void activate() throws InterruptedException, CouldNotPerformException {
         validateInitialization();
         logger.debug("Activate RSBCommunicationService for: " + this);
-        setControllerAvailabilityState(ControllerAvailabilityState.LAUNCH);
+        setControllerAvailabilityState(ControllerAvailabilityState.ACTIVATING);
         informerWatchDog.activate();
         serverWatchDog.activate();
     }
@@ -355,7 +355,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // was never initialized!
             return;
         }
-        setControllerAvailabilityState(ControllerAvailabilityState.SHUTDOWN);
+        setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
         informerWatchDog.deactivate();
         serverWatchDog.deactivate();
         setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
@@ -437,7 +437,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             logger.info(this + " is now " + controllerAvailability.name());
 
             // notify remotes about controller shutdown
-            if (controllerAvailabilityState.equals(ControllerAvailabilityState.SHUTDOWN)) {
+            if (controllerAvailabilityState.equals(ControllerAvailabilityState.DEACTIVATING)) {
                 try {
                     logger.debug("Notify data change of " + this);
                     validateInitialization();

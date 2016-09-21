@@ -38,7 +38,7 @@ public interface Controller<M> extends Shutdownable, Activatable, Changeable, Pi
     // TODO mpohling: Should be moved to rst and reimplement for rsb 14.
     public enum ControllerAvailabilityState {
 
-        LAUNCH, ONLINE, SHUTDOWN, OFFLINE
+        ACTIVATING, ONLINE, DEACTIVATING, OFFLINE
     };
 
     @SuppressWarnings(value = "unchecked")
