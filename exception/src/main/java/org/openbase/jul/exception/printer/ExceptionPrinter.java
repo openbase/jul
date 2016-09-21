@@ -24,10 +24,11 @@ package org.openbase.jul.exception.printer;
  * #L%
  */
 import java.io.PrintStream;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
 import java.util.ArrayList;
 import java.util.List;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.MultiException;
+import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
 import org.slf4j.Logger;
 
 /**
@@ -44,6 +45,7 @@ public class ExceptionPrinter {
     public static void setBeQuit(Boolean beQuiet) {
         ExceptionPrinter.beQuiet = beQuiet;
     }
+
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
@@ -99,14 +101,40 @@ public class ExceptionPrinter {
 
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error". The given message and the exception are bundled as new CouldNotPerformException and further processed.
+     *
+     * @param <T> Exception type
+     * @param message the reason why this exception occurs.
+     * @param th exception cause.
+     * @param logger
+     */
+    public static <T extends Throwable> void printHistory(final String message, T th, final Logger logger) {
+        printHistory(new CouldNotPerformException(message, th), logger, LogLevel.ERROR);
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
      * @param <T> Exception type
-     * @param th exception stack to print.
+     * @param th the exception stack to print.
      * @param stream the stream used for printing the message history e.g. System.out or. System.err
      */
     public static <T extends Throwable> void printHistory(final T th, final PrintStream stream) {
         printHistory(th, new SystemPrinter(stream));
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. The given message and the exception are bundled as new CouldNotPerformException and further processed.
+     *
+     * @param <T> Exception type
+     * @param message the reason why this exception occurs.
+     * @param th the exception cause.
+     * @param stream the stream used for printing the message history e.g. System.out or. System.err
+     */
+    public static <T extends Throwable> void printHistory(final String message, final T th, final PrintStream stream) {
+        printHistory(new CouldNotPerformException(message, th), new SystemPrinter(stream));
     }
 
     /**
@@ -146,7 +174,7 @@ public class ExceptionPrinter {
      * @param th exception stack to print.
      */
     public static <T extends Throwable> void printHistory(final T th, final Printer printer) {
-        if(beQuiet) {
+        if (beQuiet) {
             return;
         }
         printHistory(th, printer, "", "");
@@ -172,7 +200,7 @@ public class ExceptionPrinter {
     }
 
     static void printHistory(final Throwable th, final Printer printer, String rootPrefix, final String childPrefix) {
-        if(beQuiet) {
+        if (beQuiet) {
             return;
         }
         if (th instanceof MultiException) {
@@ -238,9 +266,9 @@ public class ExceptionPrinter {
         for (int i = 0; i < elementList.size(); i++) {
             // check if i is last element
             if (i + 1 == elementList.size()) {
-                generator.printElement(elementList.get(i), printer, childPrefix  + " ╚═", childPrefix + "   ");
+                generator.printElement(elementList.get(i), printer, childPrefix + " ╚═", childPrefix + "   ");
             } else {
-                generator.printElement(elementList.get(i), printer, childPrefix  + " ╠═", childPrefix + " ║ ");
+                generator.printElement(elementList.get(i), printer, childPrefix + " ╠═", childPrefix + " ║ ");
             }
         }
     }

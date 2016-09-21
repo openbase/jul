@@ -25,23 +25,24 @@ package org.openbase.jul.schedule;
  */
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.pattern.ObservableImpl;
-import org.openbase.jul.pattern.Observer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Activatable;
+import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Observable;
+import org.openbase.jul.pattern.ObservableImpl;
+import org.openbase.jul.pattern.Observer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author mpohling
  */
-public class WatchDog implements Activatable {
+public class WatchDog implements Activatable, Shutdownable {
 
     private final Object EXECUTION_LOCK = new Object();
     private final Object activationLock;
@@ -263,6 +264,17 @@ public class WatchDog implements Activatable {
 
     public void removeObserver(Observer<ServiceState> observer) {
         serviceStateObserable.removeObserver(observer);
+    }
+
+    @Override
+    public void shutdown() {
+        try {
+            serviceStateObserable.shutdown();
+            deactivate();
+        } catch (InterruptedException ex) {
+            ExceptionPrinter.printHistory(this + "was interruped during shutdown!", ex, logger);
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
