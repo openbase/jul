@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.Shutdownable;
 import org.slf4j.LoggerFactory;
@@ -118,10 +117,13 @@ public class GlobalExecutionService implements Shutdownable {
     }
 
     public void shutdown(final long shutdownTimeout, final TimeUnit timeUnit) {
-        executionService.shutdown();
+        List<Runnable> droppedTasks = executionService.shutdownNow();
+        if (!droppedTasks.isEmpty()) {
+            logger.info("Global executor shutdown forced: " + droppedTasks.size() + " tasks will be skipped...");
+        }
         try {
             if (!executionService.awaitTermination(shutdownTimeout, timeUnit)) {
-                logger.error("Executor did not terminate before shutdown Timeout[" + shutdownTimeout + timeUnit.name() + "] expired!");
+                logger.error("Executor did not terminate before shutdown Timeout[" + shutdownTimeout + " " + timeUnit.name().toLowerCase() + "] expired!");
                 forceShutdown();
             }
         } catch (InterruptedException ex) {
@@ -131,8 +133,14 @@ public class GlobalExecutionService implements Shutdownable {
     }
 
     public void forceShutdown() {
-        List<Runnable> droppedTasks = executionService.shutdownNow();
-        ExceptionPrinter.printHistory(new CouldNotPerformException("Global executor shutdown forced: " + droppedTasks.size() + " tasks will be skipped..."), logger);
+        for (int i = 0; i < 10; ++i) {
+            executionService.shutdownNow();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {
