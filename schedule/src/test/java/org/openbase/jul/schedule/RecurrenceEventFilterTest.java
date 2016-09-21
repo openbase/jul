@@ -23,14 +23,13 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import static org.openbase.jul.schedule.RecurrenceEventFilterTest.RecurrenceEventFilterImpl.TIMEOUT;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.openbase.jul.schedule.RecurrenceEventFilterTest.RecurrenceEventFilterImpl.TIMEOUT;
 
 /**
  *
@@ -59,6 +58,7 @@ public class RecurrenceEventFilterTest {
 
     /**
      * Test of trigger method, of class RecurrenceEventFilter.
+     *
      * @throws java.lang.InterruptedException
      */
     @Test(timeout = 5000)
