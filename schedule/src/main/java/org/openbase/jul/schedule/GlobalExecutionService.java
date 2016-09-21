@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GlobalExecutionService implements Shutdownable {
 
-    public static final long DEFAULT_SHUTDOWN_TIME = 5000;
+    public static final long DEFAULT_SHUTDOWN_TIME = 5;
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(GlobalExecutionService.class);
 
@@ -114,14 +114,14 @@ public class GlobalExecutionService implements Shutdownable {
 
     @Override
     public void shutdown() {
-        shutdown(DEFAULT_SHUTDOWN_TIME, TimeUnit.MILLISECONDS);
+        shutdown(DEFAULT_SHUTDOWN_TIME, TimeUnit.SECONDS);
     }
 
     public void shutdown(final long shutdownTimeout, final TimeUnit timeUnit) {
         executionService.shutdown();
         try {
             if (!executionService.awaitTermination(shutdownTimeout, timeUnit)) {
-                logger.error("Executor did not terminate before shutdown timeout expired!");
+                logger.error("Executor did not terminate before shutdown Timeout[" + shutdownTimeout + timeUnit.name() + "] expired!");
                 forceShutdown();
             }
         } catch (InterruptedException ex) {
@@ -132,7 +132,7 @@ public class GlobalExecutionService implements Shutdownable {
 
     public void forceShutdown() {
         List<Runnable> droppedTasks = executionService.shutdownNow();
-        ExceptionPrinter.printHistory(new CouldNotPerformException("Global executor shutdown forced:" + droppedTasks.size() + " tasks will be skipped..."), logger);
+        ExceptionPrinter.printHistory(new CouldNotPerformException("Global executor shutdown forced: " + droppedTasks.size() + " tasks will be skipped..."), logger);
     }
 
     public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {

@@ -29,12 +29,12 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 import org.openbase.jul.pattern.ConfigurableController;
+import org.openbase.jul.schedule.SyncObject;
 import rst.rsb.ScopeType.Scope;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
- * Threepwood</a>
+ * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  * @param <M> the message type
  * @param <MB> builder of the message M
  * @param <CONFIG> the configuration data type
@@ -43,7 +43,11 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     public static final String FIELD_SCOPE = "scope";
 
+    private final SyncObject CONFIG_LOCK = new SyncObject("ConfigLock");
+
     private CONFIG config;
+
+    private Scope currentScope;
 
     public AbstractConfigurableController(MB builder) throws InstantiationException {
         super(builder);
@@ -58,14 +62,17 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
-        try {
-            if (config == null) {
-                throw new NotAvailableException("config");
+        synchronized (CONFIG_LOCK) {
+            try {
+                if (config == null) {
+                    throw new NotAvailableException("config");
+                }
+                currentScope = detectScope(config);
+                applyConfigUpdate(config);
+                super.init(currentScope);
+            } catch (CouldNotPerformException ex) {
+                throw new InitializationException(this, ex);
             }
-            applyConfigUpdate(config);
-            super.init(detectScope());
-        } catch (CouldNotPerformException ex) {
-            throw new InitializationException(this, ex);
         }
     }
 
@@ -79,30 +86,54 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        this.config = config;
+        synchronized (CONFIG_LOCK) {
+            this.config = config;
 
-        if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
-            setDataField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
+            if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
+                setDataField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
+            }
+
+            if (supportsDataField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
+                setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
+            }
+
+            // detect scope change if instance is already active and reinit if needed.
+            try {
+                if (isActive() && !scope.equals(detectScope(config))) {
+                    currentScope = detectScope();
+                    super.init(currentScope);
+                }
+            } catch (CouldNotPerformException ex) {
+                throw new CouldNotPerformException("Could not verify scope changes!", ex);
+            }
+
+            return this.config;
         }
+    }
 
-        if (supportsDataField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
-            setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
+    private Scope detectScope(final CONFIG config) throws NotAvailableException {
+        try {
+            return (Scope) getConfigField(FIELD_SCOPE, config);
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("scope");
         }
-
-        return this.config;
     }
 
     private Scope detectScope() throws NotAvailableException {
-        try {
-            return (Scope) getConfigField(FIELD_SCOPE);
-        } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException(scope);
+        synchronized (CONFIG_LOCK) {
+            return detectScope(getConfig());
         }
     }
 
     protected final Object getConfigField(String name) throws CouldNotPerformException {
+        synchronized (CONFIG_LOCK) {
+            return getConfigField(name, getConfig());
+        }
+    }
+
+    protected final Object getConfigField(String name, final CONFIG config) throws CouldNotPerformException {
         try {
-            final CONFIG currentConfig = getConfig();
+            final CONFIG currentConfig = config;
             Descriptors.FieldDescriptor findFieldByName = currentConfig.getDescriptorForType().findFieldByName(name);
             if (findFieldByName == null) {
                 throw new NotAvailableException("Field[" + name + "] does not exist for type " + currentConfig.getClass().getName());
@@ -114,31 +145,37 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     }
 
     protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
-        try {
-            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
-            if (findFieldByName == null) {
+        synchronized (CONFIG_LOCK) {
+            try {
+                Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+                if (findFieldByName == null) {
+                    return false;
+                }
+                return config.hasField(findFieldByName);
+            } catch (Exception ex) {
                 return false;
             }
-            return config.hasField(findFieldByName);
-        } catch (Exception ex) {
-            return false;
         }
     }
 
     protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
-        try {
-            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
-            return findFieldByName != null;
-        } catch (NullPointerException ex) {
-            return false;
+        synchronized (CONFIG_LOCK) {
+            try {
+                Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+                return findFieldByName != null;
+            } catch (NullPointerException ex) {
+                return false;
+            }
         }
     }
 
     @Override
     public CONFIG getConfig() throws NotAvailableException {
-        if (config == null) {
-            throw new NotAvailableException("config");
+        synchronized (CONFIG_LOCK) {
+            if (config == null) {
+                throw new NotAvailableException("config");
+            }
+            return config;
         }
-        return config;
     }
 }

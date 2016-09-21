@@ -26,7 +26,6 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -63,6 +62,7 @@ public class RSBRemoteServiceTest {
 
     /**
      * Test of waitForConnectionState method, of class RSBRemoteService.
+     *
      * @throws java.lang.InterruptedException
      */
     @Test(timeout = 1000)

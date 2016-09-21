@@ -218,6 +218,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws InterruptedException
      */
     public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+        final boolean alreadyActivated = isActive();
         this.scope = scope;
         ParticipantConfig internalParticipantConfig = participantConfig;
 
@@ -235,11 +236,18 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             Scope internalScope = new Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
 
+            // check if this instance was partly or fully initialized before.
+            if (initialized | informerWatchDog != null | serverWatchDog != null | informer != null | server != null) {
+                deactivate();
+                reset();
+            }
+
+            // init new instances.
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-            this.informer = new RSBSynchronizedInformer<>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
+            informer = new RSBSynchronizedInformer<>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
-            // Get local server object which allows to expose remotely callable methods.
+            // get local server object which allows to expose remotely callable methods.
             server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
@@ -274,6 +282,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             postInit();
 
             initialized = true;
+
+            // check if communication service was already activated before and recover state.
+            if (alreadyActivated) {
+                activate();
+            }
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
@@ -348,6 +361,20 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
     }
 
+    public void reset() {
+        // clear existing instances.
+        if (informerWatchDog != null) {
+            informerWatchDog.shutdown();
+            informerWatchDog = null;
+            informer = null;
+        }
+        if (serverWatchDog != null) {
+            serverWatchDog.shutdown();
+            serverWatchDog = null;
+            server = null;
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -355,6 +382,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void shutdown() {
         try {
             deactivate();
+            reset();
         } catch (CouldNotPerformException | InterruptedException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
