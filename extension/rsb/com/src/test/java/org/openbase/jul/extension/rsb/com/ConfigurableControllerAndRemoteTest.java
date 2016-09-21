@@ -93,13 +93,44 @@ public class ConfigurableControllerAndRemoteTest {
 
         controller.init(sceneConfig);
         controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
-        System.out.println("Controller is only again!");
-
-        remote.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
-        System.out.println("Remote switched to disconnected after config change in the controller!");
-
+        System.out.println("Controller is online again!");
+        remote.waitForConnectionState(Remote.ConnectionState.CONNECTING);
+        System.out.println("Remote switched to connecting after config change in the controller!");
         remote.init(sceneConfig);
+        remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+        System.out.println("Remote reconnected after reinitialization!");
+    }
 
+    @Test(timeout = 10000)
+    public void applyConfigUpdateTest() throws Exception {
+        System.out.println("initTest");
+
+        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
+
+        Scope scope = Scope.newBuilder().addComponent("test2").addComponent("configurable2").addComponent("controller2").addComponent("and2").addComponent("remote2").build();
+        SceneConfig sceneConfig = SceneConfig.newBuilder().setId(UUID.randomUUID().toString()).setLabel("TestScene2").setScope(scope).build();
+
+        AbstractConfigurableController controller = new AbstractConfigurableControllerImpl();
+        controller.init(sceneConfig);
+        controller.activate();
+
+        AbstractConfigurableRemote remote = new AbstractConfigurableRemoteImpl(SceneData.class, SceneConfig.class);
+        remote.init(sceneConfig);
+        remote.activate();
+
+        remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+        controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
+        System.out.println("Succesfully connected controller and remote!");
+
+        scope = scope.toBuilder().clearComponent().addComponent("test2").addComponent("configurables2").build();
+        sceneConfig = sceneConfig.toBuilder().setScope(scope).build();
+
+        controller.applyConfigUpdate(sceneConfig);
+        controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
+        System.out.println("Controller is online again!");
+        remote.waitForConnectionState(Remote.ConnectionState.CONNECTING);
+        System.out.println("Remote switched to connecting after config change in the controller!");
+        remote.applyConfigUpdate(sceneConfig);
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
         System.out.println("Remote reconnected after reinitialization!");
     }

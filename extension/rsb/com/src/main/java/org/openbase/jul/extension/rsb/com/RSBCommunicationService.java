@@ -61,10 +61,9 @@ import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
-import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
-import rst.rsb.ScopeType;
+import rst.rsb.ScopeType.Scope;
 
 /**
  *
@@ -78,8 +77,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         RSBSharedConnectionConfig.load();
     }
 
-    public final static Scope SCOPE_SUFFIX_CONTROL = new Scope("/ctrl");
-    public final static Scope SCOPE_SUFFIX_STATUS = new Scope("/status");
+    public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
+    public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
 
     public final static String RPC_REQUEST_STATUS = "requestStatus";
 
@@ -97,7 +96,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final ReadLock dataBuilderReadLock;
     private final WriteLock dataBuilderWriteLock;
 
-    protected ScopeType.Scope scope;
+    protected Scope scope;
 
     private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
     private ControllerAvailabilityState controllerAvailabilityState;
@@ -138,7 +137,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws InitializationException
      * @throws InterruptedException
      */
-    public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
+    public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
@@ -148,7 +147,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws InitializationException
      * @throws InterruptedException
      */
-    public void init(final Scope scope) throws InitializationException, InterruptedException {
+    public void init(final rsb.Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
@@ -160,7 +159,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
-            init(new Scope(scope));
+            init(new rsb.Scope(scope));
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
@@ -189,7 +188,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws InitializationException
      * @throws InterruptedException
      */
-    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+    public void init(final rsb.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             init(ScopeTransformer.transform(scope), participantConfig);
         } catch (CouldNotTransformException ex) {
@@ -217,45 +216,45 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws InitializationException
      * @throws InterruptedException
      */
-    public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        final boolean alreadyActivated = isActive();
-        this.scope = scope;
-        ParticipantConfig internalParticipantConfig = participantConfig;
-
+    public synchronized void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
-            // activate transport communication set by the JPRSBTransport property.
-            enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-        }
+            final boolean alreadyActivated = isActive();
+            ParticipantConfig internalParticipantConfig = participantConfig;
 
-        try {
+            try {
+                // activate transport communication set by the JPRSBTransport property.
+                enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
+            } catch (JPServiceException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+            }
+
             if (scope == null) {
                 throw new NotAvailableException("scope");
             }
 
-            Scope internalScope = new Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
-
             // check if this instance was partly or fully initialized before.
-            if (initialized | informerWatchDog != null | serverWatchDog != null | informer != null | server != null) {
+            if (initialized | informerWatchDog != null | serverWatchDog != null) {
                 deactivate();
                 reset();
             }
 
+            this.scope = scope;
+            rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
+
             // init new instances.
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-            informer = new RSBSynchronizedInformer<>(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
-            informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
+            informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
+            informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
             // get local server object which allows to expose remotely callable methods.
-            server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
+            server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
             RPCHelper.registerInterface(Pingable.class, this, server);
             RPCHelper.registerInterface(Requestable.class, this, server);
             registerMethods(server);
 
-            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new Scope(Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
+            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
             this.serverWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
 
@@ -366,12 +365,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         if (informerWatchDog != null) {
             informerWatchDog.shutdown();
             informerWatchDog = null;
-            informer = null;
+            informer = new NotInitializedRSBInformer<>();
         }
         if (serverWatchDog != null) {
             serverWatchDog.shutdown();
             serverWatchDog = null;
-            server = null;
+            server = new NotInitializedRSBLocalServer();
         }
     }
 
@@ -520,7 +519,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
-    public ScopeType.Scope getScope() throws NotAvailableException {
+    public Scope getScope() throws NotAvailableException {
         if (scope == null) {
             throw new NotAvailableException("scope", new InvalidStateException("communication service not initialized yet!"));
         }

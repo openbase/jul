@@ -44,13 +44,17 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
-import static org.openbase.jul.pattern.Remote.ConnectionState.*;
+import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTED;
+import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTING;
+import static org.openbase.jul.pattern.Remote.ConnectionState.DISCONNECTED;
 import org.openbase.jul.schedule.GlobalExecutionService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -58,12 +62,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
-import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
-import rst.rsb.ScopeType;
-import org.openbase.jul.extension.rsb.iface.RSBListener;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
+import rst.rsb.ScopeType.Scope;
 
 /**
  *
@@ -129,7 +130,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
     @Override
-    public void init(final ScopeType.Scope scope) throws InitializationException, InterruptedException {
+    public void init(final Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
@@ -141,7 +142,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
     @Override
-    public void init(final Scope scope) throws InitializationException, InterruptedException {
+    public void init(final rsb.Scope scope) throws InitializationException, InterruptedException {
         init(scope, RSBSharedConnectionConfig.getParticipantConfig());
     }
 
@@ -154,7 +155,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
-            init(new Scope(scope));
+            init(new rsb.Scope(scope));
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new InitializationException(this, ex);
         }
@@ -169,7 +170,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws InterruptedException {@inheritDoc}
      */
     @Override
-    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+    public void init(final rsb.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
             init(ScopeTransformer.transform(scope), participantConfig);
         } catch (CouldNotTransformException ex) {
@@ -210,8 +211,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
     @Override
-    public synchronized void init(final ScopeType.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+    public synchronized void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
+            final boolean alreadyActivated = isActive();
             ParticipantConfig internalParticipantConfig = participantConfig;
             try {
                 // activate transport communication set by the JPRSBTransport porperty.
@@ -224,31 +226,35 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 throw new NotAvailableException("scope");
             }
 
-            if (initialized) {
-                logger.warn("Skip initialization because " + this + " already initialized!");
-                return;
+            // check if this instance was partly or fully initialized before.
+            if (initialized | listenerWatchDog != null | remoteServerWatchDog != null) {
+                deactivate();
+                reset();
             }
 
-            this.scope = new Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
+            this.scope = scope;
+
+            rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
             logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
 
-            initListener(this.scope, internalParticipantConfig);
-            initRemoteServer(this.scope, internalParticipantConfig);
+            initListener(internalScope, internalParticipantConfig);
+            initRemoteServer(internalScope, internalParticipantConfig);
 
-            try {
-                addHandler(mainHandler, true);
-            } catch (InterruptedException ex) {
-                logger.warn("Could not register main handler!", ex);
-            }
+            addHandler(mainHandler, true);
 
             postInit();
             initialized = true;
+
+            // check if remote service was already activated before and recover state.
+            if (alreadyActivated) {
+                activate();
+            }
         } catch (CouldNotPerformException ex) {
             throw new InitializationException(this, ex);
         }
     }
 
-    private void initListener(final Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
+    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
@@ -257,7 +263,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void initRemoteServer(final Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
+    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
@@ -367,6 +373,20 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         listenerWatchDog.deactivate();
     }
 
+    public void reset() {
+        // clear existing instances.
+        if (listenerWatchDog != null) {
+            listenerWatchDog.shutdown();
+            listenerWatchDog = null;
+            listener = new NotInitializedRSBListener();
+        }
+        if (remoteServerWatchDog != null) {
+            remoteServerWatchDog.shutdown();
+            remoteServerWatchDog = null;
+            remoteServer = new NotInitializedRSBRemoteServer();
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -416,7 +436,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public boolean isActive() {
-        return listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
+        try {
+            return listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
+        } catch (NullPointerException ex) {
+            return false;
+        }
     }
 
     private void activateRemoteServer() throws InterruptedException {
@@ -866,15 +890,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @throws org.openbase.jul.exception.NotAvailableException {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
-    public ScopeType.Scope getScope() throws NotAvailableException {
-        try {
-            return ScopeTransformer.transform(scope);
-        } catch (CouldNotTransformException ex) {
-            throw new NotAvailableException("scope", ex);
+    public Scope getScope() throws NotAvailableException {
+        if (scope == null) {
+            throw new NotAvailableException("scope", new InvalidStateException("remote service not initialized yet!"));
         }
+        return scope;
     }
 
     private class InternalUpdateHandler implements Handler {

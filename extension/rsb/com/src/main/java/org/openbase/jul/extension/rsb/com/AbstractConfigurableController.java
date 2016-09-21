@@ -87,27 +87,31 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         synchronized (CONFIG_LOCK) {
-            this.config = config;
-
-            if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
-                setDataField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
-            }
-
-            if (supportsDataField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
-                setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
-            }
-
-            // detect scope change if instance is already active and reinit if needed.
             try {
-                if (isActive() && !scope.equals(detectScope(config))) {
-                    currentScope = detectScope();
-                    super.init(currentScope);
-                }
-            } catch (CouldNotPerformException ex) {
-                throw new CouldNotPerformException("Could not verify scope changes!", ex);
-            }
+                this.config = config;
 
-            return this.config;
+                if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
+                    setDataField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
+                }
+
+                if (supportsDataField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
+                    setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
+                }
+
+                // detect scope change if instance is already active and reinit if needed.
+                try {
+                    if (isActive() && !scope.equals(detectScope(config))) {
+                        currentScope = detectScope();
+                        super.init(currentScope);
+                    }
+                } catch (CouldNotPerformException ex) {
+                    throw new CouldNotPerformException("Could not verify scope changes!", ex);
+                }
+
+                return this.config;
+            } catch (CouldNotPerformException ex) {
+                throw new CouldNotPerformException("Could not apply config update!", ex);
+            }
         }
     }
 
@@ -133,12 +137,11 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     protected final Object getConfigField(String name, final CONFIG config) throws CouldNotPerformException {
         try {
-            final CONFIG currentConfig = config;
-            Descriptors.FieldDescriptor findFieldByName = currentConfig.getDescriptorForType().findFieldByName(name);
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
             if (findFieldByName == null) {
-                throw new NotAvailableException("Field[" + name + "] does not exist for type " + currentConfig.getClass().getName());
+                throw new NotAvailableException("Field[" + name + "] does not exist for type " + config.getClass().getName());
             }
-            return currentConfig.getField(findFieldByName);
+            return config.getField(findFieldByName);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not return value of config field [" + name + "] for " + this, ex);
         }
