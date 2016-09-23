@@ -65,7 +65,7 @@ public class RSBRemoteServiceTest {
      *
      * @throws java.lang.InterruptedException
      */
-    @Test(timeout = 1000)
+    @Test(timeout = 10000)
     public void testWaitForConnectionState_RemoteRemoteConnectionState_long() throws InterruptedException {
         System.out.println("waitForConnectionState");
         RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();

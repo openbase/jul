@@ -90,7 +90,6 @@ public class ConfigurableControllerAndRemoteTest {
 
         scope = scope.toBuilder().clearComponent().addComponent("test").addComponent("configurables").build();
         sceneConfig = sceneConfig.toBuilder().setScope(scope).build();
-
         controller.init(sceneConfig);
         controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
         System.out.println("Controller is online again!");

@@ -100,7 +100,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
                 // detect scope change if instance is already active and reinit if needed.
                 try {
-                    if (isActive() && !scope.equals(detectScope(config))) {
+                    if (isActive() && !currentScope.equals(detectScope(config))) {
                         currentScope = detectScope();
                         super.init(currentScope);
                     }
