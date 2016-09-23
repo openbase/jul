@@ -686,7 +686,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
 
                 if (dataUpdate == null) {
-                    // controller shutdown or error detected!
+                    logger.info("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
                     setConnectionState(CONNECTING);
                     return data;
                 }
@@ -910,7 +910,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 Object dataUpdate = event.getData();
 
                 if (dataUpdate == null) {
-                    // controller shutdown or error detected!
+                    logger.info("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
                     setConnectionState(CONNECTING);
                     return;
                 }
@@ -1054,7 +1054,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 } catch (java.util.concurrent.TimeoutException ex) {
                     synchronized (connectionMonitor) {
                         if (connectionState == CONNECTED) {
-                            logger.warn("Connection to Participant[" + ScopeTransformer.transform(getScope()) + "] lost!");
+                            logger.warn("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] lost!");
 
                             // init reconnection
                             setConnectionState(CONNECTING);
