@@ -52,6 +52,7 @@ import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Requestable;
+import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
@@ -125,6 +126,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
             this.initialized = false;
+            registerShutdownHook(this);
 
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
@@ -383,7 +385,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             deactivate();
             reset();
         } catch (CouldNotPerformException | InterruptedException ex) {
-            ExceptionPrinter.printHistory(ex, logger);
+            ExceptionPrinter.printHistory("Could not shutdown " + this + "!", ex, logger);
         }
     }
 

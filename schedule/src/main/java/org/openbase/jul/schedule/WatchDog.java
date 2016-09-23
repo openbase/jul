@@ -43,40 +43,40 @@ import org.slf4j.LoggerFactory;
  * @author mpohling
  */
 public class WatchDog implements Activatable, Shutdownable {
-
+    
     private final Object EXECUTION_LOCK = new Object();
     private final Object activationLock;
-
+    
     private static final long DELAY = 5000;
-
+    
     public enum ServiceState {
-
+        
         UNKNWON, CONSTRUCTED, INITIALIZING, RUNNING, TERMINATING, FINISHED, FAILED, INTERRUPTED
     };
-
+    
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+    
     private final Activatable service;
     private final String serviceName;
     private Minder minder;
     private ServiceState serviceState = ServiceState.UNKNWON;
-
+    
     private final ObservableImpl<ServiceState> serviceStateObserable;
-
+    
     public WatchDog(final Activatable task, final String serviceName) throws InstantiationException {
         try {
-
+            
             this.service = task;
             this.serviceName = serviceName;
             this.serviceStateObserable = new ObservableImpl<>();
             this.activationLock = new SyncObject(serviceName + "WatchDogLock");
-
+            
             if (task == null) {
                 throw new NotAvailableException("task");
             }
-
+            
             Runtime.getRuntime().addShutdownHook(new Thread() {
-
+                
                 @Override
                 public void run() {
                     try {
@@ -86,13 +86,13 @@ public class WatchDog implements Activatable, Shutdownable {
                     }
                 }
             });
-
+            
             setServiceState(ServiceState.CONSTRUCTED);
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
     }
-
+    
     @Override
     public void activate() throws InterruptedException {
         logger.trace("Try to activate service: " + serviceName);
@@ -106,7 +106,7 @@ public class WatchDog implements Activatable, Shutdownable {
             logger.trace("Start activation of service: " + serviceName);
             minder.start();
         }
-
+        
         try {
             waitForActivation();
         } catch (InterruptedException ex) {
@@ -114,45 +114,45 @@ public class WatchDog implements Activatable, Shutdownable {
             throw ex;
         }
     }
-
+    
     @Override
     public void deactivate() throws InterruptedException {
-        logger.trace("Try to deactivate service: " + serviceName);
+        logger.info("Try to deactivate service: " + serviceName);
         synchronized (EXECUTION_LOCK) {
-            logger.trace("Init deactivation of service: " + serviceName);
+            logger.info("Init deactivation of service: " + serviceName);
             if (minder == null) {
-                logger.debug("Skip deactivation, Service[" + serviceName + "] not running!");
+                logger.info("Skip deactivation, Service[" + serviceName + "] not running!");
                 return;
             }
-
-            logger.trace("Init service interruption...");
+            
+            logger.info("Init service interruption...");
             minder.interrupt();
-            logger.trace("Wait for service interruption...");
+            logger.info("Wait for service interruption...");
             minder.join();
             minder = null;
-            logger.trace("Service interrupted!");
+            logger.info("Service interrupted!");
             skipActivation();
         }
     }
-
+    
     @Override
     public boolean isActive() {
         return minder != null;
     }
-
+    
     public String getServiceName() {
         return serviceName;
     }
-
+    
     public void waitForActivation() throws InterruptedException {
-
+        
         synchronized (activationLock) {
             if (serviceState == ServiceState.RUNNING) {
                 return;
             }
-
+            
             addObserver(new Observer<ServiceState>() {
-
+                
                 @Override
                 public void update(final Observable<ServiceState> source, ServiceState data) throws Exception {
                     if (data == ServiceState.RUNNING) {
@@ -165,20 +165,20 @@ public class WatchDog implements Activatable, Shutdownable {
             activationLock.wait();
         }
     }
-
+    
     public void skipActivation() {
         synchronized (activationLock) {
             activationLock.notifyAll();
         }
     }
-
+    
     private class Minder extends Thread {
-
+        
         private Minder(String name) {
             super(name);
             setServiceState(ServiceState.INITIALIZING);
         }
-
+        
         @Override
         public void run() {
             try {
@@ -205,13 +205,14 @@ public class WatchDog implements Activatable, Shutdownable {
                      *
                      * !!! Do not recover the interrupted state to grantee a proper shutdown !!!
                      */
-                    logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
+                    logger.info("Minder shutdown initiated of Service[" + serviceName + "]...");
                 }
-
+                
                 while (service.isActive()) {
                     setServiceState(ServiceState.TERMINATING);
                     try {
                         try {
+                            logger.info("Minder deactivation initiated of Service[" + serviceName + "]...");
                             service.deactivate();
                             setServiceState(ServiceState.FINISHED);
                         } catch (IllegalStateException | CouldNotPerformException ex) {
@@ -229,16 +230,16 @@ public class WatchDog implements Activatable, Shutdownable {
                 skipActivation();
             }
         }
-
+        
         private void waitWithinDelay() throws InterruptedException {
             Thread.sleep(DELAY);
         }
     }
-
+    
     public Activatable getService() {
         return service;
     }
-
+    
     private void setServiceState(final ServiceState serviceState) {
         try {
             synchronized (activationLock) {
@@ -253,19 +254,19 @@ public class WatchDog implements Activatable, Shutdownable {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify state change to all instances!", ex), logger);
         }
     }
-
+    
     public ServiceState getServiceState() {
         return serviceState;
     }
-
+    
     public void addObserver(Observer<ServiceState> observer) {
         serviceStateObserable.addObserver(observer);
     }
-
+    
     public void removeObserver(Observer<ServiceState> observer) {
         serviceStateObserable.removeObserver(observer);
     }
-
+    
     @Override
     public void shutdown() {
         try {
@@ -276,7 +277,7 @@ public class WatchDog implements Activatable, Shutdownable {
             Thread.currentThread().interrupt();
         }
     }
-
+    
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[" + serviceName + "]";

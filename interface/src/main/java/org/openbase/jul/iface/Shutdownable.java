@@ -21,7 +21,6 @@ package org.openbase.jul.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
@@ -30,10 +29,20 @@ public interface Shutdownable {
 
     /**
      * This method initializes the shutdown phrase of this instance.
-     * 
-     * All resources will be released. 
+     *
+     * All resources will be released.
      * In case of any errors no exception will/should be thrown and the method will/should not block.
      * These behavior guarantees a proper component shutdown without skipping any parts because of exception handling.
      */
     public void shutdown();
+
+    static void registerShutdownHook(final Shutdownable shutdownable) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+
+            @Override
+            public void run() {
+                shutdownable.shutdown();
+            }
+        });
+    }
 }

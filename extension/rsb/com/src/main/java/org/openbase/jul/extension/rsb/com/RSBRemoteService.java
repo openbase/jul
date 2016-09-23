@@ -48,6 +48,7 @@ import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
+import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -120,6 +121,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.connectionState = DISCONNECTED;
         this.connectionPing = -1;
         this.lastPingReceived = -1;
+        registerShutdownHook(this);
     }
 
     /**
@@ -718,7 +720,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             try {
                 deactivate();
             } catch (CouldNotPerformException | InterruptedException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not deactivate remote service!", ex), logger);
+                ExceptionPrinter.printHistory("Could not shutdown " + this + "!", ex, logger);
             }
         }
     }
