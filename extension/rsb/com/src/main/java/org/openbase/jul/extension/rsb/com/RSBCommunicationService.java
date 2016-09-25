@@ -356,9 +356,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // was never initialized!
             return;
         }
+        // clear existing instances.
         setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
-        informerWatchDog.deactivate();
-        serverWatchDog.deactivate();
+        if (informerWatchDog != null) {
+            informerWatchDog.deactivate();
+        }
+        if (serverWatchDog != null) {
+            serverWatchDog.deactivate();
+        }
         setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
     }
 

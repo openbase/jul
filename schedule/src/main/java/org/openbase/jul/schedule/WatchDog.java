@@ -39,7 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+// *
  * @author mpohling
  */
 public class WatchDog implements Activatable, Shutdownable {
@@ -117,20 +117,20 @@ public class WatchDog implements Activatable, Shutdownable {
     
     @Override
     public void deactivate() throws InterruptedException {
-        logger.info("Try to deactivate service: " + serviceName);
+        logger.debug("Try to deactivate service: " + serviceName);
         synchronized (EXECUTION_LOCK) {
-            logger.info("Init deactivation of service: " + serviceName);
+            logger.debug("Init deactivation of service: " + serviceName);
             if (minder == null) {
-                logger.info("Skip deactivation, Service[" + serviceName + "] not running!");
+                logger.debug("Skip deactivation, Service[" + serviceName + "] not running!");
                 return;
             }
             
-            logger.info("Init service interruption...");
+            logger.debug("Init service interruption...");
             minder.interrupt();
-            logger.info("Wait for service interruption...");
+            logger.debug("Wait for service interruption...");
             minder.join();
             minder = null;
-            logger.info("Service interrupted!");
+            logger.debug("Service interrupted!");
             skipActivation();
         }
     }
@@ -205,14 +205,14 @@ public class WatchDog implements Activatable, Shutdownable {
                      *
                      * !!! Do not recover the interrupted state to grantee a proper shutdown !!!
                      */
-                    logger.info("Minder shutdown initiated of Service[" + serviceName + "]...");
+                    logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
                 }
                 
                 while (service.isActive()) {
                     setServiceState(ServiceState.TERMINATING);
                     try {
                         try {
-                            logger.info("Minder deactivation initiated of Service[" + serviceName + "]...");
+                            logger.debug("Minder deactivation initiated of Service[" + serviceName + "]...");
                             service.deactivate();
                             setServiceState(ServiceState.FINISHED);
                         } catch (IllegalStateException | CouldNotPerformException ex) {

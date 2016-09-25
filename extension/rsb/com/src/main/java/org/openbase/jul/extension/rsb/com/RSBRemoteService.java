@@ -84,7 +84,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
     public static final long METHOD_CALL_MAX_TIMEOUT = 30000;
 
-    private static final Random jitterRandom = new Random();
+    private static final Random JITTER_RANDOM = new Random();
 
     static {
         RSBSharedConnectionConfig.load();
@@ -269,17 +269,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
-            this.listenerWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
-
-                @Override
-                public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
-
-                    logger.debug("listener state update: " + data.name());
-                    // Sync data after service start.
-                    if (data == WatchDog.ServiceState.RUNNING) {
-                        remoteServerWatchDog.waitForActivation();
-                        requestData();
-                    }
+            this.listenerWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data1) -> {
+                logger.debug("listener state update: " + data1.name());
+                // Sync data after service start.
+                if (data1 == WatchDog.ServiceState.RUNNING) {
+                    remoteServerWatchDog.waitForActivation();
+                    requestData();
                 }
             });
         } catch (Exception ex) {
@@ -324,8 +319,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             validateInitialization();
             setConnectionState(CONNECTING);
-            activateRemoteServer();
-            activateListener();
+            remoteServerWatchDog.activate();
+            listenerWatchDog.activate();
         } catch (CouldNotPerformException ex) {
             throw new InvalidStateException("Could not activate remote service!", ex);
         }
@@ -363,16 +358,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
         setConnectionState(DISCONNECTED);
         skipSyncTasks();
-        deactivateListener();
-        deactivateRemoteServer();
-    }
+        if (listenerWatchDog != null) {
+            listenerWatchDog.deactivate();
+        }
 
-    private void activateListener() throws InterruptedException {
-        listenerWatchDog.activate();
-    }
-
-    private void deactivateListener() throws InterruptedException {
-        listenerWatchDog.deactivate();
+        if (remoteServerWatchDog != null) {
+            remoteServerWatchDog.deactivate();
+        }
     }
 
     public void reset() {
@@ -443,14 +435,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (NullPointerException ex) {
             return false;
         }
-    }
-
-    private void activateRemoteServer() throws InterruptedException {
-        remoteServerWatchDog.activate();
-    }
-
-    private void deactivateRemoteServer() throws InterruptedException {
-        remoteServerWatchDog.deactivate();
     }
 
     /**
@@ -1116,6 +1100,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     private static long generateTimeout(long currentTimeout) {
-        return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (jitterRandom.nextDouble() * 1000)));
+        return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (JITTER_RANDOM.nextDouble() * 1000)));
     }
 }
