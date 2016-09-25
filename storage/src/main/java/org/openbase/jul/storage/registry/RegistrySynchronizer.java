@@ -224,7 +224,8 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     }
 
     /**
-     * Method should return true if the given configurations is valid, otherwise false. This default implementation accepts all configurations. To implement a custom verification just overwrite this
+     * Method should return true if the given configurations is valid, otherwise false. 
+     * This default implementation accepts all configurations. To implement a custom verification just overwrite this
      * method.
      *
      * @param config

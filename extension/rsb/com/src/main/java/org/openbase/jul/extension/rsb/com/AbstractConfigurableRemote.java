@@ -48,7 +48,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
     private final SyncObject CONFIG_LOCK = new SyncObject("ConfigLock");
 
     private final Class<CONFIG> configClass;
-    protected CONFIG config;
+    private CONFIG config;
     private Scope currentScope;
     private final ObservableImpl<CONFIG> configObservable;
 

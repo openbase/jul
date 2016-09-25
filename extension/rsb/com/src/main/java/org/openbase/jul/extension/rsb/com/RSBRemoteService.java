@@ -976,7 +976,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void addObserver(Observer<M> observer) {
         addDataObserver(observer);
     }
-
+    
     /**
      *
      * @param observer
