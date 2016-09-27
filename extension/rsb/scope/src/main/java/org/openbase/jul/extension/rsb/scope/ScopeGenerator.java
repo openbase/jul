@@ -24,6 +24,7 @@ package org.openbase.jul.extension.rsb.scope;
 import java.util.Collection;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import rsb.Scope;
 import rst.authorization.AuthorizationGroupConfigType.AuthorizationGroupConfig;
 import rst.authorization.UserConfigType.UserConfig;
@@ -36,7 +37,6 @@ import rst.homeautomation.unit.UnitGroupConfigType.UnitGroupConfig;
 import rst.rsb.ScopeType;
 import rst.spatial.ConnectionConfigType.ConnectionConfig;
 import rst.spatial.LocationConfigType.LocationConfig;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
@@ -87,7 +87,7 @@ public class ScopeGenerator {
         return generatedScope.build();
     }
 
-    public static ScopeType.Scope generateLocationScope(final LocationConfig locationConfig, final ProtoBufMessageMap<String, LocationConfig, LocationConfig.Builder> registry) throws CouldNotPerformException {
+    public static ScopeType.Scope generateLocationScope(final UnitConfig locationConfig, final ProtoBufMessageMap<String, UnitConfig, UnitConfig.Builder> registry) throws CouldNotPerformException {
 
         if (locationConfig == null) {
             throw new NotAvailableException("locationConfig");

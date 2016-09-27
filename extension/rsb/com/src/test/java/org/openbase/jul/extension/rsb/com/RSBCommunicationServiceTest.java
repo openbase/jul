@@ -25,22 +25,24 @@ package org.openbase.jul.extension.rsb.com;
  */
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import org.junit.After;
+import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
-import org.openbase.jul.schedule.SyncObject;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Remote.ConnectionState;
+import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
@@ -49,9 +51,8 @@ import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.spatial.LocationConfigType.LocationConfig;
-import rst.spatial.LocationRegistryDataType.LocationRegistryData;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import rst.homeautomation.unit.UnitConfigType.UnitConfig;
+import rst.homeautomation.unit.UnitRegistryDataType.UnitRegistryData;
 
 /**
  *
@@ -60,8 +61,8 @@ import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 public class RSBCommunicationServiceTest {
 
     static {
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(LocationRegistryData.getDefaultInstance()));
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(LocationConfig.getDefaultInstance()));
+        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
+        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitConfig.getDefaultInstance()));
     }
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -94,25 +95,25 @@ public class RSBCommunicationServiceTest {
     public void testInitialSync() throws Exception {
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
-        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        UnitConfig unit1 = UnitConfig.newBuilder().setId("Location1").build();
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(unit1);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
-        remoteService.addDataObserver(new Observer<LocationRegistryData>() {
+        remoteService.addDataObserver(new Observer<UnitRegistryData>() {
 
             @Override
-            public void update(final Observable<LocationRegistryData> source, LocationRegistryData data) throws Exception {
-                if (data.getLocationConfigCount() == 1 && data.getLocationConfig(0).getId().equals("Location1")) {
+            public void update(final Observable<UnitRegistryData> source, UnitRegistryData data) throws Exception {
+                if (data.getUnitConfigCount() == 1 && data.getUnitConfig(0).getId().equals("Location1")) {
                     firstSync = true;
                     synchronized (waitForDataSync) {
                         waitForDataSync.notifyAll();
                     }
                 }
-                if (data.getLocationConfigCount() == 2 && data.getLocationConfig(0).getId().equals("Location1") && data.getLocationConfig(1).getId().equals("Location2")) {
+                if (data.getUnitConfigCount() == 2 && data.getUnitConfig(0).getId().equals("Location1") && data.getUnitConfig(1).getId().equals("Location2")) {
                     secondSync = true;
                     synchronized (waitForDataSync) {
                         waitForDataSync.notifyAll();
@@ -131,8 +132,8 @@ public class RSBCommunicationServiceTest {
         assertTrue("Synchronization after the start of the remote service has not been done", firstSync);
 
         communicationService.deactivate();
-        LocationConfig location2 = LocationConfig.newBuilder().setId("Location2").build();
-        testData.addLocationConfig(location2);
+        UnitConfig location2 = UnitConfig.newBuilder().setId("Location2").build();
+        testData.addUnitConfig(location2);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
 
@@ -192,8 +193,8 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 30000)
     public void testReconnection() throws Exception {
         String scope = "/test/reconnection";
-        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
@@ -230,8 +231,8 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 5000)
     public void testWaitForData() throws Exception {
         String scope = "/test/reconnection";
-        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
@@ -253,8 +254,8 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 5000)
     public void testRequestData() throws Exception {
         String scope = "/test/reconnection";
-        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
@@ -270,12 +271,11 @@ public class RSBCommunicationServiceTest {
         remoteService.shutdown();
     }
 
-
     @Test(timeout = 5000)
     public void testRemoteInterference() throws Exception {
         String scope = "/test/reconnection";
-        LocationConfig location1 = LocationConfig.newBuilder().setId("Location1").build();
-        LocationRegistryData.Builder testData = LocationRegistryData.getDefaultInstance().toBuilder().addLocationConfig(location1);
+        UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
 
         RSBRemoteService remoteService1 = new RSBRemoteServiceImpl();
         RSBRemoteService remoteService2 = new RSBRemoteServiceImpl();
@@ -300,9 +300,9 @@ public class RSBCommunicationServiceTest {
         remoteService2.shutdown();
     }
 
-    public static class RSBCommunicationServiceImpl extends RSBCommunicationService<LocationRegistryData, LocationRegistryData.Builder> {
+    public static class RSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> {
 
-        public RSBCommunicationServiceImpl(LocationRegistryData.Builder builder) throws InstantiationException {
+        public RSBCommunicationServiceImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
 
@@ -311,14 +311,14 @@ public class RSBCommunicationServiceTest {
         }
     }
 
-    public static class RSBRemoteServiceImpl extends RSBRemoteService<LocationRegistryData> {
+    public static class RSBRemoteServiceImpl extends RSBRemoteService<UnitRegistryData> {
 
         public RSBRemoteServiceImpl() {
-            super(LocationRegistryData.class);
+            super(UnitRegistryData.class);
         }
 
         @Override
-        public void notifyDataUpdate(LocationRegistryData data) throws CouldNotPerformException {
+        public void notifyDataUpdate(UnitRegistryData data) throws CouldNotPerformException {
         }
     }
 }

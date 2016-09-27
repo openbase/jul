@@ -38,8 +38,8 @@ import org.openbase.jul.pattern.Controller;
 import org.openbase.jul.pattern.Remote;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.homeautomation.control.scene.SceneConfigType.SceneConfig;
 import rst.homeautomation.control.scene.SceneDataType.SceneData;
+import rst.homeautomation.unit.UnitConfigType.UnitConfig;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -74,14 +74,14 @@ public class ConfigurableControllerAndRemoteTest {
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test").addComponent("configurable").addComponent("controller").addComponent("and").addComponent("remote").build();
-        SceneConfig sceneConfig = SceneConfig.newBuilder().setId(UUID.randomUUID().toString()).setLabel("TestScene").setScope(scope).build();
+        UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setLabel("TestScene").setScope(scope).build();
 
         AbstractConfigurableController controller = new AbstractConfigurableControllerImpl();
-        controller.init(sceneConfig);
+        controller.init(unitConfig);
         controller.activate();
 
-        AbstractConfigurableRemote remote = new AbstractConfigurableRemoteImpl(SceneData.class, SceneConfig.class);
-        remote.init(sceneConfig);
+        AbstractConfigurableRemote remote = new AbstractConfigurableRemoteImpl(SceneData.class, UnitConfig.class);
+        remote.init(unitConfig);
         remote.activate();
 
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
@@ -89,13 +89,13 @@ public class ConfigurableControllerAndRemoteTest {
         System.out.println("Succesfully connected controller and remote!");
 
         scope = scope.toBuilder().clearComponent().addComponent("test").addComponent("configurables").build();
-        sceneConfig = sceneConfig.toBuilder().setScope(scope).build();
-        controller.init(sceneConfig);
+        unitConfig = unitConfig.toBuilder().setScope(scope).build();
+        controller.init(unitConfig);
         controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
         System.out.println("Controller is online again!");
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTING);
         System.out.println("Remote switched to connecting after config change in the controller!");
-        remote.init(sceneConfig);
+        remote.init(unitConfig);
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
         System.out.println("Remote reconnected after reinitialization!");
     }
@@ -107,14 +107,14 @@ public class ConfigurableControllerAndRemoteTest {
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test2").addComponent("configurable2").addComponent("controller2").addComponent("and2").addComponent("remote2").build();
-        SceneConfig sceneConfig = SceneConfig.newBuilder().setId(UUID.randomUUID().toString()).setLabel("TestScene2").setScope(scope).build();
+        UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setLabel("TestScene2").setScope(scope).build();
 
         AbstractConfigurableController controller = new AbstractConfigurableControllerImpl();
-        controller.init(sceneConfig);
+        controller.init(unitConfig);
         controller.activate();
 
-        AbstractConfigurableRemote remote = new AbstractConfigurableRemoteImpl(SceneData.class, SceneConfig.class);
-        remote.init(sceneConfig);
+        AbstractConfigurableRemote remote = new AbstractConfigurableRemoteImpl(SceneData.class, UnitConfig.class);
+        remote.init(unitConfig);
         remote.activate();
 
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
@@ -122,19 +122,19 @@ public class ConfigurableControllerAndRemoteTest {
         System.out.println("Succesfully connected controller and remote!");
 
         scope = scope.toBuilder().clearComponent().addComponent("test2").addComponent("configurables2").build();
-        sceneConfig = sceneConfig.toBuilder().setScope(scope).build();
+        unitConfig = unitConfig.toBuilder().setScope(scope).build();
 
-        controller.applyConfigUpdate(sceneConfig);
+        controller.applyConfigUpdate(unitConfig);
         controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
         System.out.println("Controller is online again!");
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTING);
         System.out.println("Remote switched to connecting after config change in the controller!");
-        remote.applyConfigUpdate(sceneConfig);
+        remote.applyConfigUpdate(unitConfig);
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
         System.out.println("Remote reconnected after reinitialization!");
     }
 
-    public class AbstractConfigurableControllerImpl extends AbstractConfigurableController<SceneData, SceneData.Builder, SceneConfig> {
+    public class AbstractConfigurableControllerImpl extends AbstractConfigurableController<SceneData, SceneData.Builder, UnitConfig> {
 
         public AbstractConfigurableControllerImpl() throws Exception {
             super(SceneData.newBuilder());
@@ -145,9 +145,9 @@ public class ConfigurableControllerAndRemoteTest {
         }
     }
 
-    public class AbstractConfigurableRemoteImpl extends AbstractConfigurableRemote<SceneData, SceneConfig> {
+    public class AbstractConfigurableRemoteImpl extends AbstractConfigurableRemote<SceneData, UnitConfig> {
 
-        public AbstractConfigurableRemoteImpl(Class<SceneData> dataClass, Class<SceneConfig> configClass) {
+        public AbstractConfigurableRemoteImpl(Class<SceneData> dataClass, Class<UnitConfig> configClass) {
             super(dataClass, configClass);
         }
     }

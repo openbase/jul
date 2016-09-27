@@ -23,8 +23,6 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.extension.protobuf.ProtobufListDiff;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -33,38 +31,38 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import rst.homeautomation.device.DeviceConfigType.DeviceConfig;
+import rst.homeautomation.unit.UnitConfigType.UnitConfig;
 
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  */
 public class ProtobufListDiffTest {
-    
-    private static List<DeviceConfig> currentContext, modContext;
-    
+
+    private static List<UnitConfig> currentContext, modContext;
+
     public ProtobufListDiffTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
         currentContext = new ArrayList<>();
-        currentContext.add(DeviceConfig.newBuilder().setId("1").build());
-        currentContext.add(DeviceConfig.newBuilder().setId("2").build());
-        currentContext.add(DeviceConfig.newBuilder().setId("3").build());
-        currentContext.add(DeviceConfig.newBuilder().setId("4").build());
-        currentContext.add(DeviceConfig.newBuilder().setId("5").build());
+        currentContext.add(UnitConfig.newBuilder().setId("1").build());
+        currentContext.add(UnitConfig.newBuilder().setId("2").build());
+        currentContext.add(UnitConfig.newBuilder().setId("3").build());
+        currentContext.add(UnitConfig.newBuilder().setId("4").build());
+        currentContext.add(UnitConfig.newBuilder().setId("5").build());
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
         currentContext.clear();
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
@@ -75,19 +73,19 @@ public class ProtobufListDiffTest {
     @Test(timeout = 5000)
     public void testGetNewMessages() {
         System.out.println("getNewMessages");
-        
-        DeviceConfig newDeviceConfig = DeviceConfig.newBuilder().setId("new").build();
-        
+
+        UnitConfig newUnitConfig = UnitConfig.newBuilder().setId("new").build();
+
         ProtobufListDiff diff = new ProtobufListDiff(currentContext);
         modContext = new ArrayList<>(currentContext);
-        
-        modContext.add(newDeviceConfig);
-        
+
+        modContext.add(newUnitConfig);
+
         diff.diff(modContext);
         Assert.assertTrue(diff.getUpdatedMessageMap().isEmpty());
         Assert.assertTrue(diff.getRemovedMessageMap().isEmpty());
         Assert.assertEquals(1, diff.getNewMessageMap().size());
-        Assert.assertTrue(diff.getNewMessageMap().getMessages().contains(newDeviceConfig));
+        Assert.assertTrue(diff.getNewMessageMap().getMessages().contains(newUnitConfig));
     }
 
     /**
@@ -96,23 +94,23 @@ public class ProtobufListDiffTest {
     @Test(timeout = 5000)
     public void testGetUpdatedMessages() {
         System.out.println("getUpdatedMessages");
-        DeviceConfig updatedDeviceConfig = DeviceConfig.newBuilder().setId("2").setDescription("updated").build();
-        
+        UnitConfig updatedUnitConfig = UnitConfig.newBuilder().setId("2").setDescription("updated").build();
+
         ProtobufListDiff diff = new ProtobufListDiff(currentContext);
         modContext = new ArrayList<>(currentContext);
-        
-        for (DeviceConfig context : currentContext) {
-            if(context.getId().equals("2")) {
+
+        for (UnitConfig context : currentContext) {
+            if (context.getId().equals("2")) {
                 modContext.remove(context);
                 break;
             }
         }
-        modContext.add(updatedDeviceConfig);
+        modContext.add(updatedUnitConfig);
         diff.diff(modContext);
         Assert.assertTrue(diff.getNewMessageMap().isEmpty());
         Assert.assertTrue(diff.getRemovedMessageMap().isEmpty());
         Assert.assertEquals(1, diff.getUpdatedMessageMap().size());
-        Assert.assertTrue(diff.getUpdatedMessageMap().getMessages().contains(updatedDeviceConfig));
+        Assert.assertTrue(diff.getUpdatedMessageMap().getMessages().contains(updatedUnitConfig));
     }
 
     /**
@@ -121,18 +119,18 @@ public class ProtobufListDiffTest {
     @Test(timeout = 5000)
     public void testGetRemovedMessages() {
         System.out.println("getRemovedMessages");
-        DeviceConfig removedDeviceConfig = DeviceConfig.newBuilder().setId("1").build();
-        
+        UnitConfig removedUnitConfig = UnitConfig.newBuilder().setId("1").build();
+
         ProtobufListDiff diff = new ProtobufListDiff(currentContext);
         modContext = new ArrayList<>(currentContext);
-        
-        modContext.remove(removedDeviceConfig);
-        
+
+        modContext.remove(removedUnitConfig);
+
         diff.diff(modContext);
         Assert.assertTrue(diff.getUpdatedMessageMap().isEmpty());
         Assert.assertTrue(diff.getNewMessageMap().isEmpty());
         Assert.assertEquals(1, diff.getRemovedMessageMap().size());
-        Assert.assertTrue(diff.getRemovedMessageMap().getMessages().contains(removedDeviceConfig));
+        Assert.assertTrue(diff.getRemovedMessageMap().getMessages().contains(removedUnitConfig));
     }
-    
+
 }
