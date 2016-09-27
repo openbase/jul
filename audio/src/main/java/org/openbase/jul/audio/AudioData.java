@@ -22,64 +22,14 @@ package org.openbase.jul.audio;
  * #L%
  */
 
-import static org.openbase.jul.audio.AudioPlayer.BUFSIZE;
-import java.io.File;
-import java.io.IOException;
 import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class AudioData implements AudioDataInterface {
-
-	private final byte[] data;
-	private final AudioFormat format;
-	private final long dataLenght;
-
-	public AudioData(final byte[] data, final AudioFormat format, final long dataLenght) {
-		this.data = data;
-		this.format = format;
-		this.dataLenght = dataLenght;
-	}
-
-	public AudioData(final File soundFile) throws CouldNotPerformException, UnsupportedAudioFileException, IOException {
-		if (!soundFile.exists()) {
-			throw new CouldNotPerformException("AudioFile is missing!");
-		}
-
-        try (AudioInputStream ais = AudioSystem.getAudioInputStream(soundFile)) {
-            this.dataLenght=  ais.getFrameLength();
-            this.format = ais.getFormat();
-            this.data = new byte[(int) ais.getFrameLength() * format.getFrameSize()];
-            final byte[] buf = new byte[BUFSIZE];
-            for (int i = 0; i < data.length; i += BUFSIZE) {
-                int r = ais.read(buf, 0, BUFSIZE);
-                if (i + r >= data.length) {
-                    r = data.length - i;
-                }
-                System.arraycopy(buf, 0, data, i, r);
-            }
-        }
-	}
-
-
-	@Override
-	public byte[] getData() {
-		return data;
-	}
-
-	@Override
-	public AudioFormat getFormat() {
-		return format;
-	}
-
-	@Override
-	public long getDataLenght() {
-		return dataLenght;
-	}
+public interface AudioData extends AudioSource {
+	public byte[] getData();
+	public AudioFormat getFormat();
+	public long getDataLenght();
 }

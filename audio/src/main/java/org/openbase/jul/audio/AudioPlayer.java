@@ -85,8 +85,8 @@ public class AudioPlayer {
 	}
 
 	private static void play(final AudioSource source) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
-		if (source instanceof AudioDataInterface) {
-			play((AudioDataInterface) source);
+		if (source instanceof AudioData) {
+			play((AudioData) source);
 		} else if (source instanceof AudioFileHolder) {
 			play(((AudioFileHolder) source).getFile());
 		} else {
@@ -95,7 +95,7 @@ public class AudioPlayer {
 		}
 	}
 
-	private static void play(final AudioDataInterface audioData) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
+	private static void play(final AudioData audioData) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
 
 		AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData.getData()), audioData.getFormat(), audioData.getDataLenght());
 //		
