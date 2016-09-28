@@ -23,7 +23,6 @@ package org.openbase.jul.extension.rst.storage.registry.consistency;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,9 +31,9 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.storage.registry.AbstractProtoBufRegistryConsistencyHandler;
 import org.openbase.jul.storage.registry.EntryModification;
-import rst.spatial.LocationConfigType;
-import rst.spatial.PlacementConfigType.PlacementConfig;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
+import rst.homeautomation.unit.UnitConfigType.UnitConfig;
+import rst.spatial.PlacementConfigType.PlacementConfig;
 
 /**
  *
@@ -46,9 +45,9 @@ import org.openbase.jul.storage.registry.ProtoBufRegistry;
 public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
 
     private final List<String> labelCollisionList;
-    private final ProtoBufRegistry<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> locationRegistry;
+    private final ProtoBufRegistry<String, UnitConfig, UnitConfig.Builder> locationRegistry;
 
-    public AbstractTransformationFrameConsistencyHandler(final ProtoBufRegistry<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> locationRegistry) {
+    public AbstractTransformationFrameConsistencyHandler(final ProtoBufRegistry<String, UnitConfig, UnitConfig.Builder> locationRegistry) {
         this.labelCollisionList = new ArrayList<>();
         this.locationRegistry = locationRegistry;
     }

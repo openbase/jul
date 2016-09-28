@@ -38,12 +38,12 @@ import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.storage.registry.EntryModification;
+import org.openbase.jul.storage.registry.ProtoBufRegistry;
 import org.openbase.jul.storage.registry.Registry;
-import rst.spatial.LocationConfigType;
+import rst.homeautomation.unit.UnitConfigType.UnitConfig;
 import rst.spatial.LocationConfigType.LocationConfig;
 import rst.spatial.PlacementConfigType;
 import rst.spatial.PlacementConfigType.PlacementConfig;
-import org.openbase.jul.storage.registry.ProtoBufRegistry;
 
 /**
  *
@@ -59,22 +59,22 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
     public static final String LOCATION_B = "LocationB";
     public static final String LOCATION_AE = "LocationÄ";
 
-    private static final LocationConfig locationA = LocationConfig.newBuilder()
+    private static final UnitConfig locationA = UnitConfig.newBuilder()
             .setId(LOCATION_A)
             .setPlacementConfig(PlacementConfigType.PlacementConfig.newBuilder()
                     .setLocationId(LOCATION_A)
                     .setTransformationFrameId(LOCATION_A)
                     .build())
-            .setRoot(true)
+            .setLocationConfig(LocationConfig.newBuilder().setRoot(true))
             .build();
 
-    private static final LocationConfig locationB = LocationConfig.newBuilder()
+    private static final UnitConfig locationB = UnitConfig.newBuilder()
             .setId(LOCATION_B)
             .setPlacementConfig(PlacementConfigType.PlacementConfig.newBuilder()
                     .setLocationId(LOCATION_A)
                     .setTransformationFrameId(LOCATION_B)
                     .build())
-            .setRoot(false)
+            .setLocationConfig(LocationConfig.newBuilder().setRoot(false))
             .build();
 
     @BeforeClass
@@ -138,45 +138,10 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
     public class AbstractTransformationFrameConsistencyHandlerImpl extends AbstractTransformationFrameConsistencyHandler {
 
         public AbstractTransformationFrameConsistencyHandlerImpl() {
-            super(new ProtoBufRegistry<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder>() {
+            super(new ProtoBufRegistry<String, UnitConfig, UnitConfig.Builder>() {
 
                 @Override
                 public void checkWriteAccess() throws RejectedException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public LocationConfigType.LocationConfig register(LocationConfigType.LocationConfig entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public boolean contains(LocationConfigType.LocationConfig key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public LocationConfigType.LocationConfig update(LocationConfigType.LocationConfig entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public LocationConfigType.LocationConfig remove(LocationConfigType.LocationConfig entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public LocationConfigType.LocationConfig getMessage(String key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public List<LocationConfigType.LocationConfig> getMessages() throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public LocationConfigType.LocationConfig.Builder getBuilder(String key) throws CouldNotPerformException {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 
@@ -201,27 +166,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> register(IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> update(IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> remove(String key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> remove(IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public IdentifiableMessage<String, LocationConfig, LocationConfigType.LocationConfig.Builder> get(String key) throws CouldNotPerformException {
+                public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> get(String key) throws CouldNotPerformException {
                     if (locationA.getId().equals(key)) {
                         return new IdentifiableMessage<>(locationA);
                     }
@@ -231,16 +176,6 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                     }
 
                     throw new NotAvailableException(LocationConfig.class);
-                }
-
-                @Override
-                public List<IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder>> getEntries() throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public boolean contains(IdentifiableMessage<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 
                 @Override
@@ -274,22 +209,87 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>> getLatestValue() throws NotAvailableException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public void addObserver(Observer<Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>>> observer) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public void removeObserver(Observer<Map<String, IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>>> observer) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
                 public void shutdown() {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public UnitConfig register(UnitConfig entry) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public boolean contains(UnitConfig key) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public UnitConfig update(UnitConfig entry) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public UnitConfig remove(UnitConfig entry) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public UnitConfig getMessage(String key) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public List<UnitConfig> getMessages() throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public UnitConfig.Builder getBuilder(String key) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> register(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> update(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> remove(String key) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> remove(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public List<IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntries() throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public boolean contains(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void addObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void removeObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getLatestValue() throws NotAvailableException {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 

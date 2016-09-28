@@ -26,17 +26,9 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import rsb.Scope;
-import rst.authorization.AuthorizationGroupConfigType.AuthorizationGroupConfig;
 import rst.authorization.UserConfigType.UserConfig;
-import rst.homeautomation.control.agent.AgentConfigType.AgentConfig;
-import rst.homeautomation.control.app.AppConfigType.AppConfig;
-import rst.homeautomation.control.scene.SceneConfigType.SceneConfig;
-import rst.homeautomation.device.DeviceConfigType.DeviceConfig;
 import rst.homeautomation.unit.UnitConfigType.UnitConfig;
-import rst.homeautomation.unit.UnitGroupConfigType.UnitGroupConfig;
 import rst.rsb.ScopeType;
-import rst.spatial.ConnectionConfigType.ConnectionConfig;
-import rst.spatial.LocationConfigType.LocationConfig;
 
 /**
  *
@@ -87,9 +79,13 @@ public class ScopeGenerator {
         return generatedScope.build();
     }
 
-    public static ScopeType.Scope generateLocationScope(final UnitConfig locationConfig, final ProtoBufMessageMap<String, UnitConfig, UnitConfig.Builder> registry) throws CouldNotPerformException {
+    public static ScopeType.Scope generateLocationScope(final UnitConfig unitConfig, final ProtoBufMessageMap<String, UnitConfig, UnitConfig.Builder> registry) throws CouldNotPerformException {
 
-        if (locationConfig == null) {
+        if (unitConfig == null) {
+            throw new NotAvailableException("unitConfig");
+        }
+
+        if (!unitConfig.hasLocationConfig() || unitConfig.getLocationConfig() == null) {
             throw new NotAvailableException("locationConfig");
         }
 
@@ -97,28 +93,28 @@ public class ScopeGenerator {
             throw new NotAvailableException("registry");
         }
 
-        if (!locationConfig.hasLabel()) {
+        if (!unitConfig.hasLabel()) {
             throw new NotAvailableException("location.label");
         }
 
-        if (!locationConfig.hasPlacementConfig()) {
+        if (!unitConfig.hasPlacementConfig()) {
             throw new NotAvailableException("location.placementconfig");
         }
 
-        if (!locationConfig.getPlacementConfig().hasLocationId() || locationConfig.getPlacementConfig().getLocationId().isEmpty()) {
+        if (!unitConfig.getPlacementConfig().hasLocationId() || unitConfig.getPlacementConfig().getLocationId().isEmpty()) {
             throw new NotAvailableException("location.placementconfig.locationid");
         }
 
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder();
-        if (!locationConfig.getRoot()) {
-            scope.addAllComponent(registry.get(locationConfig.getPlacementConfig().getLocationId()).getMessage().getScope().getComponentList());
+        if (!unitConfig.getLocationConfig().getRoot()) {
+            scope.addAllComponent(registry.get(unitConfig.getPlacementConfig().getLocationId()).getMessage().getScope().getComponentList());
         }
-        scope.addComponent(convertIntoValidScopeComponent(locationConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getLabel()));
 
         return scope.build();
     }
 
-    public static ScopeType.Scope generateConnectionScope(final ConnectionConfig connectionConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateConnectionScope(final UnitConfig connectionConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
         if (connectionConfig == null) {
             throw new NotAvailableException("connectionConfig");
@@ -152,7 +148,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateDeviceScope(final DeviceConfig deviceConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateDeviceScope(final UnitConfig deviceConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
         if (deviceConfig == null) {
             throw new NotAvailableException("deviceConfig");
@@ -186,7 +182,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateUnitScope(final UnitConfig unitConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateUnitScope(final UnitConfig unitConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
         if (unitConfig == null) {
             throw new NotAvailableException("unitConfig");
@@ -224,7 +220,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateUnitGroupScope(final UnitGroupConfig unitGroupConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateUnitGroupScope(final UnitConfig unitGroupConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
         if (unitGroupConfig == null) {
             throw new NotAvailableException("unitConfig");
@@ -262,18 +258,22 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateAgentScope(final AgentConfig agentConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateAgentScope(final UnitConfig agentConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
         if (agentConfig == null) {
-            throw new NotAvailableException("agentConfig");
+            throw new NotAvailableException("unitConfig");
+        }
+
+        if (!agentConfig.hasAgentConfig() || agentConfig.getAgentConfig() == null) {
+            throw new NotAvailableException("unitConfig.agentConfig");
         }
 
         if (!agentConfig.hasLabel()) {
-            throw new NotAvailableException("agentConfig.label");
+            throw new NotAvailableException("unitConfig.label");
         }
 
         if (agentConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field agentConfig.label isEmpty");
+            throw new NotAvailableException("Field unitConfig.label isEmpty");
         }
 
         if (locationConfig == null) {
@@ -288,7 +288,7 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add agent type
-        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getAgentClassId().replace("_", "")));
+        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getAgentConfig().getAgentClassId().replace("_", "")));
 
         // add unit label
         scope.addComponent(convertIntoValidScopeComponent(agentConfig.getLabel()));
@@ -296,7 +296,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateAppScope(final AppConfig appConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateAppScope(final UnitConfig appConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
         if (appConfig == null) {
             throw new NotAvailableException("appConfig");
@@ -330,7 +330,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateSceneScope(final SceneConfig sceneConfig, final LocationConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateSceneScope(final UnitConfig sceneConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
         if (sceneConfig == null) {
             throw new NotAvailableException("sceneConfig");
@@ -388,7 +388,7 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateSceneScope(final AuthorizationGroupConfig authorizationGroupConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateSceneScope(final UnitConfig authorizationGroupConfig) throws CouldNotPerformException {
 
         if (authorizationGroupConfig == null) {
             throw new NotAvailableException("authorizationGroupConfig");
