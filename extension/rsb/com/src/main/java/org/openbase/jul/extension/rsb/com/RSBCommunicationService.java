@@ -388,10 +388,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void shutdown() {
         try {
             deactivate();
-            reset();
         } catch (CouldNotPerformException | InterruptedException ex) {
-            ExceptionPrinter.printHistory("Could not shutdown " + this + "!", ex, logger);
+            ExceptionPrinter.printHistory("Could not deactivate " + this + " during shutdown!", ex, logger);
         }
+        reset();
     }
 
     /**
