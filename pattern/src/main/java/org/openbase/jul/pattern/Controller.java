@@ -30,7 +30,7 @@ import org.openbase.jul.iface.Shutdownable;
  */
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> Message
  */
 public interface Controller<M> extends Shutdownable, Activatable, Changeable, Pingable, Requestable<M> {

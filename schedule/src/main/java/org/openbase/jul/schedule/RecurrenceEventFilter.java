@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
  * RecurrenceEventFilter helps to filter high frequency events. After a new incoming event is processed, all further incoming events are skipped except of the last event which is executed after the
  * defined timeout is reached.

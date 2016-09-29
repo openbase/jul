@@ -26,7 +26,7 @@ package org.openbase.jul.exception;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class InvocationFailedException extends CouldNotPerformException {
 

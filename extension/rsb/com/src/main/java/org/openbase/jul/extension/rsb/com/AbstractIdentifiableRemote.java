@@ -31,7 +31,7 @@ import org.openbase.jul.pattern.IdentifiableRemote;
 
 /**
  *
- * @author Divine Threepwood
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
 public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {

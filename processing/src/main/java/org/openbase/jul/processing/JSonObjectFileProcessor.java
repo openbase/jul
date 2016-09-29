@@ -37,7 +37,7 @@ import java.io.IOException;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <DT>
  */
 public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor<DT> {

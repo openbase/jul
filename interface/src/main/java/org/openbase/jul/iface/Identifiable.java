@@ -28,7 +28,7 @@ import org.openbase.jul.exception.NotAvailableException;
 
 /**
  *
- * @author Divine Threepwood
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <ID>
  */
 public interface Identifiable<ID> {

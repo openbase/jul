@@ -29,7 +29,7 @@ import org.openbase.jul.iface.Identifiable;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <VALUE>
  */

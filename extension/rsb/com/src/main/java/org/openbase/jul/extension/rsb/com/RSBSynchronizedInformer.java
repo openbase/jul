@@ -40,7 +40,7 @@ import org.openbase.jul.extension.rsb.iface.RSBInformer;
 
 /**
  *
- * @author Divine Threepwood
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <DT>
  */
 public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedParticipant<Informer<DT>> implements RSBInformer<DT> {

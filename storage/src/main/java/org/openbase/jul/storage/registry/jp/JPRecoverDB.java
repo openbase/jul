@@ -38,7 +38,7 @@ import java.util.List;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class JPRecoverDB extends AbstractJPBoolean {
 

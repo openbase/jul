@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY> ID Type
  * @param <M> Internal Message
  * @param <MB>

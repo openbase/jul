@@ -26,7 +26,7 @@ import org.openbase.jul.iface.Manageable;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <ID> Identifier
  * @param <M> Message
  * @param <CONFIG> Configuration

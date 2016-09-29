@@ -30,7 +30,7 @@ import org.openbase.jps.preset.AbstractJPBoolean;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class JPInitializeDB extends AbstractJPBoolean {
 

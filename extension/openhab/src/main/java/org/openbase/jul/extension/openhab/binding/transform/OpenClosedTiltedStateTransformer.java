@@ -28,7 +28,7 @@ import rst.homeautomation.state.HandleStateType.HandleState;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class OpenClosedTiltedStateTransformer {
 

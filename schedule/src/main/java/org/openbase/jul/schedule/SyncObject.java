@@ -26,7 +26,7 @@ package org.openbase.jul.schedule;
 
 /**
  *
- * @author Divine Threepwood
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class SyncObject {
 
