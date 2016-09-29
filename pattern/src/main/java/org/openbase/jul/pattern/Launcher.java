@@ -27,7 +27,7 @@ import org.openbase.jul.iface.Shutdownable;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface Launcher extends Launchable, Shutdownable {
 

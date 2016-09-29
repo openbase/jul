@@ -32,7 +32,7 @@ import org.openbase.jul.pattern.Observable;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  */

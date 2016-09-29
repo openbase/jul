@@ -44,7 +44,7 @@ import org.openbase.jul.processing.FileProcessor;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <DT> datatype
  * @param <M> message
  * @param <MB> message builder

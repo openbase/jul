@@ -44,7 +44,7 @@ import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RSBSynchronizedListener extends RSBSynchronizedParticipant<Listener> implements RSBListener {
 

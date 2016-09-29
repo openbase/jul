@@ -32,7 +32,7 @@ import java.util.Map;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <M>
  * @param <MB>

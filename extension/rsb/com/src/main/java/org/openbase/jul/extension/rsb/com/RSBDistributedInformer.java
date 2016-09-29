@@ -30,7 +30,7 @@ import rsb.Scope;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <DataType>
  */
 public class RSBDistributedInformer<DataType extends Object> extends RSBSynchronizedInformer<DataType> {

@@ -27,7 +27,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <T> the type of the snapshot
  */
 public interface Snapshotable<T> {

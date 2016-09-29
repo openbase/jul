@@ -35,7 +35,7 @@ import java.lang.reflect.InvocationTargetException;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  * @param <MB>
  */

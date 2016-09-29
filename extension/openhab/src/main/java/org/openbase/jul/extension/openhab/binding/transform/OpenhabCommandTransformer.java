@@ -29,7 +29,7 @@ import rst.homeautomation.service.ServiceTemplateType.ServiceTemplate.ServiceTyp
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public final class OpenhabCommandTransformer {
 

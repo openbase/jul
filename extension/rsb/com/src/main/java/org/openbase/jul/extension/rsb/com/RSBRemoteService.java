@@ -69,7 +69,7 @@ import rst.rsb.ScopeType.Scope;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
 public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M> {

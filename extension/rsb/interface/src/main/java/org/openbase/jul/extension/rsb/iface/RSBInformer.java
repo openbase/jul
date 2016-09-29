@@ -30,7 +30,7 @@ import rsb.Event;
 
 /**
  *
- * @author Divine Threepwood
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <DataType>
  */
 public interface RSBInformer<DataType extends Object> extends RSBParticipant {

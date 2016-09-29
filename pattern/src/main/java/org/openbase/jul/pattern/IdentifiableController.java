@@ -25,7 +25,7 @@ import org.openbase.jul.iface.Identifiable;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <ID> the id type of the controller
  * @param <M> the data type of the controller
  */

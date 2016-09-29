@@ -28,7 +28,7 @@ import com.google.protobuf.GeneratedMessage;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
 public interface MessageContainer<M extends GeneratedMessage> {

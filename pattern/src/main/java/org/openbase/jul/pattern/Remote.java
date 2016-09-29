@@ -33,7 +33,7 @@ import org.openbase.jul.iface.Shutdownable;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> the data type of the remote
  */
 public interface Remote<M> extends Shutdownable, Activatable {

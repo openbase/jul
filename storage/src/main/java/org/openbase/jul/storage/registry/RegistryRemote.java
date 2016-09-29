@@ -32,7 +32,7 @@ import org.openbase.jul.pattern.Remote;
 
 /**
  *
- * @author divine
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
 public interface RegistryRemote<M> extends Remote<M> {

@@ -39,7 +39,7 @@ import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <M>
  * @param <MB>

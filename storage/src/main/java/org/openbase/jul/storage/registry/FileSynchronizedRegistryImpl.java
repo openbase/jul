@@ -49,7 +49,7 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
 
 /**
  *
- * @author mpohling
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  * @param <MAP>
