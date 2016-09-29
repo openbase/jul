@@ -96,7 +96,7 @@ public class RSBCommunicationServiceTest {
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         UnitConfig unit1 = UnitConfig.newBuilder().setId("Location1").build();
-        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(unit1);
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(unit1);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
@@ -107,13 +107,13 @@ public class RSBCommunicationServiceTest {
 
             @Override
             public void update(final Observable<UnitRegistryData> source, UnitRegistryData data) throws Exception {
-                if (data.getUnitConfigCount() == 1 && data.getUnitConfig(0).getId().equals("Location1")) {
+                if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
                     firstSync = true;
                     synchronized (waitForDataSync) {
                         waitForDataSync.notifyAll();
                     }
                 }
-                if (data.getUnitConfigCount() == 2 && data.getUnitConfig(0).getId().equals("Location1") && data.getUnitConfig(1).getId().equals("Location2")) {
+                if (data.getLocationUnitConfigCount() == 2 && data.getLocationUnitConfig(0).getId().equals("Location1") && data.getLocationUnitConfig(1).getId().equals("Location2")) {
                     secondSync = true;
                     synchronized (waitForDataSync) {
                         waitForDataSync.notifyAll();
@@ -133,7 +133,7 @@ public class RSBCommunicationServiceTest {
 
         communicationService.deactivate();
         UnitConfig location2 = UnitConfig.newBuilder().setId("Location2").build();
-        testData.addUnitConfig(location2);
+        testData.addLocationUnitConfig(location2);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
 
@@ -194,7 +194,7 @@ public class RSBCommunicationServiceTest {
     public void testReconnection() throws Exception {
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
-        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
@@ -232,7 +232,7 @@ public class RSBCommunicationServiceTest {
     public void testWaitForData() throws Exception {
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
-        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
@@ -255,7 +255,7 @@ public class RSBCommunicationServiceTest {
     public void testRequestData() throws Exception {
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
-        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
@@ -275,7 +275,7 @@ public class RSBCommunicationServiceTest {
     public void testRemoteInterference() throws Exception {
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
-        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addUnitConfig(location1);
+        UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
         RSBRemoteService remoteService1 = new RSBRemoteServiceImpl();
         RSBRemoteService remoteService2 = new RSBRemoteServiceImpl();
