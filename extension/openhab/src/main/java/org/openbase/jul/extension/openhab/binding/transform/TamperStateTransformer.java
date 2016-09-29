@@ -27,7 +27,7 @@ import rst.homeautomation.state.TamperStateType.TamperState;
 
 /**
  *
- * @author thuxohl
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class TamperStateTransformer {
 

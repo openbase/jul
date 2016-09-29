@@ -30,7 +30,7 @@ import rst.homeautomation.openhab.OpenClosedHolderType.OpenClosedHolder;
 
 /**
  *
- * @author thuxohl
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class OpenClosedStateTransformer {
 

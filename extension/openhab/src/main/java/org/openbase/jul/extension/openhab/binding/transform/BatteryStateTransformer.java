@@ -25,7 +25,7 @@ import rst.homeautomation.state.BatteryStateType.BatteryState;
 
 /**
  *
- * @author thuxohl
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class BatteryStateTransformer {
 
