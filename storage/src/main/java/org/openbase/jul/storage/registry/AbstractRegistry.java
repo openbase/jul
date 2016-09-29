@@ -26,6 +26,7 @@ package org.openbase.jul.storage.registry;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -439,6 +440,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return;
         }
         dependingRegistryMap.remove(registry).shutdown();
+    }
+
+    /**
+     * Removal of all registered registry dependencies in the reversed order in which they where added.
+     */
+    public void removeAllDependencies() {
+        List<Registry> dependingRegistryList = new ArrayList<>(dependingRegistryMap.keySet());
+        Collections.reverse(dependingRegistryList);
+        dependingRegistryList.stream().forEach((registry) -> {
+            dependingRegistryMap.remove(registry).shutdown();
+        });
     }
 
     @Override
