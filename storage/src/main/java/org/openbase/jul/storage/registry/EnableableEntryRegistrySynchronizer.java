@@ -34,7 +34,7 @@ import org.openbase.jul.pattern.Factory;
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
- * Threepwood</a>
+ *
  * @param <KEY>
  * @param <ENTRY>
  * @param <CONFIG_M>

@@ -36,8 +36,7 @@ import rst.homeautomation.unit.UnitConfigType.UnitConfig;
 
 /**
  *
- * @author * @author <a href="mailto:DivineThreepwood@gmail.com">Divine
- * Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
  */
 public class ProtobufVariableProviderTest {
 

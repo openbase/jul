@@ -48,7 +48,7 @@ import rst.spatial.PlacementConfigType.PlacementConfig;
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
- * Threepwood</a>
+ *
  */
 public class AbstractTransformationFrameConsistencyHandlerTest {
 

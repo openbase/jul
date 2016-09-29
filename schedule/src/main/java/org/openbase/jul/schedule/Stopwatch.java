@@ -26,7 +26,7 @@ import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 
 /**
- * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
  *
  * This class implements a general purpose stopwatch.
  *

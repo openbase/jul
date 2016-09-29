@@ -34,7 +34,7 @@ import rst.rsb.ScopeType.Scope;
 
 /**
  *
- * @author <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
  * @param <M> the message type
  * @param <MB> builder of the message M
  * @param <CONFIG> the configuration data type

@@ -29,7 +29,7 @@ import rst.homeautomation.state.HandleStateType.HandleState;
  * TODO: rethink handle state: if position makes sense
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
- * Threepwood</a>
+ *
  */
 public class HandleStateTransformer {
 
