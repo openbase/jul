@@ -32,7 +32,7 @@ import static rst.homeautomation.state.MotionStateType.MotionState.State.NO_MOTI
 
 /**
  *
- * @author thuxohl
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class MotionStateTransformer {
 

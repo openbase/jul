@@ -25,7 +25,7 @@ import rst.homeautomation.state.PowerConsumptionStateType.PowerConsumptionState;
 
 /**
  *
- * @author thuxohl
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class PowerConsumptionStateTransformer {
 
