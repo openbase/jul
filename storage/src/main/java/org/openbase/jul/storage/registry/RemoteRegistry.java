@@ -43,9 +43,8 @@ import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
  * @param <KEY>
  * @param <M>
  * @param <MB>
- * @param <SIB>
  */
-public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB> {
+public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB> {
 
     public RemoteRegistry() throws InstantiationException {
         this(new HashMap<>());

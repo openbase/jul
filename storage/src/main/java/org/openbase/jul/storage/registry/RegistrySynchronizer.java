@@ -61,7 +61,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
     private final Factory<ENTRY, CONFIG_M> factory;
-    protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry;
+    protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry;
 
     public RegistrySynchronizer(final Registry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         try {
