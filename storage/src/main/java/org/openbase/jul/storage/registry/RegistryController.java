@@ -1,8 +1,8 @@
-package org.openbase.jul.iface;
+package org.openbase.jul.storage.registry;
 
-/*
+/*-
  * #%L
- * JUL Interface
+ * JUL Storage
  * %%
  * Copyright (C) 2015 - 2016 openbase.org
  * %%
@@ -21,22 +21,21 @@ package org.openbase.jul.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.pattern.Controller;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @param <M>
  */
-public interface Pingable {
+public interface RegistryController<M> extends Controller<M> {
+
     /**
-     * Method can be used to calculate connection ping. 
-     * The given timestamp argument is just returned from the local server to calculate the delay on client side.
-     * 
-     * @param timestemp
-     * @return
-     * @throws org.openbase.jul.exception.CouldNotPerformException
+     * Method initializes the remote with the default registry connection scope.
+     *
+     * @throws InitializationException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
      */
-    public Future<Long> ping(Long timestemp) throws CouldNotPerformException;
+    public void init() throws InitializationException, InterruptedException;
 }
