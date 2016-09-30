@@ -23,8 +23,8 @@ package org.openbase.jul.extension.protobuf.processing;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import com.google.protobuf.Message.Builder;
 import com.google.protobuf.Message;
+import com.google.protobuf.Message.Builder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -50,7 +50,7 @@ public class ProtoBufFieldProcessor {
 
     public static Descriptors.FieldDescriptor getFieldDescriptor(final int repeatedFieldNumber, final Class<? extends GeneratedMessage> messageClass) throws CouldNotPerformException {
         try {
-            return getFieldDescriptor(repeatedFieldNumber, (GeneratedMessage) messageClass.getMethod("getDefaultInstance()").invoke(null));
+            return getFieldDescriptor(repeatedFieldNumber, (GeneratedMessage) messageClass.getMethod("getDefaultInstance").invoke(null));
         } catch (NoSuchMethodException | SecurityException | IllegalArgumentException | IllegalAccessException | InvocationTargetException ex) {
             throw new CouldNotPerformException("Could not detect field descriptor!", ex);
         }
