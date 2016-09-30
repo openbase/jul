@@ -29,7 +29,7 @@ import rsb.patterns.Callback;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface RSBLocalServer extends RSBServer {
 

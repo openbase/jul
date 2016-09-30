@@ -43,7 +43,7 @@ import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabState> implements OpenHABRemote {
 

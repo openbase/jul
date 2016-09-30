@@ -33,7 +33,7 @@ import org.openbase.jul.pattern.Factory;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
+ * * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
  *
  * @param <KEY>
  * @param <ENTRY>

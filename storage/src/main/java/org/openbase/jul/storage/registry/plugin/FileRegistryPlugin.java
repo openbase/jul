@@ -31,7 +31,7 @@ import org.openbase.jul.storage.file.FileSynchronizer;
 
 /**
  *
- * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
+ * * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
  * @param <KEY>
  * @param <ENTRY>
  */

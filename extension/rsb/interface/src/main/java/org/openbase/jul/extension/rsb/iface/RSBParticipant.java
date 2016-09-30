@@ -34,7 +34,7 @@ import rsb.config.ParticipantConfig;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface RSBParticipant extends Activatable {
 

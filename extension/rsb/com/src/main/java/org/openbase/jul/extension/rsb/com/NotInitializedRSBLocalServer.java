@@ -32,7 +32,7 @@ import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class NotInitializedRSBLocalServer extends NotInitializedRSBServer implements RSBLocalServer {
 

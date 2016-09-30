@@ -40,7 +40,7 @@ import org.openbase.jul.extension.rsb.iface.RSBParticipant;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  * @param <P>
  */
 public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipant {

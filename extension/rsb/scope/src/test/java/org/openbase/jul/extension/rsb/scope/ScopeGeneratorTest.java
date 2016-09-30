@@ -37,7 +37,7 @@ import rst.rsb.ScopeType;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class ScopeGeneratorTest {
 

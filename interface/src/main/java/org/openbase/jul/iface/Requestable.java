@@ -26,7 +26,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <T> The status type to request.
  */
 public interface Requestable<T> {

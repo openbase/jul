@@ -28,7 +28,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  * @param <UPDATE> The value type to update.
  */
 public interface Updatable<UPDATE>{

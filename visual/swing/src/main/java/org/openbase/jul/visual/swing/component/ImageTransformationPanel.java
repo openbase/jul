@@ -44,7 +44,7 @@ import org.openbase.jul.visual.swing.image.ImageLoader;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ImageTransformationPanel extends javax.swing.JPanel {
 

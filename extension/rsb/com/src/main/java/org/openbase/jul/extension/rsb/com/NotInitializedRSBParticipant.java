@@ -35,7 +35,7 @@ import org.openbase.jul.extension.rsb.iface.RSBParticipant;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public abstract class NotInitializedRSBParticipant implements RSBParticipant {
 

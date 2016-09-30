@@ -28,7 +28,7 @@ import org.openbase.jul.iface.Identifiable;
 
 /**
  *
- * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
+ * * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
  * @param <KEY>
  * @param <ENTRY>
  */

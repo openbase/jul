@@ -27,7 +27,7 @@ import org.openbase.jul.exception.InstantiationException;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
  * Factory pattern interface.
  *

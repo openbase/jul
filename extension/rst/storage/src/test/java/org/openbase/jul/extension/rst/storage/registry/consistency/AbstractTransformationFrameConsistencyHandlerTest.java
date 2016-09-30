@@ -47,7 +47,7 @@ import rst.spatial.PlacementConfigType.PlacementConfig;
 
 /**
  *
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
+ * * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
  *
  */
 public class AbstractTransformationFrameConsistencyHandlerTest {

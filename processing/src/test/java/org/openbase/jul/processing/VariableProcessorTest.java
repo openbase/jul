@@ -38,7 +38,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public class VariableProcessorTest {
 

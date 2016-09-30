@@ -68,7 +68,7 @@ import rst.rsb.ScopeType.Scope;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> the message type of the communication service
  * @param <MB> the builder for message M
  */

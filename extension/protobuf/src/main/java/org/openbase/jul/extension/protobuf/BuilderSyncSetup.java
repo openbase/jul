@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <MB>
  */
 public class BuilderSyncSetup<MB extends Builder<MB>> {

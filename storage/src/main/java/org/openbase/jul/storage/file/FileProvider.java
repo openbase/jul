@@ -29,7 +29,7 @@ import java.io.FileFilter;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <C> context
  */
 public interface FileProvider<C> {

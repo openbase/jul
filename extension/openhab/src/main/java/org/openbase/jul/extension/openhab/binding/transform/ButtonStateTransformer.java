@@ -29,7 +29,7 @@ import rst.homeautomation.state.ButtonStateType.ButtonState.State;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ButtonStateTransformer {
 

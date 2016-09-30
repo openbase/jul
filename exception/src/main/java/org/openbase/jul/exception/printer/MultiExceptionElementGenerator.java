@@ -25,7 +25,7 @@ package org.openbase.jul.exception.printer;
 import org.openbase.jul.exception.MultiException;
 
 /**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
  */
 public class MultiExceptionElementGenerator implements ElementGenerator<MultiException.SourceExceptionEntry> {
 

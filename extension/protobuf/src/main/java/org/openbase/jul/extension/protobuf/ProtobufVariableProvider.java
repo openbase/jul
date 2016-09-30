@@ -33,7 +33,7 @@ import java.util.Map;
 
 /**
  *
- * @author @author <a href="mailto:DivineThreepwood@gmail.com">DivineThreepwood</a>
+ * * @author * @author <a href="mailto:DivineThreepwood@gmail.com">DivineThreepwood</a>
  */
 public class ProtobufVariableProvider implements VariableProvider {
 

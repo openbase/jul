@@ -32,7 +32,7 @@ import rst.rsb.ScopeType;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  * @param <M>
  */
 public interface RSBRemote<M extends GeneratedMessage> extends Remote<M>{

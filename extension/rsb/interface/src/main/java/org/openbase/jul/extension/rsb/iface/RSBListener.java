@@ -33,7 +33,7 @@ import rsb.filter.Filter;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface RSBListener extends RSBParticipant {
 

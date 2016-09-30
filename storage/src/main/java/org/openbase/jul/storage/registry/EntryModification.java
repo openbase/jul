@@ -25,7 +25,7 @@ package org.openbase.jul.storage.registry;
  */
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class EntryModification extends Exception {
 

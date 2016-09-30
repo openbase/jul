@@ -41,7 +41,7 @@ import org.openbase.jul.schedule.SyncObject;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
  */
 public abstract class AbstractExecutableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractEnableableConfigurableController<M, MB, CONFIG> implements Enableable {
 

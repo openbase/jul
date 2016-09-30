@@ -30,7 +30,7 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * ConsistencyHandler can be registered at any registry type and will be informed about data changes via the processData Method. 
  * The handler can be used to establish a registry data consistency. 
  * @param <KEY> the registry key type.

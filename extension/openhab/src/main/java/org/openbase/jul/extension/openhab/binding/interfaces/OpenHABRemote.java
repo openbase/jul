@@ -29,7 +29,7 @@ import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public interface OpenHABRemote extends Manageable<String> {
 

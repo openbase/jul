@@ -26,7 +26,7 @@ package org.openbase.jul.processing;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class StringProcessor {
 

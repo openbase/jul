@@ -26,7 +26,7 @@ import org.openbase.jul.iface.Shutdownable;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  * @param <T> the data type on whose changes is notified
  */
 public interface Observable<T> extends Shutdownable {

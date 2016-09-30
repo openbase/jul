@@ -25,7 +25,7 @@ package org.openbase.jul.pattern;
  */
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <T> the observable data type
  */
 public interface Observer<T> {

@@ -30,7 +30,7 @@ import rsb.config.ParticipantConfig;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public interface RSBFactory {
 

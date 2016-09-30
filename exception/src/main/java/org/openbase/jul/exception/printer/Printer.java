@@ -26,7 +26,7 @@ package org.openbase.jul.exception.printer;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface Printer {
 

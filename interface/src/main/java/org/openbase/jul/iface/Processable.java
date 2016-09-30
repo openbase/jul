@@ -26,7 +26,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  * Interface is used to process any 
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <I> Input type needed for processing.
  * @param <O> Output type defining the process result.
  */

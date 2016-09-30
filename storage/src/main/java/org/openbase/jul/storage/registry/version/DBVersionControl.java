@@ -63,7 +63,7 @@ import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class DBVersionControl {
 

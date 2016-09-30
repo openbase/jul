@@ -31,7 +31,7 @@ import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  */

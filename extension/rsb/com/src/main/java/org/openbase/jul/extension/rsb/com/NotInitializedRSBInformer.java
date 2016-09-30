@@ -33,7 +33,7 @@ import org.openbase.jul.extension.rsb.iface.RSBInformer;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
 public class NotInitializedRSBInformer<M extends Object> extends NotInitializedRSBParticipant implements RSBInformer<M> {

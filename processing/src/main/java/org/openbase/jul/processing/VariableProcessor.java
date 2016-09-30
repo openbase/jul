@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public final class VariableProcessor {
 

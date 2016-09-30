@@ -31,7 +31,7 @@ import org.openbase.jul.iface.provider.ConfigProvider;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
  *
  * @param <ID> The id type of the configurable instance.
  * @param <CONFIG> The configuration type.

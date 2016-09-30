@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ExceptionPrinter {
 

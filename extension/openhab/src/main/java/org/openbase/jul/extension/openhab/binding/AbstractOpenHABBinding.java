@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public abstract class AbstractOpenHABBinding implements OpenHABBinding {
 

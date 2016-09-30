@@ -31,7 +31,7 @@ import java.util.Map;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
  * This converter transforms the outdated db entry into a new db version entry.
  */

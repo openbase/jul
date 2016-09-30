@@ -28,7 +28,7 @@ import rst.homeautomation.openhab.OnOffHolderType;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class PowerStateTransformer {
 

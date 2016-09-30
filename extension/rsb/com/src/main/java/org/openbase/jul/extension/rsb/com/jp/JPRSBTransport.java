@@ -27,7 +27,7 @@ import org.openbase.jps.preset.AbstractJPEnum;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class JPRSBTransport extends AbstractJPEnum<JPRSBTransport.TransportType> {
 

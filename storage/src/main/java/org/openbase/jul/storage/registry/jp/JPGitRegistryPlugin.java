@@ -30,7 +30,7 @@ import org.openbase.jps.preset.AbstractJPBoolean;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class JPGitRegistryPlugin extends AbstractJPBoolean {
 

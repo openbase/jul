@@ -30,7 +30,7 @@ import org.openbase.jul.pattern.IdentifiableController;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  * @param <MB>
  */

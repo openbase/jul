@@ -32,7 +32,7 @@ import rsb.Scope;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class JPScope extends AbstractJavaProperty<Scope> {
 

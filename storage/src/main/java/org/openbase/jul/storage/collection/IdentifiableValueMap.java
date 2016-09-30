@@ -30,7 +30,7 @@ import java.util.Map;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class IdentifiableValueMap<ID extends Identifiable> extends HashMap<ID, Identifiable<ID>> {
 

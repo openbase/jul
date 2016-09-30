@@ -30,7 +30,7 @@ import rsb.transport.spread.SharedInPushConnectorFactory;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RSBSharedConnectionConfig {
 

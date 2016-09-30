@@ -34,7 +34,7 @@ import rst.geometry.TranslationType;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class PoseTransformer {
 

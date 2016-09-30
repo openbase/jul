@@ -27,7 +27,7 @@ import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  * @param <M> Message
  * @param <MB> Builder
  */

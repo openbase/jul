@@ -36,7 +36,7 @@ import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class NotInitializedRSBListener extends NotInitializedRSBParticipant implements RSBListener {
 

@@ -28,7 +28,7 @@ import org.openbase.jul.exception.NotAvailableException;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public interface VariableProvider {
 

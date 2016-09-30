@@ -27,7 +27,7 @@ import rst.homeautomation.state.SmokeStateType.SmokeState.State;
 
 /**
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class SmokeStateTransformer {
 

@@ -33,7 +33,7 @@ import org.openbase.jul.extension.rsb.iface.RSBServer;
 
 /**
  *
- * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public abstract class NotInitializedRSBServer extends NotInitializedRSBParticipant implements RSBServer {
 

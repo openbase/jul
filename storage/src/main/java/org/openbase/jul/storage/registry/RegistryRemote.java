@@ -27,7 +27,7 @@ import org.openbase.jul.pattern.Remote;
 
 /**
  *
- @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
 public interface RegistryRemote<M> extends Remote<M> {
