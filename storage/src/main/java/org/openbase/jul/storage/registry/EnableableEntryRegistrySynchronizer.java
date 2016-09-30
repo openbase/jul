@@ -33,7 +33,7 @@ import org.openbase.jul.pattern.Factory;
 
 /**
  *
- * * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
  * @param <KEY>
  * @param <ENTRY>
@@ -42,7 +42,7 @@ import org.openbase.jul.pattern.Factory;
  */
 public abstract class EnableableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Enableable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
 
-    public EnableableEntryRegistrySynchronizer(RegistryImpl<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB, ?> remoteRegistry, Factory<ENTRY, CONFIG_M> factory) throws InstantiationException {
+    public EnableableEntryRegistrySynchronizer(RegistryImpl<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, Factory<ENTRY, CONFIG_M> factory) throws InstantiationException {
         super(registry, remoteRegistry, factory);
     }
 
