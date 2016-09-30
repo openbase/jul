@@ -24,7 +24,7 @@ package org.openbase.jul.exception;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class CouldNotProcessException extends RuntimeException {
 

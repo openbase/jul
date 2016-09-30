@@ -36,7 +36,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class GitTest {
 

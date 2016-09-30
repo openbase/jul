@@ -28,7 +28,7 @@ import org.openbase.jps.preset.AbstractJPMapStringString;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class JPGitRegistryPluginRemoteURL extends AbstractJPMapStringString {
 

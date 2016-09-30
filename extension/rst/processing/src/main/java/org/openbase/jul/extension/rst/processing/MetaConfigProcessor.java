@@ -32,7 +32,7 @@ import rst.configuration.MetaConfigType.MetaConfig;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class MetaConfigProcessor {
 

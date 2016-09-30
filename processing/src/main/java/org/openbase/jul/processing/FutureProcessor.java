@@ -26,7 +26,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class FutureProcessor {
 

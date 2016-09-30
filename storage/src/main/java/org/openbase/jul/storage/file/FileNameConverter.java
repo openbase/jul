@@ -26,7 +26,7 @@ package org.openbase.jul.storage.file;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class FileNameConverter {
     public static String convertIntoValidFileName(final String filename) {

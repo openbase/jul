@@ -33,7 +33,7 @@ import static org.openbase.jul.schedule.RecurrenceEventFilterTest.RecurrenceEven
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RecurrenceEventFilterTest {
 

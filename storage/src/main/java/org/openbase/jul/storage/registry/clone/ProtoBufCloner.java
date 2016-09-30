@@ -35,7 +35,7 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <M>
  * @param <MB>

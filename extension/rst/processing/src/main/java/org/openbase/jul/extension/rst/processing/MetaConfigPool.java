@@ -33,7 +33,7 @@ import java.util.Collection;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class MetaConfigPool implements VariableProvider {
 

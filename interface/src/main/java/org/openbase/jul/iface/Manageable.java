@@ -23,7 +23,7 @@ package org.openbase.jul.iface;
  */
 
 /*
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <CONFIG>
  */
  public interface Manageable<CONFIG> extends Initializable<CONFIG>, Shutdownable, Activatable {

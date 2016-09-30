@@ -29,7 +29,7 @@ import org.openbase.jul.schedule.SyncObject;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  * @param <MB>
  * @param <CONFIG>

@@ -24,7 +24,7 @@ package org.openbase.jul.audio;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface AudioSource {
 

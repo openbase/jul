@@ -27,7 +27,7 @@ import rst.rsb.ScopeType.Scope;
 
 /**
  *
- * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface ScopeProvider {
 
