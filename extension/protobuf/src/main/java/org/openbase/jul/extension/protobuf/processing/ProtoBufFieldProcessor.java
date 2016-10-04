@@ -22,6 +22,7 @@ package org.openbase.jul.extension.protobuf.processing;
  * #L%
  */
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -40,23 +41,36 @@ import org.openbase.jul.iface.provider.LabelProvider;
 public class ProtoBufFieldProcessor {
 
     //TODO: write java doc for all methods
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final int repeatedFieldNumber, final Message builder) {
-        return builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber);
+    public static Descriptors.FieldDescriptor getFieldDescriptor(final Message builder, final int fieldNumber) {
+        return builder.getDescriptorForType().findFieldByNumber(fieldNumber);
     }
 
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final int repeatedFieldNumber, final GeneratedMessage message) {
-        return message.getDescriptorForType().findFieldByNumber(repeatedFieldNumber);
+    public static Descriptors.FieldDescriptor getFieldDescriptor(final GeneratedMessage message, final int fieldNumber) {
+        return message.getDescriptorForType().findFieldByNumber(fieldNumber);
     }
 
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final int repeatedFieldNumber, final Class<? extends GeneratedMessage> messageClass) throws CouldNotPerformException {
+    public static FieldDescriptor[] getFieldDescriptors(final Class<? extends GeneratedMessage> messageClass, final int... fieldNumbers) throws CouldNotPerformException {
         try {
-            return getFieldDescriptor(repeatedFieldNumber, (GeneratedMessage) messageClass.getMethod("getDefaultInstance").invoke(null));
+            FieldDescriptor[] fieldDescriptors = new FieldDescriptor[fieldNumbers.length];
+            GeneratedMessage defaultMessage = (GeneratedMessage) messageClass.getMethod("getDefaultInstance").invoke(null);
+            for (int i = 0; i < fieldNumbers.length; i++) {
+                fieldDescriptors[i] = getFieldDescriptor(defaultMessage, i);
+            }
+            return fieldDescriptors;
+        } catch (NoSuchMethodException | SecurityException | IllegalArgumentException | IllegalAccessException | InvocationTargetException ex) {
+            throw new CouldNotPerformException("Could not detect field descriptors!", ex);
+        }
+    }
+
+    public static FieldDescriptor getFieldDescriptor(final Class<? extends GeneratedMessage> messageClass, final int fieldNumber) throws CouldNotPerformException {
+        try {
+            return getFieldDescriptor((GeneratedMessage) messageClass.getMethod("getDefaultInstance").invoke(null), fieldNumber);
         } catch (NoSuchMethodException | SecurityException | IllegalArgumentException | IllegalAccessException | InvocationTargetException ex) {
             throw new CouldNotPerformException("Could not detect field descriptor!", ex);
         }
     }
 
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final String fieldName, final Builder builder) {
+    public static Descriptors.FieldDescriptor getFieldDescriptor(final Builder builder, final String fieldName) {
         return builder.getDescriptorForType().findFieldByName(fieldName);
     }
 
@@ -66,7 +80,7 @@ public class ProtoBufFieldProcessor {
 
     public static String getId(final Builder msg) throws CouldNotPerformException {
         try {
-            return (String) msg.getField(getFieldDescriptor(Identifiable.TYPE_FIELD_ID, msg));
+            return (String) msg.getField(getFieldDescriptor(msg, Identifiable.TYPE_FIELD_ID));
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not get id of [" + msg + "]", ex);
         }
@@ -74,7 +88,7 @@ public class ProtoBufFieldProcessor {
 
     public static String getDescription(final Message.Builder msg) throws CouldNotPerformException {
         try {
-            return (String) msg.getField(getFieldDescriptor("description", msg));
+            return (String) msg.getField(getFieldDescriptor(msg, "description"));
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not get description of [" + msg + "]", ex);
         }
@@ -82,7 +96,7 @@ public class ProtoBufFieldProcessor {
 
     public static String getLabel(final Message.Builder msg) throws CouldNotPerformException {
         try {
-            return (String) msg.getField(getFieldDescriptor(LabelProvider.TYPE_FIELD_LABEL, msg));
+            return (String) msg.getField(getFieldDescriptor(msg, LabelProvider.TYPE_FIELD_LABEL));
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not get label of [" + msg + "]", ex);
         }
@@ -104,7 +118,7 @@ public class ProtoBufFieldProcessor {
             if (fields[i].endsWith("]")) {
                 String fieldName = fields[i].split("\\[")[0];
                 int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(fieldName, tmpBuilder);
+                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fieldName);
 
                 Message.Builder subBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
                 String subPath = fields[i + 1];
@@ -114,11 +128,11 @@ public class ProtoBufFieldProcessor {
                 tmpBuilder.setRepeatedField(fieldDescriptor, number, initFieldWithDefault(subBuilder, subPath).buildPartial());
                 return builder;
             } else {
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(fields[i], tmpBuilder);
+                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
                 tmpBuilder = tmpBuilder.getFieldBuilder(fieldDescriptor);
             }
         }
-        fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(fields[fields.length - 1], tmpBuilder);
+        fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 1]);
         Object field = tmpBuilder.getField(fieldDescriptor);
         tmpBuilder.setField(fieldDescriptor, field);
         return builder;
@@ -140,7 +154,7 @@ public class ProtoBufFieldProcessor {
             if (fields[i].endsWith("]")) {
                 String fieldName = fields[i].split("\\[")[0];
                 int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(fieldName, tmpBuilder);
+                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fieldName);
 
                 Message.Builder subBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
                 String subPath = fields[i + 1];
@@ -150,7 +164,7 @@ public class ProtoBufFieldProcessor {
                 tmpBuilder.setRepeatedField(fieldDescriptor, number, clearRequiredField(subBuilder, subPath).buildPartial());
                 return builder;
             } else {
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(fields[i], tmpBuilder);
+                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
                 if (!tmpBuilder.hasField(fieldDescriptor)) {
                     alreadyRemoved = true;
                     continue;
@@ -159,7 +173,7 @@ public class ProtoBufFieldProcessor {
             }
         }
         if (!alreadyRemoved) {
-            fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(fields[fields.length - 2], tmpBuilder);
+            fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 2]);
             tmpBuilder.clearField(fieldDescriptor);
         }
         return builder;
