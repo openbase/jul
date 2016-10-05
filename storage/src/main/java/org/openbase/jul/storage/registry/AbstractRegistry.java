@@ -167,7 +167,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
-                sandbox.internalRegister(entry, partial);
+                if (partial) {
+                    sandbox.partialRegister(entry);
+                } else {
+                    sandbox.register(entry);
+                }
                 entryMap.put(entry.getId(), entry);
                 if (!partial) {
                     finishTransaction();
@@ -181,6 +185,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             syncSandbox();
         }
+
         pluginPool.afterRegister(entry);
         return entry;
     }
@@ -414,9 +419,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void checkWriteAccess() throws RejectedException {
+    public
+            void checkWriteAccess() throws RejectedException {
         try {
-            if (JPService.getProperty(JPForce.class).getValue()) {
+            if (JPService.getProperty(JPForce.class
+            ).getValue()) {
+
                 return;
             }
         } catch (JPServiceException ex) {
@@ -425,8 +433,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
 
         try {
-            if (JPService.getProperty(JPReadOnly.class).getValue()) {
-                throw new RejectedException("ReadOnlyMode is detected!");
+            if (JPService.getProperty(JPReadOnly.class
+            ).getValue()) {
+                throw new RejectedException(
+                        "ReadOnlyMode is detected!");
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
@@ -765,6 +775,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public String toString() {
         return getName();
+
     }
 
     private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {

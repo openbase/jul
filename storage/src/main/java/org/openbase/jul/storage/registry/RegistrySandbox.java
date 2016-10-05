@@ -47,5 +47,5 @@ public interface RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException;
 
-    ENTRY internalRegister(final ENTRY entry, final boolean partial) throws CouldNotPerformException;
+    public ENTRY partialRegister(final ENTRY entry) throws CouldNotPerformException;
 }
