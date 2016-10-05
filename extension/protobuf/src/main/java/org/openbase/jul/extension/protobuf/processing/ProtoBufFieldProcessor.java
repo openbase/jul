@@ -54,7 +54,7 @@ public class ProtoBufFieldProcessor {
             FieldDescriptor[] fieldDescriptors = new FieldDescriptor[fieldNumbers.length];
             GeneratedMessage defaultMessage = (GeneratedMessage) messageClass.getMethod("getDefaultInstance").invoke(null);
             for (int i = 0; i < fieldNumbers.length; i++) {
-                fieldDescriptors[i] = getFieldDescriptor(defaultMessage, i);
+                fieldDescriptors[i] = getFieldDescriptor(defaultMessage, fieldNumbers[i]);
             }
             return fieldDescriptors;
         } catch (NoSuchMethodException | SecurityException | IllegalArgumentException | IllegalAccessException | InvocationTargetException ex) {
