@@ -130,32 +130,32 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
-        super.register(entry);
+        ENTRY result = super.register(entry);
 
-        FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(entry, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
-        fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
-        filePluginPool.afterRegister(entry, fileSynchronizer);
+        FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(result, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
+        fileSynchronizerMap.put(result.getId(), fileSynchronizer);
+        filePluginPool.afterRegister(result, fileSynchronizer);
 
-        return entry;
+        return result;
     }
 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
-        super.update(entry);
+        ENTRY result = super.update(entry);
 
         // ignore update during registration process.
-        if (!fileSynchronizerMap.containsKey(entry.getId())) {
-            logger.debug("Ignore update during registration process of entry " + entry);
+        if (!fileSynchronizerMap.containsKey(result.getId())) {
+            logger.debug("Ignore update during registration process of entry " + result);
             return entry;
         }
 
-        FileSynchronizer<ENTRY> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
+        FileSynchronizer<ENTRY> fileSynchronizer = fileSynchronizerMap.get(result.getId());
 
-        filePluginPool.beforeUpdate(entry, fileSynchronizer);
-        fileSynchronizer.save(entry);
-        filePluginPool.afterUpdate(entry, fileSynchronizer);
+        filePluginPool.beforeUpdate(result, fileSynchronizer);
+        fileSynchronizer.save(result);
+        filePluginPool.afterUpdate(result, fileSynchronizer);
 
-        return entry;
+        return result;
     }
 
     @Override

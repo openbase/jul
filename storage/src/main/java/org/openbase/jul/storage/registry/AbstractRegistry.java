@@ -186,7 +186,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         pluginPool.afterRegister(entry);
         notifyObservers();
-        return entry;
+        return get(entry);
     }
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
@@ -245,7 +245,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         pluginPool.afterUpdate(entry);
         notifyObservers();
-        return entry;
+        return get(entry);
     }
 
     @Override
