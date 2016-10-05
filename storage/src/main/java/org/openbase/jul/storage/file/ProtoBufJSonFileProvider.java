@@ -23,13 +23,12 @@ package org.openbase.jul.storage.file;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import java.io.FileFilter;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
-import java.io.File;
-import java.io.FileFilter;
-import org.apache.commons.io.filefilter.FileFileFilter;
+import org.openbase.jul.storage.file.filter.JSonFileFilter;
+import static org.openbase.jul.storage.file.filter.JSonFileFilter.FILE_SUFFIX;
 
 /**
  *
@@ -37,16 +36,13 @@ import org.apache.commons.io.filefilter.FileFileFilter;
  */
 public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<String>> {
 
-    public static final String FILE_TYPE = "json";
-    public static final String FILE_SUFFIX = "." + FILE_TYPE;
-
     @Override
     public String getFileName(Identifiable<String> context) throws CouldNotPerformException {
         try {
-            if(context == null) {
+            if (context == null) {
                 throw new NotAvailableException("context");
             }
-            
+
             return FileNameConverter.convertIntoValidFileName(context.getId().replaceAll("/", "_")) + FILE_SUFFIX;
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not generate file name!", ex);
@@ -55,19 +51,11 @@ public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<Strin
 
     @Override
     public String getFileType() {
-        return FILE_TYPE;
+        return JSonFileFilter.FILE_TYPE;
     }
 
     @Override
     public FileFilter getFileFilter() {
-        return new FileFileFilter() {
-            @Override
-            public boolean accept(File file) {
-                if (file == null) {
-                    return false;
-                }
-                return (!file.isHidden()) && file.isFile() && file.getName().toLowerCase().endsWith(FILE_SUFFIX);
-            }
-        };
+        return new JSonFileFilter();
     }
 }

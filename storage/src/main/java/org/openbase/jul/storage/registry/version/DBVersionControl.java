@@ -33,6 +33,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Constructor;
@@ -45,6 +46,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -52,14 +54,17 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Writable;
 import org.openbase.jul.storage.file.FileProvider;
+import org.openbase.jul.storage.file.filter.JSonFileFilter;
 import org.openbase.jul.storage.registry.AbstractVersionConsistencyHandler;
 import org.openbase.jul.storage.registry.ConsistencyHandler;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
+import org.openbase.jul.storage.registry.jp.JPDatabaseDirectory;
 import org.openbase.jul.storage.registry.jp.JPInitializeDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 
 /**
  *
@@ -83,6 +88,7 @@ public class DBVersionControl {
     private final String entryType;
     private final File databaseDirectory;
     private final Writable databaseWriteAccess;
+    private final List<File> globalDatabaseDirectories;
 
     public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory, final Writable databaseWriteAccess) throws InstantiationException {
         try {
@@ -94,6 +100,7 @@ public class DBVersionControl {
             this.entryFileProvider = entryFileProvider;
             this.converterPipeline = loadDBConverterPipelineAndDetectLatestVersion(converterPackage);
             this.databaseDirectory = databaseDirectory;
+            this.globalDatabaseDirectories = detectGlobalDatabaseDirectories();
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -130,6 +137,7 @@ public class DBVersionControl {
 
             // init
             Map<File, JsonObject> dbSnapshot;
+            Map<String, Map<File, JsonObject>> globalDbSnapshots = null;
             final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
 
             // check if upgrade is needed and write access is permitted.
@@ -138,38 +146,90 @@ public class DBVersionControl {
             }
 
             // load db entries
-            final HashMap<File, JsonObject> dbFileEntryMap = new HashMap<>();
-            for (File entry : databaseDirectory.listFiles(entryFileProvider.getFileFilter())) {
-                dbFileEntryMap.put(entry, loadDBEntry(entry));
-            }
+            final Map<File, JsonObject> dbFileEntryMap = loadDbSnapshot();
 
             // upgrade db entries
             for (DBVersionConverter converter : currentToTargetConverterPipeline) {
+
+                // load global dbs if needed
+                if (globalDbSnapshots == null && converter instanceof GlobalDbVersionConverter) {
+                    globalDbSnapshots = loadGlobalDbSnapshots();
+                }
+
                 for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
                     // update converted entry
-                    dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, dbFileEntryMap));
+                    dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, dbFileEntryMap, globalDbSnapshots));
                 }
             }
 
             // format and store
-            for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
-                storeEntry(formatEntryToHumanReadableString(dbEntry.getValue()), dbEntry.getKey());
-            }
+            storeDbSnapshot(dbFileEntryMap);
+
+            // format and store global db if changed
+            storeGlobalDbSnapshots(globalDbSnapshots);
 
             // upgrade db version
             upgradeCurrentDBVersion();
-
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not upgrade Database[" + databaseDirectory.getAbsolutePath() + "] to" + (targetVersion == latestDBVersion ? " latest" : "") + " version[" + targetVersion + "]!", ex);
         }
     }
 
-    public JsonObject upgradeDBEntry(final JsonObject entry, final DBVersionConverter converter, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException {
+    public JsonObject upgradeDBEntry(final JsonObject entry, final DBVersionConverter converter, final Map<File, JsonObject> dbSnapshot, Map<String, Map<File, JsonObject>> globalDbSnapshots) throws CouldNotPerformException {
         try {
             // upgrade
-            return converter.upgrade(entry, dbSnapshot);
+            if (converter instanceof GlobalDbVersionConverter) {
+                return ((GlobalDbVersionConverter) converter).upgrade(entry, dbSnapshot, globalDbSnapshots);
+            } else {
+                return converter.upgrade(entry, dbSnapshot);
+            }
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not upgrade entry with Converter[" + converter.getClass().getSimpleName() + "]!", ex);
+        }
+    }
+
+    private Map<File, JsonObject> loadDbSnapshot() throws CouldNotPerformException {
+        final HashMap<File, JsonObject> dbFileEntryMap = new HashMap<>();
+        for (File entry : databaseDirectory.listFiles(entryFileProvider.getFileFilter())) {
+            dbFileEntryMap.put(entry, loadDBEntry(entry));
+        }
+        return dbFileEntryMap;
+    }
+
+    private Map<String, Map<File, JsonObject>> loadGlobalDbSnapshots() {
+        Map<String, Map<File, JsonObject>> globalDbSnapshotMap = new HashMap<>();
+        globalDatabaseDirectories.stream().forEach((globalDatabaseDirectory) -> {
+            try {
+                if (globalDatabaseDirectory.canWrite()) {
+                    globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshot());
+                } else {
+                    logger.warn("skip loading of global database " + globalDatabaseDirectory.getAbsolutePath() + " because its write protected!");
+                }
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not load db entries out of " + globalDatabaseDirectory.getAbsolutePath(), ex, logger);
+            }
+        });
+        return globalDbSnapshotMap;
+    }
+
+    private void storeDbSnapshot(final Map<File, JsonObject> dbFileEntryMap) throws CouldNotPerformException {
+        try {
+            for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
+                storeEntry(formatEntryToHumanReadableString(dbEntry.getValue()), dbEntry.getKey());
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not store db snapshot!", ex);
+        }
+    }
+
+    private void storeGlobalDbSnapshots(final Map<String, Map<File, JsonObject>> globalDbSnapshots) throws CouldNotPerformException {
+        if (globalDbSnapshots == null) {
+            // skip because globally databases were never loaded.
+            return;
+        }
+
+        for (Entry<String, Map<File, JsonObject>> entry : globalDbSnapshots.entrySet()) {
+            storeDbSnapshot(entry.getValue());
         }
     }
 
@@ -453,6 +513,30 @@ public class DBVersionControl {
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect db version of Database[" + databaseDirectory.getName() + "]!", ex);
+        }
+    }
+
+    private List<File> detectGlobalDatabaseDirectories() throws CouldNotPerformException {
+        ArrayList<File> globalDatabaseDirectoryList = new ArrayList<>();
+        try {
+            FileFilter dbFilter = new DirectoryFileFilter() {
+
+                @Override
+                public boolean accept(File file) {
+                    return super.accept(file) && !file.equals(databaseDirectory);
+                }
+            };
+
+            FileFilter jSonFileFilter = new JSonFileFilter();
+
+            for (File neighbourDatabaseDirectory : JPService.getProperty(JPDatabaseDirectory.class).getValue().listFiles(dbFilter)) {
+                if (neighbourDatabaseDirectory.listFiles(jSonFileFilter).length > 0) {
+                    globalDatabaseDirectoryList.add(neighbourDatabaseDirectory);
+                }
+            }
+            return globalDatabaseDirectoryList;
+        } catch (JPServiceException ex) {
+            throw new CouldNotPerformException("Could not detect neighbout databases!", ex);
         }
     }
 

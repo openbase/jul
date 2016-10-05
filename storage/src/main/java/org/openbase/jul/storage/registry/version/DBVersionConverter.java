@@ -23,11 +23,10 @@ package org.openbase.jul.storage.registry.version;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.gson.JsonObject;
-import org.openbase.jul.exception.CouldNotPerformException;
 import java.io.File;
 import java.util.Map;
+import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
@@ -37,5 +36,13 @@ import java.util.Map;
  */
 public interface DBVersionConverter {
 
+    /**
+     * This method applies an upgrade transaction on the given entry to push the entry to the next db version.
+     *
+     * @param outdatedDBEntry the outdated db entry where the upgrade should be applied to.
+     * @param dbSnapshot all entries of the current database which may are partially upgraded.
+     * @return the upgraded database entry.
+     * @throws CouldNotPerformException can be thrown in case the upgrade could not be performed.
+     */
     public JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException;
 }

@@ -86,24 +86,11 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             this.fileProvider = fileProvider;
             this.filePluginPool = filePluginPool;
             databaseState = DatabaseState.UNKNOWN;
-//            this.prepareDB();
         } catch (NullPointerException ex) {
             throw new InstantiationException(this, ex);
         }
     }
 
-    // should be done by JPDatabaseDirectory.
-//    private void prepareDB() throws CouldNotPerformException {
-//        // clear db if reset property is set.
-//        if (JPService.getProperty(JPResetDB.class).getValue()) {
-//            try {
-//                FileUtils.deleteDirectory(databaseDirectory);
-//                FileUtils.forceMkdir(databaseDirectory);
-//            } catch (Exception ex) {
-//                throw new CouldNotPerformException("Could not reset db!", ex);
-//            }
-//        }
-//    }
     /**
      * This method activates the version control unit of the underlying registry
      * db. The version check and db upgrade is automatically performed during
