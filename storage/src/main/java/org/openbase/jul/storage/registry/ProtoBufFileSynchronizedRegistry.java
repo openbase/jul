@@ -35,6 +35,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapImpl;
 import org.openbase.jul.extension.protobuf.container.transformer.IdentifiableMessageTransformer;
 import org.openbase.jul.extension.protobuf.processing.ProtoBufFileProcessor;
@@ -42,7 +43,6 @@ import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileProvider;
 import org.openbase.jul.storage.registry.jp.JPGitRegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.GitRegistryPlugin;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
@@ -93,7 +93,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     /**
      * This method activate the version control unit of the underlying registry
      * db. The version check and db upgrade is automatically performed during
-     * the registry db loading phrase. The db will be upgraded to the latest db
+     * the registry db loading phase. The db will be upgraded to the latest db
      * format provided by the given converter package. The converter package
      * should contain only classes implementing the DBVersionConverter
      * interface. To fully support outdated db upgrade make sure that the
