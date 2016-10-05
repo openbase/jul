@@ -45,6 +45,10 @@ public class ProtoBufFieldProcessor {
         return builder.getDescriptorForType().findFieldByNumber(fieldNumber);
     }
 
+    public static Descriptors.FieldDescriptor getFieldDescriptor(final Builder builder, final int fieldNumber) {
+        return builder.getDescriptorForType().findFieldByNumber(fieldNumber);
+    }
+
     public static Descriptors.FieldDescriptor getFieldDescriptor(final GeneratedMessage message, final int fieldNumber) {
         return message.getDescriptorForType().findFieldByNumber(fieldNumber);
     }
