@@ -179,14 +179,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             } finally {
                 registryLock.writeLock().unlock();
             }
-            notifyObservers();
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
         } finally {
             syncSandbox();
         }
-
         pluginPool.afterRegister(entry);
+        notifyObservers();
         return get(entry);
     }
 
@@ -239,14 +238,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             } finally {
                 registryLock.writeLock().unlock();
             }
-            notifyObservers();
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
         } finally {
             syncSandbox();
         }
         pluginPool.afterUpdate(entry);
-        return get(entry.getId());
+        notifyObservers();
+        return get(entry);
     }
 
     @Override
@@ -286,13 +285,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             } finally {
                 registryLock.writeLock().unlock();
             }
-            notifyObservers();
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + " in " + this + "!", ex);
         } finally {
             syncSandbox();
         }
         pluginPool.afterRemove(entry);
+        notifyObservers();
         return oldEntry;
     }
 
