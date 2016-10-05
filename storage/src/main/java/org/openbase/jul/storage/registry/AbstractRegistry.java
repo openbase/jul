@@ -85,15 +85,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
 
-    private boolean transactionRunning;
-
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         this(entryMap, new RegistryPluginPool<>());
     }
 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
         try {
-            this.transactionRunning = false;
             this.registryLock = new ReentrantReadWriteLock();
             this.consistencyCheckLock = new ReentrantReadWriteLock();
             this.consistent = true;
@@ -136,28 +133,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    public ENTRY partialRegister(final ENTRY entry) throws CouldNotPerformException {
-        transactionRunning = true;
-        return internalRegister(entry, true);
-    }
-
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
-        try {
-            verifyRegistryState();
-        } catch (VerificationFailedException ex) {
-            throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
-        }
-        return internalRegister(entry, false);
-    }
-
-    public void verifyRegistryState() throws VerificationFailedException {
-        if (transactionRunning) {
-            throw new VerificationFailedException("Registry is blocked by another transaction! Please try again later.");
-        }
-    }
-
-    private ENTRY internalRegister(final ENTRY entry, final boolean partial) throws CouldNotPerformException {
         logger.debug("Register " + entry + "...");
         pluginPool.beforeRegister(entry);
         try {
@@ -167,15 +144,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
-                if (partial) {
-                    sandbox.partialRegister(entry);
-                } else {
-                    sandbox.register(entry);
-                }
+                sandbox.register(entry);
                 entryMap.put(entry.getId(), entry);
-                if (!partial) {
-                    finishTransaction();
-                }
+                finishTransaction();
             } finally {
                 registryLock.writeLock().unlock();
             }
@@ -215,12 +186,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
-        try {
-            verifyRegistryState();
-        } catch (VerificationFailedException ex) {
-            throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
-        }
-
         logger.debug("Update " + entry + "...");
         pluginPool.beforeUpdate(entry);
         try {
@@ -259,11 +224,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
-        try {
-            verifyRegistryState();
-        } catch (VerificationFailedException ex) {
-            throw new CouldNotPerformException("Could not remove " + entry + " in " + this + "!", ex);
-        }
         logger.debug("Remove " + entry + "...");
         pluginPool.beforeRemove(entry);
         ENTRY oldEntry;
@@ -394,11 +354,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
-        try {
-            verifyRegistryState();
-        } catch (VerificationFailedException ex) {
-            throw new CouldNotPerformException("Could not replace internal map of " + this + "!", ex);
-        }
         try {
             registryLock.writeLock().lock();
             try {
@@ -691,7 +646,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected void finishTransaction() throws CouldNotPerformException {
         try {
             checkConsistency();
-            transactionRunning = false;
         } catch (CouldNotPerformException ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex), logger, LogLevel.ERROR);
         }

@@ -62,12 +62,6 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public ENTRY partialRegister(final ENTRY entry) throws CouldNotPerformException {
-        // Not needed for mock sandbox!
-        return entry;
-    }
-
-    @Override
     public void removeConsistencyHandler(ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
         // Not needed for mock sandbox!
     }
