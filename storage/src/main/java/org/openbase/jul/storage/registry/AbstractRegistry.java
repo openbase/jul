@@ -167,7 +167,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
-                sandbox.register(entry);
+                sandbox.internalRegister(entry, partial);
                 entryMap.put(entry.getId(), entry);
                 if (!partial) {
                     finishTransaction();

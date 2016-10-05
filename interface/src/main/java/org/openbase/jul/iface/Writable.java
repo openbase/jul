@@ -21,7 +21,6 @@ package org.openbase.jul.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.RejectedException;
 
 /**
@@ -31,13 +30,14 @@ import org.openbase.jul.exception.RejectedException;
 public interface Writable {
 
     /**
-     * Check if the given instance is modifiable.
+     * Check if the given instance is writable.
+     *
      * @throws RejectedException
      */
     public void checkWriteAccess() throws RejectedException;
 
     /**
-     * Returns true if instance is writable writable.
+     * Returns true if instance is writable.
      * Triggers internally a write check.
      *
      * @return
@@ -45,7 +45,7 @@ public interface Writable {
     default public boolean isWritable() {
         try {
             checkWriteAccess();
-        } catch(RejectedException ex) {
+        } catch (RejectedException ex) {
             return false;
         }
         return true;
