@@ -187,7 +187,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
 
         pluginPool.afterRegister(entry);
-        return entry;
+        return get(entry);
     }
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
@@ -246,7 +246,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             syncSandbox();
         }
         pluginPool.afterUpdate(entry);
-        return entry;
+        return get(entry.getId());
     }
 
     @Override

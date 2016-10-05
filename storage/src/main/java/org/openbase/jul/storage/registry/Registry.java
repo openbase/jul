@@ -50,6 +50,10 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
 
     public ENTRY get(final KEY key) throws CouldNotPerformException;
 
+    default public ENTRY get(final ENTRY entry) throws CouldNotPerformException {
+        return get(entry.getId());
+    }
+
     public List<ENTRY> getEntries() throws CouldNotPerformException;
 
     public boolean contains(final ENTRY entry) throws CouldNotPerformException;
