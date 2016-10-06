@@ -197,4 +197,30 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             }
         }
     }
+
+    @Override
+    public void afterRegistryChange() throws CouldNotPerformException {
+        for (P plugin : pluginList) {
+            try {
+                plugin.afterRegistryChange();
+            } catch (RejectedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about registry change!", ex), logger, LogLevel.ERROR);
+            }
+        }
+    }
+
+    @Override
+    public void afterConsistencyCheck() throws CouldNotPerformException {
+        for (P plugin : pluginList) {
+            try {
+                plugin.afterConsistencyCheck();
+            } catch (RejectedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about finished consistency check!", ex), logger, LogLevel.ERROR);
+            }
+        }
+    }
 }

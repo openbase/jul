@@ -82,17 +82,25 @@ public class ObservableImpl<T> implements Observable<T> {
         }
     }
 
-    public void notifyObservers(Observable<T> source, T observable) throws MultiException {
+    /**
+     * Notify all changes of the observable to all observers only if the observable has changed.
+     *
+     * @param source the source of the notification
+     * @param observable the value which is notified
+     * @return true if the observable has changed
+     * @throws MultiException thrown if the notification to at least one observer fails
+     */
+    public boolean notifyObservers(Observable<T> source, T observable) throws MultiException {
         ExceptionStack exceptionStack = null;
 
         synchronized (LOCK) {
             if (observable == null) {
                 LOGGER.debug("Skip notification because observable is null!");
-                return;
+                return false;
             }
             if (unchangedValueFilter && latestValue != null && observable.hashCode() == latestValueHash) {
                 LOGGER.debug("#+# Skip notification because observable has not been changed!");
-                return;
+                return false;
             }
 
             latestValue = observable;
@@ -107,10 +115,19 @@ public class ObservableImpl<T> implements Observable<T> {
             }
         }
         MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
+        return true;
     }
 
-    public void notifyObservers(T observable) throws MultiException {
-        notifyObservers(this, observable);
+    /**
+     * Notify all changes of the observable to all observers only if the observable has changed.
+     * The source of the notification is set as this.
+     *
+     * @param observable the value which is notified
+     * @return true if the observable has changed
+     * @throws MultiException thrown if the notification to at least one observer fails
+     */
+    public boolean notifyObservers(T observable) throws MultiException {
+        return notifyObservers(this, observable);
     }
 
     @Override

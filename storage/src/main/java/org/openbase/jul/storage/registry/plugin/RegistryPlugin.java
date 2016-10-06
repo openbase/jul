@@ -24,6 +24,7 @@ package org.openbase.jul.storage.registry.plugin;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Initializable;
@@ -50,6 +51,10 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends In
 
     public void afterRemove(final ENTRY entry) throws CouldNotPerformException;
 
+    public void afterRegistryChange() throws CouldNotPerformException;
+
+    public void afterConsistencyCheck() throws CouldNotPerformException;
+
     public void beforeClear() throws CouldNotPerformException;
 
     public void beforeGet(final KEY key) throws RejectedException;
@@ -57,4 +62,7 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends In
     public void beforeGetEntries() throws CouldNotPerformException;
 
     public void checkAccess() throws RejectedException;
+
+    @Override
+    public void init(Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException;
 }
