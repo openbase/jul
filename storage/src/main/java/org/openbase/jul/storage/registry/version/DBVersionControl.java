@@ -74,6 +74,8 @@ public class DBVersionControl {
 
     public static final String VERSION_FILE_NAME = ".db-version";
     public static final String VERSION_FIELD = "version";
+    public static final String DB_CONVERTER_PACKAGE_NAME = "dbconvert";
+
     public static final String APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD = "applied_consistency_handler";
     public static final String VERSION_FILE_WARNING = "### PLEASE DO NOT MODIFY ###\n";
 

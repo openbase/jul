@@ -40,6 +40,7 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.processing.FileProcessor;
+import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.storage.file.FileProvider;
 import org.openbase.jul.storage.file.FileSynchronizer;
 import org.openbase.jul.storage.registry.jp.JPResetDB;
@@ -72,6 +73,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
     private DBVersionControl versionControl;
     private DatabaseState databaseState;
+    private final String databaseName;
 
     public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
@@ -85,10 +87,19 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             this.fileProcessor = fileProcessor;
             this.fileProvider = fileProvider;
             this.filePluginPool = filePluginPool;
-            databaseState = DatabaseState.UNKNOWN;
+            this.databaseState = DatabaseState.UNKNOWN;
+            this.databaseName = generateDatabaseName(databaseDirectory);
         } catch (NullPointerException ex) {
             throw new InstantiationException(this, ex);
         }
+    }
+
+    private String generateDatabaseName(final File databaseDirectory) {
+        return StringProcessor.transformToCamelCase(databaseDirectory.getName().replaceAll("db", "").replaceAll("DB", ""));
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     /**
