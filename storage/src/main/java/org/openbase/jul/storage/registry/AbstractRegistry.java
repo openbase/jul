@@ -373,8 +373,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public
-            void checkWriteAccess() throws RejectedException {
+    public void checkWriteAccess() throws RejectedException {
         try {
             if (JPService.getProperty(JPForce.class
             ).getValue()) {
@@ -474,7 +473,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 logger.info("Notification of registry change skipped because of running write operations!");
                 return;
             }
-            super.notifyObservers(entryMap);
+
+            if (super.notifyObservers(entryMap)) {
+                try {
+                    pluginPool.afterRegistryChange();
+                } catch (CouldNotPerformException ex) {
+                    MultiException.ExceptionStack exceptionStack = new MultiException.ExceptionStack();
+                    exceptionStack.push(pluginPool, ex);
+                    throw new MultiException("PluginPool could not execute afterRegistryChange", exceptionStack);
+                }
+            }
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
         }
@@ -512,6 +520,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @SuppressWarnings("UseSpecificCatch")
     public final int checkConsistency() throws CouldNotPerformException {
         int modificationCounter = 0;
+        boolean checkSuccessful = false;
 
         if (consistencyHandlerList.isEmpty()) {
             logger.debug("Skip consistency check because no handler are registered.");
@@ -629,6 +638,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     if (modificationCounter > 0) {
                         consistencyFeedbackEventFilter.trigger("100% of consistency checks passed after " + modificationCounter + " applied modifications.");
                     }
+                    checkSuccessful = true;
                     return modificationCounter;
 
                 } catch (CouldNotPerformException ex) {
@@ -640,6 +650,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         } finally {
             registryLock.writeLock().unlock();
+            if (checkSuccessful) {
+                pluginPool.afterConsistencyCheck();
+            }
         }
     }
 
@@ -743,7 +756,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         @Override
         public void update(Observable source, Object data) throws Exception {
             if (dependency.isConsistent()) {
-                checkConsistency();
+                if (checkConsistency() > 0) {
+                    notifyObservers();
+                }
             }
         }
 

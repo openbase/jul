@@ -23,16 +23,28 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.storage.registry.Registry;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class RegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>> implements RegistryPlugin<KEY, ENTRY> {
+
+    private Registry<KEY, ENTRY> registry;
+
+    @Override
+    public void init(Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException {
+        this.registry = registry;
+    }
+
+    public Registry<KEY, ENTRY> getRegistry() {
+        return registry;
+    }
 
     @Override
     public void beforeRegister(ENTRY entry) throws RejectedException {
@@ -76,5 +88,13 @@ public abstract class RegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>
 
     @Override
     public void shutdown() {
+    }
+
+    @Override
+    public void afterRegistryChange() throws CouldNotPerformException {
+    }
+
+    @Override
+    public void afterConsistencyCheck() throws CouldNotPerformException {
     }
 }
