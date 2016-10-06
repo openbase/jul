@@ -68,7 +68,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             this.idGenerator = idGenerator;
             this.messageClass = messageClass;
             this.protobufMessageMap = internalMap;
-            this.setName(messageClass.getSimpleName() + "Registry");
+            this.setName(getDatabaseName() + "Registry");
 
             try {
                 if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
@@ -123,7 +123,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
         try {
             String entryType;
             try {
-                entryType = messageClass.getSimpleName().replace("Type", "");
+                entryType = getDatabaseName();
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not detect entry type!", ex);
             }

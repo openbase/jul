@@ -26,11 +26,11 @@ package org.openbase.jul.storage.registry.version;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.gson.JsonObject;
 import java.io.File;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotSupportedException;
 
 /**
  *
@@ -53,5 +53,9 @@ public interface GlobalDbVersionConverter extends DBVersionConverter {
      */
     default public JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot, final Map<String, Map<File, JsonObject>> globalDbSnapshots) throws CouldNotPerformException {
         return upgrade(outdatedDBEntry, dbSnapshot);
+    }
+
+    default public JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException {
+        throw new NotSupportedException("upgrade", this);
     }
 }

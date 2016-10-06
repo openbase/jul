@@ -23,14 +23,12 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.processing.StringProcessor;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *
@@ -114,6 +112,17 @@ public class StringProcessorTest {
         assertEquals("HALLO_MY_NAME_IS_NOTHING_TO_DO.", StringProcessor.transformToUpperCase("Hallo my name is nothing to do."));
         assertEquals("I_AM_ON_THE_WAY_TO_HELL_MY_GOD!", StringProcessor.transformToUpperCase("I am on the WayToHell my god!"));
         assertEquals("FINAL", StringProcessor.transformToUpperCase("final"));
+    }
+
+    @Test(timeout = 5000)
+    public void testTransformToCamelCase() {
+        System.out.println("transformToCamelCase");
+        assertEquals("MyFarm", StringProcessor.transformToCamelCase("My Farm"));
+        assertEquals("IAmOnTheWay!", StringProcessor.transformToCamelCase("I_AM_ON_THE_WAY!"));
+        assertEquals("HalloMyNameIsNothingToDo.", StringProcessor.transformToCamelCase("Hallo my name is nothing to do."));
+        assertEquals("", StringProcessor.transformToCamelCase(""));
+        assertEquals("UndErScore", StringProcessor.transformToCamelCase("-Und-erScore--"));
+        assertEquals("Final", StringProcessor.transformToCamelCase("final"));
     }
 
     @Test(timeout = 5000)

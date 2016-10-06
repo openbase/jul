@@ -23,7 +23,6 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -58,6 +57,10 @@ public class StringProcessor {
         return output;
     }
 
+    public static String transformToCamelCase(final String input) {
+        return transformUpperCaseToCamelCase(transformToUpperCase(replaceHyphenWithUnderscore(input)));
+    }
+
     public static String replaceHyphenWithUnderscore(String input) {
         return input.replaceAll("-", "_");
     }
@@ -68,13 +71,13 @@ public class StringProcessor {
         output = output.replaceAll(" ", "_");
         return output.replaceAll("__", "_").toUpperCase();
     }
-    
+
     public static String transformFirstCharToUpperCase(final String input) {
-        if(input.isEmpty()) {
+        if (input.isEmpty()) {
             return "";
         }
-        
-        if(input.length() == 1) {
+
+        if (input.length() == 1) {
             return input.toUpperCase();
         }
         return input.substring(0, 1).toUpperCase() + input.substring(1);
@@ -82,7 +85,7 @@ public class StringProcessor {
 
     public static String fillWithSpaces(String input, int size) {
         String spaces = "";
-        for(int i = size - input.length() ; i>0 ; i--) {
+        for (int i = size - input.length(); i > 0; i--) {
             spaces += " ";
         }
         return input + spaces;
