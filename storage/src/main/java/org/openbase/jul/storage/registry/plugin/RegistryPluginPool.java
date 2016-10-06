@@ -25,6 +25,7 @@ package org.openbase.jul.storage.registry.plugin;
  */
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.RejectedException;
@@ -48,9 +49,11 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
     protected final List<P> pluginList;
     protected Registry<KEY, ENTRY> registry;
+    private final ReentrantReadWriteLock lock;
 
     public RegistryPluginPool() {
         this.pluginList = new ArrayList<>();
+        this.lock = new ReentrantReadWriteLock();
     }
 
     @Override
@@ -80,147 +83,258 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
     @Override
     public void beforeRegister(ENTRY entry) throws RejectedException {
-        for (P plugin : pluginList) {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("BR [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.beforeRegister(entry);
-            } catch (RejectedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
             }
+        } catch (RejectedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("BR [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
         }
     }
 
     @Override
     public void afterRegister(ENTRY entry) throws CouldNotPerformException {
-        pluginList.stream().forEach((plugin) -> {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("AR [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.afterRegister(entry);
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
             }
-        });
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("AR [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
+        }
     }
 
     @Override
     public void beforeUpdate(ENTRY entry) throws RejectedException {
-        for (P plugin : pluginList) {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("BU [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.beforeUpdate(entry);
-            } catch (RejectedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
             }
+        } catch (RejectedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("BU [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
         }
     }
 
     @Override
     public void afterUpdate(ENTRY entry) throws CouldNotPerformException {
-        pluginList.stream().forEach((plugin) -> {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("AU [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.afterUpdate(entry);
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
             }
-        });
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about successfully Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("AU [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
+        }
     }
 
     @Override
     public void beforeRemove(ENTRY entry) throws RejectedException {
-        for (P plugin : pluginList) {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("BRM [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.beforeRemove(entry);
-            } catch (RejectedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
             }
+        } catch (RejectedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("BRM [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
         }
     }
 
     @Override
     public void afterRemove(ENTRY entry) throws CouldNotPerformException {
-        pluginList.stream().forEach((plugin) -> {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("ARM [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.afterRemove(entry);
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
             }
-        });
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about successfully Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("ARM [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
+        }
     }
 
     @Override
     public void beforeClear() throws CouldNotPerformException {
-        pluginList.stream().forEach((plugin) -> {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("BC [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.beforeClear();
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned registry earsure!", ex), logger, LogLevel.ERROR);
             }
-        });
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned registry earsure!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("BC [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
+        }
     }
 
     @Override
     public void beforeGet(KEY key) throws RejectedException {
-        for (P plugin : pluginList) {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("BG [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.beforeGet(key);
-            } catch (RejectedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + key + "] publishment!", ex), logger, LogLevel.ERROR);
             }
+        } catch (RejectedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + key + "] publishment!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("BG [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
         }
     }
 
     @Override
     public void beforeGetEntries() throws CouldNotPerformException {
-        pluginList.stream().forEach((plugin) -> {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("BGE [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.beforeGetEntries();
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned registry publishment!", ex), logger, LogLevel.ERROR);
             }
-        });
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned registry publishment!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("BGE [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
+        }
     }
 
     @Override
     public void checkAccess() throws RejectedException {
-        for (P plugin : pluginList) {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("CA [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.checkAccess();
-            } catch (RejectedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not check registry access with RegistryPlugin[" + plugin + "]!", ex), logger, LogLevel.ERROR);
             }
+        } catch (RejectedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not check registry access with RegistryPlugins!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("CA [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
         }
     }
 
     @Override
     public void afterRegistryChange() throws CouldNotPerformException {
-        for (P plugin : pluginList) {
-            try {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("ARC [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
                 plugin.afterRegistryChange();
-            } catch (RejectedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about registry change!", ex), logger, LogLevel.ERROR);
             }
+        } catch (RejectedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about registry change!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("ARC [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
         }
     }
 
     @Override
     public void afterConsistencyCheck() throws CouldNotPerformException {
-        for (P plugin : pluginList) {
-            try {
-                plugin.afterConsistencyCheck();
-            } catch (RejectedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about finished consistency check!", ex), logger, LogLevel.ERROR);
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        try {
+            System.out.println("ACC [" + registry.getName() + "] Thread [" + Thread.currentThread().getId() + "] acquiering lock ...");
+            for (StackTraceElement stackTrace : Thread.currentThread().getStackTrace()) {
+                System.out.println(stackTrace.toString());
             }
+            lock.writeLock().lock();
+            for (P plugin : pluginList) {
+                plugin.afterConsistencyCheck();
+            }
+        } catch (RejectedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about finished consistency check!", ex), logger, LogLevel.ERROR);
+        } finally {
+            lock.writeLock().unlock();
+            System.out.println("ACC [" + registry.getName() + "] Thead [" + Thread.currentThread().getId() + "] has left the lock");
         }
     }
 }

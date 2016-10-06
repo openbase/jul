@@ -85,6 +85,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
 
+    private boolean notificationSkiped;
+
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         this(entryMap, new RegistryPluginPool<>());
     }
@@ -94,6 +96,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.registryLock = new ReentrantReadWriteLock();
             this.consistencyCheckLock = new ReentrantReadWriteLock();
             this.consistent = true;
+            this.notificationSkiped = false;
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
             this.pluginPool.init(this);
@@ -469,9 +472,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected final void notifyObservers() {
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
-            if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
-                logger.info("Notification of registry change skipped because of running consistecy checks!");
-//                logger.info("Notification of registry change skipped because of running write operations!");
+//                logger.info("Notification of registry change skipped because of running consistecy checks!");
+            if (registryLock.isWriteLockedByCurrentThread()) {
+                logger.info("Notification of registry change skipped because of running write operations!");
+                notificationSkiped = false;
                 return;
             }
 
@@ -484,6 +488,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new MultiException("PluginPool could not execute afterRegistryChange", exceptionStack);
                 }
             }
+            notificationSkiped = false;
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
         }
@@ -640,6 +645,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         consistencyFeedbackEventFilter.trigger("100% of consistency checks passed after " + modificationCounter + " applied modifications.");
                     }
                     checkSuccessful = true;
+                    pluginPool.afterConsistencyCheck();
                     return modificationCounter;
 
                 } catch (CouldNotPerformException ex) {
@@ -648,16 +654,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             } finally {
                 consistencyCheckLock.writeLock().unlock();
-                if (checkSuccessful) {
-                    if (!registryLock.isWriteLockedByCurrentThread()) {
-                        pluginPool.afterConsistencyCheck();
-                    }
-                }
+//                if (checkSuccessful) {
+//                    if (!registryLock.isWriteLockedByCurrentThread()) {
+//                        pluginPool.afterConsistencyCheck();
+//                    }
+//                }
             }
         } finally {
             registryLock.writeLock().unlock();
 //            if (checkSuccessful) {
-//                pluginPool.afterConsistencyCheck();
+//                
 //            }
         }
     }
@@ -762,7 +768,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         @Override
         public void update(Observable source, Object data) throws Exception {
             if (dependency.isConsistent()) {
-                if (checkConsistency() > 0) {
+                if (checkConsistency() > 0 || notificationSkiped) {
                     notifyObservers();
                 }
             }
