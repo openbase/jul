@@ -24,6 +24,7 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -213,7 +214,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
-        logger.info("Load registry out of " + databaseDirectory + "...");
+        logger.info("Load " + this + " out of " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
         File[] listFiles;
@@ -235,7 +236,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             }
         }
 
-        logger.info("====== " + size() + " entries successfully loaded. " + MultiException.size(exceptionStack) + " skipped. ======");
+        logger.info("====== " + size() + " entries successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
 
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
 
@@ -257,13 +258,13 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     }
 
     @Override
-    public void saveRegistry() throws MultiException {
+    public synchronized void saveRegistry() throws MultiException {
 
         if (JPService.testMode()) {
             return;
         }
 
-        logger.info("Save registry into " + databaseDirectory + "...");
+        logger.info("Save " + this + " into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
         // save all changes.
@@ -281,7 +282,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         FileSynchronizer<ENTRY> newFileSynchronizer;
         File newFile;
 
-        for (Entry<KEY, FileSynchronizer<ENTRY>> entry : fileSynchronizerMap.entrySet()) {
+        for (Entry<KEY, FileSynchronizer<ENTRY>> entry : new ArrayList<>(fileSynchronizerMap.entrySet())) {
             fileSynchronizer = entry.getValue();
             try {
                 generatedFileName = fileProvider.getFileName(fileSynchronizer.getData());

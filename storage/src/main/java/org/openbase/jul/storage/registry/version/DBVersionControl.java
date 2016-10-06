@@ -124,10 +124,10 @@ public class DBVersionControl {
         int latestVersion = getLatestDBVersion();
 
         if (versionOnStart == latestVersion) {
-            logger.info("Database[" + databaseDirectory.getName() + "] is up-to-date.");
+            logger.debug("Database[" + databaseDirectory.getName() + "] is up-to-date.");
             return;
         } else if (versionOnStart > latestVersion) {
-            throw new InvalidStateException("DB Version[" + versionOnStart + "] is newer than the latest supported version[" + latestVersion + "]!");
+            throw new InvalidStateException("DB Version[" + versionOnStart + "] is newer than the latest supported Version[" + latestVersion + "]!");
         }
 
         upgradeDB(versionOnStart, latestVersion);
@@ -173,7 +173,7 @@ public class DBVersionControl {
             // upgrade db version
             upgradeCurrentDBVersion();
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not upgrade Database[" + databaseDirectory.getAbsolutePath() + "] to" + (targetVersion == latestDBVersion ? " latest" : "") + " version[" + targetVersion + "]!", ex);
+            throw new CouldNotPerformException("Could not upgrade Database[" + databaseDirectory.getAbsolutePath() + "] to" + (targetVersion == latestDBVersion ? " latest" : "") + " Version[" + targetVersion + "]!", ex);
         }
     }
 
@@ -205,7 +205,7 @@ public class DBVersionControl {
                 if (globalDatabaseDirectory.canWrite()) {
                     globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshot());
                 } else {
-                    logger.warn("skip loading of global database " + globalDatabaseDirectory.getAbsolutePath() + " because its write protected!");
+                    logger.warn("Skip loading of global Database[" + globalDatabaseDirectory.getAbsolutePath() + "] because directory is write protected!");
                 }
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory("Could not load db entries out of " + globalDatabaseDirectory.getAbsolutePath(), ex, logger);
@@ -274,8 +274,8 @@ public class DBVersionControl {
             jsonReader.setLenient(true);
 
             jSonEntry = new JsonParser().parse(jsonReader).getAsJsonObject();
-        } catch (IOException | JsonIOException | JsonSyntaxException ex) {
-            throw new CouldNotPerformException("Could not load entry!", ex);
+        } catch (IOException | JsonIOException | JsonSyntaxException | IllegalStateException ex) {
+            throw new CouldNotPerformException("Could not load File[" + entry.getAbsolutePath() + "]!", ex);
         }
         return jSonEntry;
     }

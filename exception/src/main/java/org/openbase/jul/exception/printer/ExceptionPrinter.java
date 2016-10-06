@@ -100,6 +100,19 @@ public class ExceptionPrinter {
     }
 
     /**
+     * Print Exception messages without stack trace in non debug mode and call system exit afterwards. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error". After printing the system exit routine with error code 255 is triggered.
+     *
+     * @param <T> Exception type
+     * @param th exception stack to print.
+     * @param logger
+     */
+    public static <T extends Throwable> void printHistoryAndExit(final T th, final Logger logger) {
+        printHistory(th, logger, LogLevel.ERROR);
+        System.exit(255);
+    }
+
+    /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error". The given message and the exception are bundled as new CouldNotPerformException and further processed.
      *
@@ -109,6 +122,20 @@ public class ExceptionPrinter {
      * @param logger
      */
     public static <T extends Throwable> void printHistory(final String message, T th, final Logger logger) {
+        printHistory(new CouldNotPerformException(message, th), logger, LogLevel.ERROR);
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode and call system exit afterwards. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error". The given message and the exception are bundled as new CouldNotPerformException and further processed.
+     * After printing the system exit routine with error code 255 is triggered.
+     *
+     * @param <T> Exception type
+     * @param message the reason why this exception occurs.
+     * @param th exception cause.
+     * @param logger
+     */
+    public static <T extends Throwable> void printHistoryAndExit(final String message, T th, final Logger logger) {
         printHistory(new CouldNotPerformException(message, th), logger, LogLevel.ERROR);
     }
 
@@ -125,6 +152,19 @@ public class ExceptionPrinter {
     }
 
     /**
+     * Print Exception messages without stack trace in non debug mode and call system exit afterwards. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. After printing the system exit routine with error code 255 is triggered.
+     *
+     * @param <T> Exception type
+     * @param th the exception stack to print.
+     * @param stream the stream used for printing the message history e.g. System.out or. System.err
+     */
+    public static <T extends Throwable> void printHistoryAndExit(final T th, final PrintStream stream) {
+        printHistory(th, new SystemPrinter(stream));
+        System.exit(255);
+    }
+
+    /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The given message and the exception are bundled as new CouldNotPerformException and further processed.
      *
@@ -134,6 +174,20 @@ public class ExceptionPrinter {
      * @param stream the stream used for printing the message history e.g. System.out or. System.err
      */
     public static <T extends Throwable> void printHistory(final String message, final T th, final PrintStream stream) {
+        printHistory(new CouldNotPerformException(message, th), new SystemPrinter(stream));
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode and call system exit afterwards. Method prints recursive all messages of the given exception stack to get a history overview of the causes.
+     * In verbose mode (app -v) the stacktrace is printed in the end of history. The given message and the exception are bundled as new CouldNotPerformException and further processed.
+     * After printing the system exit routine with error code 255 is triggered.
+     *
+     * @param <T> Exception type
+     * @param message the reason why this exception occurs.
+     * @param th the exception cause.
+     * @param stream the stream used for printing the message history e.g. System.out or. System.err
+     */
+    public static <T extends Throwable> void printHistoryAndExit(final String message, final T th, final PrintStream stream) {
         printHistory(new CouldNotPerformException(message, th), new SystemPrinter(stream));
     }
 
