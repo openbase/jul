@@ -27,6 +27,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -976,7 +977,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void addObserver(Observer<M> observer) {
         addDataObserver(observer);
     }
-    
+
     /**
      *
      * @param observer
@@ -1080,12 +1081,19 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         // Notify sync cancelation
-        if (currentSyncFuture != null) {
-            currentSyncFuture.cancel(true);
+        try {
+            if (currentSyncFuture != null) {
+                currentSyncFuture.cancel(true);
+            }
+        } catch (CancellationException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not cancel synchronization because the cancelation was canceled!", ex), logger, LogLevel.WARN);
         }
-
-        if (currentSyncTask != null) {
-            currentSyncTask.cancel(true);
+        try {
+            if (currentSyncTask != null) {
+                currentSyncTask.cancel(true);
+            }
+        } catch (CancellationException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not cancel synchronization because the cancelation was canceled!", ex), logger, LogLevel.WARN);
         }
     }
 
