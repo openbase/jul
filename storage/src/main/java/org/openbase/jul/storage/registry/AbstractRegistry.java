@@ -469,8 +469,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected final void notifyObservers() {
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
-            if (registryLock.isWriteLockedByCurrentThread()) {
-                logger.info("Notification of registry change skipped because of running write operations!");
+            if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
+                logger.info("Notification of registry change skipped because of running consistecy checks!");
+//                logger.info("Notification of registry change skipped because of running write operations!");
                 return;
             }
 
@@ -647,12 +648,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             } finally {
                 consistencyCheckLock.writeLock().unlock();
+                if (checkSuccessful) {
+                    if (!registryLock.isWriteLockedByCurrentThread()) {
+                        pluginPool.afterConsistencyCheck();
+                    }
+                }
             }
         } finally {
             registryLock.writeLock().unlock();
-            if (checkSuccessful) {
-                pluginPool.afterConsistencyCheck();
-            }
+//            if (checkSuccessful) {
+//                pluginPool.afterConsistencyCheck();
+//            }
         }
     }
 
