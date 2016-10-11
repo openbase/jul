@@ -46,7 +46,7 @@ import org.openbase.jul.storage.registry.plugin.GitRegistryPlugin;
 
 /**
  *
- * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <M> Message
  * @param <MB> Message Builder

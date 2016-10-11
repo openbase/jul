@@ -32,7 +32,7 @@ import static org.openbase.jul.storage.file.filter.JSonFileFilter.FILE_SUFFIX;
 
 /**
  *
- * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ProtoBufJSonFileProvider implements FileProvider<Identifiable<String>> {
 

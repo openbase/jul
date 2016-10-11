@@ -139,7 +139,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Register " + entry + "...");
-        pluginPool.beforeRegister(entry);
         try {
             checkWriteAccess();
             try {
@@ -148,8 +147,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
                 sandbox.register(entry);
+                pluginPool.beforeRegister(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
+                pluginPool.afterRegister(entry);
             } finally {
                 registryLock.writeLock().unlock();
             }
@@ -158,14 +159,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             syncSandbox();
         }
-        pluginPool.afterRegister(entry);
         notifyObservers();
         return get(entry);
     }
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Load " + entry + "...");
-        pluginPool.beforeRegister(entry);
         try {
             try {
                 registryLock.writeLock().lock();
@@ -173,7 +172,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
                 sandbox.load(entry);
+                pluginPool.beforeRegister(entry);
                 entryMap.put(entry.getId(), entry);
+                pluginPool.afterRegister(entry);
 
             } finally {
                 registryLock.writeLock().unlock();
@@ -183,14 +184,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             syncSandbox();
         }
-        pluginPool.afterRegister(entry);
         return entry;
     }
 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Update " + entry + "...");
-        pluginPool.beforeUpdate(entry);
         try {
             checkWriteAccess();
             try {
@@ -201,8 +200,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
                 // perform update
                 sandbox.update(entry);
+                pluginPool.beforeUpdate(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
+                pluginPool.afterUpdate(entry);
             } finally {
                 registryLock.writeLock().unlock();
             }
@@ -211,7 +212,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             syncSandbox();
         }
-        pluginPool.afterUpdate(entry);
         notifyObservers();
         return get(entry);
     }
@@ -228,7 +228,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Remove " + entry + "...");
-        pluginPool.beforeRemove(entry);
         ENTRY oldEntry;
         try {
             checkWriteAccess();
@@ -240,11 +239,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
                 // perform removal
                 sandbox.remove(entry);
+                pluginPool.beforeRemove(entry);
                 try {
                     oldEntry = entryMap.remove(entry.getId());
                 } finally {
                     finishTransaction();
                 }
+                pluginPool.afterRemove(entry);
             } finally {
                 registryLock.writeLock().unlock();
             }
@@ -253,7 +254,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             syncSandbox();
         }
-        pluginPool.afterRemove(entry);
         notifyObservers();
         return oldEntry;
     }
@@ -298,9 +298,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public List<ENTRY> getEntries() throws CouldNotPerformException {
-        pluginPool.beforeGetEntries();
         try {
             registryLock.readLock().lock();
+            pluginPool.beforeGetEntries();
             return new ArrayList<>(entryMap.values());
         } finally {
             registryLock.readLock().unlock();
@@ -338,9 +338,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public void clear() throws CouldNotPerformException {
-        pluginPool.beforeClear();
         try {
             registryLock.writeLock().lock();
+            pluginPool.beforeClear();
             sandbox.clear();
             entryMap.clear();
             finishTransaction();
@@ -378,9 +378,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public void checkWriteAccess() throws RejectedException {
         try {
-            if (JPService.getProperty(JPForce.class
-            ).getValue()) {
-
+            if (JPService.getProperty(JPForce.class).getValue()) {
                 return;
             }
         } catch (JPServiceException ex) {
@@ -389,10 +387,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
 
         try {
-            if (JPService.getProperty(JPReadOnly.class
-            ).getValue()) {
-                throw new RejectedException(
-                        "ReadOnlyMode is detected!");
+            if (JPService.getProperty(JPReadOnly.class).getValue()) {
+                throw new RejectedException("ReadOnlyMode is detected!");
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
@@ -654,17 +650,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             } finally {
                 consistencyCheckLock.writeLock().unlock();
-//                if (checkSuccessful) {
-//                    if (!registryLock.isWriteLockedByCurrentThread()) {
-//                        pluginPool.afterConsistencyCheck();
-//                    }
-//                }
             }
         } finally {
             registryLock.writeLock().unlock();
-//            if (checkSuccessful) {
-//                
-//            }
         }
     }
 
