@@ -621,7 +621,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             lastModifieredEntry = ex.getEntry();
 
                             // inform about modifications
-                            logger.debug("Consistency modification applied: " + ex.getMessage());
+                            logger.info("Consistency modification applied: " + ex.getMessage());
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {

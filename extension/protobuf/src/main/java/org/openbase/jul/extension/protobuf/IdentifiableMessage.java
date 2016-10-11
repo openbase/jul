@@ -24,11 +24,14 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 import com.google.protobuf.GeneratedMessage;
+import java.util.logging.Level;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPDebugMode;
+import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -52,10 +55,10 @@ import org.slf4j.LoggerFactory;
  * @param <MB>
  */
 public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> implements Identifiable<KEY>, MessageContainer<M> {
-
+    
     protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
     private static boolean debugMode;
-
+    
     static {
         try {
             debugMode = JPService.getProperty(JPDebugMode.class).getValue();
@@ -64,24 +67,24 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             debugMode = false;
         }
     }
-
+    
     private M internalMessage;
     private ObservableImpl<IdentifiableMessage<KEY, M, MB>> observable;
-
+    
     public IdentifiableMessage(IdentifiableMessage<KEY, M, MB> identifiableMessage) throws InstantiationException {
         this(identifiableMessage.getMessage());
     }
-
+    
     public IdentifiableMessage(final M message, final IdGenerator<KEY, M> idGenerator) throws InstantiationException {
         try {
             if (idGenerator == null) {
                 throw new NotAvailableException("idGenerator");
             }
-
+            
             if (message == null) {
                 throw new NotAvailableException("message");
             }
-
+            
             this.internalMessage = message;
             this.observable = new ObservableImpl<>();
             this.setupId(idGenerator);
@@ -89,25 +92,25 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             throw new org.openbase.jul.exception.InstantiationException(this, ex);
         }
     }
-
+    
     public IdentifiableMessage(final M message) throws InstantiationException {
         try {
             if (message == null) {
                 throw new NotAvailableException("message");
             }
-
+            
             this.internalMessage = message;
-
+            
             if (!verifyId()) {
                 throw new InvalidStateException("message does not contain Field[" + TYPE_FIELD_ID + "]");
             }
-
+            
             this.observable = new ObservableImpl<>();
         } catch (CouldNotPerformException ex) {
             throw new org.openbase.jul.exception.InstantiationException(this, ex);
         }
     }
-
+    
     @Override
     public KEY getId() throws NotAvailableException {
         try {
@@ -118,18 +121,18 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
                 throw new VerificationFailedException("Given message has no id field!");
             }
             KEY id = (KEY) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
-
+            
             if (id.toString().isEmpty()) {
                 throw new VerificationFailedException("Detected id is empty!");
             }
-
+            
             return id;
-
+            
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("id", ex);
         }
     }
-
+    
     private void setupId(final IdGenerator<KEY, M> generator) throws CouldNotPerformException {
         try {
             if (verifyId()) {
@@ -143,11 +146,11 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             throw new CouldNotPerformException("Could not setup id for message: " + internalMessage, ex);
         }
     }
-
+    
     private boolean verifyId() {
         return internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
     }
-
+    
     private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
         try {
             if (verifyId()) {
@@ -158,14 +161,14 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             throw new CouldNotPerformException("Could not setup id!", ex);
         }
     }
-
+    
     public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder) throws CouldNotPerformException {
         if (builder == null) {
             throw new NotAvailableException("message");
         }
         return setMessage((M) builder.build());
     }
-
+    
     public IdentifiableMessage<KEY, M, MB> setMessage(final M message) throws CouldNotPerformException {
         if (message == null) {
             throw new NotAvailableException("message");
@@ -174,7 +177,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         notifyObservers();
         return this;
     }
-
+    
     public void notifyObservers() {
         try {
             observable.notifyObservers(this);
@@ -182,40 +185,44 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             ExceptionPrinter.printHistory(ex, logger);
         }
     }
-
+    
     @Override
     public M getMessage() {
         return internalMessage;
     }
-
+    
     public void addObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
         observable.addObserver(observer);
     }
-
+    
     public void removeObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
         observable.removeObserver(observer);
     }
-
+    
     @Override
     public String toString() {
         try {
-            //if (debugMode) {
-            //    return getClass().getSimpleName() + "[" + getId().toString() + "] = [" + internalMessage + "]";
-            //}
+            try {
+                if (JPService.getProperty(JPVerbose.class).getValue()) {
+                    return getClass().getSimpleName() + "[" + getId().toString() + "] = [" + internalMessage + "]";
+                }
+            } catch (JPNotAvailableException ex) {
+                logger.warn("JPVerbose property could not be loaded!");
+            }
             return getClass().getSimpleName() + "[" + getId().toString() + "]";
         } catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);
             return getClass().getSimpleName() + "[?]";
         }
     }
-
+    
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
                 .append(internalMessage)
                 .toHashCode();
     }
-
+    
     @Override
     public boolean equals(final Object obj) {
         if (obj instanceof IdentifiableMessage) {
