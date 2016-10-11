@@ -23,8 +23,8 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.openhab.UpDownHolderType.UpDownHolder;
-import rst.homeautomation.state.BlindStateType.BlindState;
+import rst.domotic.binding.openhab.UpDownHolderType.UpDownHolder;
+import rst.domotic.state.BlindStateType.BlindState;
 
 /**
  *

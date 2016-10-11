@@ -40,8 +40,8 @@ import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.storage.registry.EntryModification;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
 import org.openbase.jul.storage.registry.Registry;
-import rst.homeautomation.unit.UnitConfigType.UnitConfig;
-import rst.spatial.LocationConfigType.LocationConfig;
+import rst.domotic.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.location.LocationConfigType.LocationConfig;
 import rst.spatial.PlacementConfigType;
 import rst.spatial.PlacementConfigType.PlacementConfig;
 

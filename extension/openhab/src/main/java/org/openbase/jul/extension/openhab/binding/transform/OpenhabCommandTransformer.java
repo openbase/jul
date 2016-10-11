@@ -24,8 +24,8 @@ package org.openbase.jul.extension.openhab.binding.transform;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.NotSupportedException;
-import rst.homeautomation.openhab.OpenhabCommandType;
-import rst.homeautomation.service.ServiceTemplateType.ServiceTemplate.ServiceType;
+import rst.domotic.binding.openhab.OpenhabCommandType;
+import rst.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType;
 
 /**
  *

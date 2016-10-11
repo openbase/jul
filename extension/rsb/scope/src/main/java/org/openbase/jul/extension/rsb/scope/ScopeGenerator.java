@@ -26,8 +26,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import rsb.Scope;
-import rst.authorization.UserConfigType.UserConfig;
-import rst.homeautomation.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.user.UserConfigType.UserConfig;
+import rst.domotic.unit.UnitConfigType.UnitConfig;
 import rst.rsb.ScopeType;
 
 /**

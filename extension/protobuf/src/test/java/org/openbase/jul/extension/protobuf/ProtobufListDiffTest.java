@@ -31,7 +31,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import rst.homeautomation.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.UnitConfigType.UnitConfig;
 
 /**
  *

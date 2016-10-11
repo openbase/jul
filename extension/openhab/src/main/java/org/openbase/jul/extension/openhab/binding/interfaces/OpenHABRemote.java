@@ -25,7 +25,7 @@ import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.iface.Manageable;
-import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
+import rst.domotic.binding.openhab.OpenhabCommandType.OpenhabCommand;
 
 /**
  *

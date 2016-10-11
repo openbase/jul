@@ -22,8 +22,8 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotTransformException;
-import rst.homeautomation.state.SmokeStateType.SmokeState;
-import rst.homeautomation.state.SmokeStateType.SmokeState.State;
+import rst.domotic.state.SmokeStateType.SmokeState;
+import rst.domotic.state.SmokeStateType.SmokeState.State;
 
 /**
  *

@@ -25,8 +25,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.state.AlarmStateType.AlarmState;
-import rst.homeautomation.state.AlarmStateType.AlarmState.State;
+import rst.domotic.state.AlarmStateType.AlarmState;
+import rst.domotic.state.AlarmStateType.AlarmState.State;
 
 /**
  *

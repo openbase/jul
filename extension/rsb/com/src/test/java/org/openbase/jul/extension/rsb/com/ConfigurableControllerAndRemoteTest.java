@@ -33,8 +33,8 @@ import org.openbase.jul.pattern.Controller;
 import org.openbase.jul.pattern.Remote;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.homeautomation.control.scene.SceneDataType.SceneData;
-import rst.homeautomation.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.scene.SceneDataType.SceneData;
+import rst.domotic.unit.UnitConfigType.UnitConfig;
 import rst.rsb.ScopeType.Scope;
 
 /**

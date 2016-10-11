@@ -37,8 +37,8 @@ import rsb.Handler;
 import rsb.Scope;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
-import rst.homeautomation.openhab.OpenhabStateType.OpenhabState;
+import rst.domotic.binding.openhab.OpenhabCommandType.OpenhabCommand;
+import rst.domotic.binding.openhab.OpenhabStateType.OpenhabState;
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**

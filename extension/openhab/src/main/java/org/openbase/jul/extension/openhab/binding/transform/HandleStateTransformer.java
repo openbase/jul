@@ -23,7 +23,7 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.processing.StringProcessor;
-import rst.homeautomation.state.HandleStateType.HandleState;
+import rst.domotic.state.HandleStateType.HandleState;
 
 /**
  * TODO: rethink handle state: if position makes sense

@@ -23,9 +23,9 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.openhab.OnOffHolderType;
-import rst.homeautomation.state.ButtonStateType.ButtonState;
-import rst.homeautomation.state.ButtonStateType.ButtonState.State;
+import rst.domotic.binding.openhab.OnOffHolderType;
+import rst.domotic.state.ButtonStateType.ButtonState;
+import rst.domotic.state.ButtonStateType.ButtonState.State;
 
 /**
  *

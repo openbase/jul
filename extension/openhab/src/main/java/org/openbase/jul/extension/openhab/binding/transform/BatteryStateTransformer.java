@@ -21,7 +21,7 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import rst.homeautomation.state.BatteryStateType.BatteryState;
+import rst.domotic.state.BatteryStateType.BatteryState;
 
 /**
  *

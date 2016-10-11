@@ -23,8 +23,8 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 
 import org.openbase.jul.exception.CouldNotTransformException;
-import rst.homeautomation.openhab.HSBType;
-import rst.homeautomation.state.ColorStateType.ColorState;
+import rst.domotic.binding.openhab.HSBType;
+import rst.domotic.state.ColorStateType.ColorState;
 import rst.vision.ColorType.Color;
 import rst.vision.HSBColorType.HSBColor;
 

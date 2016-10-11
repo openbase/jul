@@ -25,10 +25,10 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.state.MotionStateType.MotionState;
-import rst.homeautomation.state.MotionStateType.MotionState.State;
-import static rst.homeautomation.state.MotionStateType.MotionState.State.MOTION;
-import static rst.homeautomation.state.MotionStateType.MotionState.State.NO_MOTION;
+import rst.domotic.state.MotionStateType.MotionState;
+import rst.domotic.state.MotionStateType.MotionState.State;
+import static rst.domotic.state.MotionStateType.MotionState.State.MOTION;
+import static rst.domotic.state.MotionStateType.MotionState.State.NO_MOTION;
 
 /**
  *

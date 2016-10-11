@@ -25,8 +25,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.homeautomation.state.ContactStateType.ContactState;
-import rst.homeautomation.openhab.OpenClosedHolderType.OpenClosedHolder;
+import rst.domotic.state.ContactStateType.ContactState;
+import rst.domotic.binding.openhab.OpenClosedHolderType.OpenClosedHolder;
 
 /**
  *

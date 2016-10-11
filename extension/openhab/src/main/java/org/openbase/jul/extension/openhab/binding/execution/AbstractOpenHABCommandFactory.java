@@ -22,7 +22,7 @@ package org.openbase.jul.extension.openhab.binding.execution;
  * #L%
  */
 
-import rst.homeautomation.openhab.OpenhabCommandType.OpenhabCommand;
+import rst.domotic.binding.openhab.OpenhabCommandType.OpenhabCommand;
 
 /**
  *

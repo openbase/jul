@@ -23,7 +23,7 @@
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import rst.vision.HSBColorType.HSBColor;
-import rst.homeautomation.openhab.HSBType;
+import rst.domotic.binding.openhab.HSBType;
 
 /**
  *
