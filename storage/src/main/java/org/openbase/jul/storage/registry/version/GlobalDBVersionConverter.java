@@ -35,7 +35,7 @@ import org.openbase.jul.exception.NotSupportedException;
  * Additionally this global db converter has access to all other databases as well.
  * This allows globally database transfer and modifications during the version upgrade if needed.
  */
-public interface GlobalDbVersionConverter extends DBVersionConverter {
+public interface GlobalDBVersionConverter extends DBVersionConverter {
 
     /**
      * This method applies an update transaction on the given entry to push the entry to the next db version.

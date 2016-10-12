@@ -26,16 +26,10 @@ package org.openbase.jul.storage.registry.version;
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  */
-public abstract class AbstractDBVersionConverter implements DBVersionConverter {
+public abstract class AbstractGlobalDBVersionConverter extends AbstractDBVersionConverter implements GlobalDBVersionConverter {
 
-    private final DBVersionControl versionControl;
-
-    public AbstractDBVersionConverter(DBVersionControl versionControl) {
-        this.versionControl = versionControl;
+    public AbstractGlobalDBVersionConverter(DBVersionControl versionControl) {
+        super(versionControl);
     }
 
-    @Override
-    public DBVersionControl getVersionControl() {
-        return versionControl;
-    }
 }

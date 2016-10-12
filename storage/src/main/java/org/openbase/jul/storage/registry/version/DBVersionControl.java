@@ -139,7 +139,7 @@ public class DBVersionControl {
 
             // init
             Map<File, JsonObject> dbSnapshot;
-            Map<String, Map<File, JsonObject>> globalDbSnapshots = null;
+            Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots = null;
             final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
 
             // check if upgrade is needed and write access is permitted.
@@ -154,7 +154,7 @@ public class DBVersionControl {
             for (DBVersionConverter converter : currentToTargetConverterPipeline) {
 
                 // load global dbs if needed
-                if (globalDbSnapshots == null && converter instanceof GlobalDbVersionConverter) {
+                if (globalDbSnapshots == null && converter instanceof GlobalDBVersionConverter) {
                     globalDbSnapshots = loadGlobalDbSnapshots();
                 }
 
@@ -177,11 +177,11 @@ public class DBVersionControl {
         }
     }
 
-    public JsonObject upgradeDBEntry(final JsonObject entry, final DBVersionConverter converter, final Map<File, JsonObject> dbSnapshot, Map<String, Map<File, JsonObject>> globalDbSnapshots) throws CouldNotPerformException {
+    public JsonObject upgradeDBEntry(final JsonObject entry, final DBVersionConverter converter, final Map<File, JsonObject> dbSnapshot, Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots) throws CouldNotPerformException {
         try {
             // upgrade
-            if (converter instanceof GlobalDbVersionConverter) {
-                return ((GlobalDbVersionConverter) converter).upgrade(entry, dbSnapshot, globalDbSnapshots);
+            if (converter instanceof GlobalDBVersionConverter) {
+                return ((GlobalDBVersionConverter) converter).upgrade(entry, dbSnapshot, globalDbSnapshots);
             } else {
                 return converter.upgrade(entry, dbSnapshot);
             }
@@ -198,12 +198,20 @@ public class DBVersionControl {
         return dbFileEntryMap;
     }
 
-    private Map<String, Map<File, JsonObject>> loadGlobalDbSnapshots() {
-        Map<String, Map<File, JsonObject>> globalDbSnapshotMap = new HashMap<>();
+    private Map<File, DatabaseEntryDescriptor> loadDbSnapshotAsDBEntryDescriptors() throws CouldNotPerformException {
+        final HashMap<File, DatabaseEntryDescriptor> dbFileEntryMap = new HashMap<>();
+        for (File entry : databaseDirectory.listFiles(entryFileProvider.getFileFilter())) {
+            dbFileEntryMap.put(entry, new DatabaseEntryDescriptor(loadDBEntry(entry), entry, versionOnStart, databaseDirectory));
+        }
+        return dbFileEntryMap;
+    }
+
+    private Map<String, Map<File, DatabaseEntryDescriptor>> loadGlobalDbSnapshots() {
+        Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshotMap = new HashMap<>();
         globalDatabaseDirectories.stream().forEach((globalDatabaseDirectory) -> {
             try {
                 if (globalDatabaseDirectory.canWrite()) {
-                    globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshot());
+                    globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshotAsDBEntryDescriptors());
                 } else {
                     logger.warn("Skip loading of global Database[" + globalDatabaseDirectory.getAbsolutePath() + "] because directory is write protected!");
                 }
@@ -224,14 +232,24 @@ public class DBVersionControl {
         }
     }
 
-    private void storeGlobalDbSnapshots(final Map<String, Map<File, JsonObject>> globalDbSnapshots) throws CouldNotPerformException {
+    private void storeDbSnapshotASDBEntryDescriptors(final Map<File, DatabaseEntryDescriptor> dbFileEntryMap) throws CouldNotPerformException {
+        try {
+            for (Entry<File, DatabaseEntryDescriptor> dbEntry : dbFileEntryMap.entrySet()) {
+                storeEntry(formatEntryToHumanReadableString(dbEntry.getValue().getEntry()), dbEntry.getKey());
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not store db snapshot!", ex);
+        }
+    }
+
+    private void storeGlobalDbSnapshots(final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots) throws CouldNotPerformException {
         if (globalDbSnapshots == null) {
             // skip because globally databases were never loaded.
             return;
         }
 
-        for (Entry<String, Map<File, JsonObject>> entry : globalDbSnapshots.entrySet()) {
-            storeDbSnapshot(entry.getValue());
+        for (Entry<String, Map<File, DatabaseEntryDescriptor>> entry : globalDbSnapshots.entrySet()) {
+            storeDbSnapshotASDBEntryDescriptors(entry.getValue());
         }
     }
 
