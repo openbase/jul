@@ -106,7 +106,7 @@ public class ObservableImpl<T> implements Observable<T> {
             latestValue = observable;
             latestValueHash = latestValue.hashCode();
 
-            for (Observer<T> observer : observers) {
+            for (Observer<T> observer : new ArrayList<>(observers)) {
                 try {
                     observer.update(source, observable);
                 } catch (Exception ex) {
