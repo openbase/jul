@@ -120,7 +120,7 @@ public class DBVersionControl {
     }
 
     public void validateAndUpgradeDBVersion() throws CouldNotPerformException {
-        versionOnStart = detectCurrentDBVersion();
+        versionOnStart = detectAndUpgradeCurrentDBVersion();
         int latestVersion = getLatestDBVersion();
 
         if (versionOnStart == latestVersion) {
@@ -198,10 +198,10 @@ public class DBVersionControl {
         return dbFileEntryMap;
     }
 
-    private Map<File, DatabaseEntryDescriptor> loadDbSnapshotAsDBEntryDescriptors() throws CouldNotPerformException {
+    private Map<File, DatabaseEntryDescriptor> loadDbSnapshotAsDBEntryDescriptors(final File globalDatabaseDirectory) throws CouldNotPerformException {
         final HashMap<File, DatabaseEntryDescriptor> dbFileEntryMap = new HashMap<>();
-        for (File entry : databaseDirectory.listFiles(entryFileProvider.getFileFilter())) {
-            dbFileEntryMap.put(entry, new DatabaseEntryDescriptor(loadDBEntry(entry), entry, versionOnStart, databaseDirectory));
+        for (File entry : globalDatabaseDirectory.listFiles(entryFileProvider.getFileFilter())) {
+            dbFileEntryMap.put(entry, new DatabaseEntryDescriptor(loadDBEntry(entry), entry, detectCurrentDBVersion(globalDatabaseDirectory), globalDatabaseDirectory));
         }
         return dbFileEntryMap;
     }
@@ -211,7 +211,7 @@ public class DBVersionControl {
         globalDatabaseDirectories.stream().forEach((globalDatabaseDirectory) -> {
             try {
                 if (globalDatabaseDirectory.canWrite()) {
-                    globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshotAsDBEntryDescriptors());
+                    globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshotAsDBEntryDescriptors(globalDatabaseDirectory));
                 } else {
                     logger.warn("Skip loading of global Database[" + globalDatabaseDirectory.getAbsolutePath() + "] because directory is write protected!");
                 }
@@ -303,12 +303,45 @@ public class DBVersionControl {
     }
 
     /**
+     * Method detects the current db version of the given database.
+     *
+     * @param databaseDirectory
+     * @return the current db version as integer.
+     * @throws CouldNotPerformException
+     */
+    public int detectCurrentDBVersion(final File databaseDirectory) throws CouldNotPerformException {
+        try {
+
+            // detect file
+            File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
+
+            if (!versionFile.exists()) {
+                if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
+                    throw new CouldNotPerformException("No version information available!");
+                }
+            }
+
+            // load db version
+            try {
+                String versionAsString = FileUtils.readFileToString(versionFile, "UTF-8");
+                versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
+                JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
+                return versionJsonObject.get(VERSION_FIELD).getAsInt();
+            } catch (IOException | JsonSyntaxException ex) {
+                throw new CouldNotPerformException("Could not db version Field[" + VERSION_FIELD + "]!", ex);
+            }
+        } catch (CouldNotPerformException | JPServiceException ex) {
+            throw new CouldNotPerformException("Could not detect current db version of Database[" + databaseDirectory.getName() + "]!", ex);
+        }
+    }
+
+    /**
      * Method detects the current db version and returns the version number as integer.
      *
      * @return
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
-    public int detectCurrentDBVersion() throws CouldNotPerformException {
+    public int detectAndUpgradeCurrentDBVersion() throws CouldNotPerformException {
         try {
             // detect file
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
