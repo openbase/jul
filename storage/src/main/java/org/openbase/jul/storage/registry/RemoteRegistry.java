@@ -131,4 +131,9 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         //TODO mpohling: implement!
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    @Override
+    public void registerConsistencyHandler(ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>> consistencyHandler) throws CouldNotPerformException {
+        throw new NotSupportedException("registerConsistencyHandler", "method", this);
+    }
 }
