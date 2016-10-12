@@ -39,6 +39,7 @@ import java.io.StringReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -57,7 +58,6 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Writable;
 import org.openbase.jul.storage.file.FileProvider;
-import org.openbase.jul.storage.file.filter.JSonFileFilter;
 import org.openbase.jul.storage.registry.AbstractVersionConsistencyHandler;
 import org.openbase.jul.storage.registry.ConsistencyHandler;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
@@ -138,9 +138,10 @@ public class DBVersionControl {
             logger.info("Upgrade Database[" + databaseDirectory.getName() + "] from current Version[" + currentVersion + "] to target Version[" + targetVersion + "]...");
 
             // init
-            Map<File, JsonObject> dbSnapshot;
             Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots = null;
             final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
+
+            int versionOfCurrentTransaction = currentVersion;
 
             // check if upgrade is needed and write access is permitted.
             if (!currentToTargetConverterPipeline.isEmpty()) {
@@ -153,6 +154,9 @@ public class DBVersionControl {
             // upgrade db entries
             for (DBVersionConverter converter : currentToTargetConverterPipeline) {
 
+                // calculate current transaction version
+                versionOfCurrentTransaction++;
+
                 // load global dbs if needed
                 if (globalDbSnapshots == null && converter instanceof GlobalDBVersionConverter) {
                     globalDbSnapshots = loadGlobalDbSnapshots();
@@ -162,16 +166,19 @@ public class DBVersionControl {
                     // update converted entry
                     dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, dbFileEntryMap, globalDbSnapshots));
                 }
+
+                // upgrade latest version to current version
+                latestDBVersion = versionOfCurrentTransaction;
+
+                // format and store
+                storeDbSnapshot(dbFileEntryMap);
+
+                // format and store global db if changed
+                storeGlobalDbSnapshots(globalDbSnapshots);
+
+                // upgrade db version
+                upgradeCurrentDBVersion();
             }
-
-            // format and store
-            storeDbSnapshot(dbFileEntryMap);
-
-            // format and store global db if changed
-            storeGlobalDbSnapshots(globalDbSnapshots);
-
-            // upgrade db version
-            upgradeCurrentDBVersion();
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not upgrade Database[" + databaseDirectory.getAbsolutePath() + "] to" + (targetVersion == latestDBVersion ? " latest" : "") + " Version[" + targetVersion + "]!", ex);
         }
@@ -582,13 +589,7 @@ public class DBVersionControl {
                 }
             };
 
-            FileFilter jSonFileFilter = new JSonFileFilter();
-
-            for (File neighbourDatabaseDirectory : JPService.getProperty(JPDatabaseDirectory.class).getValue().listFiles(dbFilter)) {
-                if (neighbourDatabaseDirectory.listFiles(jSonFileFilter).length > 0) {
-                    globalDatabaseDirectoryList.add(neighbourDatabaseDirectory);
-                }
-            }
+            globalDatabaseDirectoryList.addAll(Arrays.asList(JPService.getProperty(JPDatabaseDirectory.class).getValue().listFiles(dbFilter)));
             return globalDatabaseDirectoryList;
         } catch (JPServiceException ex) {
             throw new CouldNotPerformException("Could not detect neighbout databases!", ex);

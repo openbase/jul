@@ -35,7 +35,9 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
  * @param <KEY>
  * @param <M>
  * @param <MB>
+ * @deprecated because version consistency handler is not rst independent which does not allow a stable converter pipeline. Please use the global db version converter for this purpose.
  */
+@Deprecated
 public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
 
     protected final DBVersionControl versionControl;
