@@ -69,30 +69,30 @@ import org.slf4j.LoggerFactory;
  * @param <P> RegistryPluginType
  */
 public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
-
+    
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+    
     private String name;
-
+    
     protected final MAP entryMap;
-
+    
     protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
     protected RegistrySandbox<KEY, ENTRY, MAP, R> sandbox;
-
+    
     protected boolean consistent;
     private final ReentrantReadWriteLock registryLock, consistencyCheckLock;
-
+    
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
-
+    
     private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
-
+    
     private boolean notificationSkiped;
-
+    
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         this(entryMap, new RegistryPluginPool<>());
     }
-
+    
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
         try {
             this.registryLock = new ReentrantReadWriteLock();
@@ -106,13 +106,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.consistencyHandlerList = new ArrayList<>();
             this.dependingRegistryMap = new HashMap<>();
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
-
+                
                 @Override
                 public void relay() throws Exception {
                     logger.info(getLastValue());
                 }
             };
-
+            
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 shutdown();
             }));
@@ -122,13 +122,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new InstantiationException(this, ex);
         }
     }
-
+    
     public <S extends AbstractRegistry<KEY, ENTRY, MAP, R, P> & RegistrySandbox<KEY, ENTRY, MAP, R>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
         final RegistrySandbox<KEY, ENTRY, MAP, R> oldSandbox = sandbox;
         try {
             this.sandbox = sandbox;
             this.sandbox.sync(entryMap);
-
+            
             for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
                 this.sandbox.registerConsistencyHandler(consistencyHandler);
             }
@@ -137,7 +137,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new CouldNotPerformException("Could not setup sandbox!", ex);
         }
     }
-
+    
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Register " + entry + "...");
@@ -164,7 +164,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         notifyObservers();
         return get(entry);
     }
-
+    
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Load " + entry + "...");
         try {
@@ -177,7 +177,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 pluginPool.beforeRegister(entry);
                 entryMap.put(entry.getId(), entry);
                 pluginPool.afterRegister(entry);
-
+                
             } finally {
                 registryLock.writeLock().unlock();
             }
@@ -188,7 +188,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         return entry;
     }
-
+    
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Update " + entry + "...");
@@ -217,17 +217,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         notifyObservers();
         return get(entry);
     }
-
+    
     @Override
     public ENTRY remove(final KEY key) throws CouldNotPerformException {
         return remove(get(key));
     }
-
+    
     @Override
     public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
         return superRemove(entry);
     }
-
+    
     public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
         logger.debug("Remove " + entry + "...");
         ENTRY oldEntry;
@@ -259,18 +259,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         notifyObservers();
         return oldEntry;
     }
-
+    
     @Override
     public ENTRY get(final KEY key) throws CouldNotPerformException {
         verifyID(key);
         try {
             registryLock.readLock().lock();
             if (!entryMap.containsKey(key)) {
-
+                
                 if (entryMap.isEmpty()) {
                     throw new NotAvailableException("Entry", key.toString(), new InvalidStateException(this + " is empty!"));
                 }
-
+                
                 TreeMap<KEY, ENTRY> sortedMap = new TreeMap<>((KEY o1, KEY o2) -> {
                     if (o1 instanceof String && o2 instanceof String) {
                         return ((String) o1).toLowerCase().compareTo(((String) o2).toLowerCase());
@@ -280,7 +280,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     return (o1).toString().compareTo(o2.toString());
                 });
                 sortedMap.putAll(entryMap);
-
+                
                 if (sortedMap.floorKey(key) != null && sortedMap.ceilingKey(key) != null) {
                     throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is [" + sortedMap.floorKey(key) + "] or [" + sortedMap.ceilingKey(key) + "].");
                 } else if (sortedMap.floorKey(key) != null) {
@@ -297,7 +297,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.readLock().unlock();
         }
     }
-
+    
     @Override
     public List<ENTRY> getEntries() throws CouldNotPerformException {
         try {
@@ -308,7 +308,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.readLock().unlock();
         }
     }
-
+    
     @Override
     public int size() {
         try {
@@ -318,7 +318,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.readLock().unlock();
         }
     }
-
+    
     public boolean isEmpty() {
         try {
             registryLock.readLock().lock();
@@ -327,17 +327,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.readLock().unlock();
         }
     }
-
+    
     @Override
     public boolean contains(final ENTRY entry) throws CouldNotPerformException {
         return contains(entry.getId());
     }
-
+    
     @Override
     public boolean contains(final KEY key) throws CouldNotPerformException {
         return entryMap.containsKey(verifyID(key));
     }
-
+    
     @Override
     public void clear() throws CouldNotPerformException {
         try {
@@ -376,7 +376,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         notifyObservers();
     }
-
+    
     @Override
     public void checkWriteAccess() throws RejectedException {
         try {
@@ -385,9 +385,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-
+            
         }
-
+        
         try {
             if (JPService.getProperty(JPReadOnly.class).getValue()) {
                 throw new RejectedException("ReadOnlyMode is detected!");
@@ -395,13 +395,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
-
+        
         if (!isDependingOnConsistentRegistries()) {
             throw new RejectedException("At least one depending registry is inconsistent!");
         }
-
+        
         pluginPool.checkAccess();
-
+        
         if (!consistent) {
             logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
             throw new RejectedException("Registry is inconsistent!");
@@ -430,7 +430,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return;
         }
         dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
-
+        
     }
 
     /**
@@ -456,7 +456,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             dependingRegistryMap.remove(registry).shutdown();
         });
     }
-
+    
     @Override
     public boolean isReadOnly() {
         try {
@@ -466,7 +466,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         return false;
     }
-
+    
     protected final void notifyObservers() {
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
@@ -476,7 +476,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 notificationSkiped = true;
                 return;
             }
-
+            
             if (super.notifyObservers(entryMap)) {
                 try {
                     pluginPool.afterRegistryChange();
@@ -491,7 +491,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all observer!", ex), logger, LogLevel.ERROR);
         }
     }
-
+    
     protected KEY verifyID(final ENTRY entry) throws VerificationFailedException {
         try {
             return verifyID(entry.getId());
@@ -499,54 +499,54 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new VerificationFailedException("Could not verify message!", ex);
         }
     }
-
+    
     protected KEY verifyID(final KEY id) throws VerificationFailedException {
         if (id == null) {
             throw new VerificationFailedException("Invalid id!", new NotAvailableException("id"));
         }
-
+        
         if (id instanceof String && ((String) id).isEmpty()) {
             throw new VerificationFailedException("Invalid id!", new InvalidStateException("id is empty!"));
         }
         return id;
     }
-
+    
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
         consistencyHandlerList.add(consistencyHandler);
         sandbox.registerConsistencyHandler(consistencyHandler);
     }
-
+    
     public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
         consistencyHandlerList.remove(consistencyHandler);
         sandbox.removeConsistencyHandler(consistencyHandler);
     }
-
+    
     @SuppressWarnings("UseSpecificCatch")
     public final int checkConsistency() throws CouldNotPerformException {
         int modificationCounter = 0;
         boolean checkSuccessful = false;
-
+        
         if (consistencyHandlerList.isEmpty()) {
             logger.debug("Skip consistency check because no handler are registered.");
             return modificationCounter;
         }
-
+        
         if (isEmpty()) {
             logger.debug("Skip consistency check because registry is empty.");
             return modificationCounter;
         }
-
+        
         if (!isDependingOnConsistentRegistries()) {
             logger.warn("Skip consistency check because registry is depending on at least one inconsistent registry!");
             return modificationCounter;
         }
-
+        
         if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
             // Avoid triggering recursive consistency checks.
             logger.debug(getName() + " skipping consistency check because check is already running by same thread. " + Thread.currentThread().getId());
             return modificationCounter;
         }
-
+        
         try {
             registryLock.writeLock().lock();
             try {
@@ -554,13 +554,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 try {
                     int iterationCounter = 0;
                     MultiException.ExceptionStack exceptionStack = null;
-
+                    
                     final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
                     Object lastModifieredEntry = null;
                     int maxConsistencyChecks;
                     int errorCounter;
                     String note;
-
+                    
                     while (true) {
 
                         // do not burn cpu
@@ -584,13 +584,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             errorCounter = 0;
                         }
                         if (!consistencyHandlerQueue.isEmpty() || errorCounter != 0) {
-
+                            
                             if (errorCounter > 0) {
                                 note = " with " + errorCounter + " errors";
                             } else {
                                 note = "";
                             }
-
+                            
                             if (!consistencyHandlerQueue.isEmpty()) {
                                 note += " after " + consistencyHandlerQueue.size() + " applied modifications";
                             }
@@ -617,7 +617,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             if (ex.getConsistencyHandler() == consistencyHandlerQueue.peekLast() && ex.getEntry().equals(lastModifieredEntry)) {
                                 throw new InvalidStateException("ConsistencyHandler[" + consistencyHandlerQueue.peekLast() + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
                             }
-
+                            
                             consistencyHandlerQueue.remove(ex.getConsistencyHandler());
                             consistencyHandlerQueue.offer(ex.getConsistencyHandler());
                             lastModifieredEntry = ex.getEntry();
@@ -638,23 +638,23 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         } catch (Throwable ex) {
                             throw new InvalidStateException("Fatal error occured during consistency check!", ex);
                         }
-
+                        
                         if (exceptionStack != null && !exceptionStack.isEmpty()) {
                             continue;
                         }
-
+                        
                         logger.debug("Registry consistend.");
                         break;
                     }
                     consistent = true;
-
+                    
                     if (modificationCounter > 0) {
                         consistencyFeedbackEventFilter.trigger("100% of consistency checks passed after " + modificationCounter + " applied modifications.");
                     }
                     checkSuccessful = true;
                     pluginPool.afterConsistencyCheck();
                     return modificationCounter;
-
+                    
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
                     throw new CouldNotPerformException("Consistency process of " + getName() + " aborted!", ex);
@@ -666,7 +666,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.writeLock().unlock();
         }
     }
-
+    
     protected void finishTransaction() throws CouldNotPerformException {
         try {
             checkConsistency();
@@ -674,7 +674,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex), logger, LogLevel.ERROR);
         }
     }
-
+    
     private void syncSandbox() throws CouldNotPerformException {
         try {
             registryLock.readLock().lock();
@@ -683,22 +683,22 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.readLock().unlock();
         }
     }
-
+    
     @Override
     public boolean isConsistent() {
         return consistent;
     }
-
+    
     @Override
     public void shutdown() {
         super.shutdown();
         try {
             pluginPool.shutdown();
-
+            
             consistencyHandlerList.stream().forEach((consistencyHandler) -> {
                 consistencyHandler.shutdown();
             });
-
+            
             clear();
             sandbox.clear();
         } catch (CouldNotPerformException ex) {
@@ -743,36 +743,40 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         return name;
     }
-
+    
     @Override
     public boolean isSandbox() {
         return false;
     }
-
+    
     @Override
     public String toString() {
         return getName();
-
+        
     }
-
+    
     private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
-
+        
         private final Registry dependency;
-
+        
         public DependencyConsistencyCheckTrigger(final Registry dependency) {
             this.dependency = dependency;
             dependency.addObserver(this);
         }
-
+        
         @Override
         public void update(Observable source, Object data) throws Exception {
-            if (dependency.isConsistent()) {
-                if (checkConsistency() > 0 || notificationSkiped) {
-                    notifyObservers();
+            try {
+                if (dependency.isConsistent()) {
+                    if (checkConsistency() > 0 || notificationSkiped) {
+                        notifyObservers();
+                    }
                 }
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Registry inconsistend after change of depending " + source + " change.", ex, logger);
             }
         }
-
+        
         @Override
         public void shutdown() {
             removeObserver(this);
