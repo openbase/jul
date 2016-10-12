@@ -471,7 +471,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 //                logger.info("Notification of registry change skipped because of running consistecy checks!");
             if (registryLock.isWriteLockedByCurrentThread()) {
                 logger.info("Notification of registry change skipped because of running write operations!");
-                notificationSkiped = false;
+                notificationSkiped = true;
                 return;
             }
 
