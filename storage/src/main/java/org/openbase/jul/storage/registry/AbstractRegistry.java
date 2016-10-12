@@ -33,9 +33,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPReadOnly;
+import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -621,7 +623,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             lastModifieredEntry = ex.getEntry();
 
                             // inform about modifications
-                            logger.info("Consistency modification applied: " + ex.getMessage());
+                            try {
+                                if (JPService.getProperty(JPVerbose.class).getValue()) {
+                                    logger.info("Consistency modification applied: " + ex.getMessage());
+                                } else {
+                                    logger.debug("Consistency modification applied: " + ex.getMessage());
+                                }
+                            } catch (JPNotAvailableException exx) {
+                                logger.warn("JPVerbose property could not be loaded!", exx);
+                                logger.debug("Consistency modification applied: " + ex.getMessage());
+                            }
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {

@@ -27,10 +27,8 @@ import com.google.protobuf.GeneratedMessage;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPDebugMode;
-import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -201,13 +199,13 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     @Override
     public String toString() {
         try {
-            try {
-                if (JPService.getProperty(JPVerbose.class).getValue()) {
-                    return getClass().getSimpleName() + "[" + getId().toString() + "]";// = [" + internalMessage + "]";
-                }
-            } catch (JPNotAvailableException ex) {
-                logger.warn("JPVerbose property could not be loaded!");
-            }
+//            try {
+//                if (JPService.getProperty(JPVerbose.class).getValue()) {
+//                    return getClass().getSimpleName() + "[" + internalMessage + "]";
+//                }
+//            } catch (JPNotAvailableException ex) {
+//                logger.warn("JPVerbose property could not be loaded!");
+//            }
             return getClass().getSimpleName() + "[" + getId().toString() + "]";
         } catch (CouldNotPerformException ex) {
             logger.warn("Could not return id value!", ex);
