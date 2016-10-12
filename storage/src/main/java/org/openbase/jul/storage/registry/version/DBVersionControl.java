@@ -371,17 +371,19 @@ public class DBVersionControl {
         int version = 0;
         String converterClassName = "";
         Class<DBVersionConverter> converterClass;
+        Constructor<DBVersionConverter> converterConstructor;
         try {
             while (true) {
                 try {
                     converterClassName = converterPackage.getName() + "." + entryType + "_" + version + "_To_" + (version + 1) + "_DBConverter";
                     converterClass = (Class<DBVersionConverter>) Class.forName(converterClassName);
+                    converterConstructor = converterClass.getConstructor(DBVersionControl.class);
+                    converterList.add(converterConstructor.newInstance(this));
                     version++;
-                } catch (ClassNotFoundException ex) {
+                } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InvocationTargetException ex) {
                     logger.debug("Could not load Converter[" + converterClassName + "] so latest db version should be " + version + ".", ex);
                     break;
                 }
-                converterList.add(converterClass.newInstance());
             }
             latestDBVersion = version;
             return converterList;
@@ -553,4 +555,9 @@ public class DBVersionControl {
     public FileProvider getEntryFileProvider() {
         return entryFileProvider;
     }
+
+    public File getDatabaseDirectory() {
+        return databaseDirectory;
+    }
+
 }

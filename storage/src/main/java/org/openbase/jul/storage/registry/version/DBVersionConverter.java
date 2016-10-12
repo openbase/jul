@@ -45,4 +45,6 @@ public interface DBVersionConverter {
      * @throws CouldNotPerformException can be thrown in case the upgrade could not be performed.
      */
     public JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException;
+
+    public DBVersionControl getVersionControl();
 }
