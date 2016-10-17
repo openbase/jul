@@ -26,6 +26,7 @@ package org.openbase.jul.storage.registry;
 import java.util.List;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Writable;
 import org.openbase.jul.pattern.Observable;
@@ -70,4 +71,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
 
     public boolean isSandbox();
 
+    public boolean lockRegistry() throws RejectedException;
+
+    public boolean unlockRegistry() throws RejectedException;
 }

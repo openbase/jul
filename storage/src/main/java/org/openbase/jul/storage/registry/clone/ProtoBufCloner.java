@@ -23,15 +23,13 @@ package org.openbase.jul.storage.registry.clone;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.protobuf.IdGenerator;
-import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 import java.util.HashMap;
 import java.util.Map;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 
 /**
  *
@@ -41,12 +39,6 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
  * @param <MB>
  */
 public class ProtoBufCloner<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> implements RegistryCloner<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>> {
-
-    private final IdGenerator<KEY, M> idGenerator;
-
-    public ProtoBufCloner(IdGenerator<KEY, M> idGenerator) {
-        this.idGenerator = idGenerator;
-    }
 
     @Override
     public Map<KEY, IdentifiableMessage<KEY, M, MB>> deepCloneMap(Map<KEY, IdentifiableMessage<KEY, M, MB>> map) throws CouldNotPerformException {
@@ -65,7 +57,7 @@ public class ProtoBufCloner<KEY extends Comparable<KEY>, M extends GeneratedMess
     @Override
     public IdentifiableMessage<KEY, M, MB> deepCloneEntry(IdentifiableMessage<KEY, M, MB> entry) throws CouldNotPerformException {
         try {
-            return new IdentifiableMessage<>(entry.getMessage(), idGenerator);
+            return new IdentifiableMessage<>(entry.getMessage());
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not clone Entry!", ex);
         }

@@ -25,8 +25,6 @@ package org.openbase.jul.storage.registry;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-import java.util.List;
-import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
@@ -47,7 +45,7 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
     private final IdGenerator<KEY, M> idGenerator;
 
     public ProtoBufFileSynchronizedRegistrySandbox(final IdGenerator<KEY, M> idGenerator, final Descriptors.FieldDescriptor fieldDescriptor, final ProtoBufRegistry<KEY, M, MB> originRegistry) throws CouldNotPerformException, InterruptedException {
-        super(new ProtoBufMessageMapWrapper<>(), new ProtoBufCloner<>(idGenerator), originRegistry);
+        super(new ProtoBufMessageMapWrapper<>(), new ProtoBufCloner<>(), originRegistry);
         this.idGenerator = idGenerator;
     }
 
@@ -58,27 +56,22 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
 
     @Override
     public boolean contains(final M message) throws CouldNotPerformException {
-        return contains(new IdentifiableMessage<>(message, idGenerator).getId());
+        return contains(new IdentifiableMessage<KEY, M, MB>(message).getId());
     }
 
     @Override
     public M update(final M message) throws CouldNotPerformException {
-        return update(new IdentifiableMessage<>(message, idGenerator)).getMessage();
+        return update(new IdentifiableMessage<>(message)).getMessage();
     }
 
     @Override
     public M remove(M locationConfig) throws CouldNotPerformException {
-        return remove(new IdentifiableMessage<>(locationConfig, idGenerator)).getMessage();
+        return remove(new IdentifiableMessage<>(locationConfig)).getMessage();
     }
 
     @Override
     public M getMessage(final KEY id) throws CouldNotPerformException {
         return get(id).getMessage();
-    }
-
-    @Override
-    public List<M> getMessages() throws CouldNotPerformException {
-        return entryMap.getMessages();
     }
 
     @Override
@@ -88,19 +81,5 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
 
     public IdGenerator<KEY, M> getIdGenerator() {
         return idGenerator;
-    }
-
-    @Override
-    public void sync(ProtoBufMessageMap<KEY, M, MB> map) throws CouldNotPerformException {
-        try {
-            entryMap.clear();
-            for (Map.Entry<KEY, IdentifiableMessage<KEY, M, MB>> entry : map.entrySet()) {
-                IdentifiableMessage<KEY, M, MB> copy = new IdentifiableMessage<>(entry.getValue());
-                entryMap.put(copy.getId(), copy);
-            }
-            consistent = true;
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("FATAL: Sendbox sync failed!", ex);
-        }
     }
 }

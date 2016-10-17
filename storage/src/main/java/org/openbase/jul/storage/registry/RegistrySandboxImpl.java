@@ -56,8 +56,8 @@ public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException {
-        super.replaceInternalMap(cloner.deepCloneMap(map));
+    public void replaceInternalMap(Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
+        super.replaceInternalMap(cloner.deepCloneMap(map), finishTransaction);
     }
 
     @Override
@@ -78,11 +78,7 @@ public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     @Override
     public void sync(MAP map) throws CouldNotPerformException {
         try {
-            entryMap.clear();
-            for (Map.Entry<KEY, ENTRY> entry : map.entrySet()) {
-                ENTRY deepClone = cloner.deepCloneEntry(entry.getValue());
-                entryMap.put(deepClone.getId(), deepClone);
-            }
+            replaceInternalMap(map, false);
             consistent = true;
         } catch (Exception ex) {
             throw new CouldNotPerformException("FATAL: Sandbox sync failed!", ex);

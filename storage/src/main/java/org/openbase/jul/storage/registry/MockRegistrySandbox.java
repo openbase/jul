@@ -177,4 +177,14 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     public void waitForValue(long timeout, TimeUnit timeUnit) throws NotAvailableException, InterruptedException {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
+
+    @Override
+    public boolean lockRegistry() throws RejectedException {
+        throw new RejectedException("Cannot lock MockRegistrySandbox!");
+    }
+
+    @Override
+    public boolean unlockRegistry() throws RejectedException {
+        throw new RejectedException("Cannot lock MockRegistrySandbox!");
+    }
 }

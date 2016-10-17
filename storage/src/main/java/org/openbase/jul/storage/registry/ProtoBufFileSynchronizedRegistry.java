@@ -26,7 +26,6 @@ package org.openbase.jul.storage.registry;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.io.File;
-import java.util.List;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -162,11 +161,6 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     @Override
     public M getMessage(final KEY id) throws CouldNotPerformException {
         return get(id).getMessage();
-    }
-
-    @Override
-    public List<M> getMessages() throws CouldNotPerformException {
-        return entryMap.getMessages();
     }
 
     @Override

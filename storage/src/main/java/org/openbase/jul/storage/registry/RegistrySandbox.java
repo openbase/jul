@@ -43,7 +43,7 @@ public interface RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
 
-    void replaceInternalMap(Map<KEY, ENTRY> map) throws CouldNotPerformException;
+    public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException;
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException;
 

@@ -33,6 +33,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotSupportedException;
+import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
@@ -135,5 +136,15 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     @Override
     public void registerConsistencyHandler(ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>> consistencyHandler) throws CouldNotPerformException {
         throw new NotSupportedException("registerConsistencyHandler", "method", this);
+    }
+
+    @Override
+    public boolean lockRegistry() throws RejectedException {
+        throw new RejectedException("Cannot lock remote registry!");
+    }
+
+    @Override
+    public boolean unlockRegistry() throws RejectedException {
+        throw new RejectedException("Cannot unlock remote registry!");
     }
 }

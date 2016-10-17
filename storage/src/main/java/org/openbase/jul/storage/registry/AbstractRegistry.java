@@ -74,7 +74,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private String name;
 
-    protected final MAP entryMap;
+    private final MAP entryMap;
 
     protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
     protected RegistrySandbox<KEY, ENTRY, MAP, R> sandbox;
@@ -344,7 +344,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             pluginPool.beforeClear();
             sandbox.clear();
             entryMap.clear();
-            finishTransaction();
         } finally {
             registryLock.writeLock().unlock();
         }
@@ -352,19 +351,36 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     /**
-     * Replaces the internal registry map by the given one. Use with care!
+     * Replaces the internal registry map by the given one.
+     *
+     * Use with care!
      *
      * @param map
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
+        replaceInternalMap(map, true);
+    }
+
+    /**
+     * Replaces the internal registry map by the given one.
+     *
+     * Use with care!
+     *
+     * @param map
+     * @param finishTransaction is true the registry transaction will be verified.
+     * @throws org.openbase.jul.exception.CouldNotPerformException
+     */
+    public void replaceInternalMap(final Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
         try {
             registryLock.writeLock().lock();
             try {
                 sandbox.replaceInternalMap(map);
                 entryMap.clear();
                 entryMap.putAll(map);
-                finishTransaction();
+                if (finishTransaction) {
+                    finishTransaction();
+                }
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Internal map replaced by invalid data!", ex), logger, LogLevel.ERROR);
             } finally {
@@ -378,7 +394,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public void checkWriteAccess() throws RejectedException {
-        logger.info("checkWriteAccess of " + this);
+        logger.debug("checkWriteAccess of " + this);
         try {
             if (JPService.getProperty(JPForce.class).getValue()) {
                 return;
@@ -430,7 +446,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return;
         }
         dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
-
     }
 
     /**
@@ -527,7 +542,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         boolean checkSuccessful = false;
 
         if (consistencyHandlerList.isEmpty()) {
-            logger.info("Skip consistency check because no handler are registered.");
+            logger.debug("Skip consistency check because no handler are registered.");
             return modificationCounter;
         }
 
@@ -756,6 +771,24 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     }
 
+    @Override
+    public boolean lockRegistry() throws RejectedException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean unlockRegistry() throws RejectedException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private boolean lockDependingRegistries() throws RejectedException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private boolean unlockDependingRegistries() throws RejectedException {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
 
         private final Registry dependency;
@@ -769,6 +802,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         public void update(Observable source, Object data) throws Exception {
             try {
                 if (dependency.isConsistent()) {
+                    System.out.println("Check consistency of [" + getName() + "] triggered by [" + dependency.getName() + "]");
                     if (checkConsistency() > 0 || notificationSkiped) {
                         notifyObservers();
                     }
