@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
-import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
@@ -296,10 +295,9 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public void waitForValue(long timeout, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
+                public void waitForValue(long timeout, TimeUnit timeUnit) throws InterruptedException, NotAvailableException {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
-
             });
         }
 
