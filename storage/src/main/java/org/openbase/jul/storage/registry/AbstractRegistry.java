@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
@@ -772,21 +773,74 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public boolean lockRegistry() throws RejectedException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public synchronized boolean lockRegistry() throws RejectedException {
+        if (!registryLock.writeLock().tryLock()) {
+            return false;
+        }
+
+        try {
+            lockDependingRegistries();
+        } catch (CouldNotPerformException ex) {
+            registryLock.writeLock().unlock();
+            return false;
+        }
+        return true;
     }
 
     @Override
-    public boolean unlockRegistry() throws RejectedException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public synchronized boolean unlockRegistry() throws CouldNotPerformException {
+        trunlockDependingRegistries();
+        registryLock.writeLock().unlock();
     }
 
-    private boolean lockDependingRegistries() throws RejectedException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private synchronized void lockDependingRegistries() throws CouldNotPerformException {
+        boolean success = true;
+        final List<Registry> lockedRegisties = new ArrayList<>();
+
+        try {
+            // lock all depending registries except remote registries which will reject the locking.
+            for (Registry registry : dependingRegistryMap.keySet()) {
+                try {
+                    if (registry.lockRegistry()) {
+                        lockedRegisties.add(registry);
+                    } else {
+                        success = false;
+                    }
+                } catch (RejectedException ex) {
+                    // ignore if registry does not support the lock.
+                }
+            }
+        } catch (Exception ex) {
+            success = false;
+            throw new CouldNotPerformException("Could not lock all depending registries!", ex);
+        } finally {
+            try {
+                // if not successfull release all already acquire locks.
+                if (!success) {
+                    for (Registry registry : lockedRegisties) {
+                        registry.unlockRegistry();
+                    }
+                }
+            } catch (Exception ex) {
+                assert false;
+                throw new CouldNotPerformException("FATAL ERROR: Could not release depending locks!", ex);
+            }
+        }
     }
 
-    private boolean unlockDependingRegistries() throws RejectedException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private synchronized void unlockDependingRegistries() throws CouldNotPerformException {
+        try {
+            dependingRegistryMap.keySet().stream().forEach((registry) -> {
+                try {
+                    registry.unlockRegistry();
+                } catch (RejectedException ex) {
+                    // ignore if registry does not support the lock.
+                }
+            });
+        } catch (Exception ex) {
+            assert false;
+            throw new CouldNotPerformException("FATAL ERROR: Could not release depending locks!", ex);
+        }
     }
 
     private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
