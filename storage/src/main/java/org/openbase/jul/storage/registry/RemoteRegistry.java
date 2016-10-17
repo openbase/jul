@@ -144,7 +144,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     }
 
     @Override
-    public boolean unlockRegistry() throws RejectedException {
-        throw new RejectedException("RemoteRegistry not lockable!");
+    public void unlockRegistry() {
+        // because remote registry does not support locks there is no need for any action here.
     }
 }

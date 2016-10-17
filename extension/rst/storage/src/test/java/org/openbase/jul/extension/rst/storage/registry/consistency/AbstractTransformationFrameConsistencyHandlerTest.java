@@ -301,12 +301,12 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public boolean lockRegistry() throws RejectedException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
-                public boolean unlockRegistry() throws RejectedException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                public void unlockRegistry() {
+                    // Not supported
                 }
             });
         }

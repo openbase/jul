@@ -184,7 +184,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public boolean unlockRegistry() throws RejectedException {
-        throw new RejectedException("MockRegistrySandbox not lockable!");
+    public void unlockRegistry() {
+        // MockRegistrySandbox is not unlockable
     }
 }

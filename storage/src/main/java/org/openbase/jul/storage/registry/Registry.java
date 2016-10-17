@@ -68,10 +68,10 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
     public boolean isReadOnly();
 
     public boolean isConsistent();
-
+    
     public boolean isSandbox();
 
     public boolean lockRegistry() throws RejectedException;
 
-    public boolean unlockRegistry() throws RejectedException;
+    public void unlockRegistry();
 }

@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
@@ -143,8 +142,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         logger.info("Register " + entry + "...");
         try {
             checkWriteAccess();
+            lock();
             try {
-                registryLock.writeLock().lock();
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
@@ -154,7 +153,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 finishTransaction();
                 pluginPool.afterRegister(entry);
             } finally {
-                registryLock.writeLock().unlock();
+                unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
@@ -168,8 +167,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
         logger.info("Load " + entry + "...");
         try {
+            lock();
             try {
-                registryLock.writeLock().lock();
                 if (entryMap.containsKey(entry.getId())) {
                     throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
                 }
@@ -179,7 +178,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 pluginPool.afterRegister(entry);
 
             } finally {
-                registryLock.writeLock().unlock();
+                unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
@@ -194,9 +193,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         logger.info("Update " + entry + "...");
         try {
             checkWriteAccess();
+            lock();
             try {
                 // validate update
-                registryLock.writeLock().lock();
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
@@ -207,7 +206,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 finishTransaction();
                 pluginPool.afterUpdate(entry);
             } finally {
-                registryLock.writeLock().unlock();
+                unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
@@ -233,9 +232,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         ENTRY oldEntry;
         try {
             checkWriteAccess();
+            lock();
             try {
                 // validate removal
-                registryLock.writeLock().lock();
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
@@ -249,7 +248,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
                 pluginPool.afterRemove(entry);
             } finally {
-                registryLock.writeLock().unlock();
+                unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + " in " + this + "!", ex);
@@ -340,13 +339,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public void clear() throws CouldNotPerformException {
+        lock();
         try {
-            registryLock.writeLock().lock();
             pluginPool.beforeClear();
             sandbox.clear();
             entryMap.clear();
         } finally {
-            registryLock.writeLock().unlock();
+            unlock();
         }
         notifyObservers();
     }
@@ -374,7 +373,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
         try {
-            registryLock.writeLock().lock();
+            lock();
             try {
                 sandbox.replaceInternalMap(map);
                 entryMap.clear();
@@ -388,7 +387,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 syncSandbox();
             }
         } finally {
-            registryLock.writeLock().unlock();
+            unlock();
         }
         notifyObservers();
     }
@@ -563,8 +562,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return modificationCounter;
         }
 
+        lock();
         try {
-            registryLock.writeLock().lock();
             try {
                 consistencyCheckLock.writeLock().lock();
                 try {
@@ -667,10 +666,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     if (modificationCounter > 0) {
                         consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.");
                     }
-                    System.out.println("A");
                     checkSuccessful = true;
                     pluginPool.afterConsistencyCheck();
-                    System.out.println("B");
                     return modificationCounter;
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
@@ -680,7 +677,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 consistencyCheckLock.writeLock().unlock();
             }
         } finally {
-            registryLock.writeLock().unlock();
+            unlock();
         }
     }
 
@@ -772,6 +769,24 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     }
 
+    private void lock() throws RejectedException {
+        while (!Thread.currentThread().isInterrupted()) {
+            if (lockRegistry()) {
+                return;
+            }
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new RejectedException(ex);
+            }
+        }
+    }
+
+    private void unlock() {
+        registryLock.writeLock().unlock();
+    }
+
     @Override
     public synchronized boolean lockRegistry() throws RejectedException {
         if (!registryLock.writeLock().tryLock()) {
@@ -788,8 +803,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public synchronized boolean unlockRegistry() throws CouldNotPerformException {
-        trunlockDependingRegistries();
+    public synchronized void unlockRegistry() {
+        unlockDependingRegistries();
         registryLock.writeLock().unlock();
     }
 
@@ -828,19 +843,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    private synchronized void unlockDependingRegistries() throws CouldNotPerformException {
-        try {
-            dependingRegistryMap.keySet().stream().forEach((registry) -> {
-                try {
-                    registry.unlockRegistry();
-                } catch (RejectedException ex) {
-                    // ignore if registry does not support the lock.
-                }
-            });
-        } catch (Exception ex) {
-            assert false;
-            throw new CouldNotPerformException("FATAL ERROR: Could not release depending locks!", ex);
-        }
+    private synchronized void unlockDependingRegistries() {
+        dependingRegistryMap.keySet().stream().forEach((registry) -> {
+            registry.unlockRegistry();
+        });
     }
 
     private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
