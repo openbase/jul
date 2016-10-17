@@ -21,6 +21,7 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Shutdownable;
 
@@ -31,9 +32,63 @@ import org.openbase.jul.iface.Shutdownable;
  */
 public interface Observable<T> extends Shutdownable {
 
+    /**
+     * Method blocks until the observable is available.
+     * In case the given timeout is reached an TimeoutException is thrown.
+     *
+     * @param timeout is the timeout related to the given {@link TimeUnit}.
+     * @param timeUnit is the unit of the timeout.
+     * @throws InterruptedException is thrown if the current thread was interrupted externally.
+     * @throws NotAvailableException is thrown with a TimeoutException cause if the given timeout is reached.
+     */
+    public void waitForValue(final long timeout, final TimeUnit timeUnit) throws InterruptedException, NotAvailableException;
+
+    /**
+     * Method blocks until the observable is available.
+     *
+     * @throws org.openbase.jul.exception.NotAvailableException
+     * @throws InterruptedException is thrown if the current thread was interrupted externally.
+     */
+    default public void waitForValue() throws NotAvailableException, InterruptedException {
+        try {
+            waitForValue(0, TimeUnit.MILLISECONDS);
+        } catch (NotAvailableException ex) {
+            // Should never happen because no timeout was given.
+            assert false;
+        }
+    }
+
+    /**
+     * Method registers the given observer to this observable to get informed about value changes.
+     *
+     * @param observer is the observer to register.
+     */
     public void addObserver(Observer<T> observer);
 
+    /**
+     * Method removes the given observer from this observable to finish the observation.
+     *
+     * @param observer is the observer to remove.
+     */
     public void removeObserver(Observer<T> observer);
 
-    public T getLatestValue() throws NotAvailableException;
+    /**
+     * Method returns the latest observable value.
+     *
+     * @return
+     * @throws NotAvailableException
+     */
+    public T getValue() throws NotAvailableException;
+
+    /**
+     * Method returns the latest observable value.
+     *
+     * @return
+     * @throws NotAvailableException
+     * @deprecated please use {@link #getValue()} instead.
+     */
+    @Deprecated
+    default public T getLatestValue() throws NotAvailableException {
+        return getValue();
+    }
 }

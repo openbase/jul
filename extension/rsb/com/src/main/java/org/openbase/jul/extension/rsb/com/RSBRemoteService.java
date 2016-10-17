@@ -766,6 +766,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
             logger.info("Wait for " + this.toString() + " data...");
             getDataFuture().get();
+            dataObservable.waitForValue();
         } catch (ExecutionException ex) {
             throw new TimeoutException("Could not wait for data!", ex);
         }
@@ -776,16 +777,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param timeout {@inheritDoc}
      * @param timeUnit {@inheritDoc}
-     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     * @throws java.lang.InterruptedException {@inheritDoc}
      */
     @Override
-    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
+    public void waitForData(long timeout, TimeUnit timeUnit) throws NotAvailableException, InterruptedException {
         try {
             if (isDataAvailable()) {
                 return;
             }
+            long startTime = System.currentTimeMillis();
             getDataFuture().get(timeout, timeUnit);
-        } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
+            long partialTimeout = timeUnit.toMillis(timeout) - (System.currentTimeMillis() - startTime);
+            if (partialTimeout <= 0) {
+                throw new java.util.concurrent.TimeoutException("Data timeout is reached!");
+            }
+            dataObservable.waitForValue(partialTimeout, TimeUnit.MILLISECONDS);
+        } catch (java.util.concurrent.TimeoutException | CouldNotPerformException | ExecutionException ex) {
             throw new NotAvailableException("Data is not yet available!", ex);
         }
     }

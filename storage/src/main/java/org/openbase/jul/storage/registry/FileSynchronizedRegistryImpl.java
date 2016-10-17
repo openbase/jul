@@ -80,7 +80,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     }
 
     public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool) throws InstantiationException, InterruptedException {
-        super(entryMap, new FileRegistryPluginPool<>());
+        super(entryMap, filePluginPool);
         try {
             this.databaseDirectory = databaseDirectory;
             this.fileSynchronizerMap = new HashMap<>();
@@ -141,8 +141,8 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
+        logger.info("register Entry[" + entry + "]");
         ENTRY result = super.register(entry);
-
         FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(result, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
         fileSynchronizerMap.put(result.getId(), fileSynchronizer);
         filePluginPool.afterRegister(result, fileSynchronizer);

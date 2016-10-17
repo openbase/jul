@@ -25,9 +25,11 @@ package org.openbase.jul.pattern;
  */
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,18 +47,31 @@ public class ObservableImpl<T> implements Observable<T> {
     private final boolean unchangedValueFilter;
     private final Object LOCK = new Object();
     private final List<Observer<T>> observers;
-    private T latestValue;
+    private T value;
     private int latestValueHash;
 
+    /**
+     * {@inheritDoc}
+     */
     public ObservableImpl() {
         this(DEFAULT_UNCHANGED_VALUE_FILTER);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param unchangedValueFilter
+     */
     public ObservableImpl(final boolean unchangedValueFilter) {
         this.observers = new ArrayList<>();
         this.unchangedValueFilter = unchangedValueFilter;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param observer
+     */
     @Override
     public void addObserver(Observer<T> observer) {
         synchronized (LOCK) {
@@ -68,6 +83,11 @@ public class ObservableImpl<T> implements Observable<T> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param observer
+     */
     @Override
     public void removeObserver(Observer<T> observer) {
         synchronized (LOCK) {
@@ -75,6 +95,9 @@ public class ObservableImpl<T> implements Observable<T> {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void shutdown() {
         synchronized (LOCK) {
@@ -83,7 +106,59 @@ public class ObservableImpl<T> implements Observable<T> {
     }
 
     /**
+     *
+     * @param timeout {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
+    @Override
+    public void waitForValue(final long timeout, final TimeUnit timeUnit) throws NotAvailableException, InterruptedException {
+        synchronized (LOCK) {
+            if (value != null) {
+                return;
+            }
+            // if 0 wait forever like the default java wait() implementation.
+            if (timeUnit.toMillis(timeout) == 0) {
+                LOCK.wait();
+            } else {
+                timeUnit.timedWait(LOCK, timeout);
+            }
+            if (value == null) {
+                throw new NotAvailableException("Observable was not available in time.", new TimeoutException());
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
+    @Override
+    public T getValue() throws NotAvailableException {
+        if (value == null) {
+            throw new NotAvailableException("Value");
+        }
+        return value;
+    }
+
+    /**
      * Notify all changes of the observable to all observers only if the observable has changed.
+     * The source of the notification is set as this.
+     * Because of data encapsulation reasons this method is not included within the Observer interface.
+     *
+     * @param observable the value which is notified
+     * @return true if the observable has changed
+     * @throws MultiException thrown if the notification to at least one observer fails
+     */
+    public boolean notifyObservers(T observable) throws MultiException {
+        return notifyObservers(this, observable);
+    }
+
+    /**
+     * Notify all changes of the observable to all observers only if the observable has changed.
+     * Because of data encapsulation reasons this method is not included within the Observer interface.
      *
      * @param source the source of the notification
      * @param observable the value which is notified
@@ -98,13 +173,13 @@ public class ObservableImpl<T> implements Observable<T> {
                 LOGGER.debug("Skip notification because observable is null!");
                 return false;
             }
-            if (unchangedValueFilter && latestValue != null && observable.hashCode() == latestValueHash) {
+            if (unchangedValueFilter && value != null && observable.hashCode() == latestValueHash) {
                 LOGGER.debug("#+# Skip notification because observable has not been changed!");
                 return false;
             }
 
-            latestValue = observable;
-            latestValueHash = latestValue.hashCode();
+            value = observable;
+            latestValueHash = value.hashCode();
 
             for (Observer<T> observer : new ArrayList<>(observers)) {
                 try {
@@ -113,28 +188,10 @@ public class ObservableImpl<T> implements Observable<T> {
                     exceptionStack = MultiException.push(observer, ex, exceptionStack);
                 }
             }
+
+            LOCK.notifyAll();
         }
         MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
         return true;
-    }
-
-    /**
-     * Notify all changes of the observable to all observers only if the observable has changed.
-     * The source of the notification is set as this.
-     *
-     * @param observable the value which is notified
-     * @return true if the observable has changed
-     * @throws MultiException thrown if the notification to at least one observer fails
-     */
-    public boolean notifyObservers(T observable) throws MultiException {
-        return notifyObservers(this, observable);
-    }
-
-    @Override
-    public T getLatestValue() throws NotAvailableException {
-        if (latestValue == null) {
-            throw new NotAvailableException("latestvalue");
-        }
-        return latestValue;
     }
 }

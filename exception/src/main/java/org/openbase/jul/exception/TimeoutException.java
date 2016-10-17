@@ -23,12 +23,15 @@ package org.openbase.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class TimeoutException extends CouldNotPerformException {
+
+    public TimeoutException() {
+        this("Timeout");
+    }
 
     public TimeoutException(String message) {
         super(message);

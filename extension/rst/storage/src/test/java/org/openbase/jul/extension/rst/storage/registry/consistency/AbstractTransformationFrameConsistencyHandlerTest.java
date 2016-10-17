@@ -25,6 +25,7 @@ package org.openbase.jul.extension.rst.storage.registry.consistency;
  */
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -34,6 +35,7 @@ import org.junit.Test;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
+import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
@@ -142,27 +144,27 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public void checkWriteAccess() throws RejectedException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public void loadRegistry() throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public void saveRegistry() throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public Integer getDBVersion() throws NotAvailableException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public String getName() {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
@@ -180,117 +182,122 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public boolean contains(String key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public void clear() throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public int size() {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public boolean isReadOnly() {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public boolean isConsistent() {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public boolean isSandbox() {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public void shutdown() {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public UnitConfig register(UnitConfig entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public boolean contains(UnitConfig key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public UnitConfig update(UnitConfig entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public UnitConfig remove(UnitConfig entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public UnitConfig getMessage(String key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public List<UnitConfig> getMessages() throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public UnitConfig.Builder getBuilder(String key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> register(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> update(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> remove(String key) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> remove(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public List<IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntries() throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public boolean contains(IdentifiableMessage<String, UnitConfig, UnitConfig.Builder> entry) throws CouldNotPerformException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public void addObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public void removeObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
-                public Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getLatestValue() throws NotAvailableException {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                public Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getValue() throws NotAvailableException {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                @Override
+                public void waitForValue(long timeout, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
             });
@@ -298,7 +305,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
         @Override
         public void processData(Object id, Identifiable entry, Map entryMap, Registry registry) throws CouldNotPerformException, EntryModification {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 }

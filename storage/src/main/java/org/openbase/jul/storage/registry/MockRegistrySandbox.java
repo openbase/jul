@@ -25,6 +25,7 @@ package org.openbase.jul.storage.registry;
  */
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
@@ -40,6 +41,17 @@ import org.openbase.jul.pattern.Observer;
  * @param <R>
  */
 public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>> implements RegistrySandbox<KEY, ENTRY, MAP, R> {
+
+    private final Registry<KEY, ENTRY> registry;
+
+    public MockRegistrySandbox(Registry<KEY, ENTRY> registry) {
+        this.registry = registry;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 
     @Override
     public ENTRY register(ENTRY entry) throws CouldNotPerformException {
@@ -127,11 +139,6 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public String toString() {
-        return getName();
-    }
-
-    @Override
     public ENTRY load(ENTRY entry) throws CouldNotPerformException {
         return entry;
     }
@@ -152,7 +159,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public Map<KEY, ENTRY> getLatestValue() throws NotAvailableException {
+    public Map<KEY, ENTRY> getValue() throws NotAvailableException {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 
@@ -164,5 +171,10 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     @Override
     public boolean isSandbox() {
         return true;
+    }
+
+    @Override
+    public void waitForValue(long timeout, TimeUnit timeUnit) throws NotAvailableException, InterruptedException {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 }

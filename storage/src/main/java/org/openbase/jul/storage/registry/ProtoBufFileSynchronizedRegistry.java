@@ -78,7 +78,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             }
 
-            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator, protobufMessageMap.getFieldDescriptor()));
+            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator, protobufMessageMap.getFieldDescriptor(), this));
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -139,6 +139,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public M register(final M message) throws CouldNotPerformException {
+        logger.info("register Message[" + message + "]");
         M result = super.register(new IdentifiableMessage<>(message, idGenerator)).getMessage();
         return result;
     }

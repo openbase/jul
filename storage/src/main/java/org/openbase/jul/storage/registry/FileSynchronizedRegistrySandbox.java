@@ -41,12 +41,12 @@ import org.openbase.jul.storage.registry.plugin.FileRegistryPlugin;
  */
 public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistry<KEY, ENTRY>> extends RegistrySandboxImpl<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
 
-    public FileSynchronizedRegistrySandbox(MAP entryMap, RegistryCloner<KEY, ENTRY, MAP> cloner) throws CouldNotPerformException, InterruptedException {
-        super(entryMap, cloner);
+    public FileSynchronizedRegistrySandbox(MAP entryMap, RegistryCloner<KEY, ENTRY, MAP> cloner, final FileSynchronizedRegistry<KEY, ENTRY> originRegistry) throws CouldNotPerformException, InterruptedException {
+        super(entryMap, cloner, originRegistry);
     }
 
-    public FileSynchronizedRegistrySandbox(final MAP entryMap) throws CouldNotPerformException, InterruptedException {
-        super(entryMap);
+    public FileSynchronizedRegistrySandbox(final MAP entryMap, final FileSynchronizedRegistry<KEY, ENTRY> originRegistry) throws CouldNotPerformException, InterruptedException {
+        super(entryMap, originRegistry);
     }
 
     @Override

@@ -30,9 +30,9 @@ import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
 import org.openbase.jul.storage.registry.clone.ProtoBufCloner;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
 /**
  *
@@ -46,8 +46,8 @@ public class ProtoBufFileSynchronizedRegistrySandbox<KEY extends Comparable<KEY>
 
     private final IdGenerator<KEY, M> idGenerator;
 
-    public ProtoBufFileSynchronizedRegistrySandbox(final IdGenerator<KEY, M> idGenerator, final Descriptors.FieldDescriptor fieldDescriptor) throws CouldNotPerformException, InterruptedException {
-        super(new ProtoBufMessageMapWrapper<>(), new ProtoBufCloner<>(idGenerator));
+    public ProtoBufFileSynchronizedRegistrySandbox(final IdGenerator<KEY, M> idGenerator, final Descriptors.FieldDescriptor fieldDescriptor, final ProtoBufRegistry<KEY, M, MB> originRegistry) throws CouldNotPerformException, InterruptedException {
+        super(new ProtoBufMessageMapWrapper<>(), new ProtoBufCloner<>(idGenerator), originRegistry);
         this.idGenerator = idGenerator;
     }
 
