@@ -817,14 +817,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private synchronized void lockDependingRegistries() throws RejectedException, FatalImplementationErrorException {
         boolean success = true;
-        final List<Registry> lockedRegisties = new ArrayList<>();
+        final List<Registry> lockedRegistries = new ArrayList<>();
 
         try {
             // lock all depending registries except remote registries which will reject the locking.
             for (Registry registry : dependingRegistryMap.keySet()) {
                 try {
                     if (registry.tryLockRegistry()) {
-                        lockedRegisties.add(registry);
+                        lockedRegistries.add(registry);
                     } else {
                         success = false;
                     }
@@ -839,7 +839,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 // if not successfull release all already acquire locks.
                 if (!success) {
-                    lockedRegisties.stream().forEach((registry) -> {
+                    lockedRegistries.stream().forEach((registry) -> {
                         registry.unlockRegistry();
                     });
                 }
