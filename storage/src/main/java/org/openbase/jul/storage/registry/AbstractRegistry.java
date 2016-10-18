@@ -777,7 +777,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             while (!Thread.currentThread().isInterrupted()) {
                 if (registryLock.writeLock().tryLock()) {
-                    System.out.println("Locked self [" + getName() + "]");
                     try {
                         lockDependingRegistries();
                         return;
@@ -831,7 +830,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             for (Registry registry : dependingRegistryMap.keySet()) {
                 try {
                     if (registry.tryLockRegistry()) {
-                        System.out.println(getName() + " locked dependency " + registry.getName());
                         lockedRegistries.add(registry);
                     } else {
                         success = false;
@@ -847,7 +845,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 // if not successfull release all already acquire locks.
                 if (!success) {
-                    System.out.println("DependencyLocking of " + getName() + " failed");
                     lockedRegistries.stream().forEach((registry) -> {
                         registry.unlockRegistry();
                     });
@@ -882,7 +879,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         public void update(Observable source, Object data) throws Exception {
             try {
                 if (dependency.isConsistent()) {
-                    System.out.println("Check consistency of [" + getName() + "] triggered by [" + dependency.getName() + "]");
                     if (checkConsistency() > 0 || notificationSkiped) {
                         notifyObservers();
                     }
