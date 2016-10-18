@@ -179,7 +179,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public boolean lockRegistry() throws RejectedException {
+    public boolean tryLockRegistry() throws RejectedException {
         throw new RejectedException("MockRegistrySandbox not lockable!");
     }
 

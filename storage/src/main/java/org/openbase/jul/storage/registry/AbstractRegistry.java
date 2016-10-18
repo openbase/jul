@@ -39,6 +39,7 @@ import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPReadOnly;
 import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.MultiException;
@@ -262,8 +263,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public ENTRY get(final KEY key) throws CouldNotPerformException {
         verifyID(key);
+        registryLock.readLock().lock();
         try {
-            registryLock.readLock().lock();
             if (!entryMap.containsKey(key)) {
 
                 if (entryMap.isEmpty()) {
@@ -299,8 +300,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public List<ENTRY> getEntries() throws CouldNotPerformException {
+        registryLock.readLock().lock();
         try {
-            registryLock.readLock().lock();
             pluginPool.beforeGetEntries();
             return new ArrayList<>(entryMap.values());
         } finally {
@@ -310,8 +311,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public int size() {
+        registryLock.readLock().lock();
         try {
-            registryLock.readLock().lock();
             return entryMap.size();
         } finally {
             registryLock.readLock().unlock();
@@ -319,8 +320,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public boolean isEmpty() {
+        registryLock.readLock().lock();
         try {
-            registryLock.readLock().lock();
             return entryMap.isEmpty();
         } finally {
             registryLock.readLock().unlock();
@@ -372,8 +373,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
+        lock();
         try {
-            lock();
             try {
                 sandbox.replaceInternalMap(map);
                 entryMap.clear();
@@ -564,8 +565,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         lock();
         try {
+            consistencyCheckLock.writeLock().lock();
             try {
-                consistencyCheckLock.writeLock().lock();
                 try {
                     int iterationCounter = 0;
                     MultiException.ExceptionStack exceptionStack = null;
@@ -690,8 +691,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     private void syncSandbox() throws CouldNotPerformException {
+        registryLock.readLock().lock();
         try {
-            registryLock.readLock().lock();
             sandbox.sync(entryMap);
         } finally {
             registryLock.readLock().unlock();
@@ -769,46 +770,53 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     }
 
-    private void lock() throws RejectedException {
-        while (!Thread.currentThread().isInterrupted()) {
-            if (lockRegistry()) {
-                return;
+    /**
+     * Blocks until the registry write lock is acquired.
+     *
+     * @throws RejectedException is thrown in case the lock is not supported by this registry. E.g. this is the case for remote registries.
+     */
+    private void lock() throws CouldNotPerformException {
+        try {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (registryLock.writeLock().tryLock()) {
+                    try {
+                        lockDependingRegistries();
+                        return;
+                    } catch (RejectedException ex) {
+                        registryLock.writeLock().unlock();
+                    }
+                }
+
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw new CouldNotPerformException("Could not lock registry because thread was externally interrupted!", ex);
+                }
             }
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-                throw new RejectedException(ex);
-            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not lock registry!", ex);
         }
     }
 
     private void unlock() {
+        unlockDependingRegistries();
+        assert registryLock.writeLock().isHeldByCurrentThread();
         registryLock.writeLock().unlock();
     }
 
     @Override
-    public synchronized boolean lockRegistry() throws RejectedException {
-        if (!registryLock.writeLock().tryLock()) {
-            return false;
-        }
-
-        try {
-            lockDependingRegistries();
-        } catch (CouldNotPerformException ex) {
-            registryLock.writeLock().unlock();
-            return false;
-        }
-        return true;
+    public synchronized boolean tryLockRegistry() throws RejectedException {
+        return registryLock.writeLock().tryLock();
     }
 
     @Override
     public synchronized void unlockRegistry() {
-        unlockDependingRegistries();
+        assert registryLock.writeLock().isHeldByCurrentThread();
         registryLock.writeLock().unlock();
     }
 
-    private synchronized void lockDependingRegistries() throws CouldNotPerformException {
+    private synchronized void lockDependingRegistries() throws RejectedException, FatalImplementationErrorException {
         boolean success = true;
         final List<Registry> lockedRegisties = new ArrayList<>();
 
@@ -816,7 +824,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             // lock all depending registries except remote registries which will reject the locking.
             for (Registry registry : dependingRegistryMap.keySet()) {
                 try {
-                    if (registry.lockRegistry()) {
+                    if (registry.tryLockRegistry()) {
                         lockedRegisties.add(registry);
                     } else {
                         success = false;
@@ -827,18 +835,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         } catch (Exception ex) {
             success = false;
-            throw new CouldNotPerformException("Could not lock all depending registries!", ex);
+            throw new RejectedException("Could not lock all depending registries!", ex);
         } finally {
             try {
                 // if not successfull release all already acquire locks.
                 if (!success) {
-                    for (Registry registry : lockedRegisties) {
+                    lockedRegisties.stream().forEach((registry) -> {
                         registry.unlockRegistry();
-                    }
+                    });
                 }
             } catch (Exception ex) {
                 assert false;
-                throw new CouldNotPerformException("FATAL ERROR: Could not release depending locks!", ex);
+                throw new FatalImplementationErrorException("FATAL ERROR: Could not release depending locks!", ex);
             }
         }
     }

@@ -71,7 +71,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
     
     public boolean isSandbox();
 
-    public boolean lockRegistry() throws RejectedException;
+    public boolean tryLockRegistry() throws RejectedException;
 
     public void unlockRegistry();
 }

@@ -300,7 +300,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public boolean lockRegistry() throws RejectedException {
+                public boolean tryLockRegistry() throws RejectedException {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 
