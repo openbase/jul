@@ -783,6 +783,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         return;
                     } catch (RejectedException ex) {
                         registryLock.writeLock().unlock();
+                    } catch (CouldNotPerformException ex) {
+                        registryLock.writeLock().unlock();
+                        throw ex;
                     }
                 }
 
