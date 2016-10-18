@@ -714,7 +714,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             });
 
             clear();
-            sandbox.clear();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
         }
@@ -850,6 +849,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 assert false;
                 throw new FatalImplementationErrorException("FATAL ERROR: Could not release depending locks!", ex);
             }
+        }
+
+        if (!success) {
+            throw new RejectedException("Could not lock all depending registries!");
         }
     }
 
