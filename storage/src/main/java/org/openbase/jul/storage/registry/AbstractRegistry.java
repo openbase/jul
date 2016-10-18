@@ -773,10 +773,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @throws RejectedException is thrown in case the lock is not supported by this registry. E.g. this is the case for remote registries.
      */
-    private void lock() throws CouldNotPerformException {
+    protected void lock() throws CouldNotPerformException {
         try {
             while (!Thread.currentThread().isInterrupted()) {
                 if (registryLock.writeLock().tryLock()) {
+                    System.out.println("Locked self [" + getName() + "]");
                     try {
                         lockDependingRegistries();
                         return;
@@ -800,10 +801,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    private void unlock() {
+    protected void unlock() {
         unlockDependingRegistries();
         assert registryLock.writeLock().isHeldByCurrentThread();
         registryLock.writeLock().unlock();
+    }
+
+    protected boolean isWriteLockedByCurrentThread() {
+        return registryLock.writeLock().isHeldByCurrentThread();
     }
 
     @Override
@@ -819,14 +824,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private synchronized void lockDependingRegistries() throws RejectedException, FatalImplementationErrorException {
         boolean success = true;
-        final List<Registry> lockedRegisties = new ArrayList<>();
+        final List<Registry> lockedRegistries = new ArrayList<>();
 
         try {
             // lock all depending registries except remote registries which will reject the locking.
             for (Registry registry : dependingRegistryMap.keySet()) {
                 try {
                     if (registry.tryLockRegistry()) {
-                        lockedRegisties.add(registry);
+                        System.out.println(getName() + " locked dependency " + registry.getName());
+                        lockedRegistries.add(registry);
                     } else {
                         success = false;
                     }
@@ -841,7 +847,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 // if not successfull release all already acquire locks.
                 if (!success) {
-                    lockedRegisties.stream().forEach((registry) -> {
+                    System.out.println("DependencyLocking of " + getName() + " failed");
+                    lockedRegistries.stream().forEach((registry) -> {
                         registry.unlockRegistry();
                     });
                 }
