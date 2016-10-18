@@ -169,27 +169,29 @@ public class ObservableImpl<T> implements Observable<T> {
         ExceptionStack exceptionStack = null;
 
         synchronized (LOCK) {
-            if (observable == null) {
-                LOGGER.debug("Skip notification because observable is null!");
-                return false;
-            }
-            if (unchangedValueFilter && value != null && observable.hashCode() == latestValueHash) {
-                LOGGER.debug("#+# Skip notification because observable has not been changed!");
-                return false;
-            }
-
-            value = observable;
-            latestValueHash = value.hashCode();
-
-            for (Observer<T> observer : new ArrayList<>(observers)) {
-                try {
-                    observer.update(source, observable);
-                } catch (Exception ex) {
-                    exceptionStack = MultiException.push(observer, ex, exceptionStack);
+            try {
+                if (observable == null) {
+                    LOGGER.debug("Skip notification because observable is null!");
+                    return false;
                 }
-            }
+                if (unchangedValueFilter && value != null && observable.hashCode() == latestValueHash) {
+                    LOGGER.debug("#+# Skip notification because observable has not been changed!");
+                    return false;
+                }
 
-            LOCK.notifyAll();
+                value = observable;
+                latestValueHash = value.hashCode();
+
+                for (Observer<T> observer : new ArrayList<>(observers)) {
+                    try {
+                        observer.update(source, observable);
+                    } catch (Exception ex) {
+                        exceptionStack = MultiException.push(observer, ex, exceptionStack);
+                    }
+                }
+            } finally {
+                LOCK.notifyAll();
+            }
         }
         MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
         return true;
