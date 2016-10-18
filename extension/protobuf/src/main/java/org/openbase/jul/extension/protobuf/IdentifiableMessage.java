@@ -208,7 +208,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 //            }
             return getClass().getSimpleName() + "[" + getId().toString() + "]";
         } catch (CouldNotPerformException ex) {
-            logger.warn("Could not return id value!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not return id value!", ex), logger, LogLevel.WARN);
             return getClass().getSimpleName() + "[?]";
         }
     }

@@ -646,8 +646,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     logger.debug("Consistency modification applied: " + ex.getMessage());
                                 }
                             } catch (JPNotAvailableException exx) {
-                                logger.warn("JPVerbose property could not be loaded!", exx);
-                                logger.info("Consistency modification applied: " + ex.getMessage());
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
                             }
                             modificationCounter++;
                             continue;

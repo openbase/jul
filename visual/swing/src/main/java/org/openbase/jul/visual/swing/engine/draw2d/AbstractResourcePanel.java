@@ -21,7 +21,6 @@ package org.openbase.jul.visual.swing.engine.draw2d;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jps.preset.JPVisualDebugMode;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
@@ -37,6 +36,7 @@ import javax.swing.JComponent;
 import org.netbeans.lib.awtextra.AbsoluteConstraints;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
+import org.openbase.jps.preset.JPVisualDebugMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.provider.NameProvider;
@@ -209,7 +209,7 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
         try {
             g2.drawImage(image, getSkaleImageToBoundsTransformation(), parentPanel);
         } catch (Exception ex) {
-            LOGGER.error("Could not paint image!", ex);
+            ExceptionPrinter.printHistory("Could not paint image!", ex, LOGGER);
         }
 
     }

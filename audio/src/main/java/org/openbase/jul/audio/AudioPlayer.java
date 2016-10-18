@@ -21,7 +21,6 @@ package org.openbase.jul.audio;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +34,9 @@ import javax.sound.sampled.LineEvent.Type;
 import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,106 +47,103 @@ import org.slf4j.LoggerFactory;
 public class AudioPlayer {
 
     public static final int BUFSIZE = 512;
-	private final ExecutorService executorService;
-    
+    private final ExecutorService executorService;
+
     private static final Logger logger = LoggerFactory.getLogger(AudioPlayer.class);
 
-	public AudioPlayer(final int soundChannels) {
-		this.executorService = Executors.newFixedThreadPool(soundChannels);
-	}
+    public AudioPlayer(final int soundChannels) {
+        this.executorService = Executors.newFixedThreadPool(soundChannels);
+    }
 
-	public AudioPlayer() {
-		this(10);
-	}
+    public AudioPlayer() {
+        this(10);
+    }
 
-	public boolean playAudio(final AudioSource source) {
-		return playAudio(source, false);
-	}
+    public boolean playAudio(final AudioSource source) {
+        return playAudio(source, false);
+    }
 
-	public boolean playAudio(final AudioSource source, final boolean wait) {
-		try {
-			if (wait) {
-				play(source);
-				return true;
-			}
-			executorService.execute(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						play(source);
-					} catch (Exception ex) {
-						logger.warn("Could not play clip!", ex);
-					}
-				}
-			});
-		} catch (Exception ex) {
-			logger.warn("Could not play clip!", ex);
-			return false;
-		}
-		return true;
-	}
+    public boolean playAudio(final AudioSource source, final boolean wait) {
+        try {
+            if (wait) {
+                play(source);
+                return true;
+            }
+            executorService.execute(() -> {
+                try {
+                    play(source);
+                } catch (IOException | UnsupportedAudioFileException | LineUnavailableException | InterruptedException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not play clip!", ex), logger, LogLevel.WARN);
+                }
+            });
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException | InterruptedException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not play clip!", ex), logger, LogLevel.WARN);
+            return false;
+        }
+        return true;
+    }
 
-	private static void play(final AudioSource source) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
-		if (source instanceof AudioData) {
-			play((AudioData) source);
-		} else if (source instanceof AudioFileHolder) {
-			play(((AudioFileHolder) source).getFile());
-		} else {
-			logger.warn("Unkown audio source! Skip clip...");
-			assert false;
-		}
-	}
+    private static void play(final AudioSource source) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
+        if (source instanceof AudioData) {
+            play((AudioData) source);
+        } else if (source instanceof AudioFileHolder) {
+            play(((AudioFileHolder) source).getFile());
+        } else {
+            logger.warn("Unkown audio source! Skip clip...");
+            assert false;
+        }
+    }
 
-	private static void play(final AudioData audioData) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
+    private static void play(final AudioData audioData) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
 
-		AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData.getData()), audioData.getFormat(), audioData.getDataLenght());
+        AudioInputStream audioInputStream = new AudioInputStream(new ByteArrayInputStream(audioData.getData()), audioData.getFormat(), audioData.getDataLenght());
 //		
-		play(audioInputStream);
+        play(audioInputStream);
 //		play(AudioSystem.getAudioInputStream(new ByteArrayInputStream(audioData.getData())));
 
 //		SourceDataLine line = null;
 //		DataLine.Info info = new DataLine.Info(SourceDataLine.class, audioFormat);
 //
 //		line = (SourceDataLine) AudioSystem.getLine(info);
-	}
+    }
 
-	private static void play(final File clipFile) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
-		play(AudioSystem.getAudioInputStream(clipFile));
-	}
+    private static void play(final File clipFile) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
+        play(AudioSystem.getAudioInputStream(clipFile));
+    }
 
-	private static void play(final AudioInputStream audioInputStream) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
-		class AudioListener implements LineListener {
+    private static void play(final AudioInputStream audioInputStream) throws IOException, UnsupportedAudioFileException, LineUnavailableException, InterruptedException {
+        class AudioListener implements LineListener {
 
-			private boolean done = false;
+            private boolean done = false;
 
-			@Override
-			public synchronized void update(final LineEvent event) {
-				final Type eventType = event.getType();
-				if (eventType == Type.STOP || eventType == Type.CLOSE) {
-					done = true;
-					notifyAll();
-				}
-			}
+            @Override
+            public synchronized void update(final LineEvent event) {
+                final Type eventType = event.getType();
+                if (eventType == Type.STOP || eventType == Type.CLOSE) {
+                    done = true;
+                    notifyAll();
+                }
+            }
 
-			public synchronized void waitUntilDone() throws InterruptedException {
-				while (!done) {
-					wait();
-				}
-			}
-		}
-		final AudioListener listener = new AudioListener();
-		try {
-			final Clip clip = AudioSystem.getClip();
-			clip.addLineListener(listener);
-			clip.open(audioInputStream);
-			try {
-				clip.start();
-				listener.waitUntilDone();
-			} finally {
-				clip.close();
-			}
-		} finally {
-			audioInputStream.close();
-		}
-	}
+            public synchronized void waitUntilDone() throws InterruptedException {
+                while (!done) {
+                    wait();
+                }
+            }
+        }
+        final AudioListener listener = new AudioListener();
+        try {
+            final Clip clip = AudioSystem.getClip();
+            clip.addLineListener(listener);
+            clip.open(audioInputStream);
+            try {
+                clip.start();
+                listener.waitUntilDone();
+            } finally {
+                clip.close();
+            }
+        } finally {
+            audioInputStream.close();
+        }
+    }
 }

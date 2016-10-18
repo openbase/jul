@@ -28,10 +28,12 @@ import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.openhab.binding.interfaces.OpenHABRemote;
 import org.openbase.jul.extension.rsb.com.RPCHelper;
 import org.openbase.jul.extension.rsb.com.RSBFactoryImpl;
 import org.openbase.jul.extension.rsb.com.RSBRemoteService;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
 import rsb.Event;
 import rsb.Handler;
 import rsb.Scope;
@@ -39,7 +41,6 @@ import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import rst.domotic.binding.openhab.OpenhabCommandType.OpenhabCommand;
 import rst.domotic.binding.openhab.OpenhabStateType.OpenhabState;
-import org.openbase.jul.extension.rsb.iface.RSBListener;
 
 /**
  *
@@ -133,10 +134,10 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabStat
         try {
             super.deactivate();
         } catch (InterruptedException ex) {
-            logger.warn("Unable to deactivate openhab remote!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Unable to deactivate openhab remote!", ex), logger, LogLevel.WARN);
             Thread.currentThread().interrupt();
         } catch (CouldNotPerformException ex) {
-            logger.warn("Unable to deactivate openhab remote!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Unable to deactivate openhab remote!", ex), logger, LogLevel.WARN);
         }
 
         try {
@@ -144,10 +145,10 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabStat
                 openhabUpdateListener.deactivate();
             }
         } catch (InterruptedException ex) {
-            logger.warn("Unable to deactivate openhab update listener!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Unable to deactivate openhab update listener!", ex), logger, LogLevel.WARN);
             Thread.currentThread().interrupt();
         } catch (CouldNotPerformException ex) {
-            logger.warn("Unable to deactivate openhab update listener!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Unable to deactivate openhab update listener!", ex), logger, LogLevel.WARN);
         }
 
         try {
@@ -155,10 +156,10 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabStat
                 openhabCommandListener.deactivate();
             }
         } catch (InterruptedException ex) {
-            logger.warn("Unable to deactivate openhab command listener!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Unable to deactivate openhab command listener!", ex), logger, LogLevel.WARN);
             Thread.currentThread().interrupt();
         } catch (CouldNotPerformException ex) {
-            logger.warn("Unable to deactivate openhab command listener!", ex);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Unable to deactivate openhab command listener!", ex), logger, LogLevel.WARN);
         }
     }
 
