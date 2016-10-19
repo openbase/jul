@@ -33,6 +33,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
@@ -235,7 +236,9 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             }
         }
 
-        logger.info("====== " + size() + " entries successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
+        if (!isEmpty() || MultiException.size(exceptionStack) > 0) {
+            logger.info("====== " + size() + (size() == 1 ? " entry" : " entries") + " successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
+        }
 
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
 
@@ -248,7 +251,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
                 try {
                     registerConsistencyHandler(handler);
                 } catch (CouldNotPerformException ex) {
-                    throw new CouldNotPerformException("FATAL ERROR: During VersionConsistencyHandler[" + handler.getClass().getSimpleName() + "] execution!", ex);
+                    throw new FatalImplementationErrorException("FATAL ERROR: During VersionConsistencyHandler[" + handler.getClass().getSimpleName() + "] execution!", ex);
                 }
             }
         }
