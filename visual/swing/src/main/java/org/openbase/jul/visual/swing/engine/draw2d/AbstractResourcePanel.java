@@ -337,9 +337,7 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
     protected void paintChilderen(Graphics2D g, Graphics2D glg) {
         synchronized (CHILDREN_MONITOR) {
             for (AbstractResourcePanel child : childrens) {
-//				long time = System.currentTimeMillis();
                 child.paint(g, glg);
-//				System.out.println("Compontent["+child.getClass().getSimpleName()+"] update time: "+(System.currentTimeMillis()-time));
             }
         }
     }

@@ -329,7 +329,6 @@ public class LoadingAnimation extends javax.swing.JPanel implements ActionListen
 			if (timeDiffMulticator > 254) {
 				g2.setColor(Color.WHITE);
 				animationPoint[animationPointID] = 255;
-				//System.out.println("greyColorvalue:"+greyColorValue);
 			} else {
 				greyColorValue = (int) timeDiffMulticator;
 				g2.setColor(new Color(greyColorValue, greyColorValue, greyColorValue));

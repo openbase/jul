@@ -564,17 +564,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
 
                     internalCallFuture = remoteServer.callAsync(methodName, argument);
-                    try {
-                        return internalCallFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-                    } catch (java.util.concurrent.TimeoutException ex) {
-                        // validate connection
+                    while (true) {
                         try {
-                            ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-                        } catch (ExecutionException | java.util.concurrent.TimeoutException exx) {
-                            // connection broken
-                            internalCallFuture.cancel(true);
+                            return internalCallFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                        } catch (java.util.concurrent.TimeoutException ex) {
+                            // validate connection
+                            try {
+                                ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                            } catch (ExecutionException | java.util.concurrent.TimeoutException exx) {
+                                // cancel call if connection is broken
+                                internalCallFuture.cancel(true);
+                            }
                         }
-                        return internalCallFuture.get();
+
+                        // check if thread was interrupted during processing
+                        if (Thread.currentThread().isInterrupted()) {
+                            throw new InterruptedException();
+                        }
                     }
                 } catch (InterruptedException ex) {
                     if (internalCallFuture != null) {

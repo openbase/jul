@@ -39,6 +39,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.container.MessageContainer;
 import org.openbase.jul.iface.Identifiable;
+import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.slf4j.Logger;
@@ -68,6 +69,12 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     private M internalMessage;
     private ObservableImpl<IdentifiableMessage<KEY, M, MB>> observable;
 
+    /**
+     * Copy Constructor
+     *
+     * @param identifiableMessage
+     * @throws InstantiationException
+     */
     public IdentifiableMessage(IdentifiableMessage<KEY, M, MB> identifiableMessage) throws InstantiationException {
         this(identifiableMessage.getMessage());
     }
@@ -188,6 +195,10 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         return internalMessage;
     }
 
+    public String getMessageTypeName() {
+        return internalMessage.getClass().getSimpleName();
+    }
+
     public void addObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
         observable.addObserver(observer);
     }
@@ -198,7 +209,6 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 
     @Override
     public String toString() {
-        try {
 //            try {
 //                if (JPService.getProperty(JPVerbose.class).getValue()) {
 //                    return getClass().getSimpleName() + "[" + internalMessage + "]";
@@ -206,10 +216,25 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
 //            } catch (JPNotAvailableException ex) {
 //                logger.warn("JPVerbose property could not be loaded!");
 //            }
-            return getClass().getSimpleName() + "[" + getId().toString() + "]";
+        return getMessageTypeName() + "[" + generateMessageDescription() + "]";
+    }
+
+    /**
+     * Method generates a short string description of the internal message. This description is bases on internal message fields like label or id provided by the message itself.
+     * If non of this fields could be detected a ? char is returned.
+     *
+     * @return a short description of the message as string.
+     */
+    public String generateMessageDescription() {
+        if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
+            return (String) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
+        }
+
+        try {
+            return getId().toString();
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not return id value!", ex), logger, LogLevel.WARN);
-            return getClass().getSimpleName() + "[?]";
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not detect id value of internal message!", ex), logger, LogLevel.WARN);
+            return "?";
         }
     }
 

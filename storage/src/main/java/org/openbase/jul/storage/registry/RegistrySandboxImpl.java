@@ -25,6 +25,7 @@ package org.openbase.jul.storage.registry;
  */
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.storage.registry.clone.RITSCloner;
@@ -81,7 +82,7 @@ public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP exten
             replaceInternalMap(map, false);
             consistent = true;
         } catch (Exception ex) {
-            throw new CouldNotPerformException("FATAL: Sandbox sync failed!", ex);
+            throw new FatalImplementationErrorException("FATAL: Sandbox sync failed!", ex);
         }
     }
 
@@ -95,7 +96,7 @@ public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP exten
         try {
             checkConsistency();
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Given transaction is invalid because sandbox consistency check failed!", ex);
+            throw new CouldNotPerformException("Given transaction is invalid because " + this + " consistency check failed!", ex);
         }
     }
 

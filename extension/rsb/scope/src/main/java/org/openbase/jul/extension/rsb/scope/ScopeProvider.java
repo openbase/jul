@@ -32,6 +32,8 @@ import rsb.Scope;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface ScopeProvider {
+    
+    public final static String TYPE_FIELD_SCOPE = "scope";
 
     public Scope getScope() throws CouldNotPerformException;
 }

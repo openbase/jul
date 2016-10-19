@@ -109,7 +109,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
                 public void relay() throws Exception {
-                    logger.info(getLastValue());
+                    info(getLastValue());
                 }
             };
 
@@ -140,7 +140,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Register " + entry + "...");
+        info("Register " + entry + "...");
         try {
             checkWriteAccess();
             lock();
@@ -166,7 +166,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Load " + entry + "...");
+        info("Load " + entry + "...");
         try {
             lock();
             try {
@@ -191,7 +191,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Update " + entry + "...");
+        info("Update " + entry + "...");
         try {
             checkWriteAccess();
             lock();
@@ -229,7 +229,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("Remove " + entry + "...");
+        info("Remove " + entry + "...");
         ENTRY oldEntry;
         try {
             checkWriteAccess();
@@ -282,11 +282,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 sortedMap.putAll(entryMap);
 
                 if (sortedMap.floorKey(key) != null && sortedMap.ceilingKey(key) != null) {
-                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is [" + sortedMap.floorKey(key) + "] or [" + sortedMap.ceilingKey(key) + "].");
+                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is " + get(sortedMap.floorKey(key)) + " or " + get(sortedMap.ceilingKey(key)) + ".");
                 } else if (sortedMap.floorKey(key) != null) {
-                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is Entry[" + sortedMap.floorKey(key) + "].");
+                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is " + get(sortedMap.floorKey(key)) + ".");
                 } else if (sortedMap.ceilingKey(key) != null) {
-                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is Entry[" + sortedMap.ceilingKey(key) + "].");
+                    throw new NotAvailableException("Entry", key.toString(), "Nearest neighbor is " + get(sortedMap.ceilingKey(key)) + ".");
                 } else {
                     throw new InvalidStateException("Implementation error, case not handled.");
                 }
@@ -486,9 +486,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected final void notifyObservers() {
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
-//                logger.info("Notification of registry change skipped because of running consistecy checks!");
             if (registryLock.isWriteLockedByCurrentThread()) {
-                logger.info("Notification of registry change skipped because of running write operations!");
+                logger.debug("Notification of registry change skipped because of running write operations!");
                 notificationSkiped = true;
                 return;
             }
@@ -548,7 +547,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
 
         if (isEmpty()) {
-            logger.info("Skip consistency check because registry is empty.");
+            logger.debug("Skip consistency check because registry is empty.");
             return modificationCounter;
         }
 
@@ -588,7 +587,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         // handle handler interference
                         maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
                         if (iterationCounter > maxConsistencyChecks) {
-                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " errors occoured during processing!", exceptionStack);
+                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "s" : "") + " occoured during processing!", exceptionStack);
                             throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
@@ -622,8 +621,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
-                                        logger.info("Inconsisteny detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
-                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry.getId() + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
+                                        logger.debug("Inconsisteny detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
+                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
                                     }
                                 }
                             }
@@ -641,7 +640,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             // inform about modifications
                             try {
                                 if (JPService.getProperty(JPVerbose.class).getValue()) {
-                                    logger.info("Consistency modification applied: " + ex.getMessage());
+                                    info("Consistency modification applied: " + ex.getMessage());
                                 } else {
                                     logger.debug("Consistency modification applied: " + ex.getMessage());
                                 }
@@ -658,7 +657,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             continue;
                         }
 
-                        logger.info(this + " consistend.");
+                        logger.debug(this + " consistend.");
                         break;
                     }
                     consistent = true;
@@ -685,7 +684,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             checkConsistency();
         } catch (CouldNotPerformException ex) {
-            throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex), logger, LogLevel.ERROR);
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex), logger, LogLevel.ERROR);
         }
     }
 
@@ -760,6 +759,20 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public boolean isSandbox() {
         return false;
+    }
+
+    /**
+     * This method can be used to log registry info messages which are only printed for the origin registry.
+     * Info messages of a sandbox instance are redirected to the debug channel.
+     *
+     * @param message the info message to print as string.
+     */
+    public void info(final String message) {
+        if (isSandbox()) {
+            logger.debug(message);
+        } else {
+            logger.info(message);
+        }
     }
 
     @Override
