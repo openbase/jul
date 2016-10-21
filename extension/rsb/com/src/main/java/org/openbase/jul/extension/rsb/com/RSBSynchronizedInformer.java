@@ -106,6 +106,15 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
     public Event publish(final DT data) throws CouldNotPerformException, InterruptedException {
         synchronized (participantLock) {
             try {
+                
+                // Bugworkaround #2670: Informer socket transport is shutting down if publish trigger thread is marked as interruped
+                // https://code.cor-lab.org/issues/2670
+                // =========================================
+                if(Thread.currentThread().isInterrupted()) {
+                    throw new InterruptedException();
+                }
+                // =========================================
+                
                 return getParticipant().publish(data);
             } catch (IllegalStateException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Fatal error occured!", ex), logger);
