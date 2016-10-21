@@ -403,7 +403,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-
         }
 
         try {
@@ -671,6 +670,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     return modificationCounter;
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
+                    try {
+                        if (JPService.getProperty(JPForce.class).getValue()) {
+                            ExceptionPrinter.printHistory(new CouldNotPerformException("Consistency process of " + this + " aborted after " + modificationCounter + " modifications but transaction passed because registry force mode is enabled!", ex), logger, LogLevel.WARN);
+                            return modificationCounter;
+                        }
+                    } catch (JPServiceException exx) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", exx), logger);
+                    }
                     throw new CouldNotPerformException("Consistency process of " + this + " aborted!", ex);
                 }
             } finally {
