@@ -66,8 +66,6 @@ import rsb.Event;
 import rsb.Handler;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
-import rsb.transport.socket.BusConnection;
-import rsb.transport.socket.BusConnectionBase;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -657,7 +655,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         @Override
-        public M call() throws CouldNotPerformException {
+        public M call() throws CouldNotPerformException, InterruptedException {
 
             Future<Event> internalFuture = null;
             M dataUpdate;
@@ -700,7 +698,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
                     throw ex;
                 }
-            } catch (CouldNotPerformException | InterruptedException ex) {
+            } catch (CouldNotPerformException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
             }
         }
