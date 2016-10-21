@@ -112,6 +112,7 @@ public class GlobalExecutionService implements Shutdownable {
     }
 
     public void shutdown(final long shutdownTimeout, final TimeUnit timeUnit) {
+        logger.info("Shutdown global executor service...");
         List<Runnable> droppedTasks = executionService.shutdownNow();
         if (!droppedTasks.isEmpty()) {
             logger.info("Global executor shutdown forced: " + droppedTasks.size() + " tasks will be skipped...");

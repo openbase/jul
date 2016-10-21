@@ -559,37 +559,39 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             @Override
             public R call() throws Exception {
                 try {
-                    logger.debug("Calling method [" + methodName + "(" + (argument != null ? argument.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
+                    try {
+                        logger.debug("Calling method [" + methodName + "(" + (argument != null ? argument.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
 
-                    if (!isConnected()) {
-                        waitForConnectionState(CONNECTED);
-                    }
+                        if (!isConnected()) {
+                            waitForConnectionState(CONNECTED);
+                        }
 
-                    internalCallFuture = remoteServer.callAsync(methodName, argument);
-                    while (true) {
-                        try {
-                            return internalCallFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-                        } catch (java.util.concurrent.TimeoutException ex) {
-                            // validate connection
+                        internalCallFuture = remoteServer.callAsync(methodName, argument);
+                        while (true) {
                             try {
-                                ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-                            } catch (ExecutionException | java.util.concurrent.TimeoutException exx) {
-                                // cancel call if connection is broken
-                                internalCallFuture.cancel(true);
+                                return internalCallFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                            } catch (java.util.concurrent.TimeoutException ex) {
+                                // validate connection
+                                try {
+                                    ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                                } catch (ExecutionException | java.util.concurrent.TimeoutException exx) {
+                                    // cancel call if connection is broken
+                                    internalCallFuture.cancel(true);
+                                }
+                            }
+
+                            // check if thread was interrupted during processing
+                            if (Thread.currentThread().isInterrupted()) {
+                                throw new InterruptedException();
                             }
                         }
-
-                        // check if thread was interrupted during processing
-                        if (Thread.currentThread().isInterrupted()) {
-                            throw new InterruptedException();
+                    } catch (InterruptedException ex) {
+                        if (internalCallFuture != null) {
+                            internalCallFuture.cancel(true);
                         }
+                        throw ex;
                     }
-                } catch (InterruptedException ex) {
-                    if (internalCallFuture != null) {
-                        internalCallFuture.cancel(true);
-                    }
-                    throw ex;
-                } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
+                } catch (CouldNotPerformException | ExecutionException | CancellationException | InterruptedException ex) {
                     throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
                 }
             }
@@ -655,48 +657,50 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         @Override
-        public M call() throws InterruptedException, CouldNotPerformException {
+        public M call() throws CouldNotPerformException {
 
             Future<Event> internalFuture = null;
             M dataUpdate;
             try {
-                logger.debug("call request");
+                try {
+                    logger.debug("call request");
 
-                long timeout = METHOD_CALL_START_TIMEOUT;
-                while (true) {
+                    long timeout = METHOD_CALL_START_TIMEOUT;
+                    while (true) {
 
-                    if (!isActive()) {
-                        throw new InvalidStateException("Remote service is not active!");
+                        if (!isActive()) {
+                            throw new InvalidStateException("Remote service is not active!");
+                        }
+
+                        try {
+                            internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
+                            dataUpdate = (M) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData();
+                            break;
+                        } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
+                            ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+                            timeout = generateTimeout(timeout);
+                            logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                        }
                     }
 
-                    try {
-                        internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
-                        dataUpdate = (M) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData();
-                        break;
-                    } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
-                        ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                        timeout = generateTimeout(timeout);
-                        logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                    if (dataUpdate == null) {
+                        logger.info("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
+                        setConnectionState(CONNECTING);
+                        return data;
                     }
-                }
 
-                if (dataUpdate == null) {
-                    logger.info("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
-                    setConnectionState(CONNECTING);
-                    return data;
+                    // skip if sync was already performed by global data update.
+                    if (relatedFuture == null || !relatedFuture.isCancelled()) {
+                        applyDataUpdate(dataUpdate);
+                    }
+                    return dataUpdate;
+                } catch (InterruptedException ex) {
+                    if (internalFuture != null) {
+                        internalFuture.cancel(true);
+                    }
+                    throw ex;
                 }
-
-                // skip if sync was already performed by global data update.
-                if (relatedFuture == null || !relatedFuture.isCancelled()) {
-                    applyDataUpdate(dataUpdate);
-                }
-                return dataUpdate;
-            } catch (InterruptedException ex) {
-                if (internalFuture != null) {
-                    internalFuture.cancel(true);
-                }
-                throw ex;
-            } catch (CouldNotPerformException ex) {
+            } catch (CouldNotPerformException | InterruptedException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
             }
         }

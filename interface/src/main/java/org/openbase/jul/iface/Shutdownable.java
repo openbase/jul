@@ -1,5 +1,9 @@
 package org.openbase.jul.iface;
 
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /*
  * #%L
  * JUL Interface
@@ -35,14 +39,29 @@ public interface Shutdownable {
      * These behavior guarantees a proper component shutdown without skipping any parts because of exception handling.
      */
     public void shutdown();
-
+    
     static void registerShutdownHook(final Shutdownable shutdownable) {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-
-            @Override
-            public void run() {
-                shutdownable.shutdown();
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(new ShutdownDeamon(shutdownable));
     }
+    
+    class ShutdownDeamon extends Thread {
+        
+        private final static Logger LOGGER = LoggerFactory.getLogger(ShutdownDeamon.class);
+        
+        private final Shutdownable shutdownable;
+        
+        public ShutdownDeamon(final Shutdownable shutdownable) {
+            this.shutdownable = shutdownable;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                shutdownable.shutdown();
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory("Could not shutdown " + shutdownable + "!", ex, LOGGER);
+            }
+        }
+    }
+    
 }

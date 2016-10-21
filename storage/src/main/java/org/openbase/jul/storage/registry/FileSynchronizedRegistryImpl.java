@@ -270,7 +270,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         ExceptionStack exceptionStack = null;
 
         // save all changes.
-        for (FileSynchronizer<ENTRY> fileSynchronizer : fileSynchronizerMap.values()) {
+        for (FileSynchronizer<ENTRY> fileSynchronizer : new ArrayList<>(fileSynchronizerMap.values())) {
             try {
                 fileSynchronizer.save();
             } catch (CouldNotPerformException ex) {
