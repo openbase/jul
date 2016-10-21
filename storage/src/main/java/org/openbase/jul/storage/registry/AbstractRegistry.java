@@ -345,6 +345,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             pluginPool.beforeClear();
             sandbox.clear();
             entryMap.clear();
+            consistent = true;
         } finally {
             unlock();
         }
@@ -441,7 +442,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @param registry the dependency of these registry.
      */
-    public void registerDependency(final Registry registry) {
+    public void registerDependency(final Registry registry) throws CouldNotPerformException {
         // check if already registered
         if (dependingRegistryMap.containsKey(registry)) {
             return;

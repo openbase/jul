@@ -139,6 +139,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     }
 
     @Override
+    public void registerDependency(Registry registry) throws CouldNotPerformException {
+        throw new NotSupportedException("registerDependency", "method", this);
+    }
+
+    @Override
     public boolean tryLockRegistry() throws RejectedException {
         throw new RejectedException("RemoteRegistry not lockable!");
     }
@@ -147,4 +152,5 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public void unlockRegistry() {
         // because remote registry does not support locks there is no need for any action here.
     }
+
 }
