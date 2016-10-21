@@ -51,8 +51,8 @@ import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.domotic.unit.UnitConfigType.UnitConfig;
 import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
+import rst.domotic.unit.UnitConfigType.UnitConfig;
 
 /**
  *
