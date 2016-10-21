@@ -87,8 +87,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.beforeRegister(entry);
             }
@@ -107,8 +107,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.afterRegister(entry);
             }
@@ -125,8 +125,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.beforeUpdate(entry);
             }
@@ -145,8 +145,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.afterUpdate(entry);
             }
@@ -163,8 +163,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.beforeRemove(entry);
             }
@@ -183,8 +183,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.afterRemove(entry);
             }
@@ -201,8 +201,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.beforeClear();
             }
@@ -268,8 +268,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.afterRegistryChange();
             }
@@ -288,8 +288,8 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
+        lock.writeLock().lock();
         try {
-            lock.writeLock().lock();
             for (P plugin : pluginList) {
                 plugin.afterConsistencyCheck();
             }

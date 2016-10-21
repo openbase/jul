@@ -66,6 +66,8 @@ import rsb.Event;
 import rsb.Handler;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
+import rsb.transport.socket.BusConnection;
+import rsb.transport.socket.BusConnectionBase;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -587,7 +589,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         internalCallFuture.cancel(true);
                     }
                     throw ex;
-                } catch (CouldNotPerformException ex) {
+                } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
                     throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
                 }
             }
