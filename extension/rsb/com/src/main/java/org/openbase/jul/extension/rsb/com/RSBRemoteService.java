@@ -66,8 +66,6 @@ import rsb.Event;
 import rsb.Handler;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
-import rsb.transport.socket.BusConnection;
-import rsb.transport.socket.BusConnectionBase;
 import rst.rsb.ScopeType.Scope;
 
 /**
