@@ -788,7 +788,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     protected void lock() throws CouldNotPerformException {
         try {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (true) {
                 if (registryLock.writeLock().tryLock()) {
                     try {
                         lockDependingRegistries();
