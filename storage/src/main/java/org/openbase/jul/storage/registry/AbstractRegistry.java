@@ -638,15 +638,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             lastModifieredEntry = ex.getEntry();
 
                             // inform about modifications
-                            try {
-                                if (JPService.getProperty(JPVerbose.class).getValue()) {
-                                    info("Consistency modification applied: " + ex.getMessage());
-                                } else {
+//                            try {
+//                                if (JPService.getProperty(JPVerbose.class).getValue()) {
+//                                    info("Consistency modification applied: " + ex.getMessage());
+//                                } else {
                                     logger.debug("Consistency modification applied: " + ex.getMessage());
-                                }
-                            } catch (JPNotAvailableException exx) {
-                                ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
-                            }
+//                                }
+//                            } catch (JPNotAvailableException exx) {
+//                                ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
+//                            }
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {
