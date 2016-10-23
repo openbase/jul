@@ -388,17 +388,21 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateUserScope(final UserConfig userUnitConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateUserScope(final UnitConfig userUnitConfig) throws CouldNotPerformException {
 
         if (userUnitConfig == null) {
+            throw new NotAvailableException("userUnitConfig");
+        }
+        
+        if(!userUnitConfig.hasUserConfig()) {
             throw new NotAvailableException("userConfig");
         }
 
-        if (!userUnitConfig.hasUserName()) {
+        if (!userUnitConfig.getUserConfig().hasUserName()) {
             throw new NotAvailableException("userConfig.userName");
         }
 
-        if (userUnitConfig.getUserName().isEmpty()) {
+        if (userUnitConfig.getUserConfig().getUserName().isEmpty()) {
             throw new NotAvailableException("Field userConfig.userName isEmpty");
         }
 
@@ -409,7 +413,7 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getType().name()));
         
         // add user name
-        scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getUserName()));
+        scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getUserConfig().getUserName()));
 
         return scope.build();
     }
