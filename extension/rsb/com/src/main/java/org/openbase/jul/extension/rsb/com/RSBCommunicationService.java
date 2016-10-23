@@ -440,7 +440,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             // update state and notify
             this.controllerAvailabilityState = controllerAvailability;
-            logger.info(this + " is now " + controllerAvailability.name());
+            logger.debug(this + " is now " + controllerAvailability.name());
 
             // notify remotes about controller shutdown
             if (controllerAvailabilityState.equals(ControllerAvailabilityState.DEACTIVATING)) {

@@ -401,7 +401,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             // update state and notify
             this.connectionState = connectionState;
             if (connectionState == CONNECTED) {
-                logger.info("Connection established " + this);
+                logger.debug("Connection established " + this);
             }
 
             // init ping
@@ -494,7 +494,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         long retryTimeout = METHOD_CALL_START_TIMEOUT;
         long validTimeout = timeout;
         try {
-            logger.info("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
+            logger.debug("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
             if (!isConnected()) {
                 waitForConnectionState(CONNECTED);
             }
@@ -510,7 +510,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
 
                 try {
-                    logger.info("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
+                    logger.debug("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
                     return remoteServer.call(methodName, argument, retryTimeout);
                 } catch (TimeoutException ex) {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
