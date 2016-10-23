@@ -28,6 +28,8 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import rsb.Scope;
 import rst.domotic.unit.user.UserConfigType.UserConfig;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.agent.AgentClassType.AgentClass;
+import rst.domotic.unit.app.AppClassType.AppClass;
 import rst.rsb.ScopeType;
 
 /**
@@ -258,89 +260,111 @@ public class ScopeGenerator {
         return scope.build();
     }
 
-    public static ScopeType.Scope generateAgentScope(final UnitConfig agentConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateAgentScope(final UnitConfig agentUnitConfig, final AgentClass agentClass, final UnitConfig locationUnitConfig) throws CouldNotPerformException {
 
-        if (agentConfig == null) {
+        if (agentUnitConfig == null) {
             throw new NotAvailableException("unitConfig");
         }
+        
+        if (agentClass == null) {
+            throw new NotAvailableException("agentClass");
+        }
 
-        if (!agentConfig.hasAgentConfig() || agentConfig.getAgentConfig() == null) {
+        if (!agentUnitConfig.hasAgentConfig() || agentUnitConfig.getAgentConfig() == null) {
             throw new NotAvailableException("unitConfig.agentConfig");
         }
 
-        if (!agentConfig.hasLabel()) {
-            throw new NotAvailableException("unitConfig.label");
+        if (!agentClass.hasLabel()) {
+            throw new NotAvailableException("agentClass.label");
+        }
+        
+        if (!agentUnitConfig.hasLabel()) {
+            throw new NotAvailableException("agentUnitConfig.label");
         }
 
-        if (agentConfig.getLabel().isEmpty()) {
+        if (agentUnitConfig.getLabel().isEmpty()) {
             throw new NotAvailableException("Field unitConfig.label isEmpty");
         }
 
-        if (locationConfig == null) {
+        if (locationUnitConfig == null) {
             throw new NotAvailableException("location");
         }
 
-        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
-            throw new NotAvailableException("location scope");
+        if (!locationUnitConfig.hasScope() || locationUnitConfig.getScope().getComponentList().isEmpty()) {
+            throw new NotAvailableException("locationUnitConfig.scope");
         }
 
         // add location scope
-        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
+        ScopeType.Scope.Builder scope = locationUnitConfig.getScope().toBuilder();
+        
+        // add unit type
+        scope.addComponent(convertIntoValidScopeComponent(agentUnitConfig.getType().name()));
 
-        // add agent type
-        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getAgentConfig().getAgentClassId().replace("_", "")));
+        // add agent class label
+        scope.addComponent(convertIntoValidScopeComponent(agentClass.getLabel()));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(agentConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(agentUnitConfig.getLabel()));
 
         return scope.build();
     }
 
-    public static ScopeType.Scope generateAppScope(final UnitConfig appConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateAppScope(final UnitConfig appUnitConfig, final AppClass appClass, final UnitConfig locationUnitConfig) throws CouldNotPerformException {
 
-        if (appConfig == null) {
+        if (appUnitConfig == null) {
             throw new NotAvailableException("appConfig");
         }
-
-        if (!appConfig.hasLabel()) {
-            throw new NotAvailableException("appConfig.label");
+        
+        if (appClass == null) {
+            throw new NotAvailableException("appClass");
         }
 
-        if (appConfig.getLabel().isEmpty()) {
+        if (!appUnitConfig.hasLabel()) {
+            throw new NotAvailableException("appConfig.label");
+        }
+        
+        if (!appClass.hasLabel()) {
+            throw new NotAvailableException("appClass.label");
+        }
+
+        if (appUnitConfig.getLabel().isEmpty()) {
             throw new NotAvailableException("Field appConfig.label isEmpty");
         }
 
-        if (locationConfig == null) {
+        if (locationUnitConfig == null) {
             throw new NotAvailableException("location");
         }
 
-        if (!locationConfig.hasScope() || locationConfig.getScope().getComponentList().isEmpty()) {
+        if (!locationUnitConfig.hasScope() || locationUnitConfig.getScope().getComponentList().isEmpty()) {
             throw new NotAvailableException("location scope");
         }
 
         // add location scope
-        ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
+        ScopeType.Scope.Builder scope = locationUnitConfig.getScope().toBuilder();
 
+        // add unit type
+        scope.addComponent(convertIntoValidScopeComponent(appUnitConfig.getType().name()));
+        
         // add unit app
-        scope.addComponent(convertIntoValidScopeComponent("app"));
+        scope.addComponent(convertIntoValidScopeComponent(appClass.getLabel()));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(appConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(appUnitConfig.getLabel()));
 
         return scope.build();
     }
 
-    public static ScopeType.Scope generateSceneScope(final UnitConfig sceneConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateSceneScope(final UnitConfig sceneUnitConfig, final UnitConfig locationConfig) throws CouldNotPerformException {
 
-        if (sceneConfig == null) {
+        if (sceneUnitConfig == null) {
             throw new NotAvailableException("sceneConfig");
         }
 
-        if (!sceneConfig.hasLabel()) {
+        if (!sceneUnitConfig.hasLabel()) {
             throw new NotAvailableException("sceneConfig.label");
         }
 
-        if (sceneConfig.getLabel().isEmpty()) {
+        if (sceneUnitConfig.getLabel().isEmpty()) {
             throw new NotAvailableException("Field sceneConfig.label isEmpty");
         }
 
@@ -355,50 +379,52 @@ public class ScopeGenerator {
         // add location scope
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
-        // add unit app
-        scope.addComponent(convertIntoValidScopeComponent("scene"));
+        // add unit type
+        scope.addComponent(convertIntoValidScopeComponent(sceneUnitConfig.getType().name()));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(sceneConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(sceneUnitConfig.getLabel()));
 
         return scope.build();
     }
 
-    public static ScopeType.Scope generateSceneScope(final UserConfig userConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateUserScope(final UserConfig userUnitConfig) throws CouldNotPerformException {
 
-        if (userConfig == null) {
+        if (userUnitConfig == null) {
             throw new NotAvailableException("userConfig");
         }
 
-        if (!userConfig.hasUserName()) {
+        if (!userUnitConfig.hasUserName()) {
             throw new NotAvailableException("userConfig.userName");
         }
 
-        if (userConfig.getUserName().isEmpty()) {
+        if (userUnitConfig.getUserName().isEmpty()) {
             throw new NotAvailableException("Field userConfig.userName isEmpty");
         }
 
         // add manager
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
-        // add user
-        scope.addComponent(convertIntoValidScopeComponent("user"));
+        
+        // add unit type
+        scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getType().name()));
+        
         // add user name
-        scope.addComponent(convertIntoValidScopeComponent(userConfig.getUserName()));
+        scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getUserName()));
 
         return scope.build();
     }
 
-    public static ScopeType.Scope generateSceneScope(final UnitConfig authorizationGroupConfig) throws CouldNotPerformException {
+    public static ScopeType.Scope generateAuthorizationGroupScope(final UnitConfig authorizationGroupUniConfig) throws CouldNotPerformException {
 
-        if (authorizationGroupConfig == null) {
+        if (authorizationGroupUniConfig == null) {
             throw new NotAvailableException("authorizationGroupConfig");
         }
 
-        if (!authorizationGroupConfig.hasLabel()) {
+        if (!authorizationGroupUniConfig.hasLabel()) {
             throw new NotAvailableException("authorizationGroupConfig.label");
         }
 
-        if (authorizationGroupConfig.getLabel().isEmpty()) {
+        if (authorizationGroupUniConfig.getLabel().isEmpty()) {
             throw new NotAvailableException("Field authorizationGroupConfig.label isEmpty");
         }
 
@@ -409,7 +435,7 @@ public class ScopeGenerator {
         // add group
         scope.addComponent(convertIntoValidScopeComponent("group"));
         // add user name
-        scope.addComponent(convertIntoValidScopeComponent(authorizationGroupConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(authorizationGroupUniConfig.getLabel()));
 
         return scope.build();
     }

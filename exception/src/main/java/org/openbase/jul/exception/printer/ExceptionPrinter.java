@@ -26,6 +26,7 @@ package org.openbase.jul.exception.printer;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
@@ -109,7 +110,7 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final T th, final Logger logger) {
         printHistory(th, logger, LogLevel.ERROR);
-        System.exit(255);
+        exit(255);
     }
 
     /**
@@ -137,7 +138,7 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final String message, T th, final Logger logger) {
         printHistory(new CouldNotPerformException(message, th), logger, LogLevel.ERROR);
-        System.exit(255);
+        exit(255);
     }
 
     /**
@@ -162,7 +163,7 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final T th, final PrintStream stream) {
         printHistory(th, new SystemPrinter(stream));
-        System.exit(255);
+        exit(255);
     }
 
     /**
@@ -190,7 +191,14 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final String message, final T th, final PrintStream stream) {
         printHistory(new CouldNotPerformException(message, th), new SystemPrinter(stream));
-        System.exit(255);
+        exit(255);
+    }
+
+    private static void exit(final int errorCode) {
+        if (JPService.testMode()) {
+            throw new RuntimeException("System exit called in test mode!");
+        }
+        System.exit(errorCode);
     }
 
     /**
