@@ -142,7 +142,6 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
-        logger.info("register Entry[" + entry + "]");
         ENTRY result = super.register(entry);
         FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(result, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
         fileSynchronizerMap.put(result.getId(), fileSynchronizer);
@@ -214,7 +213,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
 
-        logger.info("Load " + this + " out of " + databaseDirectory + "...");
+        logger.debug("Load " + this + " out of " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
         File[] listFiles;
@@ -266,7 +265,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             return;
         }
 
-        logger.info("Save " + this + " into " + databaseDirectory + "...");
+        logger.debug("Save " + this + " into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
         // save all changes.

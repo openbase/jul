@@ -682,7 +682,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
 
                     if (dataUpdate == null) {
-                        logger.info("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
+                        logger.debug("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
                         setConnectionState(CONNECTING);
                         return data;
                     }
@@ -696,7 +696,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     if (internalFuture != null) {
                         internalFuture.cancel(true);
                     }
-                    throw ex;
+                    return null;
                 }
             } catch (CouldNotPerformException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
@@ -1122,7 +1122,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[scope:" + scope + "]";
+        return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
     }
 
     private static long generateTimeout(long currentTimeout) {

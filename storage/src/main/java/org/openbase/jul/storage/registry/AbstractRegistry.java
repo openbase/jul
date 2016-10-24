@@ -558,7 +558,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         if (consistencyCheckLock.isWriteLockedByCurrentThread()) {
             // Avoid triggering recursive consistency checks.
-            logger.debug(this + " skipping consistency check because check is already running by same thread. " + Thread.currentThread().getId());
+            logger.debug(this + " skipping consistency check because check is already running by same thread: " + Thread.currentThread().getId());
             return modificationCounter;
         }
 
