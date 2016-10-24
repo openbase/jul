@@ -30,14 +30,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPReadOnly;
-import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
@@ -77,6 +76,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private final MAP entryMap;
 
+    private final Random randomJitter;
     protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
     protected RegistrySandbox<KEY, ENTRY, MAP, R> sandbox;
 
@@ -96,6 +96,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
         try {
+            this.randomJitter = new Random(System.currentTimeMillis());
             this.registryLock = new ReentrantReadWriteLock();
             this.consistencyCheckLock = new ReentrantReadWriteLock();
             this.consistent = true;
@@ -431,7 +432,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @return The method returns should return false if at least one depending registry is not consistent!
      */
     protected boolean isDependingOnConsistentRegistries() {
-        return dependingRegistryMap.keySet().stream().noneMatch((registry) -> (!registry.isConsistent()));
+        return new ArrayList<>(dependingRegistryMap.keySet()).stream().noneMatch((registry) -> (!registry.isConsistent()));
     }
 
     /**
@@ -440,13 +441,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Consistency checks are skipped as well if at least one depending registry is not consistent.
      *
      * @param registry the dependency of these registry.
+     * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void registerDependency(final Registry registry) throws CouldNotPerformException {
-        // check if already registered
-        if (dependingRegistryMap.containsKey(registry)) {
-            return;
+        registryLock.writeLock().lock();
+        try {
+            // check if already registered
+            if (dependingRegistryMap.containsKey(registry)) {
+                return;
+            }
+            dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
+        } finally {
+            registryLock.writeLock().unlock();
         }
-        dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
     }
 
     /**
@@ -455,22 +462,32 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @param registry the dependency to remove.
      */
     public void removeDependency(final Registry registry) {
-        if (!dependingRegistryMap.containsKey(registry)) {
-            logger.warn("Could not remove a dependency which was never registered!");
-            return;
+        registryLock.writeLock().lock();
+        try {
+            if (!dependingRegistryMap.containsKey(registry)) {
+                logger.warn("Could not remove a dependency which was never registered!");
+                return;
+            }
+            dependingRegistryMap.remove(registry).shutdown();
+        } finally {
+            registryLock.writeLock().unlock();
         }
-        dependingRegistryMap.remove(registry).shutdown();
     }
 
     /**
      * Removal of all registered registry dependencies in the reversed order in which they where added.
      */
     public void removeAllDependencies() {
-        List<Registry> dependingRegistryList = new ArrayList<>(dependingRegistryMap.keySet());
-        Collections.reverse(dependingRegistryList);
-        dependingRegistryList.stream().forEach((registry) -> {
-            dependingRegistryMap.remove(registry).shutdown();
-        });
+        registryLock.writeLock().lock();
+        try {
+            List<Registry> dependingRegistryList = new ArrayList<>(dependingRegistryMap.keySet());
+            Collections.reverse(dependingRegistryList);
+            dependingRegistryList.stream().forEach((registry) -> {
+                dependingRegistryMap.remove(registry).shutdown();
+            });
+        } finally {
+            registryLock.writeLock().unlock();
+        }
     }
 
     @Override
@@ -642,7 +659,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 //                                if (JPService.getProperty(JPVerbose.class).getValue()) {
 //                                    info("Consistency modification applied: " + ex.getMessage());
 //                                } else {
-                                    logger.debug("Consistency modification applied: " + ex.getMessage());
+                            logger.debug("Consistency modification applied: " + ex.getMessage());
 //                                }
 //                            } catch (JPNotAvailableException exx) {
 //                                ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
@@ -712,17 +729,21 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     @Override
     public void shutdown() {
-        super.shutdown();
         try {
-            pluginPool.shutdown();
-
-            consistencyHandlerList.stream().forEach((consistencyHandler) -> {
-                consistencyHandler.shutdown();
-            });
-
-            clear();
+            registryLock.writeLock().lock();
+            try {
+                super.shutdown();
+                removeAllDependencies();
+                pluginPool.shutdown();
+                consistencyHandlerList.stream().forEach((consistencyHandler) -> {
+                    consistencyHandler.shutdown();
+                });
+                clear();
+            } finally {
+                registryLock.writeLock().unlock();
+            }
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
+            ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
         }
     }
 
@@ -810,7 +831,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
 
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(100 + randomJitter.nextInt(5));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     throw new CouldNotPerformException("Could not lock registry because thread was externally interrupted!", ex);
@@ -882,7 +903,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     private synchronized void unlockDependingRegistries() {
-        dependingRegistryMap.keySet().stream().forEach((registry) -> {
+        new ArrayList<>(dependingRegistryMap.keySet()).stream().forEach((registry) -> {
             registry.unlockRegistry();
         });
     }
