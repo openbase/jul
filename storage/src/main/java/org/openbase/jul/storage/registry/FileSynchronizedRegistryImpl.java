@@ -202,12 +202,12 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
                 databaseState = DatabaseState.OUTDATED;
                 try {
                     if (!JPService.getProperty(JPForce.class).getValue()) {
-                        throw new CouldNotPerformException("Force readonly mode!", new CouldNotPerformException("Registry is not up-to-date! To fix registry manually start the registry in force mode", ex));
+                        throw new CouldNotPerformException("Registry is not up-to-date! To fix registry manually start the registry in force mode", ex);
                     }
                 } catch (JPServiceException exx) {
                     ExceptionPrinter.printHistory("Could not check force flag!", exx, logger);
                 }
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Force readonly mode!", ex), logger);
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Registry is not up-to-date but force mode is enabled so you are able to apply manual fixes via the registry editor.", ex), logger);
             }
         }
 
