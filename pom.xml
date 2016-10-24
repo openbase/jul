@@ -56,9 +56,9 @@
     <packaging>pom</packaging>
     
     <scm>
-        <connection>scm:git:git@github.com/openbase/jul.git</connection>
-        <developerConnection>scm:git:git@github.com/openbase/jul.git</developerConnection>
-        <url>git@github.com/openbase/jul.git</url>
+        <connection>scm:git:https://github.com/openbase/jul.git</connection>
+        <developerConnection>scm:git:https://github.com/openbase/jul.git</developerConnection>
+        <url>https://github.com/openbase/jul.git</url>
     </scm>
    
     <build>
