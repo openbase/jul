@@ -167,7 +167,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
-        info("Load " + entry + "...");
+        logger.debug("Load " + entry + "...");
         try {
             lock();
             try {

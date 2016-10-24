@@ -200,7 +200,13 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
                 databaseState = DatabaseState.LATEST;
             } catch (CouldNotPerformException ex) {
                 databaseState = DatabaseState.OUTDATED;
-                logger.warn("Registry is not up-to-date! To fix registry manually start the registry in force mode.");
+                try {
+                    if (!JPService.getProperty(JPForce.class).getValue()) {
+                        throw new CouldNotPerformException("Force readonly mode!", new CouldNotPerformException("Registry is not up-to-date! To fix registry manually start the registry in force mode", ex));
+                    }
+                } catch (JPServiceException exx) {
+                    ExceptionPrinter.printHistory("Could not check force flag!", exx, logger);
+                }
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Force readonly mode!", ex), logger);
             }
         }
@@ -236,7 +242,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         }
 
         if (!isEmpty() || MultiException.size(exceptionStack) > 0) {
-            logger.info("====== " + size() + (size() == 1 ? " entry" : " entries") + " successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
+            logger.info("====== " + size() + (size() == 1 ? " entry" : " entries") + " of " + this + " successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
         }
 
         MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
