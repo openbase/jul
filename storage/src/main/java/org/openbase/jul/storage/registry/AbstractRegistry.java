@@ -853,12 +853,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public synchronized boolean tryLockRegistry() throws RejectedException {
+    public boolean tryLockRegistry() throws RejectedException {
         return registryLock.writeLock().tryLock();
     }
 
     @Override
-    public synchronized void unlockRegistry() {
+    public void unlockRegistry() {
         assert registryLock.writeLock().isHeldByCurrentThread();
         registryLock.writeLock().unlock();
     }

@@ -24,20 +24,19 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 import com.google.protobuf.GeneratedMessage.Builder;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.NotInitializedException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Changeable;
 import org.openbase.jul.schedule.Timeout;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.openbase.jps.preset.JPDebugMode;
-import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,9 +195,8 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                     holder.notifyChange();
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
-                    throw ex;
                 }
-            } catch (CouldNotPerformException | InterruptedException ex) {
+            } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
             }
         }
