@@ -68,8 +68,15 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
     public boolean isReadOnly();
 
     public boolean isConsistent();
-    
+
     public boolean isSandbox();
+
+    /**
+     * Return true if this registry does not contain any entries.
+     *
+     * @return is true if the registry is empty.
+     */
+    public boolean isEmtpy();
 
     public boolean tryLockRegistry() throws RejectedException;
 
