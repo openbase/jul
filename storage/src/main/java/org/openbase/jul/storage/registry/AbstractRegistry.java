@@ -728,6 +728,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
+    public boolean isEmtpy() {
+        return entryMap.isEmpty();
+    }
+
+    @Override
     public void shutdown() {
         try {
             registryLock.writeLock().lock();
