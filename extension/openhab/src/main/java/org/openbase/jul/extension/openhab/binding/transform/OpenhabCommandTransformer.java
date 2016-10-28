@@ -52,6 +52,9 @@ public final class OpenhabCommandTransformer {
                         return AlarmStateTransformer.transform(command.getDecimal());
                     case SMOKE_STATE_SERVICE:
                         return SmokeStateTransformer.transform(command.getDecimal());
+                    case TEMPERATURE_STATE_SERVICE:
+                    case TARGET_TEMPERATURE_STATE_SERVICE:
+                        return TemperatureStateTransformer.transform(command.getDecimal());
                     default:
                         // native double type
                         return command.getDecimal();
