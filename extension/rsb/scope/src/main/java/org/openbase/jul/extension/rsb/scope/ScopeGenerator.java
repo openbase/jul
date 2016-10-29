@@ -26,7 +26,6 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import rsb.Scope;
-import rst.domotic.unit.user.UserConfigType.UserConfig;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
 import rst.domotic.unit.agent.AgentClassType.AgentClass;
 import rst.domotic.unit.app.AppClassType.AppClass;
@@ -39,10 +38,14 @@ import rst.rsb.ScopeType;
 public class ScopeGenerator {
 
     public static String generateStringRep(final ScopeType.Scope scope) {
+        // TODO Release Scrab: Add exception handling in case the scope is null.
+        assert scope != null; 
         return generateStringRep(scope.getComponentList());
     }
 
     public static String generateStringRep(final Scope scope) {
+        // TODO Release Scrab: Add exception handling in case the scope is null.
+        assert scope != null; 
         return generateStringRep(scope.getComponents());
     }
 

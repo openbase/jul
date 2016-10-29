@@ -836,7 +836,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
 
                 try {
-                    Thread.sleep(100 + randomJitter.nextInt(5));
+                    Thread.sleep(20 + randomJitter.nextInt(5));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     throw new CouldNotPerformException("Could not lock registry because thread was externally interrupted!", ex);
