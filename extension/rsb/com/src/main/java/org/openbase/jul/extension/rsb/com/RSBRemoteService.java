@@ -1122,6 +1122,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public String toString() {
+        if(scope == null) {
+            return getClass().getSimpleName() + "[scope:?]";
+        }
         return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
     }
 
