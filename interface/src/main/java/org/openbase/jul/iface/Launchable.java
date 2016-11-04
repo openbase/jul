@@ -30,5 +30,11 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Launchable {
 
-    public void launch() throws CouldNotPerformException, InterruptedException;
+    /**
+     * Method launch the application which is referred by this launcher.
+     * @return returns true if the application was successfully started in case the application was started with restrictions false will be returned. 
+     * @throws CouldNotPerformException Is thrown in case any error occurs during the startup phase.
+     * @throws InterruptedException is thrown in case the thread was externally interrupted. 
+     */
+    public boolean launch() throws CouldNotPerformException, InterruptedException;
 }

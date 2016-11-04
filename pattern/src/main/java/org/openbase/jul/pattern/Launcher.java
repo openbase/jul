@@ -21,7 +21,6 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.iface.Launchable;
 import org.openbase.jul.iface.Shutdownable;
 
@@ -31,4 +30,6 @@ import org.openbase.jul.iface.Shutdownable;
  */
 public interface Launcher extends Launchable, Shutdownable {
 
+    // Load application specific java properties.
+    public void loadProperties();
 }

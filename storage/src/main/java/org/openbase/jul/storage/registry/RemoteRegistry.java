@@ -36,6 +36,7 @@ import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
+import org.openbase.jul.pattern.Remote;
 import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
 
 /**
@@ -46,6 +47,8 @@ import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
  * @param <MB>
  */
 public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB> {
+
+    private Remote remote;
 
     public RemoteRegistry() throws InstantiationException {
         this(new HashMap<>());
@@ -153,4 +156,15 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         // because remote registry does not support locks there is no need for any action here.
     }
 
+    @Override
+    public boolean isReadOnly() {
+        if (remote != null && !remote.isConnected()) {
+            return true;
+        }
+        return super.isReadOnly();
+    }
+
+    public void setRemote(Remote remote) {
+        this.remote = remote;
+    }
 }
