@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jps.core.JPService;
 import rsb.Factory;
 import rsb.config.ParticipantConfig;
 import rsb.transport.spread.InPushConnectorFactoryRegistry;
@@ -33,16 +34,16 @@ import rsb.transport.spread.SharedInPushConnectorFactory;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RSBSharedConnectionConfig {
-
+    
     private static boolean init = false;
     private static ParticipantConfig participantConfig;
-
+    
     public synchronized static void load() {
         if (init) {
             return;
         }
         participantConfig = Factory.getInstance().getDefaultParticipantConfig();
-
+        
         final String inPushFactoryKey = "shareIfPossible";
         // register a (spread-specifc) factory to create the appropriate in push
         // connectors. In this case the factory tries to share all connections
@@ -56,10 +57,16 @@ public class RSBSharedConnectionConfig {
         participantConfig.getOrCreateTransport("spread")
                 .getOptions()
                 .setProperty("transport.spread.java.infactory", inPushFactoryKey);
+
+        // Disable rsb introspection for test mode.
+        if (JPService.testMode()) {
+            participantConfig.setIntrospectionEnabled(false);
+        }
+        
         init = true;
-
+        
     }
-
+    
     public static ParticipantConfig getParticipantConfig() {
         if (!init) {
             load();
