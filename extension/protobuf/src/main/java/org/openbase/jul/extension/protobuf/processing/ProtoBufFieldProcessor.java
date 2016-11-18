@@ -183,12 +183,30 @@ public class ProtoBufFieldProcessor {
         return builder;
     }
 
+    public enum BuilderInitializationStatus {
+
+        ALL_REQUIRED_FIELDS_SET,
+        NO_REQUIRED_FIELDS_SET,
+        SOME_REQUIRED_FIELDS_SET;
+    }
+
     public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
+        return checkBuilderInitialization(builder) == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+    }
+
+    /**
+     * Recursively check the initialization of a builder.
+     *
+     * @param builder the builder which is checked
+     * @return the initialization status of the builder
+     */
+    public static BuilderInitializationStatus checkBuilderInitialization(final Message.Builder builder) {
         if (builder.isInitialized()) {
             // all required fields are set, thus no problem
-            return false;
+            return BuilderInitializationStatus.ALL_REQUIRED_FIELDS_SET;
         }
 
+        BuilderInitializationStatus status = null, tmp;
         for (Descriptors.FieldDescriptor field : builder.getDescriptorForType().getFields()) {
             // check if the field is set or a repeated field that does not contain further messages, if not continue
             if (!field.isRepeated() && !builder.hasField(field)) {
@@ -202,18 +220,34 @@ public class ProtoBufFieldProcessor {
             if (field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
                 if (field.isRepeated()) {
                     for (int i = 0; i < builder.getRepeatedFieldCount(field); ++i) {
-                        if (checkIfSomeButNotAllRequiredFieldsAreSet(((Message) builder.getRepeatedField(field, i)).toBuilder())) {
-                            return true;
+                        tmp = checkBuilderInitialization(((Message) builder.getRepeatedField(field, i)).toBuilder());
+                        if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
+                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+                        } else {
+                            if (status == null) {
+                                status = tmp;
+                            } else if (tmp != status) {
+                                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+                            }
                         }
                     }
-                } else if (checkIfSomeButNotAllRequiredFieldsAreSet(builder.getFieldBuilder(field))) {
-                    return true;
+                } else {
+                    tmp = checkBuilderInitialization(builder.getFieldBuilder(field));
+                    if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
+                        return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+                    } else {
+                        if (status == null) {
+                            status = tmp;
+                        } else if (tmp != status) {
+                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+                        }
+                    }
                 }
             } else if (field.isRequired()) {
                 // field is no message but still required
-                return true;
+                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
             }
         }
-        return false;
+        return BuilderInitializationStatus.NO_REQUIRED_FIELDS_SET;
     }
 }
