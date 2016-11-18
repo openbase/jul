@@ -27,6 +27,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.pattern.Remote;
 
@@ -40,7 +42,8 @@ public class RSBRemoteServiceTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass

@@ -21,17 +21,14 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import com.google.protobuf.GeneratedMessage;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.InstantiationException;
 
 /**
@@ -39,31 +36,33 @@ import org.openbase.jul.exception.InstantiationException;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RemoteRegistryTest {
-    
+
     private static RemoteRegistry remoteRegistry;
-    
+
     public RemoteRegistryTest() {
     }
-    
+
     @BeforeClass
-    public static void setUpClass() throws InstantiationException {
-         remoteRegistry = new RemoteRegistry();
+    public static void setUpClass() throws InstantiationException, JPServiceException {
+        JPService.setupJUnitTestMode();
+        remoteRegistry = new RemoteRegistry();
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
 
     /**
      * Test of notifyRegistryUpdate method, of class RemoteRegistry.
+     *
      * @throws java.lang.Exception
      */
     @Test

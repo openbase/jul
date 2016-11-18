@@ -23,14 +23,14 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.extension.protobuf.ProtobufVariableProvider;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import rst.domotic.unit.UnitConfigType;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
 
@@ -44,7 +44,8 @@ public class ProtobufVariableProviderTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass
@@ -83,7 +84,7 @@ public class ProtobufVariableProviderTest {
         config = config.toBuilder().setId("TestID").build();
         System.out.println("getValue");
         ProtobufVariableProvider instance = new ProtobufVariableProvider(config);
-        
+
         assertEquals("TestLabel", instance.getValue("LABEL"));
         assertEquals("TestID", instance.getValue("ID"));
     }

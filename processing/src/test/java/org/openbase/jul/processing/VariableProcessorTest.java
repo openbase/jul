@@ -23,18 +23,18 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.processing.VariableProvider;
-import org.openbase.jul.processing.VariableProcessor;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.NotAvailableException;
 import java.util.HashMap;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.exception.MultiException;
+import org.openbase.jul.exception.NotAvailableException;
 
 /**
  *
@@ -49,7 +49,8 @@ public class VariableProcessorTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass

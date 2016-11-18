@@ -28,12 +28,13 @@ import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.printer.LogLevel;
-import java.util.logging.Level;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,8 @@ public class ExceptionPrinterTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass

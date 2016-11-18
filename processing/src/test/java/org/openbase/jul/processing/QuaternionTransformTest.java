@@ -23,16 +23,16 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.processing.QuaternionEulerTransform;
 import javax.vecmath.Quat4d;
 import javax.vecmath.Vector3d;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertArrayEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 
 /**
  *
@@ -44,7 +44,8 @@ public class QuaternionTransformTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass

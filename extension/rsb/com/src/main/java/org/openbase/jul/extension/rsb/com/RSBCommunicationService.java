@@ -30,8 +30,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InitializationException;
@@ -44,7 +42,6 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.extension.protobuf.MessageController;
-import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
 import org.openbase.jul.extension.rsb.iface.RSBInformer;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -63,7 +60,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.config.ParticipantConfig;
-import rsb.config.TransportConfig;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -198,19 +194,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
-    private void enableTransport(final ParticipantConfig participantConfig, final JPRSBTransport.TransportType type) {
-        if (type == JPRSBTransport.TransportType.DEFAULT) {
-            return;
-        }
-
-        for (TransportConfig transport : participantConfig.getEnabledTransports()) {
-            logger.debug("Disable " + transport.getName() + " communication.");
-            transport.setEnabled(false);
-        }
-        logger.debug("Enable [" + type.name().toLowerCase() + "] communication.");
-        participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
-    }
-
     /**
      *
      * @param scope
@@ -223,13 +206,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             final boolean alreadyActivated = isActive();
             ParticipantConfig internalParticipantConfig = participantConfig;
 
-            try {
-                // activate transport communication set by the JPRSBTransport property.
-                enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
-            } catch (JPServiceException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-            }
-
+//            try {
+//                // activate transport communication set by the JPRSBTransport property.
+//                enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
+//            } catch (JPServiceException ex) {
+//                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+//            }
             if (scope == null) {
                 throw new NotAvailableException("scope");
             }

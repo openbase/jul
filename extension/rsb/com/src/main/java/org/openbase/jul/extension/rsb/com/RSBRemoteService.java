@@ -32,8 +32,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InitializationException;
@@ -218,12 +216,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             final boolean alreadyActivated = isActive();
             ParticipantConfig internalParticipantConfig = participantConfig;
-            try {
-                // activate transport communication set by the JPRSBTransport porperty.
-                enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
-            } catch (JPServiceException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-            }
+//            try {
+//                // activate transport communication set by the JPRSBTransport porperty.
+//                enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
+//            } catch (JPServiceException ex) {
+//                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+//            }
 
             if (scope == null) {
                 throw new NotAvailableException("scope");
@@ -1122,7 +1120,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public String toString() {
-        if(scope == null) {
+        if (scope == null) {
             return getClass().getSimpleName() + "[scope:?]";
         }
         return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
