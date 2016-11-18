@@ -190,20 +190,70 @@ public class ProtoBufFieldProcessor {
         SOME_REQUIRED_FIELDS_SET;
     }
 
+//    public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
+//        return checkBuilderInitialization(builder) == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+//    }
+//
+//    /**
+//     * Recursively check the initialization of a builder.
+//     *
+//     * @param builder the builder which is checked
+//     * @return the initialization status of the builder
+//     */
+//    public static BuilderInitializationStatus checkBuilderInitialization(final Message.Builder builder) {
+//        if (builder.isInitialized()) {
+//            // all required fields are set, thus no problem
+//            return BuilderInitializationStatus.ALL_REQUIRED_FIELDS_SET;
+//        }
+//
+//        BuilderInitializationStatus status = null, tmp;
+//        for (Descriptors.FieldDescriptor field : builder.getDescriptorForType().getFields()) {
+//            // check if the field is set or a repeated field that does not contain further messages, if not continue
+//            if (!field.isRepeated() && !builder.hasField(field)) {
+//                continue;
+//            }
+//            if (field.isRepeated() && field.getType() != Descriptors.FieldDescriptor.Type.MESSAGE) {
+//                continue;
+//            }
+//
+//            // recursively check for all sub-messages
+//            if (field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
+//                if (field.isRepeated()) {
+//                    for (int i = 0; i < builder.getRepeatedFieldCount(field); ++i) {
+//                        tmp = checkBuilderInitialization(((Message) builder.getRepeatedField(field, i)).toBuilder());
+//                        if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
+//                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+//                        } else {
+//                            if (status == null) {
+//                                status = tmp;
+//                            } else if (tmp != status) {
+//                                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+//                            }
+//                        }
+//                    }
+//                } else {
+//                    tmp = checkBuilderInitialization(builder.getFieldBuilder(field));
+//                    if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
+//                        return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+//                    } else {
+//                        if (status == null) {
+//                            status = tmp;
+//                        } else if (tmp != status) {
+//                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+//                        }
+//                    }
+//                }
+//            } else if (field.isRequired()) {
+//                // field is no message but still required
+//                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+//            }
+//        }
+//        return BuilderInitializationStatus.NO_REQUIRED_FIELDS_SET;
+//    }
     public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
-        return checkBuilderInitialization(builder) == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-    }
-
-    /**
-     * Recursively check the initialization of a builder.
-     *
-     * @param builder the builder which is checked
-     * @return the initialization status of the builder
-     */
-    public static BuilderInitializationStatus checkBuilderInitialization(final Message.Builder builder) {
         if (builder.isInitialized()) {
             // all required fields are set, thus no problem
-            return BuilderInitializationStatus.ALL_REQUIRED_FIELDS_SET;
+            return false;
         }
 
         BuilderInitializationStatus status = null, tmp;
@@ -220,34 +270,20 @@ public class ProtoBufFieldProcessor {
             if (field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
                 if (field.isRepeated()) {
                     for (int i = 0; i < builder.getRepeatedFieldCount(field); ++i) {
-                        tmp = checkBuilderInitialization(((Message) builder.getRepeatedField(field, i)).toBuilder());
-                        if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
-                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-                        } else {
-                            if (status == null) {
-                                status = tmp;
-                            } else if (tmp != status) {
-                                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-                            }
+                        if (checkIfSomeButNotAllRequiredFieldsAreSet(((Message) builder.getRepeatedField(field, i)).toBuilder())) {
+                            return true;
                         }
                     }
                 } else {
-                    tmp = checkBuilderInitialization(builder.getFieldBuilder(field));
-                    if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
-                        return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-                    } else {
-                        if (status == null) {
-                            status = tmp;
-                        } else if (tmp != status) {
-                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-                        }
+                    if (checkIfSomeButNotAllRequiredFieldsAreSet(builder.getFieldBuilder(field))) {
+                        return true;
                     }
                 }
             } else if (field.isRequired()) {
                 // field is no message but still required
-                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
+                return true;
             }
         }
-        return BuilderInitializationStatus.NO_REQUIRED_FIELDS_SET;
+        return false;
     }
 }

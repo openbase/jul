@@ -49,7 +49,7 @@ public class MultiException extends CouldNotPerformException {
         }
     }
 
-    public static ExceptionStack push(final Object source, final Exception exception, ExceptionStack exceptionStack) {
+    public synchronized static ExceptionStack push(final Object source, final Exception exception, ExceptionStack exceptionStack) {
         if (exceptionStack == null) {
             exceptionStack = new MultiException.ExceptionStack();
         }
