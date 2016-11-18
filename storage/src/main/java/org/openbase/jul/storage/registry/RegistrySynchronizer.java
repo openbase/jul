@@ -93,15 +93,12 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         remoteRegistry.waitForValue();
         remoteRegistry.addObserver(remoteChangeObserver);
 
-        GlobalExecutionService.submit(() -> {
-            try {
-                remoteRegistry.waitForValue();
-                internalSync();
-            } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
-            }
-            return null;
-        });
+        try {
+            remoteRegistry.waitForValue();
+            internalSync();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
+        }
         active = true;
     }
 
