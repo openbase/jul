@@ -21,14 +21,16 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.NotAvailableException;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
 
 /**
  *
@@ -40,7 +42,8 @@ public class TimeoutTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass
@@ -63,7 +66,7 @@ public class TimeoutTest {
         System.out.println("getTimeToWait");
         final Stopwatch stopwatch = new Stopwatch();
         final long timeToWait = 200;
-        
+
         // #### Test timeout expire ####
         Timeout timeout = new Timeout(timeToWait) {
 
@@ -84,7 +87,6 @@ public class TimeoutTest {
         System.out.println("time: " + stopwatch.getTime());
         assertTrue("timer to fast!", Math.abs(stopwatch.getTime() - timeToWait) < 50);
 
-        
         // #### Test timeout cancel ####
         stopwatch.reset();
 
@@ -100,11 +102,11 @@ public class TimeoutTest {
             // there should be no result because timeout was canceled.
         }
         // #### Test multi timeout start behaviour ####
-        
+
         stopwatch.reset();
         timeout.start(50);
         timeout.start(50);
         timeout.start(50);
-        
+
     }
 }

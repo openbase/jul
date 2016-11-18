@@ -27,14 +27,16 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.pattern.Controller;
 import org.openbase.jul.pattern.Remote;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.domotic.unit.scene.SceneDataType.SceneData;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.scene.SceneDataType.SceneData;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -47,7 +49,8 @@ public class ConfigurableControllerAndRemoteTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass

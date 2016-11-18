@@ -31,6 +31,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
 
 /**
@@ -45,7 +47,8 @@ public class ProtobufListDiffTest {
     }
 
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws JPServiceException {
+        JPService.setupJUnitTestMode();
         currentContext = new ArrayList<>();
         currentContext.add(UnitConfig.newBuilder().setId("1").build());
         currentContext.add(UnitConfig.newBuilder().setId("2").build());
