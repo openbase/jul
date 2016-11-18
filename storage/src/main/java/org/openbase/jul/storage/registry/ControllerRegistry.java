@@ -24,9 +24,6 @@ package org.openbase.jul.storage.registry;
 import java.util.HashMap;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Controller;
 
@@ -48,16 +45,9 @@ public class ControllerRegistry<KEY, ENTRY extends Controller & Identifiable<KEY
 
     @Override
     public void clear() throws CouldNotPerformException {
-        MultiException.ExceptionStack exceptionStack = null;
         for (Controller controller : getEntries()) {
-            try {
-                controller.deactivate();
-            } catch (InterruptedException ex) {
-                ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
-                exceptionStack = MultiException.push(this, ex, exceptionStack);
-            }
+            controller.shutdown();
         }
-        MultiException.checkAndThrow("Could not deactivate all devices!", exceptionStack);
         super.clear();
     }
 }

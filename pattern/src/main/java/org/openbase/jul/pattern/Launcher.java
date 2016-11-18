@@ -1,5 +1,8 @@
 package org.openbase.jul.pattern;
 
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.iface.Launchable;
+
 /*
  * #%L
  * JUL Pattern
@@ -20,16 +23,54 @@ package org.openbase.jul.pattern;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-import org.openbase.jul.iface.Launchable;
-import org.openbase.jul.iface.Shutdownable;
-
-/**
+ *
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * 
+ * @param <L> the launchable to launch by this launcher.
  */
-public interface Launcher extends Launchable, Shutdownable {
+public interface Launcher<L extends Launchable> {
 
-    // Load application specific java properties.
-    public void loadProperties();
+    /**
+     * starts the launchable.
+     *
+     * @throws CouldNotPerformException
+     * @throws java.lang.InterruptedException
+     */
+    public void launch() throws CouldNotPerformException, InterruptedException;
+
+    /**
+     * Restarts the launchable.
+     *
+     * @throws CouldNotPerformException
+     * @throws java.lang.InterruptedException
+     */
+    public void relaunch() throws CouldNotPerformException, InterruptedException;
+
+    /**
+     * Stops the launchable.
+     */
+    public void stop();
+    
+    /**
+     * Get the uptime of the launchable.
+     *
+     * @return time in milliseconds.,
+     */
+    public long getUpTime();
+    
+    /**
+     * Get the uptime of the launchable.
+     *
+     * @return time in milliseconds.,
+     */
+    public long getLaunchTime();
+    
+    /**
+     * Flag is set if the application was successfully verified after launching.
+     * In case the verification has failed, may some application functions are restricted.
+     * @return Returns true if the application verification was successful after launching.
+     */
+    public boolean isVerified();
+
 }

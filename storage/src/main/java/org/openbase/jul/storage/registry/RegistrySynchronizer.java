@@ -26,8 +26,6 @@ package org.openbase.jul.storage.registry;
 import com.google.protobuf.GeneratedMessage;
 import java.util.Map;
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.VerificationFailedException;
@@ -36,11 +34,14 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessageMap;
 import org.openbase.jul.extension.protobuf.ProtobufListDiff;
+import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Configurable;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
+import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Factory;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.schedule.GlobalExecutionService;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ import org.slf4j.LoggerFactory;
  * @param <CONFIG_M>
  * @param <CONFIG_MB>
  */
-public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> {
+public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> implements Activatable, Shutdownable {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Registry<KEY, ENTRY> localRegistry;
@@ -62,6 +63,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
     private final Factory<ENTRY, CONFIG_M> factory;
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry;
+    private boolean active;
 
     public RegistrySynchronizer(final Registry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         try {
@@ -86,25 +88,44 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         }
     }
 
-    public void init() throws CouldNotPerformException, InterruptedException {
-        this.remoteRegistry.addObserver(remoteChangeObserver);
-        try {
-            this.internalSync();
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
+    @Override
+    public void activate() throws CouldNotPerformException, InterruptedException {
+        remoteRegistry.waitForValue();
+        remoteRegistry.addObserver(remoteChangeObserver);
+
+        GlobalExecutionService.submit(() -> {
             try {
-                if (JPService.getProperty(JPTestMode.class).getValue()) {
-                    throw ex;
-                }
-            } catch (JPServiceException exx) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", exx), logger);
+                remoteRegistry.waitForValue();
+                internalSync();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
             }
-        }
+            return null;
+        });
+        active = true;
     }
 
+    @Override
+    public void deactivate() throws CouldNotPerformException, InterruptedException {
+        active = false;
+        remoteRegistry.removeObserver(remoteChangeObserver);
+        recurrenceSyncFilter.cancel();
+    }
+
+    @Override
+    public boolean isActive() {
+        return active;
+    }
+
+    @Override
     public void shutdown() {
-        this.remoteRegistry.removeObserver(remoteChangeObserver);
-        this.recurrenceSyncFilter.cancel();
+        try {
+            deactivate();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
+        }
     }
 
     private void sync() {
@@ -197,6 +218,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
             MultiException.checkAndThrow("Could not sync all entries!", exceptionStack);
 
         } catch (CouldNotPerformException ex) {
+            assert !JPService.testMode(); // exit if errors occurs during unit tests.
             throw new CouldNotPerformException("Entry registry sync failed!", ex);
         }
     }

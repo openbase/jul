@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractOpenHABBinding implements OpenHABBinding {
 
-    protected static final Logger logger = LoggerFactory.getLogger(AbstractOpenHABBinding.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractOpenHABBinding.class);
 
     protected static OpenHABBinding instance;
     protected OpenHABRemote openHABRemote;

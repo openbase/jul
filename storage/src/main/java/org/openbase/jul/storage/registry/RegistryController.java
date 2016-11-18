@@ -21,7 +21,7 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.iface.DefaultInitializable;
 import org.openbase.jul.pattern.Controller;
 
 /**
@@ -29,13 +29,6 @@ import org.openbase.jul.pattern.Controller;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
-public interface RegistryController<M> extends Controller<M> {
+public interface RegistryController<M> extends Controller<M>, DefaultInitializable {
 
-    /**
-     * Method initializes the remote with the default registry connection scope.
-     *
-     * @throws InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
-     */
-    public void init() throws InitializationException, InterruptedException;
 }

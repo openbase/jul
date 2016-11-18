@@ -1,5 +1,8 @@
 package org.openbase.jul.iface;
 
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.iface.provider.NameProvider;
+
 /*
  * #%L
  * JUL Interface
@@ -20,21 +23,30 @@ package org.openbase.jul.iface;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-import org.openbase.jul.exception.CouldNotPerformException;
-
-/**
+ *
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ *
+ * This interface can be implemented by any applications which should be launchable by a Launcher instance.
+ * @param <CONFIG> the configuration type of this launchable.
+ *
  */
-public interface Launchable {
+public interface Launchable<CONFIG> extends Manageable<CONFIG>, DefaultInitializableImpl<CONFIG> {
 
     /**
-     * Method launch the application which is referred by this launcher.
-     * @return returns true if the application was successfully started in case the application was started with restrictions false will be returned. 
+     * Method starts the referred application.
+     *
+     * @return returns true if the application was successfully started in case the application was started with restrictions false will be returned.
      * @throws CouldNotPerformException Is thrown in case any error occurs during the startup phase.
-     * @throws InterruptedException is thrown in case the thread was externally interrupted. 
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
      */
-    public boolean launch() throws CouldNotPerformException, InterruptedException;
+    public default boolean launch() throws CouldNotPerformException, InterruptedException {
+        try {
+            init();
+            activate();
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not launch " + this, ex);
+        }
+        return true;
+    }
 }
