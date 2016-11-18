@@ -30,6 +30,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @param <T> The status type to request.
  */
 public interface Requestable<T> {
-             
+    
+    // todo next release: replace by requestData and rename in DataRequestable<T>
     public T requestStatus() throws CouldNotPerformException;
 }

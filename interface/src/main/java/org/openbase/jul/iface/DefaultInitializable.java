@@ -1,10 +1,6 @@
 package org.openbase.jul.iface;
 
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.slf4j.LoggerFactory;
-
-/*
+/*-
  * #%L
  * JUL Interface
  * %%
@@ -25,21 +21,19 @@ import org.slf4j.LoggerFactory;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.exception.InitializationException;
 
- /*
+/**
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <CONFIG>
  */
-public interface Manageable<CONFIG> extends Initializable<CONFIG>, Shutdownable, Activatable {
+public interface DefaultInitializable {
 
-    @Override
-    public default void shutdown() {
-        try {
-            deactivate();
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory("Could not shutdown " + this, ex, LoggerFactory.getLogger(getClass()));
-        }
-    }
+    /**
+     * Method initializes this instance with the default configuration.
+     *
+     * @throws InitializationException is thrown in case the default initialization could not performed.
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     */
+    public void init() throws InitializationException, InterruptedException;
 }
