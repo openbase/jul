@@ -34,6 +34,7 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Constructor;
@@ -109,12 +110,9 @@ public class DBVersionControl {
     }
 
     public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory) throws InstantiationException {
-        this(entryType, entryFileProvider, converterPackage, databaseDirectory, new Writable() {
-            @Override
-            public void checkWriteAccess() throws RejectedException {
-                if (!databaseDirectory.canWrite()) {
-                    throw new RejectedException("db directory not writable!");
-                }
+        this(entryType, entryFileProvider, converterPackage, databaseDirectory, () -> {
+            if (!databaseDirectory.canWrite()) {
+                throw new RejectedException("db directory not writable!");
             }
         });
     }
@@ -324,8 +322,9 @@ public class DBVersionControl {
 
             if (!versionFile.exists()) {
                 if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    throw new CouldNotPerformException("No version information available!");
+                    throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
                 }
+                return getLatestDBVersion();
             }
 
             // load db version
@@ -333,9 +332,13 @@ public class DBVersionControl {
                 String versionAsString = FileUtils.readFileToString(versionFile, "UTF-8");
                 versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
                 JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
-                return versionJsonObject.get(VERSION_FIELD).getAsInt();
+                try {
+                    return versionJsonObject.get(VERSION_FIELD).getAsInt();
+                } catch (JsonSyntaxException ex) {
+                    throw new CouldNotPerformException("Field[" + VERSION_FIELD + "] is missing!", ex);
+                }
             } catch (IOException | JsonSyntaxException ex) {
-                throw new CouldNotPerformException("Could not db version Field[" + VERSION_FIELD + "]!", ex);
+                throw new CouldNotPerformException("Could not parse db version information!", ex);
             }
         } catch (CouldNotPerformException | JPServiceException ex) {
             throw new CouldNotPerformException("Could not detect current db version of Database[" + databaseDirectory.getName() + "]!", ex);
