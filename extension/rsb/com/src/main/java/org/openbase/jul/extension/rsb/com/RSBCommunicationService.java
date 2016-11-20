@@ -240,25 +240,21 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
-            this.serverWatchDog.addObserver(new Observer<WatchDog.ServiceState>() {
-
-                @Override
-                public void update(final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) throws Exception {
-                    if (data == WatchDog.ServiceState.RUNNING) {
-
-                        setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
-
-                        // Sync data after service start.
-                        GlobalExecutionService.submit(() -> {
-                            try {
-                                serverWatchDog.waitForActivation();
-                                logger.debug("trigger initial sync");
-                                notifyChange();
-                            } catch (InterruptedException | CouldNotPerformException ex) {
-                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
-                            }
-                        });
-                    }
+            this.serverWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+                if (data == WatchDog.ServiceState.RUNNING) {
+                    
+                    setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
+                    
+                    // Sync data after service start.
+                    GlobalExecutionService.submit(() -> {
+                        try {
+                            serverWatchDog.waitForActivation();
+                            logger.debug("trigger initial sync");
+                            notifyChange();
+                        } catch (InterruptedException | CouldNotPerformException ex) {
+                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
+                        }
+                    });
                 }
             });
 

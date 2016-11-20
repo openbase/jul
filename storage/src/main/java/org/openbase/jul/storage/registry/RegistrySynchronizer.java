@@ -41,7 +41,6 @@ import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Factory;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
-import org.openbase.jul.schedule.GlobalExecutionService;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final Registry<KEY, ENTRY> localRegistry;
-    private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteChangeObserver;
+    private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteRegistryChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
     private final Factory<ENTRY, CONFIG_M> factory;
@@ -75,12 +74,14 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
                 @Override
                 public void relay() throws Exception {
+                    logger.debug("Incomming updates passed filter...");
                     internalSync();
                 }
             };
 
-            this.remoteChangeObserver = (Observable<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> source, Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>> data) -> {
-                sync();
+            this.remoteRegistryChangeObserver = (Observable<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> source, Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>> data) -> {
+                logger.debug("Incomming updates...");
+                recurrenceSyncFilter.trigger();
             };
 
         } catch (Exception ex) {
@@ -90,8 +91,9 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
+        logger.debug("activate " + this);
         remoteRegistry.waitForValue();
-        remoteRegistry.addObserver(remoteChangeObserver);
+        remoteRegistry.addObserver(remoteRegistryChangeObserver);
 
         try {
             remoteRegistry.waitForValue();
@@ -104,8 +106,9 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     @Override
     public void deactivate() throws CouldNotPerformException, InterruptedException {
+        logger.debug("deactivate " + this);
         active = false;
-        remoteRegistry.removeObserver(remoteChangeObserver);
+        remoteRegistry.removeObserver(remoteRegistryChangeObserver);
         recurrenceSyncFilter.cancel();
     }
 
@@ -123,10 +126,6 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
         }
-    }
-
-    private void sync() {
-        recurrenceSyncFilter.trigger();
     }
 
     private synchronized void internalSync() throws CouldNotPerformException, InterruptedException {
