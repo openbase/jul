@@ -52,7 +52,6 @@ import org.openbase.jul.iface.Requestable;
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
-import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.schedule.GlobalExecutionService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -242,9 +241,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             this.serverWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
                 if (data == WatchDog.ServiceState.RUNNING) {
-                    
+
                     setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
-                    
+
                     // Sync data after service start.
                     GlobalExecutionService.submit(() -> {
                         try {
