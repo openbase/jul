@@ -32,7 +32,6 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Shutdownable;
-import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public class WatchDog implements Activatable, Shutdownable {
 
     private final Object EXECUTION_LOCK = new Object();
-    private final Object activationLock;
+    private final Object stateLock;
 
     private static final long DELAY = 5000;
 
@@ -71,7 +70,7 @@ public class WatchDog implements Activatable, Shutdownable {
             this.service = task;
             this.serviceName = serviceName;
             this.serviceStateObserable = new ObservableImpl<>();
-            this.activationLock = new SyncObject(serviceName + "WatchDogLock");
+            this.stateLock = new SyncObject(serviceName + "WatchDogLock");
 
             if (task == null) {
                 throw new NotAvailableException("task");
@@ -147,30 +146,23 @@ public class WatchDog implements Activatable, Shutdownable {
     }
 
     public void waitForActivation() throws InterruptedException {
-
-        synchronized (activationLock) {
-            if (serviceState == ServiceState.RUNNING) {
-                return;
-            }
-
-            addObserver(new Observer<ServiceState>() {
-
-                @Override
-                public void update(final Observable<ServiceState> source, ServiceState data) throws Exception {
-                    if (data == ServiceState.RUNNING) {
-                        synchronized (activationLock) {
-                            activationLock.notifyAll();
-                        }
-                    }
+        waitForServiceState(ServiceState.RUNNING);
+    }
+    
+    public void waitForServiceState(final ServiceState serviceSatet) throws InterruptedException {
+        synchronized (stateLock) {
+            while (!Thread.currentThread().isInterrupted()) {
+                if (this.serviceState.equals(serviceSatet)) {
+                    return;
                 }
-            });
-            activationLock.wait();
+                stateLock.wait();
+            }
         }
     }
 
     public void skipActivation() {
-        synchronized (activationLock) {
-            activationLock.notifyAll();
+        synchronized (stateLock) {
+            stateLock.notifyAll();
         }
     }
 
@@ -244,11 +236,12 @@ public class WatchDog implements Activatable, Shutdownable {
 
     private void setServiceState(final ServiceState serviceState) {
         try {
-            synchronized (activationLock) {
+            synchronized (stateLock) {
                 if (this.serviceState == serviceState) {
                     return;
                 }
                 this.serviceState = serviceState;
+                stateLock.notifyAll();
             }
             logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
             serviceStateObserable.notifyObservers(serviceState);
