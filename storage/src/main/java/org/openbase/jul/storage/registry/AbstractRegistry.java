@@ -604,7 +604,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         // handle handler interference
                         maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
                         if (iterationCounter > maxConsistencyChecks) {
-                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "s" : "") + " occoured during processing!", exceptionStack);
+                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occoured during processing!", exceptionStack);
                             throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
@@ -626,7 +626,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             if (!consistencyHandlerQueue.isEmpty()) {
                                 note += " after " + consistencyHandlerQueue.size() + " applied modifications";
                             }
-                            consistencyFeedbackEventFilter.trigger(((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100)) + "% of max consistency checks passed" + note + ".");
+                            consistencyFeedbackEventFilter.trigger(((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100)) + "% of max consistency checks passed of " + this + note + ".");
                         }
                         consistencyHandlerQueue.clear();
 

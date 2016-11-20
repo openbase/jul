@@ -321,10 +321,10 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
+                if (JPService.getProperty(JPInitializeDB.class).getValue()) {
+                    return getLatestDBVersion();
                 }
-                return getLatestDBVersion();
+                throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
             }
 
             // load db version
@@ -358,7 +358,7 @@ public class DBVersionControl {
 
             if (!versionFile.exists()) {
                 if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    throw new CouldNotPerformException("No version information available!");
+                    throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
                 }
                 upgradeCurrentDBVersion();
             }
@@ -559,7 +559,7 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                throw new CouldNotPerformException("No version information available!");
+                throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
             }
 
             // load db version
