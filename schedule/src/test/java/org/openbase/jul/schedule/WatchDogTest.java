@@ -131,8 +131,8 @@ public class WatchDogTest {
     @Test(timeout = 3000)
     public void testDeactivationInNonActiveState() throws Exception {
         System.out.println("testDeactivationInNonActiveState");
-        final WatchDog instance = new WatchDog(new TestBadService(), "TestBadService");
-        assertEquals(instance.isActive(), false);
+        final WatchDog watchDog = new WatchDog(new TestBadService(), "TestBadService");
+        assertEquals(watchDog.isActive(), false);
 
         new Thread() {
 
@@ -140,15 +140,19 @@ public class WatchDogTest {
             public void run() {
                 try {
                     Thread.sleep(500);
-                    instance.deactivate();
-                    assertEquals(false, instance.isActive());
+                    watchDog.deactivate();
+                    assertEquals(false, watchDog.isActive());
                 } catch (InterruptedException ex) {
                 }
             }
         }.start();
 
-        instance.activate();
-        assertEquals(false, instance.isActive());
+        try {
+            watchDog.activate();
+            assertTrue("No exception thrown for bad service activation!", false);
+        } catch (CouldNotPerformException | InterruptedException ex) {
+        }
+        assertEquals(false, watchDog.isActive());
     }
 
     class TestService implements Activatable {
@@ -173,8 +177,6 @@ public class WatchDogTest {
 
     class TestBadService implements Activatable {
 
-        private boolean active;
-
         @Override
         public void activate() throws CouldNotPerformException {
             throw new NullPointerException("Simulate internal Nullpointer...");
@@ -182,12 +184,11 @@ public class WatchDogTest {
 
         @Override
         public void deactivate() throws CouldNotPerformException, InterruptedException {
-            active = false;
         }
 
         @Override
         public boolean isActive() {
-            return active;
+            return false;
         }
     }
 }

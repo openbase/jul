@@ -23,6 +23,7 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
@@ -95,7 +96,7 @@ public class WatchDog implements Activatable, Shutdownable {
     }
 
     @Override
-    public void activate() throws InterruptedException {
+    public void activate() throws InterruptedException, CouldNotPerformException {
         logger.trace("Try to activate service: " + serviceName);
         synchronized (EXECUTION_LOCK) {
             logger.trace("Init activation of service: " + serviceName);
@@ -110,7 +111,7 @@ public class WatchDog implements Activatable, Shutdownable {
 
         try {
             waitForActivation();
-        } catch (InterruptedException ex) {
+        } catch (CouldNotPerformException | InterruptedException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
             throw ex;
         }
@@ -145,15 +146,23 @@ public class WatchDog implements Activatable, Shutdownable {
         return serviceName;
     }
 
-    public void waitForActivation() throws InterruptedException {
+    public void waitForActivation() throws InterruptedException, CouldNotPerformException {
         waitForServiceState(ServiceState.RUNNING);
     }
     
-    public void waitForServiceState(final ServiceState serviceSatet) throws InterruptedException {
+    public void waitForServiceState(final ServiceState serviceSatet) throws InterruptedException, CouldNotPerformException {
         synchronized (stateLock) {
-            while (!Thread.currentThread().isInterrupted()) {
+            while (true) {
+                if(Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+                
                 if (this.serviceState.equals(serviceSatet)) {
                     return;
+                }
+                
+                if(minder == null || minder.isInterrupted()) {
+                    throw new CouldNotPerformException("Could not wait for minder State["+serviceSatet.name()+"] because minder is finished.");
                 }
                 stateLock.wait();
             }
@@ -226,6 +235,10 @@ public class WatchDog implements Activatable, Shutdownable {
         }
 
         private void waitWithinDelay() throws InterruptedException {
+            if(JPService.testMode()) {
+                Thread.sleep(10);
+                return;
+            }
             Thread.sleep(DELAY);
         }
     }
