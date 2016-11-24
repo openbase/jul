@@ -936,7 +936,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param data
      */
-    private void applyDataUpdate(final M data) {
+    private synchronized void applyDataUpdate(final M data) {
         this.data = data;
         CompletableFuture<M> currentSyncFuture = null;
         Future<M> currentSyncTask = null;
@@ -959,6 +959,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         if (currentSyncFuture != null) {
+            logger.info("Cancel running sync tasks because sync was already performed.");
             currentSyncFuture.complete(data);
         }
 
@@ -1045,29 +1046,25 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @return the connection delay in milliseconds.
      */
     public Future<Long> ping() {
-        return GlobalExecutionService.submit(new Callable<Long>() {
-
-            @Override
-            public Long call() throws Exception {
-                try {
-                    Long requestTime = (Long) callMethodAsync("ping", System.currentTimeMillis()).get(PING_TIMEOUT, TimeUnit.MILLISECONDS);
-                    lastPingReceived = System.currentTimeMillis();
-                    connectionPing = lastPingReceived - requestTime;
-                    return connectionPing;
-                } catch (java.util.concurrent.TimeoutException ex) {
-                    synchronized (connectionMonitor) {
-                        if (connectionState == CONNECTED) {
-                            logger.warn("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] lost!");
-
-                            // init reconnection
-                            setConnectionState(CONNECTING);
-                            requestData();
-                        }
+        return GlobalExecutionService.submit(() -> {
+            try {
+                Long requestTime = (Long) callMethodAsync("ping", System.currentTimeMillis()).get(PING_TIMEOUT, TimeUnit.MILLISECONDS);
+                lastPingReceived = System.currentTimeMillis();
+                connectionPing = lastPingReceived - requestTime;
+                return connectionPing;
+            } catch (java.util.concurrent.TimeoutException ex) {
+                synchronized (connectionMonitor) {
+                    if (connectionState == CONNECTED) {
+                        logger.warn("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] lost!");
+                        
+                        // init reconnection
+                        setConnectionState(CONNECTING);
+                        requestData();
                     }
-                    throw ex;
-                } catch (CouldNotPerformException | ExecutionException ex) {
-                    throw new CouldNotPerformException("Could not compute ping!", ex);
                 }
+                throw ex;
+            } catch (CouldNotPerformException | ExecutionException ex) {
+                throw new CouldNotPerformException("Could not compute ping!", ex);
             }
         });
     }

@@ -91,7 +91,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
-        logger.debug("activate " + this);
+        logger.info("activate " + this);
         remoteRegistry.waitForValue();
         remoteRegistry.addObserver(remoteRegistryChangeObserver);
 
