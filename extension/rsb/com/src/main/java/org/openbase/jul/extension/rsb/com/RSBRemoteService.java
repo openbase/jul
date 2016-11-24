@@ -936,7 +936,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param data
      */
-    private synchronized void applyDataUpdate(final M data) {
+    private void applyDataUpdate(final M data) {
         this.data = data;
         CompletableFuture<M> currentSyncFuture = null;
         Future<M> currentSyncTask = null;
