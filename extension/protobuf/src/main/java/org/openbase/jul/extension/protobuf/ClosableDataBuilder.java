@@ -23,8 +23,8 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage.Builder;
+import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
@@ -32,19 +32,19 @@ import com.google.protobuf.GeneratedMessage.Builder;
  */
 public class ClosableDataBuilder<MB extends Builder<MB>> implements java.lang.AutoCloseable {
 
-        private final BuilderSyncSetup<MB> builderSetup;
+    private final BuilderSyncSetup<MB> builderSetup;
 
-        public ClosableDataBuilder(final BuilderSyncSetup<MB> builderSetup, final Object consumer) {
-            this.builderSetup = builderSetup;
-            builderSetup.lockWrite(consumer);
-        }
-
-        public MB getInternalBuilder() {
-            return builderSetup.getBuilder();
-        }
-
-        @Override
-        public void close() throws Exception {
-            builderSetup.unlockWrite();
-        }
+    public ClosableDataBuilder(final BuilderSyncSetup<MB> builderSetup, final Object consumer) {
+        this.builderSetup = builderSetup;
+        builderSetup.lockWrite(consumer);
     }
+
+    public MB getInternalBuilder() {
+        return builderSetup.getBuilder();
+    }
+
+    @Override
+    public void close() throws CouldNotPerformException {
+        builderSetup.unlockWrite();
+    }
+}

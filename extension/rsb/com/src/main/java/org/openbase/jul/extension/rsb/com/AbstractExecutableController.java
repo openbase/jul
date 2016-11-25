@@ -21,6 +21,7 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -32,6 +33,7 @@ import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.iface.Enableable;
 import org.openbase.jul.schedule.GlobalExecutionService;
 import org.openbase.jul.schedule.SyncObject;
@@ -76,17 +78,12 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
                     throw new InvalidStateException("Unknown is not a valid state!");
                 }
 
-//                    try (ClosableDataBuilder<MB> dataBuilder = getDataBuilder(this)) {
-//                        Descriptors.FieldDescriptor findFieldByName = dataBuilder.getInternalBuilder().getDescriptorForType().findFieldByName(ACTIVATION_STATE);
-//                        if (findFieldByName == null) {
-//                            throw new NotAvailableException("Field[" + ACTIVATION_STATE + "] does not exist for type " + dataBuilder.getClass().getName());
-//                        }
-//                        dataBuilder.getInternalBuilder().setField(findFieldByName, activation);
-//                    } catch (Exception ex) {
-//                        throw new CouldNotPerformException("Could not apply data change!", ex);
-//                    }
-                try {
-                    setDataField(FIELD_ACTIVATION_STATE, activation);
+                try (ClosableDataBuilder<MB> dataBuilder = getDataBuilder(this)) {
+                    Descriptors.FieldDescriptor findFieldByName = dataBuilder.getInternalBuilder().getDescriptorForType().findFieldByName(FIELD_ACTIVATION_STATE);
+                    if (findFieldByName == null) {
+                        throw new NotAvailableException("Field[" + FIELD_ACTIVATION_STATE + "] does not exist for type " + dataBuilder.getClass().getName());
+                    }
+                    dataBuilder.getInternalBuilder().setField(findFieldByName, activation);
                 } catch (Exception ex) {
                     throw new CouldNotPerformException("Could not apply data change!", ex);
                 }
