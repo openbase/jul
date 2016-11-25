@@ -23,30 +23,29 @@ package org.openbase.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class NotSupportedException extends CouldNotPerformException {
 
-	public NotSupportedException(String message, Object context, Object source) {
-		super("Given "+context+" is not supported by "+source+": "+message);
-	}
+    public NotSupportedException(Object context, Class source) {
+        this(context, source.getSimpleName());
+    }
 
-	public NotSupportedException(Object context, Class source) {
-		this(context, source.getSimpleName());
-	}
+    public NotSupportedException(Object context, Object source) {
+        super("Given " + context + " is not supported by " + source + "!");
+    }
 
-	public NotSupportedException(Object context, Object source) {
-		super("Given "+context+" is not supported by "+source+"!");
-	}
+    public NotSupportedException(Object context, Object source, Throwable cause) {
+        super("Given " + context + " is not supported by " + source + "!", cause);
+    }
 
-	public NotSupportedException(Object context, Object source, Throwable cause) {
-		super("Given "+context+" is not supported by "+source+"!", cause);
-	}
+    public NotSupportedException(Object context, Object source, String message, Throwable cause) {
+        super("Given " + context + " is not supported by " + source + ": " + message, cause);
+    }
 
-	public NotSupportedException(String message,Object context, Object source, Throwable cause) {
-		super("Given "+context+" is not supported by "+source+": "+message, cause);
-	}
+    public NotSupportedException(Object context, Object source, String message) {
+        super("Given " + context + " is not supported by " + source + ": " + message);
+    }
 }

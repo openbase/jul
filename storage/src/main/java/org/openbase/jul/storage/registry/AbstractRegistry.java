@@ -733,7 +733,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void shutdown() {
+    public void shutdown() {    
         try {
             registryLock.writeLock().lock();
             try {
