@@ -608,7 +608,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             synchronized (syncMonitor) {
 
                 // Check if sync is in process.
-                if (syncFuture != null) {
+                if (syncFuture != null && !syncFuture.isCancelled()) {
                     return syncFuture;
                 }
 
@@ -665,6 +665,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     while (true) {
 
                         if (!isActive()) {
+                            syncFuture.cancel(true);
                             throw new InvalidStateException("Remote service is not active!");
                         }
 
@@ -1056,7 +1057,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 synchronized (connectionMonitor) {
                     if (connectionState == CONNECTED) {
                         logger.warn("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] lost!");
-                        
+
                         // init reconnection
                         setConnectionState(CONNECTING);
                         requestData();
