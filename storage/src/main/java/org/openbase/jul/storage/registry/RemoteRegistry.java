@@ -138,12 +138,12 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
     @Override
     public void registerConsistencyHandler(ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>> consistencyHandler) throws CouldNotPerformException {
-        throw new NotSupportedException("registerConsistencyHandler", "method", this);
+        throw new NotSupportedException("registerConsistencyHandler", this);
     }
 
     @Override
     public void registerDependency(Registry registry) throws CouldNotPerformException {
-        throw new NotSupportedException("registerDependency", "method", this);
+        throw new NotSupportedException("registerDependency", this);
     }
 
     @Override
