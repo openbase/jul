@@ -646,7 +646,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private class SyncTaskCallable implements Callable<M> {
 
-        Future<M> relatedFuture;
+        private Future<M> relatedFuture;
 
         public void setRelatedFuture(Future<M> relatedFuture) {
             this.relatedFuture = relatedFuture;
@@ -960,12 +960,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         if (currentSyncFuture != null) {
-            logger.info("Cancel running sync tasks because sync was already performed.");
             currentSyncFuture.complete(data);
         }
 
         if (currentSyncTask != null && !currentSyncTask.isDone()) {
-            currentSyncTask.cancel(true);
+//            logger.info("Cancel running sync tasks because sync was already performed.");
+            currentSyncTask.cancel(false);
         }
         setConnectionState(CONNECTED);
 
