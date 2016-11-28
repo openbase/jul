@@ -36,7 +36,7 @@ import org.openbase.jul.iface.Shutdownable;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> the data type of the remote
  */
-public interface Remote<M> extends Shutdownable, Activatable {
+public interface Remote<M> extends Shutdownable, Activatable{
 
     // TODO mpohling: Should be moved to rst and reimplement for rsb 15.
     public enum ConnectionState {
