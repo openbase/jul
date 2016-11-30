@@ -33,6 +33,7 @@ import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.iface.Enableable;
 import org.openbase.jul.schedule.GlobalExecutionService;
@@ -53,12 +54,11 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
     public static final String FIELD_AUTOSTART = "autostart";
 
     private final SyncObject enablingLock = new SyncObject(AbstractExecutableController.class);
-    private Callable<Void> setActivationStateCallable;
+    private Future<Void> executionFuture;
     private boolean executing;
 
     public AbstractExecutableController(final MB builder) throws InstantiationException {
         super(builder);
-
     }
 
     @Override
@@ -71,9 +71,11 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         return (ActivationState) getDataField(FIELD_ACTIVATION_STATE);
     }
 
-    public Future<Void> setActivationState(final ActivationState activation) throws CouldNotPerformException {
-        if (setActivationStateCallable == null) {
-            setActivationStateCallable = () -> {
+    public synchronized Future<Void> setActivationState(final ActivationState activation) throws CouldNotPerformException {
+        return GlobalExecutionService.submit(new Callable<Void>() {
+
+            @Override
+            public Void call() throws Exception {
                 if (activation.getValue().equals(ActivationState.State.UNKNOWN)) {
                     throw new InvalidStateException("Unknown is not a valid state!");
                 }
@@ -89,13 +91,23 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
                 }
 
                 try {
-                    if (activation.getValue().equals(ActivationState.State.ACTIVE)) {
+                    if (activation.getValue() == ActivationState.State.ACTIVE) {
                         if (!executing) {
                             executing = true;
-                            execute();
+                            executionFuture = GlobalExecutionService.submit(new Callable<Void>() {
+
+                                @Override
+                                public Void call() throws Exception {
+                                    execute();
+                                    return null;
+                                }
+                            });
                         }
                     } else {
                         if (executing) {
+                            if (executionFuture != null || !executionFuture.isDone()) {
+                                executionFuture.cancel(true);
+                            }
                             executing = false;
                             stop();
                         }
@@ -104,9 +116,8 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update execution state!", ex), logger);
                 }
                 return null;
-            };
-        }
-        return GlobalExecutionService.submit(setActivationStateCallable);
+            }
+        });
     }
 
     public boolean isExecuting() {
@@ -144,7 +155,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         try {
             return (Boolean) getConfigField(FIELD_AUTOSTART);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new NotSupportedException("autostart", (AbstractExecutableController) this, (Throwable) ex), logger);
+            ExceptionPrinter.printHistory(new NotSupportedException("autostart", (AbstractExecutableController) this, (Throwable) ex), logger, LogLevel.WARN);
             return false;
         }
     }
