@@ -142,6 +142,10 @@ public abstract class Timeout {
             }
         }
     }
+    
+    public void setWaitTime(long waitTime) {
+        this.waitTime = waitTime;
+    }
 
     public abstract void expired() throws InterruptedException;
 

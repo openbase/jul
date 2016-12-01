@@ -30,13 +30,14 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Shutdownable;
+import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> the data type of the remote
  */
-public interface Remote<M> extends Shutdownable, Activatable{
+public interface Remote<M> extends Shutdownable, Activatable, DataProvider<M> {
 
     // TODO mpohling: Should be moved to rst and reimplement for rsb 15.
     public enum ConnectionState {
@@ -169,31 +170,11 @@ public interface Remote<M> extends Shutdownable, Activatable{
     public void removeConnectionStateObserver(final Observer<ConnectionState> observer);
 
     /**
-     * This method allows the registration of data observers to get informed about data updates.
-     *
-     * @param observer the observer added
-     */
-    public void addDataObserver(final Observer<M> observer);
-
-    /**
-     * This method removes already registered data observers.
-     *
-     * @param observer the observer removed
-     */
-    public void removeDataObserver(final Observer<M> observer);
-
-    /**
-     * Check if the data object is already available.
-     *
-     * @return if data is available
-     */
-    public boolean isDataAvailable();
-
-    /**
      * Method returns the class of the data object.
      *
      * @return the class of the data object
      */
+    @Override
     public Class<M> getDataClass();
 
     /**
@@ -206,6 +187,7 @@ public interface Remote<M> extends Shutdownable, Activatable{
      * @return the data object of the remote.
      * @throws NotAvailableException is thrown in case the data is not yet synchronized with the main controller instance.
      */
+    @Override
     public M getData() throws NotAvailableException;
 
     /**
@@ -225,6 +207,7 @@ public interface Remote<M> extends Shutdownable, Activatable{
      * @throws CouldNotPerformException is thrown if any error occurs.
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
+    @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException;
 
     /**
@@ -235,6 +218,7 @@ public interface Remote<M> extends Shutdownable, Activatable{
      * @throws NotAvailableException is thrown in case the any error occurs, or if the given timeout is reached. In this case a TimeoutException is thrown.
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
+    @Override
     public void waitForData(long timeout, TimeUnit timeUnit) throws NotAvailableException, InterruptedException;
 
     /**
