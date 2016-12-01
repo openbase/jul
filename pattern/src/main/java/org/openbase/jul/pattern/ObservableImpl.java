@@ -24,8 +24,8 @@ package org.openbase.jul.pattern;
  * #L%
  */
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.NotAvailableException;
@@ -38,81 +38,36 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <T> the data type on whose changes is notified
  */
-public class ObservableImpl<T> implements Observable<T> {
+public class ObservableImpl<T> extends AbstractObservable<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObservableImpl.class);
 
-    private static final boolean DEFAULT_UNCHANGED_VALUE_FILTER = true;
-
-    private final boolean unchangedValueFilter;
-    private final Object LOCK = new Object();
-    private final List<Observer<T>> observers;
     private T value;
-    private int latestValueHash;
 
     /**
-     * {@inheritDoc}
+     * Construct new Observable.
      */
     public ObservableImpl() {
-        this(DEFAULT_UNCHANGED_VALUE_FILTER);
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @param unchangedValueFilter
+     * Construct new Observable
+     * @param unchangedValueFilter defines if the observer should be informed even if the value is the same than notified before.
      */
-    public ObservableImpl(final boolean unchangedValueFilter) {
-        this.observers = new ArrayList<>();
-        this.unchangedValueFilter = unchangedValueFilter;
+    public ObservableImpl(boolean unchangedValueFilter) {
+        super(unchangedValueFilter);
     }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param observer
-     */
-    @Override
-    public void addObserver(Observer<T> observer) {
-        synchronized (LOCK) {
-            if (observers.contains(observer)) {
-                LOGGER.warn("Skip observer registration. Observer[" + observer + "] is already registered!");
-                return;
-            }
-            observers.add(observer);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param observer
-     */
-    @Override
-    public void removeObserver(Observer<T> observer) {
-        synchronized (LOCK) {
-            observers.remove(observer);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void shutdown() {
-        synchronized (LOCK) {
-            observers.clear();
-        }
-    }
-
+    
     /**
      *
+     * {@inheritDoc}
      * @param timeout {@inheritDoc}
+     * @param timeUnit {@inheritDoc}
      * @throws InterruptedException {@inheritDoc}
-     * @throws NotAvailableException {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public void waitForValue(final long timeout, final TimeUnit timeUnit) throws NotAvailableException, InterruptedException {
+    public void waitForValue(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         synchronized (LOCK) {
             if (value != null) {
                 return;
@@ -144,16 +99,13 @@ public class ObservableImpl<T> implements Observable<T> {
     }
 
     /**
-     * Notify all changes of the observable to all observers only if the observable has changed.
-     * The source of the notification is set as this.
-     * Because of data encapsulation reasons this method is not included within the Observer interface.
+     * {@inheritDoc }
      *
-     * @param observable the value which is notified
-     * @return true if the observable has changed
-     * @throws MultiException thrown if the notification to at least one observer fails
+     * @return {@inheritDoc }
      */
-    public boolean notifyObservers(T observable) throws MultiException {
-        return notifyObservers(this, observable);
+    @Override
+    public boolean isValueAvailable() {
+        return value != null;
     }
 
     /**
@@ -165,6 +117,7 @@ public class ObservableImpl<T> implements Observable<T> {
      * @return true if the observable has changed
      * @throws MultiException thrown if the notification to at least one observer fails
      */
+    @Override
     public boolean notifyObservers(Observable<T> source, T observable) throws MultiException {
         ExceptionStack exceptionStack = null;
 

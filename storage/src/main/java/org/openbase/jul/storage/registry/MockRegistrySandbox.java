@@ -164,6 +164,11 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
+    public boolean isValueAvailable() {
+        return true;
+    }
+    
+    @Override
     public void shutdown() {
         // Not needed for mock sandbox!
     }

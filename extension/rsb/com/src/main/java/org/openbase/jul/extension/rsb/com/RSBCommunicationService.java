@@ -27,6 +27,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -50,8 +51,11 @@ import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Requestable;
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
+import org.openbase.jul.pattern.AbstractObservable;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
+import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalExecutionService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -67,7 +71,7 @@ import rst.rsb.ScopeType.Scope;
  * @param <M> the message type of the communication service
  * @param <MB> the builder for message M
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M> {
 
     static {
         RSBSharedConnectionConfig.load();
@@ -97,7 +101,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
     private ControllerAvailabilityState controllerAvailabilityState;
     private boolean initialized;
-
+    
+    private final DataObserver dataObserver;
+    
     /**
      * Create a communication service.
      *
@@ -120,9 +126,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
+            this.dataObserver = new DataObserver();
             this.initialized = false;
             registerShutdownHook(this);
-
+            
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -289,7 +296,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 throw new NotAvailableException("message class");
             }
             return clazz;
-        } catch (Exception ex) {
+        } catch (SecurityException | NotAvailableException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not detect message class of builder " + dataBuilder.getClass().getName() + "!", ex);
         }
     }
@@ -390,15 +397,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
     @Override
-    public M getData() throws CouldNotPerformException {
+    public M getData() throws NotAvailableException {
         try {
             return (M) cloneDataBuilder().build();
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not build message!", ex);
+            throw new NotAvailableException("Data", new CouldNotPerformException("Could not build message!", ex));
         }
     }
 
@@ -529,6 +536,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
+        
+        
     }
 
     /**
@@ -703,6 +712,53 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             return getClass().getSimpleName() + "[" + informer.getScope().toString() + "]";
         } catch (NotAvailableException ex) {
             return getClass().getSimpleName() + "[]";
+        }
+    }
+    
+    @Override
+    public boolean isDataAvailable() {
+        try {
+            return getData().isInitialized();
+        } catch (NotAvailableException ex) {
+            return false;
+        }
+    }
+    
+    @Override
+    public void waitForData() throws CouldNotPerformException, InterruptedException {
+        // because this is the controller, the data is already available.
+    }
+    
+    @Override
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
+        // because this is the controller, the data is already available.
+    }
+
+    @Override
+    public void addDataObserver(Observer<M> observer) {
+        dataObserver.addObserver(observer);
+    }
+
+    @Override
+    public void removeDataObserver(Observer<M> observer) {
+        dataObserver.removeObserver(observer);
+    }
+    
+    private class DataObserver extends AbstractObservable<M> {
+
+        @Override
+        public void waitForValue(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
+            waitForData();
+        }
+
+        @Override
+        public M getValue() throws NotAvailableException {
+            return getData();
+        }
+
+        @Override
+        public boolean isValueAvailable() {
+            return isDataAvailable();
         }
     }
 }

@@ -22,6 +22,7 @@ package org.openbase.jul.pattern;
  * #L%
  */
 import java.util.concurrent.TimeUnit;
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Shutdownable;
 
@@ -39,17 +40,17 @@ public interface Observable<T> extends Shutdownable {
      * @param timeout is the timeout related to the given {@link TimeUnit}.
      * @param timeUnit is the unit of the timeout.
      * @throws InterruptedException is thrown if the current thread was interrupted externally.
-     * @throws NotAvailableException is thrown with a TimeoutException cause if the given timeout is reached.
+     * @throws CouldNotPerformException is thrown with a TimeoutException cause if the given timeout is reached.
      */
-    public void waitForValue(final long timeout, final TimeUnit timeUnit) throws InterruptedException, NotAvailableException;
+    public void waitForValue(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Method blocks until the observable is available.
      *
-     * @throws org.openbase.jul.exception.NotAvailableException
+     * @throws CouldNotPerformException is thrown if an error occurs before the thread was blocked.
      * @throws InterruptedException is thrown if the current thread was interrupted externally.
      */
-    default public void waitForValue() throws NotAvailableException, InterruptedException {
+    default public void waitForValue() throws CouldNotPerformException, InterruptedException {
         try {
             waitForValue(0, TimeUnit.MILLISECONDS);
         } catch (NotAvailableException ex) {
@@ -80,6 +81,12 @@ public interface Observable<T> extends Shutdownable {
      */
     public T getValue() throws NotAvailableException;
 
+    /**
+     * Checks if a value was ever notified.
+     * @return true if the value is available.
+     */
+    public boolean isValueAvailable();
+    
     /**
      * Method returns the latest observable value.
      *
