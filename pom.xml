@@ -193,9 +193,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <dependency.jps.version>[3.1,3.2-SNAPSHOT)</dependency.jps.version>
         <!--<dependency.jps.version>3.2-SNAPSHOT</dependency.jps.version>-->
-        <!--<dependency.jps.version>[3.1,3.2-SNAPSHOT)</dependency.jps.version>-->
-        <dependency.jps.version>3.2-SNAPSHOT</dependency.jps.version>
         <dependency.rst.sandbox.artifact>rst-sandbox-csra</dependency.rst.sandbox.artifact>
         <dependency.rst.sandbox.version>[0.13,0.14-SNAPSHOT)</dependency.rst.sandbox.version>
         <!--dependency.rst.sandbox.version>0.13-SNAPSHOT</dependency.rst.sandbox.version-->
