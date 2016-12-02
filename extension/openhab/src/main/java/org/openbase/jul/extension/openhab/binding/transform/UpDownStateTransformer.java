@@ -48,7 +48,7 @@ public class UpDownStateTransformer {
             case DOWN:
                 return UpDownHolder.newBuilder().setState(UpDownHolder.UpDown.DOWN).build();
             case UP:
-                return UpDownHolder.newBuilder().setState(UpDownHolder.UpDown.DOWN).build();
+                return UpDownHolder.newBuilder().setState(UpDownHolder.UpDown.UP).build();
             case UNKNOWN:
                 throw new TypeNotSupportedException(blindState, UpDownHolder.UpDown.class);
             default:
