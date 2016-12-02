@@ -128,8 +128,10 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         try {
             synchronized (enablingLock) {
                 super.enable();
-                if (isAutostartEnabled()) {
+                if (detectAutostart()) {
                     setActivationState(ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build()).get();
+                } else {
+                    setActivationState(ActivationState.newBuilder().setValue(ActivationState.State.DEACTIVE).build()).get();
                 }
             }
         } catch (ExecutionException ex) {
@@ -149,16 +151,18 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
             throw new CouldNotPerformException("Could not diable " + this, ex);
         }
     }
-
-    public boolean isAutostartEnabled() {
+    
+    private boolean detectAutostart() {
         try {
-            return (Boolean) getConfigField(FIELD_AUTOSTART);
+            return isAutostartEnabled();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new NotSupportedException("autostart", (AbstractExecutableController) this, (Throwable) ex), logger, LogLevel.WARN);
-            return false;
+            return true;
         }
     }
-
+    
+    protected abstract boolean isAutostartEnabled() throws CouldNotPerformException;
+    
     protected abstract void execute() throws CouldNotPerformException, InterruptedException;
 
     protected abstract void stop() throws CouldNotPerformException, InterruptedException;
