@@ -38,7 +38,6 @@ import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.iface.Enableable;
 import org.openbase.jul.schedule.GlobalExecutionService;
 import org.openbase.jul.schedule.SyncObject;
-import rst.domotic.state.ActivationStateType;
 import rst.domotic.state.ActivationStateType.ActivationState;
 
 /**
@@ -130,7 +129,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
             synchronized (enablingLock) {
                 super.enable();
                 if (isAutostartEnabled()) {
-                    setActivationState(ActivationStateType.ActivationState.newBuilder().setValue(ActivationStateType.ActivationState.State.ACTIVE).build()).get();
+                    setActivationState(ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build()).get();
                 }
             }
         } catch (ExecutionException ex) {
@@ -143,7 +142,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         try {
             synchronized (enablingLock) {
                 executing = false;
-                setActivationState(ActivationStateType.ActivationState.newBuilder().setValue(ActivationStateType.ActivationState.State.DEACTIVE).build()).get();
+                setActivationState(ActivationState.newBuilder().setValue(ActivationState.State.DEACTIVE).build()).get();
                 super.disable();
             }
         } catch (ExecutionException ex) {

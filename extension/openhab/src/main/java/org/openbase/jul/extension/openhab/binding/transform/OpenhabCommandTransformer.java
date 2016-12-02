@@ -55,6 +55,8 @@ public final class OpenhabCommandTransformer {
                     case TEMPERATURE_STATE_SERVICE:
                     case TARGET_TEMPERATURE_STATE_SERVICE:
                         return TemperatureStateTransformer.transform(command.getDecimal());
+                    case BRIGHTNESS_STATE_SERVICE:
+                        return BrightnessStateTransformer.transform(command.getDecimal());
                     default:
                         // native double type
                         return command.getDecimal();
