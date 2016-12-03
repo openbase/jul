@@ -531,13 +531,16 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             logger.debug("Skip update notification because connection not established.");
             return;
         }
+        
+        M newData = getData();
+        
         try {
-            informer.publish(getData());
+            informer.publish(newData);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
         
-        
+        dataObserver.notifyObservers(newData);
     }
 
     /**
