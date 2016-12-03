@@ -524,7 +524,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     } else {
                         retryTimeout = generateTimeout(retryTimeout);
                     }
-                    
+
                     // only print warning if timeout is too long.
                     final int nextTimeout = (int) (Math.floor(retryTimeout / 1000));
                     if (nextTimeout > 15) {
@@ -532,7 +532,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     } else {
                         logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + nextTimeout + " sec.");
                     }
-                    
+
                     Thread.yield();
                 }
             }
@@ -685,7 +685,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
                             ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                             timeout = generateTimeout(timeout);
-                            logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                            
+
+                            // only print warning if timeout is too long.
+                            final int nextTimeout = (int) (Math.floor(timeout / 1000));
+                            if (nextTimeout > 15) {
+                                logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + nextTimeout + " sec.");
+                            } else {
+                                logger.debug("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + nextTimeout + " sec.");
+                            }
                         }
                     }
 
