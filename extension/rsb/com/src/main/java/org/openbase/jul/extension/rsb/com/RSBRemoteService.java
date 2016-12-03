@@ -398,7 +398,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
             // update state and notify
             this.connectionState = connectionState;
-            
+
             if (connectionState == CONNECTED) {
                 logger.debug("Connection established " + this);
             }
@@ -524,7 +524,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     } else {
                         retryTimeout = generateTimeout(retryTimeout);
                     }
-                    logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
+                    
+                    // only print warning if timeout is too long.
+                    final int nextTimeout = (int) (Math.floor(retryTimeout / 1000));
+                    if (nextTimeout > 15) {
+                        logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + nextTimeout + " sec.");
+                    } else {
+                        logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + nextTimeout + " sec.");
+                    }
+                    
                     Thread.yield();
                 }
             }
