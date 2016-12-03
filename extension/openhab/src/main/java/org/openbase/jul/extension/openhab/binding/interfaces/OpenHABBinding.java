@@ -29,5 +29,8 @@ import org.openbase.jul.exception.NotAvailableException;
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public interface OpenHABBinding {
+    
+    
+    
     public OpenHABRemote getOpenHABRemote() throws NotAvailableException;
 }
