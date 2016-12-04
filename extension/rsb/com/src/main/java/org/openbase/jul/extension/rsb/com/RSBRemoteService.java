@@ -79,6 +79,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public static final long PING_TIMEOUT = 5000;
     public static final long CONNECTION_TIMEOUT = 60000;
     public static final long DATA_WAIT_TIMEOUT = 1000;
+    public static final long LOGGING_TIMEOUT = 15000;
     public static final long METHOD_CALL_START_TIMEOUT = 500;
     public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
     public static final long METHOD_CALL_MAX_TIMEOUT = 30000;
@@ -216,12 +217,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             final boolean alreadyActivated = isActive();
             ParticipantConfig internalParticipantConfig = participantConfig;
-//            try {
-//                // activate transport communication set by the JPRSBTransport porperty.
-//                enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
-//            } catch (JPServiceException ex) {
-//                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-//            }
 
             if (scope == null) {
                 throw new NotAvailableException("scope");
@@ -510,14 +505,20 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 try {
                     logger.debug("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
-                    return remoteServer.call(methodName, argument, retryTimeout);
+                    final R returnValue = remoteServer.call(methodName, argument, retryTimeout);
+
+                    if (retryTimeout != METHOD_CALL_START_TIMEOUT && retryTimeout > 15000) {
+                        logger.info("Methode[" + methodName + "(" + argument + ")] returned! Continue processing...");
+                    }
+                    return returnValue;
+
                 } catch (TimeoutException ex) {
-                    ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
 
                     // check if timeout is set and handle
                     if (timeout != -1) {
                         validTimeout -= retryTimeout;
                         if (validTimeout <= 0) {
+                            ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
                             throw new TimeoutException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
                         }
                         retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
@@ -526,11 +527,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
 
                     // only print warning if timeout is too long.
-                    final int nextTimeout = (int) (Math.floor(retryTimeout / 1000));
-                    if (nextTimeout > 15) {
-                        logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + nextTimeout + " sec.");
+                    if (retryTimeout > 15000) {
+                        ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+                        logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     } else {
-                        logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + nextTimeout + " sec.");
+                        ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
+                        logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     }
 
                     Thread.yield();
@@ -681,18 +683,22 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         try {
                             internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                             dataUpdate = (M) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData();
+
+                            if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000) {
+                                logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
+                            }
                             break;
                         } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
-                            ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+
                             timeout = generateTimeout(timeout);
-                            
 
                             // only print warning if timeout is too long.
-                            final int nextTimeout = (int) (Math.floor(timeout / 1000));
-                            if (nextTimeout > 15) {
-                                logger.warn("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + nextTimeout + " sec.");
+                            if (timeout > 15000) {
+                                ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+                                logger.warn("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                             } else {
-                                logger.debug("Remote Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + nextTimeout + " sec.");
+                                ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
+                                logger.debug("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                             }
                         }
                     }
