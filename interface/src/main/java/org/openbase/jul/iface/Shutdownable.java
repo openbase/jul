@@ -43,7 +43,8 @@ public interface Shutdownable {
     /**
      * Method registers a runtime shutdown hook for the given Shutdownable.
      * In case the application is finalizing the shutdown method of the Shutdownable will be invoked.
-     * @param shutdownable the instance which is  automatically shutting down in case the application is finalizing. 
+     *
+     * @param shutdownable the instance which is automatically shutting down in case the application is finalizing.
      */
     static void registerShutdownHook(final Shutdownable shutdownable) {
         Runtime.getRuntime().addShutdownHook(new ShutdownDeamon(shutdownable));
