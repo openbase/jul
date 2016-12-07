@@ -40,30 +40,30 @@ public abstract class Timeout {
 
     private static final Logger logger = LoggerFactory.getLogger(Timeout.class);
 
-    private final Object lock = new Object();
+    private final Object lock = new SyncObject("TimeoutLock");
+    private final Object cancelLock = new SyncObject("TimoutCanelLock");
     private Future timerTask;
-    private long waitTime;
+    private long defaultWaitTime;
     private boolean expired;
 
-    public Timeout(final long waitTime) {
-        this.waitTime = waitTime;
+    public Timeout(final long defaultWaitTime) {
+        this.defaultWaitTime = defaultWaitTime;
     }
 
     public long getTimeToWait() {
-        return waitTime;
+        return defaultWaitTime;
     }
 
     public void restart(final long waitTime) {
-        this.waitTime = waitTime;
-        restart();
-    }
-
-    public void restart() {
         logger.debug("Reset timer.");
         synchronized (lock) {
             cancel();
-            start();
+            start(waitTime);
         }
+    }
+
+    public void restart() {
+        restart(defaultWaitTime);
     }
 
     /**
@@ -87,11 +87,10 @@ public abstract class Timeout {
     }
 
     public void start() {
-        internal_start(waitTime);
+        internal_start(defaultWaitTime);
     }
 
     public void start(final long waitTime) {
-        this.waitTime = waitTime;
         internal_start(waitTime);
     }
 
@@ -101,6 +100,7 @@ public abstract class Timeout {
                 logger.debug("Reject start, not interrupted or expired.");
                 return;
             }
+            this.defaultWaitTime = waitTime;
             expired = false;
 
 //            logger.info("Create new timer");
@@ -109,16 +109,29 @@ public abstract class Timeout {
 
                 @Override
                 public Void call() throws InterruptedException {
-                    logger.debug("Wait for timeout TimeOut interrupted.");
                     try {
-                        Thread.sleep(waitTime);
-                    } catch (InterruptedException ex) {
-                        logger.debug("TimeOut interrupted.");
-                        throw ex;
-                    }
-                    try {
+                        logger.debug("Wait for timeout TimeOut interrupted.");
+                        try {
+                            synchronized (cancelLock) {
+                                cancelLock.wait(waitTime);
+                                if (timerTask.isCancelled()) {
+                                    logger.debug("TimeOut was canceled.");
+                                    return null;
+                                }
+                            }
+                        } catch (InterruptedException ex) {
+                            logger.debug("TimeOut was interrupted.");
+                            return null;
+                        }
                         logger.debug("Expire...");
                         expired = true;
+                    } finally {
+                        synchronized (lock) {
+                            timerTask = null;
+                        }
+                    }
+
+                    try {
                         expired();
                     } catch (Exception ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
@@ -135,22 +148,24 @@ public abstract class Timeout {
         synchronized (lock) {
             if (timerTask != null) {
                 logger.debug("cancel timer.");
-                timerTask.cancel(true);
-                timerTask = null;
+                synchronized (cancelLock) {
+                    timerTask.cancel(false);
+                    cancelLock.notifyAll();
+                }
             } else {
                 logger.debug("timer was canceled but never started!");
             }
         }
     }
-    
+
     public void setWaitTime(long waitTime) {
-        this.waitTime = waitTime;
+        this.defaultWaitTime = waitTime;
     }
 
     public abstract void expired() throws InterruptedException;
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "[wait:" + waitTime + "]";
+        return getClass().getSimpleName() + "[wait:" + defaultWaitTime + "]";
     }
 }
