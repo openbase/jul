@@ -101,9 +101,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
     private ControllerAvailabilityState controllerAvailabilityState;
     private boolean initialized;
-    
+
     private final DataObserver dataObserver;
-    
+
     /**
      * Create a communication service.
      *
@@ -126,10 +126,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
-            this.dataObserver = new DataObserver();
+            this.dataObserver = new DataObserver(this);
             this.initialized = false;
             registerShutdownHook(this);
-            
+
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -531,15 +531,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             logger.debug("Skip update notification because connection not established.");
             return;
         }
-        
+
         M newData = getData();
-        
+
         try {
             informer.publish(newData);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
         }
-        
+
         dataObserver.notifyObservers(newData);
     }
 
@@ -717,7 +717,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             return getClass().getSimpleName() + "[]";
         }
     }
-    
+
     @Override
     public boolean isDataAvailable() {
         try {
@@ -726,12 +726,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             return false;
         }
     }
-    
+
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
         // because this is the controller, the data is already available.
     }
-    
+
     @Override
     public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         // because this is the controller, the data is already available.
@@ -746,8 +746,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void removeDataObserver(Observer<M> observer) {
         dataObserver.removeObserver(observer);
     }
-    
+
     private class DataObserver extends AbstractObservable<M> {
+
+        public DataObserver(Object source) {
+            super(source);
+        }
 
         @Override
         public void waitForValue(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {

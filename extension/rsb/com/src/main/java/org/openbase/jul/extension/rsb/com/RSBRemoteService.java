@@ -109,8 +109,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private boolean initialized;
     private final Class<M> dataClass;
 
-    private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>();
-    private final ObservableImpl<M> dataObservable = new ObservableImpl<>();
+    private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
 
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
