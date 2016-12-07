@@ -45,22 +45,47 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
     private T value;
 
     /**
-     * Construct new Observable.
+     * {@inheritDoc}
      */
     public ObservableImpl() {
+        super();
     }
 
     /**
-     * Construct new Observable
-     * @param unchangedValueFilter defines if the observer should be informed even if the value is the same than notified before.
+     *
+     * {@inheritDoc}
+     *
+     * @param source {@inheritDoc}
      */
-    public ObservableImpl(boolean unchangedValueFilter) {
-        super(unchangedValueFilter);
+    public ObservableImpl(final Object source) {
+        super(source);
     }
-    
+
     /**
      *
      * {@inheritDoc}
+     *
+     * @param unchangedValueFilter {@inheritDoc}
+     */
+    public ObservableImpl(final boolean unchangedValueFilter) {
+        super(unchangedValueFilter);
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
+     * @param unchangedValueFilter {@inheritDoc}
+     * @param source {@inheritDoc}
+     */
+    public ObservableImpl(final boolean unchangedValueFilter, final Object source) {
+        super(unchangedValueFilter, source);
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     *
      * @param timeout {@inheritDoc}
      * @param timeUnit {@inheritDoc}
      * @throws InterruptedException {@inheritDoc}

@@ -40,17 +40,28 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractObservable.class);
 
     private static final boolean DEFAULT_UNCHANGED_VALUE_FILTER = true;
+    private static final Object DEFAULT_SOURCE = null;
 
     protected final boolean unchangedValueFilter;
     protected final Object LOCK = new Object();
     protected final List<Observer<T>> observers;
     protected int latestValueHash;
+    private Object source;
 
     /**
      * Construct new Observable.
      */
     public AbstractObservable() {
-        this(DEFAULT_UNCHANGED_VALUE_FILTER);
+        this(DEFAULT_UNCHANGED_VALUE_FILTER, DEFAULT_SOURCE);
+    }
+
+    /**
+     * Construct new Observable.
+     *
+     * @param source the responsible source of the value notifications.
+     */
+    public AbstractObservable(final Object source) {
+        this(DEFAULT_UNCHANGED_VALUE_FILTER, source);
     }
 
     /**
@@ -59,8 +70,21 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @param unchangedValueFilter defines if the observer should be informed even if the value is the same than notified before.
      */
     public AbstractObservable(final boolean unchangedValueFilter) {
+        this(unchangedValueFilter, DEFAULT_SOURCE);
+    }
+
+    /**
+     * Construct new Observable.
+     *
+     * If the source is not defined the observable itself will be used as notification source.
+     *
+     * @param unchangedValueFilter defines if the observer should be informed even if the value is the same than notified before.
+     * @param source the responsible source of the value notifications.
+     */
+    public AbstractObservable(final boolean unchangedValueFilter, final Object source) {
         this.observers = new ArrayList<>();
         this.unchangedValueFilter = unchangedValueFilter;
+        this.source = source == DEFAULT_SOURCE ? this : source; // use observer itself if source was not explicit defined.
     }
 
     /**
