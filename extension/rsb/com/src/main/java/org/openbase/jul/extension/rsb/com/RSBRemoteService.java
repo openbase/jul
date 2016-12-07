@@ -890,7 +890,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 if (this.connectionState.equals(connectionState)) {
                     return;
                 }
-                logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[scope:" + scope + "] connection...");
+
+                logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[" + (scope == null ? "?" : ScopeGenerator.generateStringRep(scope)) + "] connection...");
                 connectionMonitor.wait(timeout);
                 if (timeout != 0 && !this.connectionState.equals(connectionState)) {
                     throw new TimeoutException("Timeout expired!");

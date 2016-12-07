@@ -29,6 +29,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.pattern.Remote;
 
@@ -64,7 +65,7 @@ public class RSBRemoteServiceTest {
      * @throws java.lang.InterruptedException
      */
     @Test(timeout = 10000)
-    public void testWaitForConnectionState_RemoteRemoteConnectionState_long() throws InterruptedException {
+    public void testWaitForConnectionState_RemoteRemoteConnectionState_long() throws InterruptedException, InitializationException {
         System.out.println("waitForConnectionState");
         RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
         try {
