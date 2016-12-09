@@ -57,7 +57,7 @@ public class GlobalCachedExecutorService extends AbstractExecutorService<ThreadP
     
     private static GlobalCachedExecutorService instance;
 
-    private GlobalCachedExecutorService() {
+    GlobalCachedExecutorService() {
         super((ThreadPoolExecutor) Executors.newCachedThreadPool());
         
         // configure executor service
