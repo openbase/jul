@@ -194,14 +194,14 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
 
     @Override
     public boolean isActive() {
-        if (participant == null) {
-            return false;
-        }
-        if (active) {
-            synchronized (participantLock) {
+        synchronized (participantLock) {
+            if (participant == null) {
+                return false;
+            }
+            if (active) {
                 active = participant.isActive();
             }
+            return active;
         }
-        return active;
     }
 }

@@ -23,6 +23,11 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -46,17 +51,40 @@ import org.slf4j.LoggerFactory;
  */
 public class WatchDog implements Activatable, Shutdownable {
 
-    private final Object EXECUTION_LOCK = new Object();
-    private final Object stateLock;
+    protected static final Logger logger = LoggerFactory.getLogger(WatchDog.class);
 
-    private static final long DELAY = 5000;
+    public static final List<WatchDog> globalWatchDogList = Collections.synchronizedList(new ArrayList<WatchDog>());
+
+    static {
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread("WatchDogShutdownHook") {
+                @Override
+                public void run() {
+                    assert globalWatchDogList != null;
+                    globalWatchDogList.forEach((watchDog) -> {
+                        try {
+                            watchDog.shutdown();
+                        } catch (Exception ex) {
+                            ExceptionPrinter.printHistory("Could not shutdown watchdog!", ex, logger);
+                        }
+                    });
+                }
+            });
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory("Could not register shutdown watchdog hook!", ex, logger);
+        }
+    }
+    
+    private final Object EXECUTION_LOCK;
+    private final SyncObject STATE_LOCK;
+
+    private static final long RUNNING_DELAY = 60000;
+    private static final long DEFAULT_DELAY = 10000;
 
     public enum ServiceState {
 
         UNKNWON, CONSTRUCTED, INITIALIZING, RUNNING, TERMINATING, FINISHED, FAILED, INTERRUPTED
     };
-
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final Activatable service;
     private final String serviceName;
@@ -67,29 +95,18 @@ public class WatchDog implements Activatable, Shutdownable {
 
     public WatchDog(final Activatable task, final String serviceName) throws InstantiationException {
         try {
-
             this.service = task;
             this.serviceName = serviceName;
             this.serviceStateObserable = new ObservableImpl<>();
-            this.stateLock = new SyncObject(serviceName + "WatchDogLock");
+            this.EXECUTION_LOCK = new SyncObject(serviceName + " EXECUTION_LOCK");
+            this.STATE_LOCK = new SyncObject(serviceName + " STATE_LOCK");
 
             if (task == null) {
                 throw new NotAvailableException("task");
             }
 
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-
-                @Override
-                public void run() {
-                    try {
-                        deactivate();
-                    } catch (InterruptedException ex) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown " + serviceName + "!", ex), logger);
-                    }
-                }
-            });
-
             setServiceState(ServiceState.CONSTRUCTED);
+            globalWatchDogList.add(this);
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -104,9 +121,11 @@ public class WatchDog implements Activatable, Shutdownable {
                 logger.debug("Skip activation, Service[" + serviceName + "] already running!");
                 return;
             }
-            minder = new Minder(serviceName + "WatchDog");
-            logger.trace("Start activation of service: " + serviceName);
-            minder.start();
+            synchronized (STATE_LOCK) {
+                minder = new Minder(serviceName + "WatchDog");
+                logger.trace("Start activation of service: " + serviceName);
+                minder.setFuture(GlobalScheduledExecutionService.scheduleAtFixedRate(minder, 0, getRate(), TimeUnit.MILLISECONDS));
+            }
         }
 
         try {
@@ -119,20 +138,23 @@ public class WatchDog implements Activatable, Shutdownable {
 
     @Override
     public void deactivate() throws InterruptedException {
-        logger.debug("Try to deactivate service: " + serviceName);
+        logger.trace("Try to deactivate service: " + serviceName);
         synchronized (EXECUTION_LOCK) {
-            logger.debug("Init deactivation of service: " + serviceName);
+            logger.trace("Init deactivation of service: " + serviceName);
             if (minder == null) {
                 logger.debug("Skip deactivation, Service[" + serviceName + "] not running!");
                 return;
             }
 
-            logger.debug("Init service interruption...");
-            minder.interrupt();
-            logger.debug("Wait for service interruption...");
-            minder.join();
-            minder = null;
-            logger.debug("Service interrupted!");
+            logger.trace("Init service interruption...");
+            minder.shutdown();
+            logger.trace("Wait for service interruption...");
+
+            synchronized (STATE_LOCK) {
+                minder = null;
+            }
+
+            logger.trace("Service interrupted!");
             skipActivation();
         }
     }
@@ -149,98 +171,143 @@ public class WatchDog implements Activatable, Shutdownable {
     public void waitForActivation() throws InterruptedException, CouldNotPerformException {
         waitForServiceState(ServiceState.RUNNING);
     }
-    
+
     public void waitForServiceState(final ServiceState serviceSatet) throws InterruptedException, CouldNotPerformException {
-        synchronized (stateLock) {
+        synchronized (STATE_LOCK) {
             while (true) {
-                if(Thread.interrupted()) {
+                if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
-                
+
                 if (this.serviceState.equals(serviceSatet)) {
                     return;
                 }
-                
-                if(minder == null || minder.isInterrupted()) {
-                    throw new CouldNotPerformException("Could not wait for minder State["+serviceSatet.name()+"] because minder is finished.");
+
+                if (minder == null || minder.getFuture().isDone() && (serviceSatet == ServiceState.RUNNING || serviceSatet == ServiceState.INITIALIZING)) {
+                    throw new CouldNotPerformException("Could not wait for minder State[" + serviceSatet.name() + "] because minder is finished.");
                 }
-                stateLock.wait();
+                STATE_LOCK.wait();
             }
         }
     }
 
     public void skipActivation() {
-        synchronized (stateLock) {
-            stateLock.notifyAll();
+        synchronized (STATE_LOCK) {
+            STATE_LOCK.notifyAll();
         }
     }
 
-    private class Minder extends Thread {
+    private class Minder implements Runnable, Shutdownable {
+
+        private final String name;
+        private boolean processing;
+        private ScheduledFuture future;
+        private final Object FUTURE_LOCK = new SyncObject("FUTURE_LOCK");
 
         private Minder(String name) {
-            super(name);
+            this.name = name;
             setServiceState(ServiceState.INITIALIZING);
+        }
+
+        public ScheduledFuture getFuture() {
+            return future;
+        }
+
+        public void setFuture(ScheduledFuture future) {
+            synchronized (FUTURE_LOCK) {
+                this.future = future;
+                FUTURE_LOCK.notifyAll();
+            }
+        }
+
+        public void waitForInit() throws InterruptedException {
+            synchronized (FUTURE_LOCK) {
+                if (future == null) {
+                    FUTURE_LOCK.wait();
+                }
+            }
         }
 
         @Override
         public void run() {
-            try {
-                try {
-                    while (!isInterrupted()) {
-                        if (!service.isActive()) {
-                            setServiceState(ServiceState.INITIALIZING);
-                            try {
-                                logger.debug("Service activate: " + service.hashCode() + " : " + serviceName);
-                                service.activate();
-                                setServiceState(ServiceState.RUNNING);
-                            } catch (CouldNotPerformException | NullPointerException ex) {
-                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex), logger);
-                                setServiceState(ServiceState.FAILED);
-                                logger.info("Try again in " + (DELAY / 1000) + " seconds...");
-                            }
-                        }
-                        waitWithinDelay();
-                    }
-                } catch (InterruptedException ex) {
-                    /**
-                     * An interrupted exception was caught triggered by the deactivate() method of the watchdog.
-                     * The minder shutdown will be initiated now.
-                     *
-                     * !!! Do not recover the interrupted state to grantee a proper shutdown !!!
-                     */
-                    logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
-                }
 
-                while (service.isActive()) {
-                    setServiceState(ServiceState.TERMINATING);
-                    try {
-                        try {
-                            logger.debug("Minder deactivation initiated of Service[" + serviceName + "]...");
-                            service.deactivate();
-                            setServiceState(ServiceState.FINISHED);
-                        } catch (IllegalStateException | CouldNotPerformException ex) {
-                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown Service[" + serviceName + "]! Try again in " + (DELAY / 1000) + " seconds...", ex), logger);
-                            waitWithinDelay();
-                        }
-                    } catch (InterruptedException ex) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not terminate Service[" + serviceName + "] because termination was externaly interrupted.", ex), logger, LogLevel.WARN);
-                        setServiceState(ServiceState.INTERRUPTED);
-                        break;
-                    }
-                }
-            } catch (Throwable tr) {
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Fatal watchdog execution error! Release all locks...", tr), logger);
-                skipActivation();
-            }
-        }
-
-        private void waitWithinDelay() throws InterruptedException {
-            if(JPService.testMode()) {
-                Thread.sleep(10);
+            // avoid parallel execution by simple process filter.
+            if (processing) {
                 return;
             }
-            Thread.sleep(DELAY);
+            processing = true;
+
+            try {
+                try {
+                    try {
+                        waitForInit();
+                        if (!future.isCancelled()) {
+                            if (!service.isActive()) {
+                                setServiceState(ServiceState.INITIALIZING);
+                                try {
+                                    logger.debug("Service activate: " + service.hashCode() + " : " + serviceName);
+                                    service.activate();
+                                    setServiceState(ServiceState.RUNNING);
+                                } catch (CouldNotPerformException | NullPointerException ex) {
+                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex), logger);
+                                    setServiceState(ServiceState.FAILED);
+                                    logger.info("Try again in " + (getRate() / 1000) + " seconds...");
+                                }
+                            }
+                            return; // check finished because service is still running.
+                        }
+                    } catch (InterruptedException ex) {
+                        /**
+                         * An interrupted exception was caught triggered by the deactivate() or cancel() method of the watchdog.
+                         * The minder shutdown will be initiated now.
+                         *
+                         * !!! Do not recover the interrupted state to grantee a proper shutdown !!!
+                         */
+                        logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
+                    }
+                } catch (Throwable tr) {
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Fatal watchdog execution error!", tr), logger);
+                    skipActivation();
+                    assert false;
+                }
+            } finally {
+                processing = false;
+            }
         }
+
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public void shutdown() {
+            future.cancel(true);
+            if (service.isActive()) {
+                setServiceState(ServiceState.TERMINATING);
+                try {
+                    try {
+                        logger.debug("Minder deactivation initiated of Service[" + serviceName + "]...");
+                        service.deactivate();
+                    } catch (IllegalStateException | CouldNotPerformException ex) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not deactivate Service[" + serviceName + "]!", ex), logger);
+                    }
+                } catch (InterruptedException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not terminate Service[" + serviceName + "] because termination was externaly interrupted.", ex), logger, LogLevel.WARN);
+                    setServiceState(ServiceState.INTERRUPTED);
+                }
+            }
+            setServiceState(ServiceState.FINISHED);
+        }
+    }
+
+    private long getRate() throws InterruptedException {
+        if (JPService.testMode()) {
+            return 10;
+        }
+        if (serviceState == ServiceState.RUNNING) {
+            return RUNNING_DELAY;
+        }
+        return DEFAULT_DELAY;
     }
 
     public Activatable getService() {
@@ -249,12 +316,12 @@ public class WatchDog implements Activatable, Shutdownable {
 
     private void setServiceState(final ServiceState serviceState) {
         try {
-            synchronized (stateLock) {
+            synchronized (STATE_LOCK) {
                 if (this.serviceState == serviceState) {
                     return;
                 }
                 this.serviceState = serviceState;
-                stateLock.notifyAll();
+                STATE_LOCK.notifyAll();
             }
             logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
             serviceStateObserable.notifyObservers(serviceState);
@@ -278,11 +345,15 @@ public class WatchDog implements Activatable, Shutdownable {
     @Override
     public void shutdown() {
         try {
-            serviceStateObserable.shutdown();
+            if (serviceStateObserable != null) {
+                serviceStateObserable.shutdown();
+            }
             deactivate();
         } catch (InterruptedException ex) {
             ExceptionPrinter.printHistory(this + "was interruped during shutdown!", ex, logger);
             Thread.currentThread().interrupt();
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
         }
     }
 

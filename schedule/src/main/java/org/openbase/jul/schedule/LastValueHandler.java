@@ -23,7 +23,6 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
@@ -98,12 +97,12 @@ public abstract class LastValueHandler<V> implements Runnable {
             oldValue = this.value;
             return true;
         }
-        
-        if(valueChanged) {
+
+        if (valueChanged) {
             valueChanged = false;
             return true;
         }
-        
+
         return false;
     }
 
@@ -165,7 +164,7 @@ public abstract class LastValueHandler<V> implements Runnable {
             exetcuterWaiter.notify();
         }
     }
-    
+
     public void forceValueChange() {
         valueChanged = true;
         synchronized (exetcuterWaiter) {
