@@ -55,7 +55,7 @@ import org.openbase.jul.pattern.Remote;
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTED;
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTING;
 import static org.openbase.jul.pattern.Remote.ConnectionState.DISCONNECTED;
-import org.openbase.jul.schedule.GlobalExecutionService;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -559,7 +559,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
 
         validateActivation();
-        return GlobalExecutionService.submit(new Callable<R>() {
+        return GlobalCachedExecutorService.submit(new Callable<R>() {
 
             private Future<R> internalCallFuture;
 
@@ -647,7 +647,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             SyncTaskCallable syncCallable = new SyncTaskCallable();
 
-            final Future<M> currentSyncTask = GlobalExecutionService.submit(syncCallable);
+            final Future<M> currentSyncTask = GlobalCachedExecutorService.submit(syncCallable);
             syncCallable.setRelatedFuture(currentSyncTask);
             return currentSyncTask;
         } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
@@ -1070,7 +1070,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @return the connection delay in milliseconds.
      */
     public Future<Long> ping() {
-        return GlobalExecutionService.submit(() -> {
+        return GlobalCachedExecutorService.submit(() -> {
             try {
                 Long requestTime = (Long) callMethodAsync("ping", System.currentTimeMillis()).get(PING_TIMEOUT, TimeUnit.MILLISECONDS);
                 lastPingReceived = System.currentTimeMillis();

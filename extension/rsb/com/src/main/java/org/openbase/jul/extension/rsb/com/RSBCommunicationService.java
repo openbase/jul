@@ -56,7 +56,7 @@ import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
-import org.openbase.jul.schedule.GlobalExecutionService;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -252,7 +252,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
 
                     // Sync data after service start.
-                    GlobalExecutionService.submit(() -> {
+                    GlobalCachedExecutorService.submit(() -> {
                         try {
                             serverWatchDog.waitForActivation();
                             logger.debug("trigger initial sync");

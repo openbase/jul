@@ -32,13 +32,13 @@ import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Processable;
-import static org.openbase.jul.schedule.AbstractExecutionService.allOf;
+import static org.openbase.jul.schedule.AbstractExecutorService.allOf;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class GlobalScheduledExecutionService extends AbstractExecutionService<ScheduledThreadPoolExecutor> {
+public class GlobalScheduledExecutorService extends AbstractExecutorService<ScheduledThreadPoolExecutor> {
 
     /**
      * Keep alive time in milli seconds.
@@ -55,9 +55,9 @@ public class GlobalScheduledExecutionService extends AbstractExecutionService<Sc
      */
     public static final int DEFAULT_CORE_POOL_SIZE = 10;
 
-    private static GlobalScheduledExecutionService instance;
+    private static GlobalScheduledExecutorService instance;
 
-    private GlobalScheduledExecutionService() {
+    GlobalScheduledExecutorService() {
         super((ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(DEFAULT_CORE_POOL_SIZE));
 
         // configure executor service
@@ -65,9 +65,9 @@ public class GlobalScheduledExecutionService extends AbstractExecutionService<Sc
         executorService.setMaximumPoolSize(DEFAULT_MAX_POOL_SIZE);
     }
 
-    public static synchronized GlobalScheduledExecutionService getInstance() {
+    static synchronized GlobalScheduledExecutorService getInstance() {
         if (instance == null) {
-            instance = new GlobalScheduledExecutionService();
+            instance = new GlobalScheduledExecutorService();
         }
         return instance;
     }
@@ -177,7 +177,7 @@ public class GlobalScheduledExecutionService extends AbstractExecutionService<Sc
      * @throws CouldNotPerformException thrown by the errorProcessor
      */
     public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException {
-        return AbstractExecutionService.applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
+        return AbstractExecutorService.applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
     }
 
     public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {
