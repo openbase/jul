@@ -23,12 +23,13 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.preset.JPTestMode;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -91,12 +92,15 @@ public final class VariableProcessor {
             if (throwOnError) {
                 throw ex;
             } else {
+                if (JPService.testMode()) {
+                    return context;
+                }
                 ExceptionPrinter.printHistory(ex, logger);
             }
         }
         return context;
     }
-    
+
     public static String resolveVariable(final String variable, final Collection<VariableProvider> providers) throws MultiException {
         VariableProvider[] providerArray = new VariableProvider[providers.size()];
         return resolveVariable(variable, providers.toArray(providerArray));

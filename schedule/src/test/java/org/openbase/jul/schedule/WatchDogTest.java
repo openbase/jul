@@ -153,6 +153,7 @@ public class WatchDogTest {
         } catch (CouldNotPerformException | InterruptedException ex) {
         }
         assertEquals(false, watchDog.isActive());
+        System.out.println("Tests finished.");
     }
 
     class TestService implements Activatable {

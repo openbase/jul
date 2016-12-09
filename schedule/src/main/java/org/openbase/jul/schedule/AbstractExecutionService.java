@@ -28,30 +28,86 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
+import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.Shutdownable;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <ES> The toplevel execution service class.
+ * @param <ES> The internal execution service.
  */
-public abstract class AbstractExecutionService<ES extends ExecutorService> implements Shutdownable {
+public abstract class AbstractExecutionService<ES extends ThreadPoolExecutor> implements Shutdownable {
 
     public static final long DEFAULT_SHUTDOWN_TIME = 5;
 
-    protected final org.slf4j.Logger logger = LoggerFactory.getLogger(AbstractExecutionService.class);
+    /**
+     * Report rate for the debug mode in milliseconds.
+     */
+    public static final long DEFAULT_REPORT_RATE = 60000;
+
+    public static final double DEFAULT_WARNING_RATIO = .9d;
+
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final ES executorService;
 
     public AbstractExecutionService(final ES executorService) {
         this.executorService = executorService;
-        new ShutdownDeamon(this);
+        this.initReportService();
+        Shutdownable.registerShutdownHook(this);
+    }
+
+    private Runnable initReportService() {
+        final Runnable reportService = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final boolean overload;
+                    if (executorService.getActiveCount() == executorService.getPoolSize()) {
+                        overload = true;
+                        logger.warn("Further tasks will be rejected because executor service overload detected!");
+                    } else if (executorService.getActiveCount() >= ((double) executorService.getPoolSize() * DEFAULT_WARNING_RATIO)) {
+                        overload = true;
+                        logger.warn("High Executor service load of detected! This can cause system instability issues!");
+                    } else {
+                        overload = false;
+                    }
+
+                    if (overload || JPService.getProperty(JPDebugMode.class).getValue()) {
+                        logger.info("ExecutorLoad " + getExecutorLoad() + "% [" + executorService.getActiveCount() + " active threads of " + executorService.getPoolSize() + " processing " + executorService.getTaskCount() + " tasks]");
+                    }
+                } catch (JPNotAvailableException ex) {
+                    logger.warn("Could not detect debug mode!", ex);
+                }
+            }
+        };
+        final ScheduledExecutorService scheduledExecutorService;
+        scheduledExecutorService = executorService instanceof ScheduledExecutorService ? ((ScheduledExecutorService) executorService) : GlobalScheduledExecutionService.getInstance().getExecutorService();
+        scheduledExecutorService.scheduleAtFixedRate(reportService, DEFAULT_REPORT_RATE, DEFAULT_REPORT_RATE, TimeUnit.MILLISECONDS);
+        return reportService;
+    }
+
+    public int getExecutorLoad() {
+        if (executorService.getPoolSize() == 0) {
+            if (executorService.getActiveCount() == 0) {
+                return 0;
+            } else {
+                return 100;
+            }
+        }
+        return ((int) (((double) executorService.getActiveCount() / (double) executorService.getPoolSize()) * 100));
     }
 
     public <T> Future<T> internalSubmit(Callable<T> task) {
@@ -66,7 +122,7 @@ public abstract class AbstractExecutionService<ES extends ExecutorService> imple
         executorService.execute(runnable);
     }
 
-    public ExecutorService getExecutorService() {
+    public ES getExecutorService() {
         return executorService;
     }
 

@@ -56,7 +56,7 @@ public interface Shutdownable {
 
         private final Shutdownable shutdownable;
 
-        public ShutdownDeamon(final Shutdownable shutdownable) {
+        private ShutdownDeamon(final Shutdownable shutdownable) {
             super(ShutdownDeamon.class.getSimpleName() + "[" + shutdownable + "]");
             this.shutdownable = shutdownable;
         }

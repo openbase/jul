@@ -26,7 +26,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Processable;
 
@@ -34,12 +37,34 @@ import org.openbase.jul.iface.Processable;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class GlobalExecutionService extends AbstractExecutionService<ExecutorService> {
+public class GlobalExecutionService extends AbstractExecutionService<ThreadPoolExecutor> {
 
+    /**
+     * Keep alive time in milli seconds.
+     */
+    public static final long DEFAULT_KEEP_ALIVE_TIME = 60000;
+    
+    /**
+     * The default maximal pool size. If this thread amount is reached further tasks will be rejected.
+     */
+    public static final int DEFAULT_MAX_POOL_SIZE = 2000;
+    
+    /**
+     * The core thread pool size.
+     */
+    public static final int DEFAULT_CORE_POOL_SIZE = 100;
+            
+    
     private static GlobalExecutionService instance;
 
     private GlobalExecutionService() {
-        super(Executors.newCachedThreadPool());
+        super((ThreadPoolExecutor) Executors.newCachedThreadPool());
+        
+        // configure executor service
+        executorService.setKeepAliveTime(DEFAULT_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS);
+        executorService.setMaximumPoolSize(DEFAULT_MAX_POOL_SIZE);
+        executorService.setCorePoolSize(DEFAULT_CORE_POOL_SIZE);
+        // ==========================
     }
 
     public static synchronized GlobalExecutionService getInstance() {

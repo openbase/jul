@@ -26,8 +26,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -38,13 +38,31 @@ import static org.openbase.jul.schedule.AbstractExecutionService.allOf;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class GlobalScheduledExecutionService extends AbstractExecutionService<ScheduledExecutorService> {
+public class GlobalScheduledExecutionService extends AbstractExecutionService<ScheduledThreadPoolExecutor> {
 
-    public static final int DEFAULT_THREAD_POOL_SIZE = 10;
+    /**
+     * Keep alive time in milli seconds.
+     */
+    public static final long DEFAULT_KEEP_ALIVE_TIME = 60000;
+
+    /**
+     * The default maximal pool size. If this thread amount is reached further tasks will be rejected.
+     */
+    public static final int DEFAULT_MAX_POOL_SIZE = 100;
+
+    /**
+     * The core thread pool size.
+     */
+    public static final int DEFAULT_CORE_POOL_SIZE = 10;
+
     private static GlobalScheduledExecutionService instance;
 
     private GlobalScheduledExecutionService() {
-        super(Executors.newScheduledThreadPool(DEFAULT_THREAD_POOL_SIZE));
+        super((ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(DEFAULT_CORE_POOL_SIZE));
+
+        // configure executor service
+        executorService.setKeepAliveTime(DEFAULT_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS);
+        executorService.setMaximumPoolSize(DEFAULT_MAX_POOL_SIZE);
     }
 
     public static synchronized GlobalScheduledExecutionService getInstance() {
@@ -94,7 +112,7 @@ public class GlobalScheduledExecutionService extends AbstractExecutionService<Sc
      * scheduled for execution
      * @throws NotAvailableException if callable is null
      */
-    public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) throws RejectedExecutionException, CouldNotPerformException {
+    public static <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) throws RejectedExecutionException, CouldNotPerformException {
         if (callable == null) {
             throw new NotAvailableException("callable");
         }
@@ -116,7 +134,7 @@ public class GlobalScheduledExecutionService extends AbstractExecutionService<Sc
      * @throws NotAvailableException if command is null
      * @throws IllegalArgumentException if period less than or equal to zero
      */
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) throws NotAvailableException, IllegalArgumentException, RejectedExecutionException {
+    public static ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) throws NotAvailableException, IllegalArgumentException, RejectedExecutionException {
         if (command == null) {
             throw new NotAvailableException("command");
         }
@@ -139,7 +157,7 @@ public class GlobalScheduledExecutionService extends AbstractExecutionService<Sc
      * @throws NotAvailableException if command is null
      * @throws IllegalArgumentException if delay less than or equal to zero
      */
-    public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) throws NotAvailableException, IllegalArgumentException, RejectedExecutionException {
+    public static ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) throws NotAvailableException, IllegalArgumentException, RejectedExecutionException {
         if (command == null) {
             throw new NotAvailableException("command");
         }

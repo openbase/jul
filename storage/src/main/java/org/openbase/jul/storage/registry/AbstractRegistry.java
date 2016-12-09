@@ -114,9 +114,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             };
 
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                shutdown();
-            }));
+            Shutdownable.registerShutdownHook(this);
             finishTransaction();
             notifyObservers();
         } catch (CouldNotPerformException ex) {
@@ -733,7 +731,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void shutdown() {    
+    public void shutdown() {
         try {
             registryLock.writeLock().lock();
             try {
