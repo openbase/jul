@@ -124,7 +124,7 @@ public class WatchDog implements Activatable, Shutdownable {
             synchronized (STATE_LOCK) {
                 minder = new Minder(serviceName + "WatchDog");
                 logger.trace("Start activation of service: " + serviceName);
-                minder.setFuture(GlobalScheduledExecutionService.scheduleAtFixedRate(minder, 0, getRate(), TimeUnit.MILLISECONDS));
+                minder.setFuture(GlobalScheduledExecutorService.scheduleAtFixedRate(minder, 0, getRate(), TimeUnit.MILLISECONDS));
             }
         }
 

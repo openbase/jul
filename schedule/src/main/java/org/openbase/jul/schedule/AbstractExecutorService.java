@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <ES> The internal execution service.
  */
-public abstract class AbstractExecutionService<ES extends ThreadPoolExecutor> implements Shutdownable {
+public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> implements Shutdownable {
 
     public static final long DEFAULT_SHUTDOWN_TIME = 5;
 
@@ -63,7 +63,7 @@ public abstract class AbstractExecutionService<ES extends ThreadPoolExecutor> im
 
     protected final ES executorService;
 
-    public AbstractExecutionService(final ES executorService) {
+    public AbstractExecutorService(final ES executorService) {
         this.executorService = executorService;
         this.initReportService();
         Shutdownable.registerShutdownHook(this);
@@ -94,7 +94,7 @@ public abstract class AbstractExecutionService<ES extends ThreadPoolExecutor> im
             }
         };
         final ScheduledExecutorService scheduledExecutorService;
-        scheduledExecutorService = executorService instanceof ScheduledExecutorService ? ((ScheduledExecutorService) executorService) : GlobalScheduledExecutionService.getInstance().getExecutorService();
+        scheduledExecutorService = executorService instanceof ScheduledExecutorService ? ((ScheduledExecutorService) executorService) : GlobalScheduledExecutorService.getInstance().getExecutorService();
         scheduledExecutorService.scheduleAtFixedRate(reportService, DEFAULT_REPORT_RATE, DEFAULT_REPORT_RATE, TimeUnit.MILLISECONDS);
         return reportService;
     }

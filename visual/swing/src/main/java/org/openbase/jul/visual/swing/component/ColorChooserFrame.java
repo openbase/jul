@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.schedule.GlobalExecutionService;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +64,7 @@ public class ColorChooserFrame extends javax.swing.JFrame {
     }
 
     public static Color getColor() throws CouldNotPerformException {
-        Future<Color> colorFuture = GlobalExecutionService.submit(new Callable<Color>() {
+        Future<Color> colorFuture = GlobalCachedExecutorService.submit(new Callable<Color>() {
             @Override
             public Color call() throws CouldNotPerformException {
                 ColorChooserFrame colorChooserFrame = null;

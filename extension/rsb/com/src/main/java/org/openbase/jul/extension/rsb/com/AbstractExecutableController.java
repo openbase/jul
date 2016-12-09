@@ -36,7 +36,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.iface.Enableable;
-import org.openbase.jul.schedule.GlobalExecutionService;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import rst.domotic.state.ActivationStateType.ActivationState;
 
@@ -71,7 +71,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
     }
 
     public synchronized Future<Void> setActivationState(final ActivationState activation) throws CouldNotPerformException {
-        return GlobalExecutionService.submit(new Callable<Void>() {
+        return GlobalCachedExecutorService.submit(new Callable<Void>() {
 
             @Override
             public Void call() throws Exception {
@@ -93,7 +93,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
                     if (activation.getValue() == ActivationState.State.ACTIVE) {
                         if (!executing) {
                             executing = true;
-                            executionFuture = GlobalExecutionService.submit(new Callable<Void>() {
+                            executionFuture = GlobalCachedExecutorService.submit(new Callable<Void>() {
 
                                 @Override
                                 public Void call() throws Exception {
