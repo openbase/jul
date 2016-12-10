@@ -144,17 +144,17 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public boolean contains(final M message) throws CouldNotPerformException {
-        return contains(new IdentifiableMessage<>(message, idGenerator).getId());
+        return contains(new IdentifiableMessage<KEY, M, MB>(message).getId());
     }
 
     @Override
     public M update(final M message) throws CouldNotPerformException {
-        return update(new IdentifiableMessage<>(message, idGenerator)).getMessage();
+        return update(new IdentifiableMessage<>(message)).getMessage();
     }
 
     @Override
-    public M remove(M locationConfig) throws CouldNotPerformException {
-        return remove(new IdentifiableMessage<>(locationConfig, idGenerator)).getMessage();
+    public M remove(M message) throws CouldNotPerformException {
+        return remove(new IdentifiableMessage<>(message)).getMessage();
     }
 
     @Override

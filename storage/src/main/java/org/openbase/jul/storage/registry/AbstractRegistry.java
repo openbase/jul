@@ -587,6 +587,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                     final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
                     Object lastModifieredEntry = null;
+                    final ArrayList<ENTRY> entryValueCopy = new ArrayList<>();
                     int maxConsistencyChecks;
                     int errorCounter;
                     String note;
@@ -632,7 +633,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         try {
                             for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
                                 consistencyHandler.reset();
-                                for (ENTRY entry : entryMap.values()) {
+                                entryValueCopy.clear();
+                                entryValueCopy.addAll(new ArrayList<>(entryMap.values()));
+                                for (ENTRY entry : entryValueCopy) {
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
@@ -665,7 +668,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {
-                            throw new InvalidStateException("Fatal error occured during consistency check!", ex);
+                            throw ExceptionPrinter.printHistoryAndReturnThrowable(new InvalidStateException("Fatal error occured during consistency check!", ex), logger);
                         }
 
                         if (exceptionStack != null && !exceptionStack.isEmpty()) {
