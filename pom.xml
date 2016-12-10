@@ -85,12 +85,12 @@
                             </roots>
                         </configuration>
                     </execution>
-                    <execution>
+<!--                    <execution> //disabled because of broken license url
                         <id>download-licenses</id>
                         <goals>
                             <goal>download-licenses</goal>
                         </goals>
-                    </execution>
+                    </execution>-->
                 </executions>
             </plugin>
             <plugin>
