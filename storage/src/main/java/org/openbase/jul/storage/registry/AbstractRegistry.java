@@ -847,6 +847,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new CouldNotPerformException("Could not lock registry!", ex);
         }
     }
+    
+    public boolean isBusy() {
+        return registryLock.isWriteLocked();
+    }
 
     protected void unlock() {
         unlockDependingRegistries();
