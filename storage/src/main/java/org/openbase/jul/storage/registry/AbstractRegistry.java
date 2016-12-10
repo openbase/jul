@@ -34,9 +34,11 @@ import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPReadOnly;
+import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
@@ -554,7 +556,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @SuppressWarnings("UseSpecificCatch")
     public final int checkConsistency() throws CouldNotPerformException {
         int modificationCounter = 0;
-        boolean checkSuccessful = false;
 
         if (consistencyHandlerList.isEmpty()) {
             logger.debug("Skip consistency check because no handler are registered.");
@@ -656,15 +657,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             lastModifieredEntry = ex.getEntry();
 
                             // inform about modifications
-//                            try {
-//                                if (JPService.getProperty(JPVerbose.class).getValue()) {
-//                                    info("Consistency modification applied: " + ex.getMessage());
-//                                } else {
-                            logger.debug("Consistency modification applied: " + ex.getMessage());
-//                                }
-//                            } catch (JPNotAvailableException exx) {
-//                                ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
-//                            }
+                            try {
+                                if (JPService.getProperty(JPVerbose.class).getValue()) {
+                                    info("Consistency modification applied: " + ex.getMessage());
+                                } else {
+                                    logger.debug("Consistency modification applied: " + ex.getMessage());
+                                }
+                            } catch (JPNotAvailableException exx) {
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
+                            }
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {
@@ -683,7 +684,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     if (modificationCounter > 0) {
                         consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.");
                     }
-                    checkSuccessful = true;
                     pluginPool.afterConsistencyCheck();
                     return modificationCounter;
                 } catch (CouldNotPerformException ex) {
@@ -847,9 +847,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             throw new CouldNotPerformException("Could not lock registry!", ex);
         }
     }
-    
+
     public boolean isBusy() {
         return registryLock.isWriteLocked();
+    }
+
+    public boolean isBusyByCurrentThread() {
+        return registryLock.isWriteLockedByCurrentThread();
     }
 
     protected void unlock() {
