@@ -796,7 +796,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             if (isDataAvailable()) {
                 return;
             }
-            logger.info("Wait for " + this.toString() + " data...");
+            logger.debug("Wait for " + this.toString() + " data...");
             getDataFuture().get();
             dataObservable.waitForValue();
         } catch (ExecutionException ex) {
