@@ -147,7 +147,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         logger.debug("order lockWrite by " + consumer);
         writeLock.lock();
         writeLockConsumer = consumer;
-        writeLockTimeout.start();
+        writeLockTimeout.restart();
         logger.debug("lockWrite by " + consumer);
     }
 
@@ -155,7 +155,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         boolean success = writeLock.tryLock();
         if (success) {
             writeLockConsumer = consumer;
-            writeLockTimeout.start();
+            writeLockTimeout.restart();
         }
         return success;
     }
