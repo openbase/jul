@@ -190,6 +190,12 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     }
 
     @Override
+    protected void afterConsistencyCheck() throws CouldNotPerformException {
+        super.afterConsistencyCheck();
+        saveRegistry();
+    }
+    
+    @Override
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
 

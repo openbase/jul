@@ -90,20 +90,26 @@ public abstract class Timeout {
         internal_start(defaultWaitTime);
     }
 
+    /**
+     * Start the timeout with the given wait time. The default wait time is not modifiered and still the same as before.
+     *
+     * @param waitTime The time to wait until the timeout is thrown.
+     */
     public void start(final long waitTime) {
         internal_start(waitTime);
     }
-
+    
     private void internal_start(final long waitTime) {
         synchronized (lock) {
             if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
                 logger.debug("Reject start, not interrupted or expired.");
                 return;
             }
-            this.defaultWaitTime = waitTime;
             expired = false;
 
 //            logger.info("Create new timer");
+
+//            GlobalScheduledExecutorService.submit(task)
             // TODO may a global scheduled executor service is more suitable.
             timerTask = GlobalCachedExecutorService.submit(new Callable<Void>() {
 
@@ -113,6 +119,7 @@ public abstract class Timeout {
                         logger.debug("Wait for timeout TimeOut interrupted.");
                         try {
                             synchronized (cancelLock) {
+                                System.out.println("WaitFor: "+waitTime);
                                 cancelLock.wait(waitTime);
                                 if (timerTask.isCancelled()) {
                                     logger.debug("TimeOut was canceled.");
@@ -158,10 +165,27 @@ public abstract class Timeout {
         }
     }
 
+    /**
+     *
+     * @param waitTime
+     * @deprecated please use setDefaultWaitTime instead.
+     */
+    @Deprecated
     public void setWaitTime(long waitTime) {
+        setDefaultWaitTime(waitTime);
+    }
+
+    public void setDefaultWaitTime(long waitTime) {
         this.defaultWaitTime = waitTime;
     }
 
+    /**
+     * This method is called in case a timeout is reached.
+     *
+     * This method should be overwritten by a timeout implementation.
+     *
+     * @throws InterruptedException
+     */
     public abstract void expired() throws InterruptedException;
 
     @Override

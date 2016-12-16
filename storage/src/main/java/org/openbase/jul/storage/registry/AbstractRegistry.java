@@ -684,7 +684,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     if (modificationCounter > 0) {
                         consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.");
                     }
-                    pluginPool.afterConsistencyCheck();
+                    
                     return modificationCounter;
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
@@ -699,11 +699,21 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new CouldNotPerformException("Consistency process of " + this + " aborted!", ex);
                 }
             } finally {
+                afterConsistencyCheck();
                 consistencyCheckLock.writeLock().unlock();
             }
         } finally {
             unlock();
         }
+    }
+    
+    /**
+     * Can be overwritten for further registry actions scheduled after consistency checks.
+     * 
+     * Don't forgett to pass-througt the call to the super class. (super.afterConsistencyCheck())
+     */
+    protected void afterConsistencyCheck() throws CouldNotPerformException {
+        pluginPool.afterConsistencyCheck();
     }
 
     protected void finishTransaction() throws CouldNotPerformException {
