@@ -25,6 +25,8 @@ package org.openbase.jul.schedule;
  */
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -41,7 +43,7 @@ public abstract class Timeout {
     private static final Logger logger = LoggerFactory.getLogger(Timeout.class);
 
     private final Object lock = new SyncObject("TimeoutLock");
-    private final Object cancelLock = new SyncObject("TimoutCanelLock");
+//    private final Object cancelLock = new SyncObject("TimoutCanelLock");
     private Future timerTask;
     private long defaultWaitTime;
     private boolean expired;
@@ -87,7 +89,12 @@ public abstract class Timeout {
     }
 
     public void start() {
-        internal_start(defaultWaitTime);
+        try {
+            internal_start(defaultWaitTime);
+        } catch (CouldNotPerformException | RejectedExecutionException ex) {
+            ExceptionPrinter.printHistory("Could not start " + this, ex, logger);
+            //TODO: throw exception in next release.
+        }
     }
 
     /**
@@ -96,10 +103,15 @@ public abstract class Timeout {
      * @param waitTime The time to wait until the timeout is thrown.
      */
     public void start(final long waitTime) {
-        internal_start(waitTime);
+        try {
+            internal_start(waitTime);
+        } catch (CouldNotPerformException | RejectedExecutionException ex) {
+            ExceptionPrinter.printHistory("Could not start " + this, ex, logger);
+            //TODO: throw exception in next release.
+        }
     }
-    
-    private void internal_start(final long waitTime) {
+
+    private void internal_start(final long waitTime) throws RejectedExecutionException, CouldNotPerformException {
         synchronized (lock) {
             if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
                 logger.debug("Reject start, not interrupted or expired.");
@@ -108,32 +120,32 @@ public abstract class Timeout {
             expired = false;
 
 //            logger.info("Create new timer");
-
-//            GlobalScheduledExecutorService.submit(task)
+//            
             // TODO may a global scheduled executor service is more suitable.
-            timerTask = GlobalCachedExecutorService.submit(new Callable<Void>() {
+//            timerTask = GlobalCachedExecutorService.submit(new Callable<Void>() {
+            timerTask = GlobalScheduledExecutorService.schedule(new Callable<Void>() {
 
                 @Override
                 public Void call() throws InterruptedException {
-                    try {
-                        logger.debug("Wait for timeout TimeOut interrupted.");
+                    synchronized (lock) {
                         try {
-                            synchronized (cancelLock) {
-                                System.out.println("WaitFor: "+waitTime);
-                                cancelLock.wait(waitTime);
-                                if (timerTask.isCancelled()) {
-                                    logger.debug("TimeOut was canceled.");
-                                    return null;
-                                }
+                            logger.debug("Wait for timeout TimeOut interrupted.");
+//                        try {
+//                        synchronized (cancelLock) {
+//                                System.out.println("WaitFor: " + waitTime);
+//                                cancelLock.wait(waitTime);
+                            if (timerTask.isCancelled()) {
+                                logger.debug("TimeOut was canceled.");
+                                return null;
                             }
-                        } catch (InterruptedException ex) {
-                            logger.debug("TimeOut was interrupted.");
-                            return null;
-                        }
-                        logger.debug("Expire...");
-                        expired = true;
-                    } finally {
-                        synchronized (lock) {
+//                        }
+//                        } catch (InterruptedException ex) {
+//                            logger.debug("TimeOut was interrupted.");
+//                            return null;
+//                        }
+                            logger.debug("Expire...");
+                            expired = true;
+                        } finally {
                             timerTask = null;
                         }
                     }
@@ -146,7 +158,7 @@ public abstract class Timeout {
                     logger.debug("Worker finished.");
                     return null;
                 }
-            });
+            }, waitTime, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -155,10 +167,7 @@ public abstract class Timeout {
         synchronized (lock) {
             if (timerTask != null) {
                 logger.debug("cancel timer.");
-                synchronized (cancelLock) {
-                    timerTask.cancel(false);
-                    cancelLock.notifyAll();
-                }
+                timerTask.cancel(false);
             } else {
                 logger.debug("timer was canceled but never started!");
             }
