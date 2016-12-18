@@ -23,13 +23,10 @@ package org.openbase.jul.schedule;
  */
 import java.util.Collection;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Processable;
 
