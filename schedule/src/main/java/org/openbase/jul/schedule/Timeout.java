@@ -43,7 +43,6 @@ public abstract class Timeout {
     private static final Logger logger = LoggerFactory.getLogger(Timeout.class);
 
     private final Object lock = new SyncObject("TimeoutLock");
-//    private final Object cancelLock = new SyncObject("TimoutCanelLock");
     private Future timerTask;
     private long defaultWaitTime;
     private boolean expired;
@@ -113,16 +112,11 @@ public abstract class Timeout {
 
     private void internal_start(final long waitTime) throws RejectedExecutionException, CouldNotPerformException {
         synchronized (lock) {
-            if (timerTask != null && !timerTask.isCancelled() && !timerTask.isDone()) {
+            if (isActive()) {
                 logger.debug("Reject start, not interrupted or expired.");
                 return;
             }
             expired = false;
-
-//            logger.info("Create new timer");
-//            
-            // TODO may a global scheduled executor service is more suitable.
-//            timerTask = GlobalCachedExecutorService.submit(new Callable<Void>() {
             timerTask = GlobalScheduledExecutorService.schedule(new Callable<Void>() {
 
                 @Override
@@ -130,19 +124,10 @@ public abstract class Timeout {
                     synchronized (lock) {
                         try {
                             logger.debug("Wait for timeout TimeOut interrupted.");
-//                        try {
-//                        synchronized (cancelLock) {
-//                                System.out.println("WaitFor: " + waitTime);
-//                                cancelLock.wait(waitTime);
                             if (timerTask.isCancelled()) {
                                 logger.debug("TimeOut was canceled.");
                                 return null;
                             }
-//                        }
-//                        } catch (InterruptedException ex) {
-//                            logger.debug("TimeOut was interrupted.");
-//                            return null;
-//                        }
                             logger.debug("Expire...");
                             expired = true;
                         } finally {
