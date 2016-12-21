@@ -933,6 +933,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         @Override
         public void update(Observable source, Object data) throws Exception {
+            //TODO: update on sandbox level should be handled first
             try {
                 if (dependency.isConsistent()) {
                     if (checkConsistency() > 0 || notificationSkiped) {
@@ -941,6 +942,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory("Registry inconsistend after change of depending " + source + " change.", ex, logger);
+            } finally {
+                syncSandbox();
             }
         }
 
