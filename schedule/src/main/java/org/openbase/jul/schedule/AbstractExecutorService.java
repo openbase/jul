@@ -32,7 +32,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPDebugMode;
@@ -70,27 +69,24 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     private Runnable initReportService() {
-        final Runnable reportService = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    final boolean overload;
-                    if (executorService.getActiveCount() == executorService.getPoolSize()) {
-                        overload = true;
-                        logger.warn("Further tasks will be rejected because executor service overload detected!");
-                    } else if (executorService.getActiveCount() >= ((double) executorService.getPoolSize() * DEFAULT_WARNING_RATIO)) {
-                        overload = true;
-                        logger.warn("High Executor service load of detected! This can cause system instability issues!");
-                    } else {
-                        overload = false;
-                    }
-
-                    if (overload || JPService.getProperty(JPDebugMode.class).getValue()) {
-                        logger.info("ExecutorLoad " + getExecutorLoad() + "% [" + executorService.getActiveCount() + " active threads of " + executorService.getPoolSize() + " processing " + executorService.getTaskCount() + " tasks]");
-                    }
-                } catch (JPNotAvailableException ex) {
-                    logger.warn("Could not detect debug mode!", ex);
+        final Runnable reportService = () -> {
+            try {
+                final boolean overload;
+                if (executorService.getActiveCount() == executorService.getMaximumPoolSize()) {
+                    overload = true;
+                    logger.warn("Further tasks will be rejected because executor service overload is detected!");
+                } else if (executorService.getActiveCount() >= ((double) executorService.getMaximumPoolSize() * DEFAULT_WARNING_RATIO)) {
+                    overload = true;
+                    logger.warn("High Executor service load detected! This can cause system instability issues!");
+                } else {
+                    overload = false;
                 }
+
+                if (overload || JPService.getProperty(JPDebugMode.class).getValue()) {
+                    logger.info("Executor load " + getExecutorLoad() + "% [" + executorService.getActiveCount() + " of " + executorService.getMaximumPoolSize() + " threads processing " + (executorService.getTaskCount() - executorService.getCompletedTaskCount()) + " tasks] in total " + executorService.getCompletedTaskCount() + " are completed.");
+                }
+            } catch (JPNotAvailableException ex) {
+                logger.warn("Could not detect debug mode!", ex);
             }
         };
         final ScheduledExecutorService scheduledExecutorService;
@@ -100,14 +96,14 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     public int getExecutorLoad() {
-        if (executorService.getPoolSize() == 0) {
+        if (executorService.getMaximumPoolSize() == 0) {
             if (executorService.getActiveCount() == 0) {
                 return 0;
             } else {
                 return 100;
             }
         }
-        return ((int) (((double) executorService.getActiveCount() / (double) executorService.getPoolSize()) * 100));
+        return ((int) (((double) executorService.getActiveCount() / (double) executorService.getMaximumPoolSize()) * 100));
     }
 
     public <T> Future<T> internalSubmit(Callable<T> task) {
@@ -161,7 +157,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     /**
      * This method applies an error handler to the given future object.
-     * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
+     * In case the given timeout is expired or the future processing fails the error processor is processed with the occurred exception as argument.
      * The receive a future should be submitted to any execution service or handled externally.
      *
      * @param future the future on which is the error processor is registered.
