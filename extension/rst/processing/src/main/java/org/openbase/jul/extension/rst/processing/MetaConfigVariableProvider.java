@@ -23,8 +23,7 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-
+import java.util.Map;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.VariableProvider;
 import rst.configuration.MetaConfigType.MetaConfig;
@@ -43,13 +42,36 @@ public class MetaConfigVariableProvider implements VariableProvider {
         this.metaConfig = metaConfig;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
     @Override
     public String getName() {
         return name;
     }
 
+    /**
+     *
+     * @param variable {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public String getValue(String variable) throws NotAvailableException {
         return MetaConfigProcessor.getValue(metaConfig, variable);
     }
+
+    /**
+     *
+     * @param variableContains {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
+    @Override
+    public Map<String, String> getValues(String variableContains) throws NotAvailableException {
+        return MetaConfigProcessor.getValues(metaConfig, variableContains);
+    }
+
 }

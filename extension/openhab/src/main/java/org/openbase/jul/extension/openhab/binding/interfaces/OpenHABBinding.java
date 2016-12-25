@@ -23,14 +23,14 @@ package org.openbase.jul.extension.openhab.binding.interfaces;
  */
 
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.iface.Launchable;
+import org.openbase.jul.iface.VoidInitializable;
 
 /**
  *
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public interface OpenHABBinding {
-    
-    
+public interface OpenHABBinding extends Launchable<Void>, VoidInitializable{
     
     public OpenHABRemote getOpenHABRemote() throws NotAvailableException;
 }

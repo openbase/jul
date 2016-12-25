@@ -23,7 +23,8 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import java.util.HashMap;
+import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import rst.configuration.EntryType;
@@ -54,22 +55,43 @@ public class MetaConfigProcessor {
         }
         throw new NotAvailableException("value for Key[" + key + "]");
     }
-    
-    
+
+    /**
+     * Method resolves all variables whose name contains the given identifier.
+     * @param metaConfig the meta config to resolve the variables.
+     * @param variableContains the identifier to select the variables.
+     * @return a map of the variable name and its current value.
+     * @throws NotAvailableException is thrown in case no variable name matches the given identifier.
+     */
+    public static Map<String, String> getValues(final MetaConfig metaConfig, final String variableContains) throws NotAvailableException {
+        final Map<String, String> variableSelection = new HashMap<>();
+        for (EntryType.Entry entry : metaConfig.getEntryList()) {
+            if (entry.getKey().contains(variableContains)) {
+                if (!entry.getValue().isEmpty()) {
+                    variableSelection.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if (variableSelection.isEmpty()) {
+            throw new NotAvailableException("No values found because no variables are matching [" + variableContains + "]!");
+        }
+        return variableSelection;
+    }
+
     public static MetaConfig setValue(final MetaConfig metaConfig, final String key, final String value) throws CouldNotPerformException {
         return setValue(metaConfig.toBuilder(), key, value).build();
     }
-    
+
     public static MetaConfig.Builder setValue(final MetaConfig.Builder metaConfigBuilder, final String key, final String value) throws CouldNotPerformException {
-        
+
         // remove entry if already exist.
         for (int i = 0; i < metaConfigBuilder.getEntryCount(); i++) {
-            if(metaConfigBuilder.getEntry(i).getKey().equals(key)) {
+            if (metaConfigBuilder.getEntry(i).getKey().equals(key)) {
                 metaConfigBuilder.removeEntry(i);
                 break;
             }
         }
-        
+
         // add new entry
         metaConfigBuilder.addEntry(Entry.newBuilder().setKey(key).setValue(value));
         return metaConfigBuilder;

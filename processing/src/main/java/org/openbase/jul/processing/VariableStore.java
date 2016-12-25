@@ -23,8 +23,9 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import org.openbase.jul.exception.NotAvailableException;
 
@@ -49,6 +50,7 @@ public class VariableStore implements VariableProvider {
 
     /**
      * Resolves the value for the given key.
+     *
      * @param key
      * @return
      * @throws NotAvailableException
@@ -59,7 +61,31 @@ public class VariableStore implements VariableProvider {
     }
 
     /**
+     * Method resolves all variables whose name contains the given identifier.
+     *
+     * @param metaConfig the meta config to resolve the variables.
+     * @param variableContains the identifier to select the variables.
+     * @return a map of the variable name and its current value.
+     * @throws NotAvailableException is thrown in case no variable name matches the given identifier.
+     */
+    public Map<String, String> getValues(final String variableContains) throws NotAvailableException {
+        final Map<String, String> variableSelection = new HashMap<>();
+        for (Entry<String, String> entry : variableMap.entrySet()) {
+            if (entry.getKey().contains(variableContains)) {
+                if (!entry.getValue().isEmpty()) {
+                    variableSelection.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        if (variableSelection.isEmpty()) {
+            throw new NotAvailableException("No values found because no variables are matching [" + variableContains + "]!");
+        }
+        return variableSelection;
+    }
+
+    /**
      * Stores the key value pair into the variable Store.
+     *
      * @param key
      * @param value
      */
