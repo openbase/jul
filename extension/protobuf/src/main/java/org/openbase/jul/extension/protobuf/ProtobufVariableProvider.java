@@ -23,9 +23,9 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import java.util.HashMap;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.processing.VariableProvider;
@@ -44,17 +44,28 @@ public class ProtobufVariableProvider implements VariableProvider {
         this.message = message;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
     @Override
     public String getName() {
         return message.getDescriptorForType().getName() + ProtobufVariableProvider.NAME_SUFIX;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param variable {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public String getValue(String variable) throws NotAvailableException {
-
         String key;
         for (Map.Entry<Descriptors.FieldDescriptor, Object> fieldEntry : message.getAllFields().entrySet()) {
-            key  = StringProcessor.transformToUpperCase(fieldEntry.getKey().getName());
+            key = StringProcessor.transformToUpperCase(fieldEntry.getKey().getName());
             if (key.equals(variable) || (StringProcessor.transformToUpperCase(message.getClass().getSimpleName()) + "/" + key).equals(variable)) {
                 if (!fieldEntry.getValue().toString().isEmpty()) {
                     return fieldEntry.getValue().toString();
@@ -62,5 +73,30 @@ public class ProtobufVariableProvider implements VariableProvider {
             }
         }
         throw new NotAvailableException("Value for Variable[" + variable + "]");
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param variableContains {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
+    @Override
+    public Map<String, String> getValues(String variableContains) throws NotAvailableException {
+        final Map<String, String> variableSelection = new HashMap<>();
+        String key;
+        for (Map.Entry<Descriptors.FieldDescriptor, Object> fieldEntry : message.getAllFields().entrySet()) {
+            key = StringProcessor.transformToUpperCase(fieldEntry.getKey().getName());
+            if (key.contains(variableContains) || (StringProcessor.transformToUpperCase(message.getClass().getSimpleName()) + "/" + key).contains(variableContains)) {
+                if (!fieldEntry.getValue().toString().isEmpty()) {
+                    variableSelection.put(key, fieldEntry.getValue().toString());
+                }
+            }
+        }
+        if (variableSelection.isEmpty()) {
+            throw new NotAvailableException("No values found because no protobuf fields are matching [" + variableContains + "]!");
+        }
+        return variableSelection;
     }
 }

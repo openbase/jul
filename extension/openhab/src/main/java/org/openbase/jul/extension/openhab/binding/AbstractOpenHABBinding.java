@@ -61,7 +61,8 @@ public abstract class AbstractOpenHABBinding implements OpenHABBinding {
         }
     }
 
-    public void shutdown() throws InterruptedException {
+    @Override
+    public void shutdown() {
         if (openHABRemote != null) {
             openHABRemote.shutdown();
         }

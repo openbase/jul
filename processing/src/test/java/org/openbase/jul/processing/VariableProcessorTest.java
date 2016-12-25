@@ -24,6 +24,7 @@ package org.openbase.jul.processing;
  * #L%
  */
 import java.util.HashMap;
+import java.util.Map;
 import org.junit.After;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
@@ -70,7 +71,7 @@ public class VariableProcessorTest {
      */
     @Test(timeout = 5000)
     public void testResolveVariables() throws Exception {
-        System.out.println("resolveVariables");
+        System.out.println("testResolveVariables");
         String context = "${VAR_A} : Hey Mr ${VAR_B} is happy today because of Mrs ${VAR_C}. ${VAR_W}${VAR_O}${VAR_W}";
         boolean throwOnError = true;
         String expResult = "A : Hey Mr B is happy today because of Mrs C. WOW";
@@ -83,7 +84,7 @@ public class VariableProcessorTest {
      */
     @Test(timeout = 5000)
     public void testResolveVariablesErrorCase() throws Exception {
-        System.out.println("resolveVariables");
+        System.out.println("testResolveVariablesErrorCase");
         String context = "${VAR_A} : Hey Mr ${VAR_D} is happy today because of Mrs ${VAR_C}. ${VAR_W}${VAR_Y}${VAR_W}";
         boolean throwOnError = true;
         String expResult = "A : Hey Mr  is happy today because of Mrs C. WW";
@@ -97,27 +98,15 @@ public class VariableProcessorTest {
         assertEquals(expResult, result);
     }
 
-    public class TestVariableProvider implements VariableProvider {
-
-        private HashMap<String, String> varMap = new HashMap<>();
+    public class TestVariableProvider extends VariableStore {
 
         public TestVariableProvider() {
-            varMap.put("VAR_A", "A");
-            varMap.put("VAR_B", "B");
-            varMap.put("VAR_C", "C");
-            varMap.put("VAR_W", "W");
-            varMap.put("VAR_O", "O");
-        }
-
-        @Override
-        public String getName() {
-            return "TestVarPro";
-        }
-
-        @Override
-        public String getValue(String variable) throws NotAvailableException {
-            return varMap.get(variable);
+            super("TestVarPro");
+            store("VAR_A", "A");
+            store("VAR_B", "B");
+            store("VAR_C", "C");
+            store("VAR_W", "W");
+            store("VAR_O", "O");
         }
     }
-
 }

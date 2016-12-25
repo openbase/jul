@@ -1,6 +1,8 @@
 
 package org.openbase.jul.exception;
 
+import org.slf4j.Logger;
+
 /*
  * #%L
  * JUL Exception

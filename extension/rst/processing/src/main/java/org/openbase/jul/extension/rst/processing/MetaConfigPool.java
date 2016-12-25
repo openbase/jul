@@ -30,6 +30,8 @@ import org.openbase.jul.processing.VariableProcessor;
 import org.openbase.jul.processing.VariableProvider;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
+import org.openbase.jul.exception.NotSupportedException;
 
 /**
  *
@@ -60,6 +62,12 @@ public class MetaConfigPool implements VariableProvider {
         }
     }
 
+    @Override
+    public Map<String, String> getValues(String variableContains) throws NotAvailableException {
+        //TODO: Should be implemented.
+        throw new NotAvailableException(new NotSupportedException("Method[getValues]", MetaConfigPool.class));
+    }
+    
     @Override
     public String getName() {
         String provider = "";
