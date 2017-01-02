@@ -63,11 +63,11 @@ public class VariableStore implements VariableProvider {
     /**
      * Method resolves all variables whose name contains the given identifier.
      *
-     * @param metaConfig the meta config to resolve the variables.
      * @param variableContains the identifier to select the variables.
      * @return a map of the variable name and its current value.
      * @throws NotAvailableException is thrown in case no variable name matches the given identifier.
      */
+    @Override
     public Map<String, String> getValues(final String variableContains) throws NotAvailableException {
         final Map<String, String> variableSelection = new HashMap<>();
         for (Entry<String, String> entry : variableMap.entrySet()) {
