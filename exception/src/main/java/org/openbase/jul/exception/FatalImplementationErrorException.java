@@ -30,17 +30,21 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
 
     public FatalImplementationErrorException(String message) {
         super(message);
+        assert false;
     }
 
     public FatalImplementationErrorException(String message, Throwable cause) {
         super(message, cause);
+        assert false;
     }
 
     public FatalImplementationErrorException(Throwable cause) {
         super(cause);
+        assert false;
     }
 
     public FatalImplementationErrorException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
+        assert false;
     }
 }

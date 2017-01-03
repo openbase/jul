@@ -42,6 +42,13 @@ public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID
     public CONFIG getConfig() throws NotAvailableException;
 
     /**
+     * Method returns the class of the configuration instance.
+     *
+     * @return the class of the configuration.
+     */
+    public Class<CONFIG> getConfigClass();
+
+    /**
      * This method allows the registration of config observers to get informed about config updates.
      *
      * @param observer the observer added
