@@ -40,6 +40,11 @@ public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> ext
         super(dataClass);
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public String getId() throws NotAvailableException {
         try {

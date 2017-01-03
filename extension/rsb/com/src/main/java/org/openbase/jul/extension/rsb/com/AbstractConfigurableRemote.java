@@ -58,6 +58,12 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         this.configObservable = new ObservableImpl<>(true);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param config {@inheritDoc}
+     * @throws InitializationException {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
         synchronized (CONFIG_LOCK) {
@@ -74,6 +80,13 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         }
     }
 
+    /**
+     * {@inheritDoc} 
+     * @param config {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         synchronized (CONFIG_LOCK) {
@@ -170,6 +183,11 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public CONFIG getConfig() throws NotAvailableException {
         synchronized (CONFIG_LOCK) {
@@ -180,6 +198,11 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public String getId() throws NotAvailableException {
         try {
@@ -194,20 +217,36 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
         return super.getId();
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
     public Class<CONFIG> getConfigClass() {
         return configClass;
     }
 
+    /**
+     * {@inheritDoc}
+     * @param observer {@inheritDoc}
+     */
     @Override
     public void addConfigObserver(final Observer<CONFIG> observer) {
         configObservable.addObserver(observer);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param observer {@inheritDoc}
+     */
     @Override
     public void removeConfigObserver(final Observer<CONFIG> observer) {
         configObservable.removeObserver(observer);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void shutdown() {
         configObservable.shutdown();
