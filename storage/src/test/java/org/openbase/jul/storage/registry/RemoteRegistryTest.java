@@ -30,6 +30,8 @@ import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -37,19 +39,30 @@ import org.openbase.jul.exception.InstantiationException;
  */
 public class RemoteRegistryTest {
 
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RemoteRegistryTest.class);
+
     private static RemoteRegistry remoteRegistry;
 
     public RemoteRegistryTest() {
     }
 
     @BeforeClass
-    public static void setUpClass() throws InstantiationException, JPServiceException {
-        JPService.setupJUnitTestMode();
-        remoteRegistry = new RemoteRegistry();
+    public static void setUpClass() throws Throwable {
+        try {
+            JPService.setupJUnitTestMode();
+            remoteRegistry = new RemoteRegistry();
+        } catch (Throwable ex) {
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(ex, LOGGER);
+        }
     }
 
     @AfterClass
-    public static void tearDownClass() {
+    public static void tearDownClass() throws Throwable {
+        try {
+            remoteRegistry.shutdown();
+        } catch (Throwable ex) {
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(ex, LOGGER);
+        }
     }
 
     @Before
