@@ -70,23 +70,29 @@
                 <version>1.10</version>
                 <configuration>
                     <verbose>false</verbose>
+                    <licenseName>lgpl_v3</licenseName>
+                    <failOnMissingHeader>true</failOnMissingHeader>
+                    <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
+                    <roots>
+                        <root>src/main/java</root>
+                        <root>src/test</root>
+                    </roots>
                 </configuration>
                 <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check-file-header</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <id>first</id>
                         <goals>
                             <goal>update-file-header</goal>
                         </goals>
                         <phase>process-sources</phase>
-                        <configuration>
-                            <licenseName>lgpl_v3</licenseName>
-                            <roots>
-                                <root>src/main/java</root>
-                                <root>src/test</root>
-                            </roots>
-                        </configuration>
                     </execution>
-<!--                    <execution> //disabled because of broken license url
+                    <!--                    <execution> //disabled because of broken license url
                         <id>download-licenses</id>
                         <goals>
                             <goal>download-licenses</goal>
