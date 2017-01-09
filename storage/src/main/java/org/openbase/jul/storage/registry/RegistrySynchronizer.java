@@ -212,10 +212,13 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                 exceptionStack = MultiException.push(this, ex, exceptionStack);
             }
             MultiException.checkAndThrow("Could not sync all entries!", exceptionStack);
-
         } catch (CouldNotPerformException ex) {
-            assert !JPService.testMode(); // exit if errors occurs during unit tests.
-            throw new CouldNotPerformException("Entry registry sync failed!", ex);
+            CouldNotPerformException exx = new CouldNotPerformException("Entry registry sync failed!", ex);
+            if (JPService.testMode()) {
+                ExceptionPrinter.printHistory(exx, logger);
+                assert false; // exit if errors occurs during unit tests.
+            }
+            throw exx;
         }
     }
 
