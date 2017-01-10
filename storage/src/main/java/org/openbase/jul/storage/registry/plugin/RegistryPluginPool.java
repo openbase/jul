@@ -26,6 +26,7 @@ package org.openbase.jul.storage.registry.plugin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.RejectedException;
@@ -57,7 +58,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     }
 
     @Override
-    public void init(Registry<KEY, ENTRY> registry) throws InitializationException {
+    public void init(final Registry<KEY, ENTRY> registry) throws InitializationException {
         this.registry = registry;
     }
 
@@ -68,11 +69,12 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
                 plugin.shutdown();
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown RegistryPlugin[" + plugin + "]!", ex), logger, LogLevel.ERROR);
+                assert !JPService.testMode(); // fail during unit tests.
             }
         });
     }
 
-    public void addPlugin(P plugin) throws InitializationException, InterruptedException {
+    public void addPlugin(final P plugin) throws InitializationException, InterruptedException {
         try {
             plugin.init(registry);
             pluginList.add(plugin);
@@ -82,7 +84,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     }
 
     @Override
-    public void beforeRegister(ENTRY entry) throws RejectedException {
+    public void beforeRegister(final ENTRY entry) throws RejectedException {
         if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
             return;
         }
@@ -90,19 +92,22 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.beforeRegister(entry);
+                try {
+                    plugin.beforeRegister(entry);
+                } catch (RejectedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (RejectedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void afterRegister(ENTRY entry) throws CouldNotPerformException {
+    public void afterRegister(final ENTRY entry) throws CouldNotPerformException {
         if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
             return;
         }
@@ -110,17 +115,20 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.afterRegister(entry);
+                try {
+                    plugin.afterRegister(entry);
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void beforeUpdate(ENTRY entry) throws RejectedException {
+    public void beforeUpdate(final ENTRY entry) throws RejectedException {
         if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
             return;
         }
@@ -128,19 +136,22 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.beforeUpdate(entry);
+                try {
+                    plugin.beforeUpdate(entry);
+                } catch (RejectedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (RejectedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void afterUpdate(ENTRY entry) throws CouldNotPerformException {
+    public void afterUpdate(final ENTRY entry) throws CouldNotPerformException {
         if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
             return;
         }
@@ -148,17 +159,20 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.afterUpdate(entry);
+                try {
+                    plugin.afterUpdate(entry);
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about successfully Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void beforeRemove(ENTRY entry) throws RejectedException {
+    public void beforeRemove(final ENTRY entry) throws RejectedException {
         if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
             return;
         }
@@ -166,19 +180,22 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.beforeRemove(entry);
+                try {
+                    plugin.beforeRemove(entry);
+                } catch (RejectedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (RejectedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void afterRemove(ENTRY entry) throws CouldNotPerformException {
+    public void afterRemove(final ENTRY entry) throws CouldNotPerformException {
         if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
             return;
         }
@@ -186,10 +203,13 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.afterRemove(entry);
+                try {
+                    plugin.afterRemove(entry);
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about successfully Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
@@ -204,29 +224,33 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.beforeClear();
+                try {
+                    plugin.beforeClear();
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned registry earsure!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned registry earsure!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void beforeGet(KEY key) throws RejectedException {
+    public void beforeGet(final KEY key) throws RejectedException {
         if (pluginList.isEmpty()) {
             return;
         }
 
-        try {
-            for (P plugin : pluginList) {
+        for (P plugin : pluginList) {
+            try {
                 plugin.beforeGet(key);
+            } catch (RejectedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + key + "] publishment!", ex), logger, LogLevel.ERROR);
+                assert !JPService.testMode(); // fail during unit tests.
             }
-        } catch (RejectedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned Entry[" + key + "] publishment!", ex), logger, LogLevel.ERROR);
         }
     }
 
@@ -236,12 +260,13 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
-        try {
-            for (P plugin : pluginList) {
+        for (P plugin : pluginList) {
+            try {
                 plugin.beforeGetEntries();
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned registry publishment!", ex), logger, LogLevel.ERROR);
+                assert !JPService.testMode(); // fail during unit tests.
             }
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about planned registry publishment!", ex), logger, LogLevel.ERROR);
         }
     }
 
@@ -251,14 +276,15 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
-        try {
-            for (P plugin : pluginList) {
+        for (P plugin : pluginList) {
+            try {
                 plugin.checkAccess();
+            } catch (RejectedException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not check registry access with RegistryPlugin[" + plugin + "]!", ex), logger, LogLevel.ERROR);
+                assert !JPService.testMode(); // fail during unit tests.
             }
-        } catch (RejectedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not check registry access with RegistryPlugins!", ex), logger, LogLevel.ERROR);
         }
     }
 
@@ -271,12 +297,15 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.afterRegistryChange();
+                try {
+                    plugin.afterRegistryChange();
+                } catch (RejectedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about registry change!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (RejectedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about registry change!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }
@@ -291,12 +320,15 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         lock.writeLock().lock();
         try {
             for (P plugin : pluginList) {
-                plugin.afterConsistencyCheck();
+                try {
+                    plugin.afterConsistencyCheck();
+                } catch (RejectedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about finished consistency check!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
+                }
             }
-        } catch (RejectedException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugins about finished consistency check!", ex), logger, LogLevel.ERROR);
         } finally {
             lock.writeLock().unlock();
         }

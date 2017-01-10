@@ -76,7 +76,18 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      *
      * @return is true if the registry is empty.
      */
-    public boolean isEmtpy();
+    public boolean isEmpty();
+
+    /**
+     * Return true if this registry does not contain any entries.
+     *
+     * @return is true if the registry is empty.
+     * @deprecated removed because of typo. Please use isEmpty() instead!
+     */
+    @Deprecated
+    default public boolean isEmtpy() {
+        return isEmpty();
+    }
 
     public boolean tryLockRegistry() throws RejectedException;
 

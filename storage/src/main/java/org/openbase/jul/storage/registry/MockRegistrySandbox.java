@@ -179,7 +179,7 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public boolean isEmtpy() {
+    public boolean isEmpty() {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 

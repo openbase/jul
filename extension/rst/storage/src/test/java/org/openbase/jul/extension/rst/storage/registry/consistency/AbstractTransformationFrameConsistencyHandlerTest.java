@@ -213,7 +213,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public boolean isEmtpy() {
+                public boolean isEmpty() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 
