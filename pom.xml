@@ -73,6 +73,9 @@
                     <licenseName>lgpl_v3</licenseName>
                     <failOnMissingHeader>true</failOnMissingHeader>
                     <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
+                    <canUpdateCopyright>true</canUpdateCopyright>
+                    <canUpdateDescription>true</canUpdateDescription>
+                    <canUpdateLicense>true</canUpdateLicense>
                     <roots>
                         <root>src/main/java</root>
                         <root>src/test</root>
@@ -80,19 +83,13 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check-file-header</goal>
-                        </goals>
-                    </execution>
-                    <execution>
                         <id>first</id>
                         <goals>
                             <goal>update-file-header</goal>
                         </goals>
                         <phase>process-sources</phase>
                     </execution>
-                   <execution>
+                    <execution>
                         <id>download-licenses</id>
                         <goals>
                             <goal>download-licenses</goal>
