@@ -62,6 +62,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
+import rsb.RSBException;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
 import rst.rsb.ScopeType.Scope;
@@ -250,7 +251,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
+    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException, InterruptedException {
         try {
             this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
@@ -259,7 +260,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
+    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException, InterruptedException {
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
@@ -271,7 +272,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     requestData();
                 }
             });
-        } catch (Exception ex) {
+        } catch (RuntimeException | InstantiationException ex) {
             throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope + "]!", ex);
         }
     }
