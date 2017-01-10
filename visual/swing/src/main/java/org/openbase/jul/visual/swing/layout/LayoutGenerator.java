@@ -2,11 +2,9 @@ package org.openbase.jul.visual.swing.layout;
 
 /*
  * #%L
- * JUL Visual
- * $Id:$
- * $HeadURL:$
+ * JUL Visual Swing
  * %%
- * Copyright (C) 2015 - 2016 openbase.org
+ * Copyright (C) 2015 - 2017 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
