@@ -91,12 +91,12 @@
                         </goals>
                         <phase>process-sources</phase>
                     </execution>
-                    <!--                    <execution> //disabled because of broken license url
+                   <execution>
                         <id>download-licenses</id>
                         <goals>
                             <goal>download-licenses</goal>
                         </goals>
-                    </execution>-->
+                    </execution>
                 </executions>
             </plugin>
             <plugin>
