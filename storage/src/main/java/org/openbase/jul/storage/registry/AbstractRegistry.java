@@ -139,6 +139,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @param entry {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
         info("Register " + entry + "...");
@@ -190,6 +196,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return entry;
     }
 
+    /**
+     * {@inheritDoc}
+     * @param entry {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
         info("Update " + entry + "...");
@@ -219,11 +231,23 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return get(entry);
     }
 
+    /**
+     * {@inheritDoc}
+     * @param key {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public ENTRY remove(final KEY key) throws CouldNotPerformException {
         return remove(get(key));
     }
 
+    /**
+     * {@inheritDoc}
+     * @param entry {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
         return superRemove(entry);
@@ -261,6 +285,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return oldEntry;
     }
 
+    /**
+     * {@inheritDoc}
+     * @param key {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public ENTRY get(final KEY key) throws CouldNotPerformException {
         verifyID(key);
@@ -299,6 +329,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc} 
+     */
     @Override
     public List<ENTRY> getEntries() throws CouldNotPerformException {
         registryLock.readLock().lock();
@@ -310,6 +345,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public int size() {
         registryLock.readLock().lock();
@@ -320,6 +359,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc} 
+     */
+    @Override
     public boolean isEmpty() {
         registryLock.readLock().lock();
         try {
@@ -329,16 +373,32 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @param entry {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public boolean contains(final ENTRY entry) throws CouldNotPerformException {
         return contains(entry.getId());
     }
 
+    /**
+     * {@inheritDoc}
+     * @param key {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public boolean contains(final KEY key) throws CouldNotPerformException {
         return entryMap.containsKey(verifyID(key));
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
     @Override
     public void clear() throws CouldNotPerformException {
         lock();
@@ -395,6 +455,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         notifyObservers();
     }
 
+    /**
+     * {@inheritDoc}
+     * @throws RejectedException {@inheritDoc}
+     */
     @Override
     public void checkWriteAccess() throws RejectedException {
         logger.debug("checkWriteAccess of " + this);
@@ -490,6 +554,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isReadOnly() {
         try {
@@ -733,16 +801,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isConsistent() {
         return consistent;
     }
 
-    @Override
-    public boolean isEmtpy() {
-        return entryMap.isEmpty();
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void shutdown() {
         try {
@@ -801,6 +871,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return name;
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isSandbox() {
         return false;
@@ -820,10 +894,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public String toString() {
         return getName();
-
     }
 
     /**
@@ -876,11 +953,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return registryLock.writeLock().isHeldByCurrentThread();
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws RejectedException {@inheritDoc}
+     */
     @Override
     public boolean tryLockRegistry() throws RejectedException {
         return registryLock.writeLock().tryLock();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void unlockRegistry() {
         assert registryLock.writeLock().isHeldByCurrentThread();
@@ -941,6 +1026,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             dependency.addObserver(this);
         }
 
+        /**
+         * {@inheritDoc}
+         * @param source {@inheritDoc}
+         * @param data {@inheritDoc}
+         * @throws Exception {@inheritDoc}
+         */
         @Override
         public void update(Observable source, Object data) throws Exception {
             //TODO: update on sandbox level should be handled first
@@ -957,6 +1048,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
         @Override
         public void shutdown() {
             removeObserver(this);
