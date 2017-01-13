@@ -30,8 +30,8 @@
     <dependencies>
         <dependency>
             <groupId>rsb</groupId>
-            <artifactId>${dependency.rst.sandbox.artifact}</artifactId>
-            <version>${dependency.rst.sandbox.version}</version>
+            <artifactId>${dependency.rst.experimental.artifact}</artifactId>
+            <version>${dependency.rst.experimental.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
