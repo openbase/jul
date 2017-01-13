@@ -58,6 +58,12 @@
         </dependency>
         <dependency>
             <groupId>rsb</groupId>
+            <artifactId>${dependency.rst.experimental.artifact}</artifactId>
+            <version>${dependency.rst.experimental.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>rsb</groupId>
             <artifactId>${dependency.rst.sandbox.artifact}</artifactId>
             <version>${dependency.rst.sandbox.version}</version>
             <scope>test</scope>
