@@ -890,7 +890,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
-                logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[" + (scope == null ? "?" : ScopeGenerator.generateStringRep(scope)) + "] connection...");
+                String scopeString;
+                try {
+                    scopeString = ScopeGenerator.generateStringRep(scope);
+                } catch (CouldNotPerformException ex) {
+                    scopeString = "?";
+                }
+
+                logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[" + scopeString + "] connection...");
                 connectionMonitor.wait(timeout);
                 if (timeout != 0 && !this.connectionState.equals(connectionState)) {
                     throw new TimeoutException("Timeout expired!");
@@ -1140,10 +1147,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public String toString() {
-        if (scope == null) {
+        try {
+            return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
+        } catch (CouldNotPerformException ex) {
             return getClass().getSimpleName() + "[scope:?]";
         }
-        return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
     }
 
     private static long generateTimeout(long currentTimeout) {

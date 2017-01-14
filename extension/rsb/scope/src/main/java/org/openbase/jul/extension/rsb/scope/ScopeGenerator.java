@@ -37,25 +37,39 @@ import rst.rsb.ScopeType;
  */
 public class ScopeGenerator {
 
-    public static String generateStringRep(final ScopeType.Scope scope) {
-        // TODO Release Scrab: Add exception handling in case the scope is null.
-        assert scope != null; 
-        return generateStringRep(scope.getComponentList());
-    }
-
-    public static String generateStringRep(final Scope scope) {
-        // TODO Release Scrab: Add exception handling in case the scope is null.
-        assert scope != null; 
-        return generateStringRep(scope.getComponents());
-    }
-
-    public static String generateStringRep(final Collection<String> components) {
-        String stringRep = Scope.COMPONENT_SEPARATOR;
-        for (String component : components) {
-            stringRep += component;
-            stringRep += Scope.COMPONENT_SEPARATOR;
+    public static String generateStringRep(final ScopeType.Scope scope) throws CouldNotPerformException {
+        try {
+            if (scope == null) {
+                throw new NotAvailableException("scope");
+            }
+            return generateStringRep(scope.getComponentList());
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not generate scope string representation!", ex);
         }
-        return stringRep;
+    }
+
+    public static String generateStringRep(final Scope scope) throws CouldNotPerformException {
+        try {
+            if (scope == null) {
+                throw new NotAvailableException("scope");
+            }
+            return generateStringRep(scope.getComponents());
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not generate scope string representation!", ex);
+        }
+    }
+
+    public static String generateStringRep(final Collection<String> components) throws CouldNotPerformException {
+        try {
+            String stringRep = Scope.COMPONENT_SEPARATOR;
+            for (String component : components) {
+                stringRep += component;
+                stringRep += Scope.COMPONENT_SEPARATOR;
+            }
+            return stringRep;
+        } catch (RuntimeException ex) {
+            throw new CouldNotPerformException("Could not generate scope string representation!", ex);
+        }
     }
 
     public static ScopeType.Scope generateScope(final String label, final String type, final ScopeType.Scope locationScope) throws CouldNotPerformException {
@@ -268,7 +282,7 @@ public class ScopeGenerator {
         if (agentUnitConfig == null) {
             throw new NotAvailableException("unitConfig");
         }
-        
+
         if (agentClass == null) {
             throw new NotAvailableException("agentClass");
         }
@@ -280,7 +294,7 @@ public class ScopeGenerator {
         if (!agentClass.hasLabel()) {
             throw new NotAvailableException("agentClass.label");
         }
-        
+
         if (!agentUnitConfig.hasLabel()) {
             throw new NotAvailableException("agentUnitConfig.label");
         }
@@ -299,7 +313,7 @@ public class ScopeGenerator {
 
         // add location scope
         ScopeType.Scope.Builder scope = locationUnitConfig.getScope().toBuilder();
-        
+
         // add unit type
         scope.addComponent(convertIntoValidScopeComponent(agentUnitConfig.getType().name()));
 
@@ -317,7 +331,7 @@ public class ScopeGenerator {
         if (appUnitConfig == null) {
             throw new NotAvailableException("appConfig");
         }
-        
+
         if (appClass == null) {
             throw new NotAvailableException("appClass");
         }
@@ -325,7 +339,7 @@ public class ScopeGenerator {
         if (!appUnitConfig.hasLabel()) {
             throw new NotAvailableException("appConfig.label");
         }
-        
+
         if (!appClass.hasLabel()) {
             throw new NotAvailableException("appClass.label");
         }
@@ -347,7 +361,7 @@ public class ScopeGenerator {
 
         // add unit type
         scope.addComponent(convertIntoValidScopeComponent(appUnitConfig.getType().name()));
-        
+
         // add unit app
         scope.addComponent(convertIntoValidScopeComponent(appClass.getLabel()));
 
@@ -396,8 +410,8 @@ public class ScopeGenerator {
         if (userUnitConfig == null) {
             throw new NotAvailableException("userUnitConfig");
         }
-        
-        if(!userUnitConfig.hasUserConfig()) {
+
+        if (!userUnitConfig.hasUserConfig()) {
             throw new NotAvailableException("userConfig");
         }
 
@@ -411,10 +425,10 @@ public class ScopeGenerator {
 
         // add manager
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
-        
+
         // add unit type
         scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getType().name()));
-        
+
         // add user name
         scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getUserConfig().getUserName()));
 
