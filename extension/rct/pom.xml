@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.openbase</groupId>
         <artifactId>jul.extension</artifactId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.2.0-SNAPSHOT</version>
     </parent>
     
     <url>https://github.com/openbase/jul/wiki</url>
