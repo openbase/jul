@@ -132,20 +132,22 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @return true if the observable has changed
      * @throws MultiException thrown if the notification to at least one observer fails
      */
-    public boolean notifyObservers(T observable) throws MultiException {
+    public boolean notifyObservers(final T observable) throws MultiException {
         return notifyObservers(this, observable);
     }
 
     /**
      * Notify all changes of the observable to all observers only if the observable has changed.
      * Because of data encapsulation reasons this method is not included within the Observer interface.
+     * 
+     * Note: In case the given observable is null this notification will be ignored.
      *
      * @param source the source of the notification
      * @param observable the value which is notified
      * @return true if the observable has changed
      * @throws MultiException thrown if the notification to at least one observer fails
      */
-    public boolean notifyObservers(Observable<T> source, T observable) throws MultiException {
+    public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException {
         ExceptionStack exceptionStack = null;
 
         synchronized (LOCK) {
@@ -155,13 +157,14 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                     return false;
                 }
                 if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
-                    LOGGER.debug("#+# Skip notification because observable has not been changed!");
+                    LOGGER.debug("Skip notification because observable has not been changed!");
                     return false;
                 }
 
+                applyValueUpdate(observable);
                 latestValueHash = observable.hashCode();
 
-                for (Observer<T> observer : new ArrayList<>(observers)) {
+                for (final Observer<T> observer : new ArrayList<>(observers)) {
                     try {
                         observer.update(source, observable);
                     } catch (Exception ex) {
@@ -174,5 +177,15 @@ public abstract class AbstractObservable<T> implements Observable<T> {
         }
         MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
         return true;
+    }
+    
+    /**
+     * Method is called if a observer notification delivers a new value. 
+     * @param value the new value
+     * 
+     * Note: Overwrite this method for getting informed about value changes.
+     */
+    protected void applyValueUpdate(final T value) {
+        // overwrite for current state holding obervable implementations.
     }
 }

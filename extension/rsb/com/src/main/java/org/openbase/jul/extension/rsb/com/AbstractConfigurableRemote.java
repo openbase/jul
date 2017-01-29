@@ -60,6 +60,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
 
     /**
      * {@inheritDoc}
+     *
      * @param config {@inheritDoc}
      * @throws InitializationException {@inheritDoc}
      * @throws InterruptedException {@inheritDoc}
@@ -81,7 +82,8 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
     }
 
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
+     *
      * @param config {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -98,7 +100,16 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
                 try {
                     if (isActive() && !currentScope.equals(detectScope(config))) {
                         currentScope = detectScope();
-                        super.init(currentScope);
+
+                        if (isLocked()) {
+                            // temporally unlock for scope update and lock afterwards again.
+                            final Object latestMaintainer = maintainer;
+                            unlock(maintainer);
+                            super.init(currentScope);
+                            lock(latestMaintainer);
+                        } else {
+                            super.init(currentScope);
+                        }
                     }
                 } catch (CouldNotPerformException ex) {
                     throw new CouldNotPerformException("Could not verify scope changes!", ex);
@@ -185,6 +196,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      * @throws NotAvailableException {@inheritDoc}
      */
@@ -200,6 +212,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      * @throws NotAvailableException {@inheritDoc}
      */
@@ -219,6 +232,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -228,6 +242,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
 
     /**
      * {@inheritDoc}
+     *
      * @param observer {@inheritDoc}
      */
     @Override
@@ -237,6 +252,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
 
     /**
      * {@inheritDoc}
+     *
      * @param observer {@inheritDoc}
      */
     @Override

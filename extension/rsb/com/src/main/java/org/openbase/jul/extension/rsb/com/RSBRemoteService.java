@@ -30,6 +30,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InitializationException;
@@ -37,6 +39,7 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
+import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
@@ -99,6 +102,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
     private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
+    private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
+    protected Object maintainer;
 
     private CompletableFuture<M> syncFuture;
     private Future<M> syncTask;
@@ -120,7 +125,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.connectionState = DISCONNECTED;
         this.connectionPing = -1;
         this.lastPingReceived = -1;
-        registerShutdownHook(this);
     }
 
     /**
@@ -214,6 +218,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public synchronized void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         try {
+            verifyMaintainability();
+
             final boolean alreadyActivated = isActive();
             ParticipantConfig internalParticipantConfig = participantConfig;
 
@@ -278,6 +284,53 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
+     * @throws VerificationFailedException {@inheritDoc}
+     */
+    public void verifyMaintainability() throws VerificationFailedException {
+        if (isLocked()) {
+            throw new VerificationFailedException("Manipulation of " + this + "is currently not valid because the maintains is protected by another instance! "
+                    + "This happens if you try to modify an instanced which is locked by a managed instance pool.");
+        }
+    }
+
+    public boolean isLocked() {
+        synchronized (maintainerLock) {
+            return maintainer != null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
+    public void lock(final Object maintainer) throws CouldNotPerformException {
+        synchronized (maintainerLock) {
+            if (this.maintainer != null) {
+                throw new CouldNotPerformException("Could not lock remote for because remote is already locked by another instance!");
+            }
+            this.maintainer = maintainer;
+        }
+    }
+
+    /**
+     * Method unlocks this instance.
+     *
+     * @param maintainer the instance which currently holds the lock.
+     * @throws CouldNotPerformException is thrown if the instance could not be unlocked.
+     */
+    public void unlock(final Object maintainer) throws CouldNotPerformException {
+        synchronized (maintainerLock) {
+            if (this.maintainer != null && this.maintainer != maintainer) {
+                throw new CouldNotPerformException("Could not unlock remote for because remote is locked by another instance!");
+            }
+            this.maintainer = null;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -310,6 +363,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
         try {
+            verifyMaintainability();
             validateInitialization();
             setConnectionState(CONNECTING);
             remoteServerWatchDog.activate();
@@ -344,6 +398,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
         try {
+            verifyMaintainability();
             validateInitialization();
         } catch (InvalidStateException ex) {
             // was never initialized!
@@ -360,17 +415,22 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    public void reset() {
-        // clear existing instances.
-        if (listenerWatchDog != null) {
-            listenerWatchDog.shutdown();
-            listenerWatchDog = null;
-            listener = new NotInitializedRSBListener();
-        }
-        if (remoteServerWatchDog != null) {
-            remoteServerWatchDog.shutdown();
-            remoteServerWatchDog = null;
-            remoteServer = new NotInitializedRSBRemoteServer();
+    public void reset() throws CouldNotPerformException {
+        try {
+            verifyMaintainability();
+            // clear existing instances.
+            if (listenerWatchDog != null) {
+                listenerWatchDog.shutdown();
+                listenerWatchDog = null;
+                listener = new NotInitializedRSBListener();
+            }
+            if (remoteServerWatchDog != null) {
+                remoteServerWatchDog.shutdown();
+                remoteServerWatchDog = null;
+                remoteServer = new NotInitializedRSBRemoteServer();
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not reset " + this + "!", ex);
         }
     }
 
@@ -730,6 +790,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public void shutdown() {
+
+        try {
+            verifyMaintainability();
+        } catch (VerificationFailedException ex) {
+            throw new RuntimeException("Can not shutdown " + this + "!", ex);
+        }
+
         try {
             dataObservable.shutdown();
         } finally {
@@ -885,24 +952,42 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException {
         synchronized (connectionMonitor) {
+            boolean delayDetected = false;
             while (!Thread.currentThread().isInterrupted()) {
+
+                // check if requested connection state is reached.
                 if (this.connectionState.equals(connectionState)) {
+                    if (delayDetected) {
+                        logger.info("Continue processing because " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] is now " + this.connectionState.name().toLowerCase() + ".");
+                    }
                     return;
                 }
 
-                String scopeString;
-                try {
-                    scopeString = ScopeGenerator.generateStringRep(scope);
-                } catch (CouldNotPerformException ex) {
-                    scopeString = "?";
+                // detect delay for long term wait
+                if (timeout == 0) {
+                    connectionMonitor.wait(15000);
+                    if (!this.connectionState.equals(connectionState)) {
+                        delayDetected = true;
+                        logger.info("Wait that " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] is " + connectionState.name().toLowerCase() + "...");
+                        connectionMonitor.wait();
+                    }
+                    continue;
                 }
 
-                logger.info("Wait for " + getClass().getSimpleName().replace("Remote", "") + "[" + scopeString + "] connection...");
+                // wait till timeout
                 connectionMonitor.wait(timeout);
                 if (timeout != 0 && !this.connectionState.equals(connectionState)) {
                     throw new TimeoutException("Timeout expired!");
                 }
             }
+        }
+    }
+
+    private String getScopeStringRep() {
+        try {
+            return ScopeGenerator.generateStringRep(scope);
+        } catch (CouldNotPerformException ex) {
+            return "?";
         }
     }
 

@@ -132,44 +132,13 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
     }
 
     /**
-     * Notify all changes of the observable to all observers only if the observable has changed.
-     * Because of data encapsulation reasons this method is not included within the Observer interface.
+     * {@inheritDoc}
      *
-     * @param source the source of the notification
-     * @param observable the value which is notified
-     * @return true if the observable has changed
-     * @throws MultiException thrown if the notification to at least one observer fails
+     * @param value {@inheritDoc}
      */
     @Override
-    public boolean notifyObservers(Observable<T> source, T observable) throws MultiException {
-        ExceptionStack exceptionStack = null;
-
-        synchronized (LOCK) {
-            try {
-                if (observable == null) {
-                    LOGGER.debug("Skip notification because observable is null!");
-                    return false;
-                }
-                if (unchangedValueFilter && value != null && observable.hashCode() == latestValueHash) {
-                    LOGGER.debug("#+# Skip notification because observable has not been changed!");
-                    return false;
-                }
-
-                value = observable;
-                latestValueHash = value.hashCode();
-
-                for (Observer<T> observer : new ArrayList<>(observers)) {
-                    try {
-                        observer.update(source, observable);
-                    } catch (Exception ex) {
-                        exceptionStack = MultiException.push(observer, ex, exceptionStack);
-                    }
-                }
-            } finally {
-                LOCK.notifyAll();
-            }
-        }
-        MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
-        return true;
+    protected void applyValueUpdate(final T value) {
+        this.value = value;
     }
+
 }
