@@ -28,8 +28,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
-import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.iface.Activatable;
+import org.openbase.jul.iface.Lockable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.provider.DataProvider;
 
@@ -38,7 +38,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> the data type of the remote
  */
-public interface Remote<M> extends Shutdownable, Activatable, DataProvider<M> {
+public interface Remote<M> extends Shutdownable, Activatable, Lockable, DataProvider<M> {
 
     // TODO mpohling: Should be moved to rst and reimplement for rsb 15.
     public enum ConnectionState {
@@ -252,37 +252,4 @@ public interface Remote<M> extends Shutdownable, Activatable, DataProvider<M> {
      * an CouldNotPerformException will be thrown.
      */
     public CompletableFuture<M> requestData() throws CouldNotPerformException;
-
-    /**
-     * Method verifies if this instance can be maintained.
-     *
-     * @throws VerificationFailedException is thrown if the instance is currently maintained by another instance.
-     */
-    public void verifyMaintainability() throws VerificationFailedException;
-
-    /**
-     * This method allows to lock this instance to make sure no other instances can maintain these one.
-     * This could for example be useful if the management of this instance should be restricted to an instance pool.
-     * 
-     * Note: After a successfully lock only the maintainer is able to unlock this instance.
-     *
-     * @param maintainer
-     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the remote could not be locked.
-     */
-    public void lock(final Object maintainer) throws CouldNotPerformException;
-
-    /**
-     * Method checks if the this instance is currently locked by another instance.
-     * @return true if this instance is locked.
-     */
-    public boolean isLocked();
-
-    /**
-     * Method unlocks this instance.
-     * Only the maintainer who has previously locked this instance is able to unlock the instance by this method.
-     *
-     * @param maintainer the instance which currently holds the lock.
-     * @throws CouldNotPerformException is thrown if the instance could not be unlocked.
-     */
-    public void unlock(final Object maintainer) throws CouldNotPerformException;
 }

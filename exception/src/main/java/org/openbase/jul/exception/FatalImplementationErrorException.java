@@ -21,6 +21,8 @@ package org.openbase.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -28,23 +30,103 @@ package org.openbase.jul.exception;
  */
 public class FatalImplementationErrorException extends CouldNotPerformException {
 
+    /**
+     *
+     * @param message
+     * @deprecated please use one of the available constructors.
+     */
+    @Deprecated
     public FatalImplementationErrorException(String message) {
-        super(message);
-        assert false;
+        this(message, FatalImplementationErrorException.class);
     }
 
+    /**
+     *
+     * @param message
+     * @param cause
+     * @deprecated please use one of the available constructors.
+     */
+    @Deprecated
     public FatalImplementationErrorException(String message, Throwable cause) {
-        super(message, cause);
-        assert false;
+        this(message, FatalImplementationErrorException.class, cause);
     }
 
+    /**
+     *
+     * @param cause
+     * @deprecated please use one of the available constructors.
+     */
+    @Deprecated
     public FatalImplementationErrorException(Throwable cause) {
-        super(cause);
+        this(FatalImplementationErrorException.class, cause);
+    }
+
+    /**
+     *
+     * @param message
+     * @param cause
+     * @param enableSuppression
+     * @param writableStackTrace
+     * @deprecated please use one of the available constructors.
+     */
+    @Deprecated
+    public FatalImplementationErrorException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        this(message, cause);
+    }
+
+    /**
+     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer. *
+     *
+     * Note: In case assertions are enabled this instantiation directly results in an assertion exception.
+     *
+     * @param message the message which describes the fatal implementation error.
+     * @param source the instance where the error has been occurred.
+     */
+    public FatalImplementationErrorException(final String message, final Object source) {
+        super("Fatal implementation error in " + source + ": " + message);
+        ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source).getClass()));
         assert false;
     }
 
-    public FatalImplementationErrorException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    /**
+     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer. *
+     *
+     * Note: In case assertions are enabled this instantiation directly results in an assertion exception.
+     *
+     * @param message the message which describes the fatal implementation error.
+     * @param source the instance where the error has been occurred.
+     * @param cause the exception which causes the fatal implementation error.
+     */
+    public FatalImplementationErrorException(final String message, final Object source, final Throwable cause) {
+        super("Fatal implementation error in " + source + ": " + message, cause);
+        ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source).getClass()));
         assert false;
+    }
+
+    /**
+     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer. *
+     *
+     * Note: In case assertions are enabled this instantiation directly results in an assertion exception.
+     *
+     * @param cause the exception which causes the fatal implementation error.
+     * @param source the instance where the error has been occurred.
+     */
+    public FatalImplementationErrorException(final Object source, final Throwable cause) {
+        super("Fatal implementation error in " + source + "!", cause);
+        ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source).getClass()));
+        assert false;
+    }
+
+    /**
+     * Method detects the class of the given instance. In case the instance itself is the class these one is directly returned.
+     *
+     * @param object
+     * @return
+     */
+    private Class detectClass(final Object object) {
+        if (object instanceof Class) {
+            return (Class) object;
+        }
+        return object.getClass();
     }
 }

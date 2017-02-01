@@ -139,6 +139,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @param entry {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -196,6 +197,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @param entry {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -231,6 +233,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @param key {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -242,6 +245,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @param entry {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -285,6 +289,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @param key {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -329,8 +334,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
-     * @throws CouldNotPerformException {@inheritDoc} 
+     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public List<ENTRY> getEntries() throws CouldNotPerformException {
@@ -345,6 +351,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -359,7 +366,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
-     * @return {@inheritDoc} 
+     *
+     * @return {@inheritDoc}
      */
     @Override
     public boolean isEmpty() {
@@ -373,6 +381,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @param entry {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -384,6 +393,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @param key {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
@@ -395,6 +405,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -455,6 +466,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @throws RejectedException {@inheritDoc}
      */
     @Override
@@ -554,6 +566,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -750,7 +763,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     if (modificationCounter > 0) {
                         consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.");
                     }
-                    
+
                     return modificationCounter;
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
@@ -772,10 +785,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             unlock();
         }
     }
-    
+
     /**
      * Can be overwritten for further registry actions scheduled after consistency checks.
-     * 
+     *
      * Don't forgett to pass-througt the call to the super class. (super.afterConsistencyCheck())
      */
     protected void afterConsistencyCheck() throws CouldNotPerformException {
@@ -786,7 +799,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             checkConsistency();
         } catch (CouldNotPerformException ex) {
-            throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException("FATAL ERROR: Registry consistency check failed but sandbox check was successful!", ex), logger, LogLevel.ERROR);
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException("Registry consistency check failed but sandbox check was successful!", this, ex), logger, LogLevel.ERROR);
         }
     }
 
@@ -801,6 +814,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -871,6 +885,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -894,6 +909,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -953,6 +969,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      * @throws RejectedException {@inheritDoc}
      */
@@ -1000,7 +1017,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             } catch (Exception ex) {
                 assert false;
-                throw new FatalImplementationErrorException("FATAL ERROR: Could not release depending locks!", ex);
+                throw new FatalImplementationErrorException("Could not release depending locks!", this, ex);
             }
         }
 
@@ -1026,6 +1043,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         /**
          * {@inheritDoc}
+         *
          * @param source {@inheritDoc}
          * @param data {@inheritDoc}
          * @throws Exception {@inheritDoc}

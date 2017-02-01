@@ -22,7 +22,13 @@ package org.openbase.jul.pattern;
  * #L%
  */
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.slf4j.Logger;
@@ -139,7 +145,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     /**
      * Notify all changes of the observable to all observers only if the observable has changed.
      * Because of data encapsulation reasons this method is not included within the Observer interface.
-     * 
+     *
      * Note: In case the given observable is null this notification will be ignored.
      *
      * @param source the source of the notification
@@ -148,14 +154,16 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @throws MultiException thrown if the notification to at least one observer fails
      */
     public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException {
+        if (observable == null) {
+            LOGGER.debug("Skip notification because observable is null!");
+            return false;
+        }
+
         ExceptionStack exceptionStack = null;
+        final Map<Observer<T>, Future<Void>> notificationFutureList = new HashMap<>();
 
         synchronized (LOCK) {
             try {
-                if (observable == null) {
-                    LOGGER.debug("Skip notification because observable is null!");
-                    return false;
-                }
                 if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
                     LOGGER.debug("Skip notification because observable has not been changed!");
                     return false;
@@ -165,27 +173,69 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                 latestValueHash = observable.hashCode();
 
                 for (final Observer<T> observer : new ArrayList<>(observers)) {
-                    try {
-                        observer.update(source, observable);
-                    } catch (Exception ex) {
-                        exceptionStack = MultiException.push(observer, ex, exceptionStack);
+
+                    if (executorService == null) {
+
+                        if (Thread.currentThread().isInterrupted()) {
+                            break;
+                        }
+
+                        // synchron notification
+                        try {
+                            observer.update(source, observable);
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                            return true;
+                        } catch (Exception ex) {
+                            exceptionStack = MultiException.push(observer, ex, exceptionStack);
+                        }
+                    } else {
+                        // asynchron notification
+                        notificationFutureList.put(observer, executorService.submit(new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                observer.update(source, observable);
+                                return null;
+                            }
+                        }));
                     }
                 }
             } finally {
                 LOCK.notifyAll();
             }
+
+            // handle exeception printing for async variant
+            if (executorService == null) {
+                for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
+                    try {
+                        notificationFuture.getValue().get();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                        return true;
+                    } catch (Exception ex) {
+                        exceptionStack = MultiException.push(notificationFuture.getKey(), ex, exceptionStack);
+                    }
+                }
+            }
         }
         MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
         return true;
     }
-    
+
     /**
-     * Method is called if a observer notification delivers a new value. 
+     * Method is called if a observer notification delivers a new value.
+     *
      * @param value the new value
-     * 
+     *
      * Note: Overwrite this method for getting informed about value changes.
      */
     protected void applyValueUpdate(final T value) {
         // overwrite for current state holding obervable implementations.
+    }
+
+    private ExecutorService executorService;
+
+    public void setExecutorService(ExecutorService executorService) {
+        this.executorService = executorService;
     }
 }

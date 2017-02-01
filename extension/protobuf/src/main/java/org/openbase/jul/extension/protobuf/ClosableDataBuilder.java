@@ -31,9 +31,11 @@ import org.openbase.jul.exception.CouldNotPerformException;
 public class ClosableDataBuilder<MB extends Builder<MB>> implements java.lang.AutoCloseable {
 
     private final BuilderSyncSetup<MB> builderSetup;
+    private final Object consumer;
 
     public ClosableDataBuilder(final BuilderSyncSetup<MB> builderSetup, final Object consumer) {
         this.builderSetup = builderSetup;
+        this.consumer = consumer;
         builderSetup.lockWrite(consumer);
     }
 

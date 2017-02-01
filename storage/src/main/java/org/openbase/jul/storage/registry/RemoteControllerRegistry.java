@@ -47,7 +47,9 @@ public class RemoteControllerRegistry<KEY, ENTRY extends Remote & Identifiable<K
     @Override
     public void clear() throws CouldNotPerformException {
         for (Remote remote : getEntries()) {
-            remote.shutdown();
+            if (!remote.isLocked()) {
+                remote.shutdown();
+            }
         }
         super.clear();
     }

@@ -80,7 +80,7 @@ public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP exten
             replaceInternalMap(map, false);
             consistent = true;
         } catch (Exception ex) {
-            throw new FatalImplementationErrorException("FATAL: Sandbox sync failed!", ex);
+            throw new FatalImplementationErrorException("Sandbox sync failed!", this, ex);
         }
     }
 

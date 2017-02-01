@@ -192,7 +192,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         super.afterConsistencyCheck();
         saveRegistry();
     }
-    
+
     @Override
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
@@ -260,7 +260,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
                 try {
                     registerConsistencyHandler(handler);
                 } catch (CouldNotPerformException ex) {
-                    throw new FatalImplementationErrorException("FATAL ERROR: During VersionConsistencyHandler[" + handler.getClass().getSimpleName() + "] execution!", ex);
+                    throw new FatalImplementationErrorException("During VersionConsistencyHandler[" + handler.getClass().getSimpleName() + "] execution!", this, ex);
                 }
             }
         }

@@ -264,9 +264,8 @@ public class WatchDog implements Activatable, Shutdownable {
                         logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
                     }
                 } catch (Throwable tr) {
-                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Fatal watchdog execution error!", tr), logger);
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, tr), logger);
                     skipActivation();
-                    assert false;
                 }
             } finally {
                 processing = false;

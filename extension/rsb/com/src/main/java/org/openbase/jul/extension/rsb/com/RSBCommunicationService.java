@@ -125,6 +125,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
             this.dataObserver = new DataObserver(this);
+            this.dataObserver.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
             this.initialized = false;
             registerShutdownHook(this);
 

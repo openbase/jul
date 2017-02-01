@@ -289,7 +289,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void verifyMaintainability() throws VerificationFailedException {
         if (isLocked()) {
             throw new VerificationFailedException("Manipulation of " + this + "is currently not valid because the maintains is protected by another instance! "
-                    + "This happens if you try to modify an instanced which is locked by a managed instance pool.");
+                    + "Did you try to modify an instance which is locked by a managed instance pool?");
         }
     }
 
