@@ -194,19 +194,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         // overwrite for specific post initialization tasks.
     }
 
-    private void enableTransport(final ParticipantConfig participantConfig, final JPRSBTransport.TransportType type) {
-        if (type == JPRSBTransport.TransportType.DEFAULT) {
-            return;
-        }
-
-        for (TransportConfig transport : participantConfig.getEnabledTransports()) {
-            logger.debug("Disable " + transport.getName() + " communication.");
-            transport.setEnabled(false);
-        }
-        logger.debug("Enable [" + type.name().toLowerCase() + "] communication.");
-        participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
-    }
-
     /**
      * {@inheritDoc}
      *
