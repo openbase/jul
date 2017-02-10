@@ -675,7 +675,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * Method can be used to calculate connection ping.
      * The given timestamp argument is just returned from the local server to calculate the delay on client side.
      *
-     * @param timestemp
+     * @param timestamp
      * @return
      */
     @Override
