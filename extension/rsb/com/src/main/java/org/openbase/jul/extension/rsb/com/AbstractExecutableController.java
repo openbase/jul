@@ -36,6 +36,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.iface.Enableable;
+import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import rst.domotic.state.ActivationStateType.ActivationState;
@@ -70,49 +71,52 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
         return (ActivationState) getDataField(FIELD_ACTIVATION_STATE);
     }
 
-    public synchronized Future<Void> setActivationState(final ActivationState activation) throws CouldNotPerformException {
+    public Future<Void> setActivationState(final ActivationState activation) throws CouldNotPerformException {
         return GlobalCachedExecutorService.submit(new Callable<Void>() {
 
             @Override
             public Void call() throws Exception {
-                if (activation.getValue().equals(ActivationState.State.UNKNOWN)) {
+                if (activation == null || activation.getValue().equals(ActivationState.State.UNKNOWN)) {
                     throw new InvalidStateException("Unknown is not a valid state!");
                 }
 
                 try (ClosableDataBuilder<MB> dataBuilder = getDataBuilder(this)) {
-                    Descriptors.FieldDescriptor findFieldByName = dataBuilder.getInternalBuilder().getDescriptorForType().findFieldByName(FIELD_ACTIVATION_STATE);
-                    if (findFieldByName == null) {
-                        throw new NotAvailableException("Field[" + FIELD_ACTIVATION_STATE + "] does not exist for type " + dataBuilder.getClass().getName());
-                    }
-                    dataBuilder.getInternalBuilder().setField(findFieldByName, activation);
-                } catch (Exception ex) {
-                    throw new CouldNotPerformException("Could not apply data change!", ex);
-                }
+                    try {
+                        if (activation.getValue() == ActivationState.State.ACTIVE) {
+                            if (!executing) {
+                                executing = true;
+                                executionFuture = GlobalCachedExecutorService.submit(new Callable<Void>() {
 
-                try {
-                    if (activation.getValue() == ActivationState.State.ACTIVE) {
-                        if (!executing) {
-                            executing = true;
-                            executionFuture = GlobalCachedExecutorService.submit(new Callable<Void>() {
-
-                                @Override
-                                public Void call() throws Exception {
-                                    execute();
-                                    return null;
-                                }
-                            });
-                        }
-                    } else {
-                        if (executing) {
-                            if (executionFuture != null || !executionFuture.isDone()) {
-                                executionFuture.cancel(true);
+                                    @Override
+                                    public Void call() throws Exception {
+                                        execute();
+                                        return null;
+                                    }
+                                });
                             }
-                            executing = false;
-                            stop();
+                        } else {
+                            if (executing) {
+                                if (executionFuture != null || !executionFuture.isDone()) {
+                                    executionFuture.cancel(true);
+                                }
+                                executing = false;
+                                executionFuture = null;
+                                stop();
+                            }
                         }
+
+                        // save new activation state
+                        Descriptors.FieldDescriptor findFieldByName = dataBuilder.getInternalBuilder().getDescriptorForType().findFieldByName(FIELD_ACTIVATION_STATE);
+                        if (findFieldByName == null) {
+                            throw new NotAvailableException("Field[" + FIELD_ACTIVATION_STATE + "] does not exist for type " + dataBuilder.getClass().getName());
+                        }
+                        dataBuilder.getInternalBuilder().setField(findFieldByName, activation);
+
+                    } catch (CouldNotPerformException | InterruptedException ex) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update execution state!", ex), logger);
                     }
-                } catch (CouldNotPerformException | InterruptedException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update execution state!", ex), logger);
+                } catch (Exception ex) {
+                    throw new CouldNotPerformException("Could not " + StringProcessor.transformUpperCaseToCamelCase(activation.getValue().name()) + " " + this, ex);
                 }
                 return null;
             }
@@ -151,7 +155,7 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
             throw new CouldNotPerformException("Could not diable " + this, ex);
         }
     }
-    
+
     private boolean detectAutostart() {
         try {
             return isAutostartEnabled();
@@ -160,9 +164,9 @@ public abstract class AbstractExecutableController<M extends GeneratedMessage, M
             return true;
         }
     }
-    
+
     protected abstract boolean isAutostartEnabled() throws CouldNotPerformException;
-    
+
     protected abstract void execute() throws CouldNotPerformException, InterruptedException;
 
     protected abstract void stop() throws CouldNotPerformException, InterruptedException;

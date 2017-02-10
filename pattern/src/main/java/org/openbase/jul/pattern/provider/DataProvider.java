@@ -29,9 +29,9 @@ import org.openbase.jul.pattern.Observer;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <Data>
+ * @param <D>
  */
-public interface DataProvider<Data> {
+public interface DataProvider<D> {
 
     /**
      * Check if the data object is already available.
@@ -45,7 +45,7 @@ public interface DataProvider<Data> {
      *
      * @return the class of the data object
      */
-    public Class<Data> getDataClass();
+    public Class<D> getDataClass();
     
     /**
      * Method returns the data object of this instance.
@@ -55,21 +55,21 @@ public interface DataProvider<Data> {
      * @return the data object.
      * @throws NotAvailableException is thrown in case the data is not available.
      */
-    public Data getData() throws NotAvailableException;
+    public D getData() throws NotAvailableException;
 
     /**
      * This method allows the registration of data observers to get informed about data updates.
      *
      * @param observer the observer added
      */
-    public void addDataObserver(final Observer<Data> observer);
+    public void addDataObserver(final Observer<D> observer);
 
     /**
      * This method removes already registered data observers.
      *
      * @param observer the observer removed
      */
-    public void removeDataObserver(final Observer<Data> observer);
+    public void removeDataObserver(final Observer<D> observer);
     
     /**
      * Method blocks until an initial data is available.

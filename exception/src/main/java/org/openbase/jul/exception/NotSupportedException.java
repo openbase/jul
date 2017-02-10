@@ -32,18 +32,18 @@ public class NotSupportedException extends CouldNotPerformException {
     }
 
     public NotSupportedException(Object context, Object source) {
-        super("Given " + context + " is not supported by " + source + "!");
+        super(context + " is not supported by " + source + "!");
     }
 
     public NotSupportedException(Object context, Object source, Throwable cause) {
-        super("Given " + context + " is not supported by " + source + "!", cause);
+        super(context + " is not supported by " + source + "!", cause);
     }
 
     public NotSupportedException(Object context, Object source, String message, Throwable cause) {
-        super("Given " + context + " is not supported by " + source + ": " + message, cause);
+        super(context + " is not supported by " + source + ": " + message, cause);
     }
 
     public NotSupportedException(Object context, Object source, String message) {
-        super("Given " + context + " is not supported by " + source + ": " + message);
+        super(context + " is not supported by " + source + ": " + message);
     }
 }
