@@ -159,7 +159,12 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 active = true;
                 logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activated.");
             }
-        } catch (IllegalStateException | RSBException | NullPointerException ex) {
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            /**
+             * Catching specific exceptions here is not possible because not all thrown exceptions are predictable *
+             */
             throw new CouldNotPerformException("Could not activate listener!", ex);
         }
     }
