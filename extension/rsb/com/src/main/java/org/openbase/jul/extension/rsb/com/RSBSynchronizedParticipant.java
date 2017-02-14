@@ -21,9 +21,16 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +42,8 @@ import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import org.openbase.jul.extension.rsb.iface.RSBParticipant;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import org.openbase.jul.schedule.GlobalScheduledExecutorService;
 
 /**
  *
@@ -45,11 +54,12 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
 
     private final Logger logger = LoggerFactory.getLogger(RSBSynchronizedParticipant.class);
 
+    private static final long DEACTIVATION_TIMEOUT = 3000;
+
     private P participant;
     protected final SyncObject participantLock = new SyncObject("participant");
     protected final Scope scope;
     protected final ParticipantConfig config;
-    private boolean active;
 
     protected RSBSynchronizedParticipant(final Scope scope, final ParticipantConfig config) throws InstantiationException {
         try {
@@ -58,7 +68,6 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             }
             this.scope = scope;
             this.config = config;
-            this.active = false;
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -150,18 +159,24 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 if (participant == null) {
                     participant = init();
                 }
-                logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activate");
+                logger.debug("Participant[" + this + "] will be activated.");
                 if (participant.isActive()) {
-                    logger.warn("Skip activation because Participant[" + this.hashCode() + "] is already activated!");
+                    logger.warn("Skip activation because Participant[" + this + "] is already active!");
                     return;
                 }
                 getParticipant().activate();
-                active = true;
-                logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] activated.");
+                logger.debug("Participant[" + this + "] is now activate.");
             }
         } catch (InterruptedException ex) {
             throw ex;
         } catch (Exception ex) {
+            try {
+                deactivate();
+            } catch (InterruptedException exx) {
+                throw exx;
+            } catch (Exception exx) {
+                ExceptionPrinter.printHistory("Could not deactivate listener which was triggert because activation has been failed.", exx, logger, LogLevel.WARN);
+            }
             /**
              * Catching specific exceptions here is not possible because not all thrown exceptions are predictable *
              */
@@ -179,18 +194,38 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                     return;
                 }
 
-                active = false;
-                if (participant == null) {
-                    logger.warn("Ignore listener deactivation because listener was never activated!");
-                    return;
-                }
+                // deactivate
+                logger.debug("Participant[" + this + "] will be deactivated.");
+                final Future<Void> deactivationFuture = GlobalCachedExecutorService.submit(() -> {
+                    if (participant.isActive()) {
+                        participant.deactivate();
+                    }
+                    return null;
+                });
 
-                logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] deactivate.");
-                participant.deactivate();
-                logger.debug("participant[" + this.hashCode() + ":" + participant.isActive() + "] deactivated.");
-                participant = null;
+                // wait for deactivation and handle error case
+                try {
+                    deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
+                    participant = null;
+                } catch (TimeoutException ex) {
+                    throw new CouldNotPerformException(this + " does not response in time! Deactivation stall detected!");
+                } catch (ExecutionException ex) {
+                    if (ex.getCause() == null) {
+                        throw ex;
+                    }
+                    throw ex.getCause();
+                } catch (InterruptedException ex) {
+                    deactivationFuture.cancel(true);
+                    throw ex;
+                }
+                logger.debug("Participant[" + this + "] deactivated.");
             }
-        } catch (IllegalStateException | RSBException | NullPointerException ex) {
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (Throwable ex) {
+            /**
+             * Catching specific exceptions here is not possible because not all thrown exceptions are predictable *
+             */
             throw new CouldNotPerformException("Could not deactivate listener!", ex);
         }
     }
@@ -198,13 +233,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     @Override
     public boolean isActive() {
         synchronized (participantLock) {
-            if (participant == null) {
-                return false;
-            }
-            if (active) {
-                active = participant.isActive();
-            }
-            return active;
+            return participant != null;
         }
     }
 }

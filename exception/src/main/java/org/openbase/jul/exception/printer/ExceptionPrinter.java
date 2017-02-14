@@ -65,7 +65,7 @@ public class ExceptionPrinter {
      * @param <T> Exception type
      * @param th exception stack to print.
      * @param logger the logger used as message printer.
-     * @param level
+     * @param level the logging level used for the print.
      * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final Logger logger, final LogLevel level) {
@@ -80,10 +80,24 @@ public class ExceptionPrinter {
      * @param <T> Exception type
      * @param logger the logger used as message printer.
      * @param th exception stack to print.
-     * @param level
+     * @param level the logging level used for the print.
      */
     public static <T extends Throwable> void printHistory(final T th, final Logger logger, final LogLevel level) {
         printHistory(th, new LogPrinter(logger, level));
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history.
+     *
+     * @param <T> Exception type
+     * @param message the reason why this exception occurs.
+     * @param logger the logger used as message printer.
+     * @param th exception stack to print.
+     * @param level the logging level used for the print.
+     */
+    public static <T extends Throwable> void printHistory(final String message, final T th, final Logger logger, final LogLevel level) {
+        printHistory(new CouldNotPerformException(message, th), new LogPrinter(logger, level));
     }
 
     /**
@@ -345,5 +359,9 @@ public class ExceptionPrinter {
         }
 
         return throwable.getMessage().replaceAll("\n", "").trim();
+    }
+
+    public static void printHistory(String could_not_deactivate_listener_which_was_t, Exception exx, Logger logger, LogLevel logLevel) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
