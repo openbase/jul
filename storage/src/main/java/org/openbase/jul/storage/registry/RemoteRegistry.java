@@ -55,7 +55,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public RemoteRegistry(final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
         super(internalMap);
     }
-
+    
     public synchronized void notifyRegistryUpdate(final Collection<M> values) throws CouldNotPerformException {
         Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
         for (M value : values) {

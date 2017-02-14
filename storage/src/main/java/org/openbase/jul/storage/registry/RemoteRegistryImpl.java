@@ -24,6 +24,8 @@ package org.openbase.jul.storage.registry;
 import java.util.HashMap;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.InvalidStateException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Controller;
 
@@ -33,13 +35,17 @@ import org.openbase.jul.pattern.Controller;
  * @param <KEY>
  * @param <ENTRY>
  */
-public class ControllerRegistry<KEY, ENTRY extends Controller & Identifiable<KEY>> extends RegistryImpl<KEY, ENTRY> {
+public class RemoteRegistryImpl<KEY, ENTRY extends Controller & Identifiable<KEY>> extends RegistryImpl<KEY, ENTRY> implements SynchronizableRegistry<KEY, ENTRY> {
 
-    public ControllerRegistry() throws InstantiationException {
+    private static final long NEVER_SYNCHRONIZED = -1;
+
+    private long lastSynchronizationTimestamp = NEVER_SYNCHRONIZED;
+
+    public RemoteRegistryImpl() throws InstantiationException {
         super(new HashMap<>());
     }
 
-    public ControllerRegistry(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
+    public RemoteRegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
         super(entryMap);
     }
 
@@ -50,4 +56,37 @@ public class ControllerRegistry<KEY, ENTRY extends Controller & Identifiable<KEY
         }
         super.clear();
     }
+
+    /**
+     * {@inheritDoc }
+     */
+    @Override
+    public void notifySynchronization() {
+        lastSynchronizationTimestamp = System.currentTimeMillis();
+    }
+
+    /**
+     * {@inheritDoc }
+     *
+     * @return {@inheritDoc }
+     */
+    @Override
+    public boolean isInitiallySynchronized() {
+        return lastSynchronizationTimestamp != NEVER_SYNCHRONIZED;
+    }
+
+    /**
+     * {@inheritDoc }
+     *
+     * @return {@inheritDoc }
+     * @throws NotAvailableException {@inheritDoc }
+     */
+    @Override
+    public long getLastSynchronizationTimestamp() throws NotAvailableException {
+        if (!isInitiallySynchronized()) {
+            throw new NotAvailableException("SynchronizationTimestamp", new InvalidStateException("ControllerRegistry was never fully synchronized yet!"));
+        }
+        return lastSynchronizationTimestamp;
+    }
+
 }
