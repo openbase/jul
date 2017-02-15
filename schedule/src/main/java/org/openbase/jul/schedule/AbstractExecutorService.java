@@ -49,23 +49,37 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> implements Shutdownable {
 
-    public static final long DEFAULT_SHUTDOWN_TIME = 5;
+    /**
+     * Default shutdown delay in milliseconds.
+     */
+    public static final long DEFAULT_SHUTDOWN_DELAY = 3000;
+    
+    /**
+     * Default shutdown time in milliseconds.
+     */
+    public static final long DEFAULT_SHUTDOWN_TIME = 5000;
 
     /**
      * Report rate for the debug mode in milliseconds.
      */
     public static final long DEFAULT_REPORT_RATE = 60000;
 
+    /**
+     * The ratio of the threads which can be used until pool overload warnings are periodically printed. 
+     */
     public static final double DEFAULT_WARNING_RATIO = .9d;
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+    /**
+     * The internally used executor service.
+     */
     protected final ES executorService;
 
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    
     public AbstractExecutorService(final ES executorService) {
         this.executorService = executorService;
         this.initReportService();
-        Shutdownable.registerShutdownHook(this);
+        Shutdownable.registerShutdownHook(this, DEFAULT_SHUTDOWN_DELAY);
     }
 
     private Runnable initReportService() {
@@ -124,7 +138,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     @Override
     public void shutdown() {
-        shutdown(DEFAULT_SHUTDOWN_TIME, TimeUnit.SECONDS);
+        shutdown(DEFAULT_SHUTDOWN_TIME, TimeUnit.MILLISECONDS);
     }
 
     public void shutdown(final long shutdownTimeout, final TimeUnit timeUnit) {

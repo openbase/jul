@@ -43,7 +43,6 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
 import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
-import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -63,7 +62,6 @@ import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
 import rsb.config.ParticipantConfig;
-import rsb.config.TransportConfig;
 import rst.rsb.ScopeType.Scope;
 
 /**
@@ -196,19 +194,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     protected void postInit() throws InitializationException, InterruptedException {
         // overwrite for specific post initialization tasks.
-    }
-
-    private void enableTransport(final ParticipantConfig participantConfig, final JPRSBTransport.TransportType type) {
-        if (type == JPRSBTransport.TransportType.DEFAULT) {
-            return;
-        }
-
-        for (TransportConfig transport : participantConfig.getEnabledTransports()) {
-            logger.debug("Disable " + transport.getName() + " communication.");
-            transport.setEnabled(false);
-        }
-        logger.debug("Enable [" + type.name().toLowerCase() + "] communication.");
-        participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
     }
 
     /**

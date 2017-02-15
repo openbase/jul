@@ -1,6 +1,6 @@
 package org.openbase.jul.exception;
 
- /*
+/*
  * #%L
  * JUL Exception
  * %%
@@ -21,7 +21,6 @@ package org.openbase.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -37,10 +36,10 @@ public class InstantiationException extends CouldNotPerformException {
     }
 
     public InstantiationException(final Object instance, final String identifiere, final Throwable cause) {
-        this(instance.getClass(), identifiere, cause);
+        this(instance instanceof Class ? (Class) instance : instance.getClass(), identifiere, cause);
     }
 
     public InstantiationException(final Object instance, final Throwable cause) {
-        this(instance.getClass(), cause);
+        this(instance instanceof Class ? (Class) instance : instance.getClass(), cause);
     }
 }

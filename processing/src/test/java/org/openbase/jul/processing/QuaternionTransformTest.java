@@ -84,7 +84,7 @@ public class QuaternionTransformTest {
         double yaw = Math.toRadians(0);
 
         Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
-        System.out.println("90r Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+//        System.out.println("90r Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
         assertArrayEquals(toDoubleArray(new Quat4d(0.7071, 0, 0, 0.7071)), toDoubleArray(result), 0.1d);
     }
 
@@ -100,7 +100,7 @@ public class QuaternionTransformTest {
         double yaw = Math.toRadians(0);
 
         Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
-        System.out.println("90p Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+//        System.out.println("90p Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
         assertArrayEquals(toDoubleArray(new Quat4d(0, 0.7071, 0, 0.7071)), toDoubleArray(result), 0.1d);
     }
 
@@ -116,7 +116,7 @@ public class QuaternionTransformTest {
         double yaw = Math.toRadians(90);
 
         Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
-        System.out.println("90y Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+//        System.out.println("90y Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
         assertArrayEquals(toDoubleArray(new Quat4d(0, 0, 0.7071, 0.7071)), toDoubleArray(result), 0.1d);
     }
 
@@ -132,7 +132,7 @@ public class QuaternionTransformTest {
         double yaw = Math.toRadians(30);
 
         Quat4d result = QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw));
-        System.out.println("90y Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
+//        System.out.println("90y Result [" + result.x + "][" + result.y + "][" + result.z + "][" + result.w + "]");
         assertArrayEquals(toDoubleArray(new Quat4d(0.409, 0.516, 0.399, 0.638)), toDoubleArray(result), 0.1d);
     }
 
@@ -177,8 +177,8 @@ public class QuaternionTransformTest {
         double yaw = Math.toRadians(78);
         Vector3d input = new Vector3d(roll, pitch, yaw);
         Vector3d result = QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw)));
-        System.out.println("Expected [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
-        System.out.println("Result [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
+//        System.out.println("Expected [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
+//        System.out.println("Result [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
         assertArrayEquals(toDoubleArray(input), toDoubleArray(QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(input))), 0.1d);
     }
 
@@ -192,8 +192,8 @@ public class QuaternionTransformTest {
 
         Vector3d input = new Vector3d(roll, pitch, yaw);
         Vector3d result = QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(new Vector3d(roll, pitch, yaw)));
-        System.out.println("Expected [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
-        System.out.println("Result [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
+//        System.out.println("Expected [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
+//        System.out.println("Result [" + Math.toDegrees(result.x) + "][" + Math.toDegrees(result.y) + "][" + Math.toDegrees(result.z) + "]");
         assertArrayEquals(toDoubleArray(input), toDoubleArray(QuaternionEulerTransform.transform(QuaternionEulerTransform.transform(input))), 0.1d);
     }
 

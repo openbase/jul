@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> implements Activatable, Shutdownable {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Registry<KEY, ENTRY> localRegistry;
+    private final SynchronizableRegistry<KEY, ENTRY> localRegistry;
     private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteRegistryChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
@@ -62,7 +62,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry;
     private boolean active;
 
-    public RegistrySynchronizer(final Registry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
+    public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.localRegistry = registry;
             this.remoteRegistry = remoteRegistry;
@@ -73,7 +73,11 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                 @Override
                 public void relay() throws Exception {
                     logger.debug("Incomming updates passed filter...");
-                    internalSync();
+                    try {
+                        internalSync();
+                    } finally {
+                        registry.notifySynchronization();
+                    }
                 }
             };
 

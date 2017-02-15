@@ -65,7 +65,6 @@ public class ProtobufVariableProviderTest {
     public void testGetName() {
 
         UnitConfigType.UnitConfig config = UnitConfig.getDefaultInstance();
-        System.out.println("getName");
         ProtobufVariableProvider instance = new ProtobufVariableProvider(config);
         String expResult = "UnitConfig" + ProtobufVariableProvider.NAME_SUFIX;
         String result = instance.getName();
@@ -80,7 +79,6 @@ public class ProtobufVariableProviderTest {
         UnitConfigType.UnitConfig config = UnitConfig.getDefaultInstance();
         config = config.toBuilder().setLabel("TestLabel").build();
         config = config.toBuilder().setId("TestID").build();
-        System.out.println("getValue");
         ProtobufVariableProvider instance = new ProtobufVariableProvider(config);
 
         assertEquals("TestLabel", instance.getValue("LABEL"));

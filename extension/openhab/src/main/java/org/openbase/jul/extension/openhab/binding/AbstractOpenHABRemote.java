@@ -27,6 +27,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.openhab.binding.interfaces.OpenHABRemote;
@@ -94,7 +95,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabStat
                     }
                     internalReceiveCommand(openhabCommand);
                 } catch (ClassCastException ex) {
-                    // Thats not an command hab command. Skip invocation...
+                    ExceptionPrinter.printHistory(new NotSupportedException(event.getData().getClass().getSimpleName(), this), logger, LogLevel.DEBUG);
                 } catch (CouldNotPerformException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not handle openhab command!", ex), logger);
                 }
@@ -107,7 +108,7 @@ public abstract class AbstractOpenHABRemote extends RSBRemoteService<OpenhabStat
                     try {
                         internalReceiveUpdate((OpenhabCommand) event.getData());
                     } catch (ClassCastException ex) {
-                        // Thats not an command hab command. Skip invocation...
+                        ExceptionPrinter.printHistory(new NotSupportedException(event.getData().getClass().getSimpleName(), this), logger, LogLevel.DEBUG);
                     } catch (CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Could not handle openhab update!", ex), logger);
                     }
