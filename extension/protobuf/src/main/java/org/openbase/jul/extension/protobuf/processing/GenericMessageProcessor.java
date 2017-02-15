@@ -21,9 +21,12 @@ package org.openbase.jul.extension.protobuf.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.GeneratedMessage;
+import java.lang.reflect.InvocationTargetException;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InitializationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -31,29 +34,34 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public class GenericMessageProcessor<M extends GeneratedMessage> implements MessageProcessor<GeneratedMessage, M> {
 
-    private final M.Builder builder;
+    private static final String NEW_BUILDER_METHOD_NAME = "newBuilder";
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    private M.Builder builder;
     private final Class<M> dataClass;
 
-    public GenericMessageProcessor(final M.Builder builder, final Class<M> dataClass) {
-        this.builder = builder;
+    public GenericMessageProcessor(final Class<M> dataClass) throws InitializationException {
         this.dataClass = dataClass;
+        try {
+            this.builder = (M.Builder) dataClass.getMethod(NEW_BUILDER_METHOD_NAME).invoke(null);
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+            throw new InitializationException(this, new CouldNotPerformException("Could not create builder from dataClass[" + dataClass.getSimpleName() + "]!", ex));
+        }
     }
 
     @Override
-    public M process(GeneratedMessage input) throws CouldNotPerformException, InterruptedException {
+    public M process(final GeneratedMessage input) throws CouldNotPerformException, InterruptedException {
         if (dataClass.isInstance(input)) {
             return (M) input;
         }
 
         builder.clear();
-        for (FieldDescriptor fieldDescriptor : builder.getDescriptorForType().getFields()) {
-            for (FieldDescriptor inputFieldDescriptor : input.getAllFields().keySet()) {
-                if (fieldDescriptor.getType().equals(inputFieldDescriptor.getType())
-                        && fieldDescriptor.getName().equals(inputFieldDescriptor.getName())) {
-                    builder.setField(fieldDescriptor, input.getField(inputFieldDescriptor));
-                }
-            }
-        }
+        builder.getDescriptorForType().getFields().stream().forEach((fieldDescriptor) -> {
+            input.getAllFields().keySet().stream().filter((inputFieldDescriptor) -> (fieldDescriptor.getType().equals(inputFieldDescriptor.getType())
+                    && fieldDescriptor.getName().equals(inputFieldDescriptor.getName()))).forEach((inputFieldDescriptor) -> {
+                        builder.setField(fieldDescriptor, input.getField(inputFieldDescriptor));
+                    });
+        });
         return (M) builder.build();
     }
 }
