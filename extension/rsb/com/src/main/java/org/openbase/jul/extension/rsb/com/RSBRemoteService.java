@@ -40,6 +40,8 @@ import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
+import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
 import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
@@ -106,6 +108,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private M data;
     private boolean initialized;
     private final Class<M> dataClass;
+    private MessageProcessor<GeneratedMessage, M> messageProcessor;
 
     private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
     private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
@@ -119,6 +122,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.connectionState = DISCONNECTED;
         this.connectionPing = -1;
         this.lastPingReceived = -1;
+        this.messageProcessor = new SimpleMessageProcessor<>(dataClass);
+    }
+
+    public void setMessageProcessor(MessageProcessor<GeneratedMessage, M> messageProcessor) {
+        this.messageProcessor = messageProcessor;
     }
 
     /**
@@ -707,7 +715,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         public M call() throws CouldNotPerformException, InterruptedException {
 
             Future<Event> internalFuture = null;
-            M dataUpdate;
+            M dataUpdate = null;
             try {
                 try {
                     logger.debug("call request");
@@ -722,8 +730,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                         try {
                             internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
-                            dataUpdate = (M) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData();
-
+                            dataUpdate = messageProcessor.process((GeneratedMessage) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData());
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
                             }
@@ -1015,11 +1022,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
-                try {
-                    applyDataUpdate((M) dataUpdate);
-                } catch (ClassCastException ex) {
-                    // Thats not the right internal data type. Skip update...
-                }
+                applyDataUpdate(messageProcessor.process((GeneratedMessage) dataUpdate));
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception ex) {
