@@ -132,24 +132,26 @@ public class WatchDogTest {
         final WatchDog watchDog = new WatchDog(new TestBadService(), "TestBadService");
         assertEquals(watchDog.isActive(), false);
 
-        new Thread() {
+        Thread disableTask = new Thread() {
 
             @Override
             public void run() {
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(50);
                     watchDog.deactivate();
                     assertEquals(false, watchDog.isActive());
                 } catch (InterruptedException ex) {
                 }
             }
-        }.start();
+        };
+        disableTask.start();
 
         try {
             watchDog.activate();
             assertTrue("No exception thrown for bad service activation!", false);
         } catch (CouldNotPerformException | InterruptedException ex) {
         }
+        disableTask.join();
         assertEquals(false, watchDog.isActive());
         System.out.println("Tests finished.");
     }
