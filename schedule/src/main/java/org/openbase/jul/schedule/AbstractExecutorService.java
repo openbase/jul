@@ -32,6 +32,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPDebugMode;
@@ -53,11 +54,21 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
      * Default shutdown delay in milliseconds.
      */
     public static final long DEFAULT_SHUTDOWN_DELAY = 3000;
-    
+
     /**
      * Default shutdown time in milliseconds.
      */
-    public static final long DEFAULT_SHUTDOWN_TIME = 5000;
+    public static final long DEFAULT_SHUTDOWN_TIME = 30000;
+
+    /**
+     * Default shutdown time in milliseconds.
+     */
+    public static final long SMART_SHUTDOWN_TIMEOUT = 30000;
+
+    /**
+     * The rate for printing feedback if the shutdown is delayed.
+     */
+    public static final long SMART_SHUTDOWN_STATUS_PRINT_RATE = 1000;
 
     /**
      * Report rate for the debug mode in milliseconds.
@@ -65,7 +76,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     public static final long DEFAULT_REPORT_RATE = 60000;
 
     /**
-     * The ratio of the threads which can be used until pool overload warnings are periodically printed. 
+     * The ratio of the threads which can be used until pool overload warnings are periodically printed.
      */
     public static final double DEFAULT_WARNING_RATIO = .9d;
 
@@ -75,7 +86,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     protected final ES executorService;
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     public AbstractExecutorService(final ES executorService) {
         this.executorService = executorService;
         this.initReportService();
@@ -138,6 +149,33 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     @Override
     public void shutdown() {
+        smartShutdown();
+    }
+
+    public void smartShutdown() {
+        long timeout = SMART_SHUTDOWN_TIMEOUT;
+        int lastTaskCount = Integer.MAX_VALUE;
+        while (getExecutorService().getActiveCount() != 0) {
+
+            if (getExecutorService().getActiveCount() >= lastTaskCount) {
+                timeout -= SMART_SHUTDOWN_STATUS_PRINT_RATE;
+            } else {
+                logger.info("Waiting for " + getExecutorService().getActiveCount() + " tasks to continue the shutdown.");
+            }
+            
+            if(timeout <= 0) {
+                logger.warn("Smart shutdown timeout reached!");
+                break;
+            }
+
+            lastTaskCount = getExecutorService().getActiveCount();
+            try {
+                Thread.sleep(SMART_SHUTDOWN_STATUS_PRINT_RATE);
+            } catch (InterruptedException ex) {
+                logger.warn("Smart shutdown skipped!");
+                break;
+            }
+        }
         shutdown(DEFAULT_SHUTDOWN_TIME, TimeUnit.MILLISECONDS);
     }
 
