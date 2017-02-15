@@ -782,7 +782,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public void shutdown() {
-
         try {
             verifyMaintainability();
         } catch (VerificationFailedException ex) {
@@ -867,11 +866,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param timeout {@inheritDoc}
      * @param timeUnit {@inheritDoc}
-     * @throws NotAvailableException {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
     @Override
-    public void waitForData(long timeout, TimeUnit timeUnit) throws NotAvailableException, InterruptedException {
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         try {
             if (isDataAvailable()) {
                 return;

@@ -21,7 +21,6 @@ package org.openbase.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -45,15 +44,15 @@ public class CouldNotTransformException extends CouldNotPerformException {
     }
 
     public CouldNotTransformException(final Object source, final Class destination, final String message) {
-        this(source, destination.getClass().getName(), message);
+        this(source, destination.getName(), message);
     }
 
     public CouldNotTransformException(final Object source, final Class destination, final String message, final Throwable cause) {
-        this(source, destination.getClass().getName(), message, cause);
+        this(source, destination.getName(), message, cause);
     }
 
     public CouldNotTransformException(final Object source, final Class destination, final Throwable cause) {
-        this(source, destination.getClass().getName(), cause);
+        this(source, destination.getName(), cause);
     }
 
     public CouldNotTransformException(final Object source, final Object destination, final String message) {

@@ -216,11 +216,11 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, DataProv
      *
      * @param timeout maximal time to wait for the main controller data. After the timeout is reached a NotAvailableException is thrown which is caused by a TimeoutException.
      * @param timeUnit the time unit of the timeout.
-     * @throws NotAvailableException is thrown in case the any error occurs, or if the given timeout is reached. In this case a TimeoutException is thrown.
+     * @throws CouldNotPerformException is thrown in case the any error occurs, or if the given timeout is reached. In this case a TimeoutException is thrown.
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
     @Override
-    public void waitForData(long timeout, TimeUnit timeUnit) throws NotAvailableException, InterruptedException;
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Checks if a server connection is established.
