@@ -672,15 +672,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * Method can be used to calculate connection ping.
-     * The given timestamp argument is just returned from the local server to calculate the delay on client side.
      *
-     * @param timestamp
-     * @return
+     * {@inheritDoc }
+     *
+     * @param timestamp {@inheritDoc }
+     * @return {@inheritDoc }
      */
     @Override
-    public Future<Long> ping(Long timestemp) {
-        return CompletableFuture.completedFuture(timestemp);
+    public Future<Long> ping(final Long timestamp) {
+        return CompletableFuture.completedFuture(timestamp);
     }
 
     /**

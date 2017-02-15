@@ -275,6 +275,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @throws VerificationFailedException {@inheritDoc}
      */
+    @Override
     public void verifyMaintainability() throws VerificationFailedException {
         if (isLocked()) {
             throw new VerificationFailedException("Manipulation of " + this + "is currently not valid because the maintains is protected by another instance! "
@@ -282,6 +283,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    @Override
     public boolean isLocked() {
         synchronized (maintainerLock) {
             return maintainer != null;
@@ -293,6 +295,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @throws CouldNotPerformException {@inheritDoc}
      */
+    @Override
     public void lock(final Object maintainer) throws CouldNotPerformException {
         synchronized (maintainerLock) {
             if (this.maintainer != null) {
@@ -308,6 +311,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @param maintainer the instance which currently holds the lock.
      * @throws CouldNotPerformException is thrown if the instance could not be unlocked.
      */
+    @Override
     public void unlock(final Object maintainer) throws CouldNotPerformException {
         synchronized (maintainerLock) {
             if (this.maintainer != null && this.maintainer != maintainer) {
