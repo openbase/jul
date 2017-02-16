@@ -165,7 +165,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
         synchronized (LOCK) {
             try {
                 if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
-                    LOGGER.debug("Skip notification because observable has not been changed!");
+                    LOGGER.debug("Skip notification because " + this + " has not been changed!");
                     return false;
                 }
 
@@ -237,5 +237,10 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     public void setExecutorService(ExecutorService executorService) {
         this.executorService = executorService;
+    }
+
+    @Override
+    public String toString() {
+        return Observable.class.getSimpleName() + "[" + (source == this ? source.getClass().getSimpleName() : source) + "]";
     }
 }

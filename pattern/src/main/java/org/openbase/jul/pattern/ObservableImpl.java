@@ -21,11 +21,8 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
 import org.slf4j.Logger;
@@ -140,5 +137,4 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
     protected void applyValueUpdate(final T value) {
         this.value = value;
     }
-
 }
