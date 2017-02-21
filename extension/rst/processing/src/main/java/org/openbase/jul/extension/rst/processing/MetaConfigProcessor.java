@@ -41,7 +41,7 @@ public class MetaConfigProcessor {
      * @param metaConfig key value set
      * @param key the key to resolve
      * @return the related value of the given key.
-     * @throws org.openbase.jul.exception.NotAvailableException
+     * @throws org.openbase.jul.exception.NotAvailableException si thrown if not value for the given key could be resolved.
      */
     public static String getValue(final MetaConfig metaConfig, final String key) throws NotAvailableException {
         for (EntryType.Entry entry : metaConfig.getEntryList()) {
@@ -56,6 +56,7 @@ public class MetaConfigProcessor {
 
     /**
      * Method resolves all variables whose name contains the given identifier.
+     *
      * @param metaConfig the meta config to resolve the variables.
      * @param variableContains the identifier to select the variables.
      * @return a map of the variable name and its current value.

@@ -98,8 +98,8 @@ public class TimestampProcessor {
      * Method updates the timestamp field of the given message with the given timestamp.
      * In case of an error the original message is returned.
      *
-     * @param <M> the message type of the message to update.
-     * @param millisecunds the time to update
+     * @param <M> the message type of the message to update. 
+     * @param timestamp the timestamp to update
      * @param message the message
      * @param logger the logger which is used for printing the exception stack in case something went wrong.
      * @return the updated message or the original one in case of errors.
