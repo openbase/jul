@@ -63,14 +63,13 @@ public class RPCHelper {
 
                     Object result;
                     Class<?> payloadType;
-//
+
                     if (event.getData() == null) {
                         result = method.invoke(instance);
                     } else {
                         result = method.invoke(instance, event.getData());
                     }
 
-//                        if (method.getReturnType().isAssignableFrom(Future.class)) {
                     // Implementation of Future support by resolving result to reache inner future object.
                     if (result instanceof Future) {
                         result = ((Future) result).get();

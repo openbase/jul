@@ -81,7 +81,7 @@ public class TimestampProcessorTest {
         PowerStateType.PowerState powerState = PowerStateType.PowerState.newBuilder().build();
         long time1 = System.currentTimeMillis();
         Thread.sleep(1);
-        long time2 = TimestampJavaTimeTransform.transform(TimestampProcessor.updateTimeStampWithCurrentTime(powerState).getTimestamp());
+        long time2 = TimestampJavaTimeTransform.transform(TimestampProcessor.updateTimestampWithCurrentTime(powerState).getTimestamp());
         Thread.sleep(1);
         long time3 = System.currentTimeMillis();
         assertTrue(time1 < time2);
@@ -97,7 +97,7 @@ public class TimestampProcessorTest {
         System.out.println("updateTimeStamp");
         PowerStateType.PowerState.Builder powerState = PowerStateType.PowerState.newBuilder();
         long time = 9999;
-        TimestampProcessor.updateTimeStamp(time, powerState);
+        TimestampProcessor.updateTimestamp(time, powerState);
         assertEquals(TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());
     }
 }

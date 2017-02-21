@@ -21,13 +21,12 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.MessageOrBuilder;
 import java.lang.reflect.InvocationTargetException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotSupportedException;
-import rst.configuration.EntryType.Entry.Builder;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.Logger;
 import rst.timing.TimestampType.Timestamp;
 
 /**
@@ -55,10 +54,10 @@ public class TimestampProcessor {
      *
      * @param <M> the message type of the message to update.
      * @param messageOrBuilder the message
-     * @return
+     * @return the updated message
      * @throws CouldNotPerformException
      */
-    public static <M extends MessageOrBuilder> M updateTimeStampWithCurrentTime(final M messageOrBuilder) throws CouldNotPerformException {
+    public static <M extends MessageOrBuilder> M updateTimestampWithCurrentTime(final M messageOrBuilder) throws CouldNotPerformException {
         try {
 
             // handle builder
@@ -83,15 +82,52 @@ public class TimestampProcessor {
      * @param <M> the message type of the message to update.
      * @param millisecunds the time to update
      * @param message the message
-     * @return
+     * @return the updated message
      * @throws CouldNotPerformException
      */
-    public static <M extends MessageOrBuilder> M updateTimeStamp(final long millisecunds, final M message) throws CouldNotPerformException {
+    public static <M extends MessageOrBuilder> M updateTimestamp(final long millisecunds, final M message) throws CouldNotPerformException {
         try {
             message.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(message, TimestampJavaTimeTransform.transform(millisecunds));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
             throw new CouldNotPerformException("Could not update timestemp! ", new NotSupportedException("Field[Timestamp]", message.getClass().getName(), ex));
         }
         return message;
+    }
+
+    /**
+     * Method updates the timestamp field of the given message with the given timestamp.
+     * In case of an error the original message is returned.
+     *
+     * @param <M> the message type of the message to update.
+     * @param millisecunds the time to update
+     * @param message the message
+     * @param logger the logger which is used for printing the exception stack in case something went wrong.
+     * @return the updated message or the original one in case of errors.
+     */
+    public static <M extends MessageOrBuilder> M updateTimestamp(final long timestamp, final M message, final Logger logger) {
+        try {
+            return updateTimestamp(timestamp, message);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(ex, logger);
+            return message;
+        }
+    }
+
+    /**
+     * Method updates the timestamp field of the given message with the current time.
+     * In case of an error the original message is returned.
+     *
+     * @param <M> the message type of the message to update.
+     * @param message the message
+     * @param logger the logger which is used for printing the exception stack in case something went wrong.
+     * @return the updated message or the original one in case of errors.
+     */
+    public static <M extends MessageOrBuilder> M updateTimestampWithCurrentTime(final M message, final Logger logger) {
+        try {
+            return updateTimestampWithCurrentTime(message);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(ex, logger);
+            return message;
+        }
     }
 }
