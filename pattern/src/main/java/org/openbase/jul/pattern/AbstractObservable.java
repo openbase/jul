@@ -47,7 +47,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     private static final Object DEFAULT_SOURCE = null;
 
     protected final boolean unchangedValueFilter;
-    protected final Object LOCK = new Object();
+
+    protected final Object NOTIFICATION_LOCK = new String("ObservableNotificationLock");
+    private final Object OBSERVER_LOCK = new String("ObserverLock");
     protected final List<Observer<T>> observers;
     protected int latestValueHash;
     private Object source;
@@ -98,7 +100,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      */
     @Override
     public void addObserver(Observer<T> observer) {
-        synchronized (LOCK) {
+        synchronized (OBSERVER_LOCK) {
             if (observers.contains(observer)) {
                 LOGGER.warn("Skip observer registration. Observer[" + observer + "] is already registered!");
                 return;
@@ -114,7 +116,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      */
     @Override
     public void removeObserver(Observer<T> observer) {
-        synchronized (LOCK) {
+        synchronized (OBSERVER_LOCK) {
             observers.remove(observer);
         }
     }
@@ -124,7 +126,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      */
     @Override
     public void shutdown() {
-        synchronized (LOCK) {
+        synchronized (OBSERVER_LOCK) {
             observers.clear();
         }
     }
@@ -162,60 +164,67 @@ public abstract class AbstractObservable<T> implements Observable<T> {
         ExceptionStack exceptionStack = null;
         final Map<Observer<T>, Future<Void>> notificationFutureList = new HashMap<>();
 
-        synchronized (LOCK) {
-            try {
-                if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
-                    LOGGER.debug("Skip notification because " + this + " has not been changed!");
-                    return false;
-                }
+        final ArrayList<Observer<T>> tempObserverList;
 
-                applyValueUpdate(observable);
-                latestValueHash = observable.hashCode();
+        synchronized (OBSERVER_LOCK) {
+            tempObserverList = new ArrayList<>(observers);
+        }
 
-                for (final Observer<T> observer : new ArrayList<>(observers)) {
-
-                    if (executorService == null) {
-
-                        if (Thread.currentThread().isInterrupted()) {
-                            break;
-                        }
-
-                        // synchron notification
-                        try {
-                            observer.update(source, observable);
-                        } catch (InterruptedException ex) {
-                            Thread.currentThread().interrupt();
-                            return true;
-                        } catch (Exception ex) {
-                            exceptionStack = MultiException.push(observer, ex, exceptionStack);
-                        }
-                    } else {
-                        // asynchron notification
-                        notificationFutureList.put(observer, executorService.submit(new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                observer.update(source, observable);
-                                return null;
-                            }
-                        }));
-                    }
-                }
-            } finally {
-                LOCK.notifyAll();
+        try {
+            if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
+                LOGGER.debug("Skip notification because " + this + " has not been changed!");
+                return false;
             }
 
-            // handle exeception printing for async variant
-            if (executorService == null) {
-                for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
+            applyValueUpdate(observable);
+            latestValueHash = observable.hashCode();
+
+            for (final Observer<T> observer : tempObserverList) {
+
+                if (executorService == null) {
+
+                    if (Thread.currentThread().isInterrupted()) {
+                        break;
+                    }
+
+                    // synchron notification
                     try {
-                        notificationFuture.getValue().get();
+                        observer.update(source, observable);
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                         return true;
                     } catch (Exception ex) {
-                        exceptionStack = MultiException.push(notificationFuture.getKey(), ex, exceptionStack);
+                        exceptionStack = MultiException.push(observer, ex, exceptionStack);
                     }
+                } else {
+                    // asynchron notification
+                    notificationFutureList.put(observer, executorService.submit(new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            observer.update(source, observable);
+                            return null;
+                        }
+                    }));
                 }
+            }
+        } finally {
+            synchronized (NOTIFICATION_LOCK) {
+                NOTIFICATION_LOCK.notifyAll();
+            }
+        }
+
+        // handle exeception printing for async variant
+        if (executorService == null) {
+            for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
+                try {
+                    notificationFuture.getValue().get();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    return true;
+                } catch (Exception ex) {
+                    exceptionStack = MultiException.push(notificationFuture.getKey(), ex, exceptionStack);
+                }
+
             }
         }
         MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);

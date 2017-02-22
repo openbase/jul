@@ -88,15 +88,15 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
      */
     @Override
     public void waitForValue(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
-        synchronized (LOCK) {
+        synchronized (NOTIFICATION_LOCK) {
             if (value != null) {
                 return;
             }
             // if 0 wait forever like the default java wait() implementation.
             if (timeUnit.toMillis(timeout) == 0) {
-                LOCK.wait();
+                NOTIFICATION_LOCK.wait();
             } else {
-                timeUnit.timedWait(LOCK, timeout);
+                timeUnit.timedWait(NOTIFICATION_LOCK, timeout);
             }
             if (value == null) {
                 throw new NotAvailableException("Observable was not available in time.", new TimeoutException());
