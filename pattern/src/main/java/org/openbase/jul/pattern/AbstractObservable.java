@@ -155,7 +155,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @return true if the observable has changed
      * @throws MultiException thrown if the notification to at least one observer fails
      */
-    public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException {
+    public synchronized boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException {
         if (observable == null) {
             LOGGER.debug("Skip notification because observable is null!");
             return false;
@@ -166,10 +166,6 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
         final ArrayList<Observer<T>> tempObserverList;
 
-        synchronized (OBSERVER_LOCK) {
-            tempObserverList = new ArrayList<>(observers);
-        }
-
         try {
             if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
                 LOGGER.debug("Skip notification because " + this + " has not been changed!");
@@ -179,6 +175,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             applyValueUpdate(observable);
             latestValueHash = observable.hashCode();
 
+            synchronized (OBSERVER_LOCK) {
+                tempObserverList = new ArrayList<>(observers);
+            }
             for (final Observer<T> observer : tempObserverList) {
 
                 if (executorService == null) {
