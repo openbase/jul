@@ -162,8 +162,8 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
             } else {
                 logger.info("Waiting for " + getExecutorService().getActiveCount() + " tasks to continue the shutdown.");
             }
-            
-            if(timeout <= 0) {
+
+            if (timeout <= 0) {
                 logger.warn("Smart shutdown timeout reached!");
                 break;
             }
@@ -180,10 +180,16 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     public void shutdown(final long shutdownTimeout, final TimeUnit timeUnit) {
-        logger.info("Shutdown global executor service...");
+        logger.debug("Shutdown global executor service...");
+
+        final int activeCount = getExecutorService().getActiveCount();
+        if (activeCount != 0) {
+            logger.info("Global executor shutdown forced: " + activeCount + " tasks will be skipped...");
+        }
+
         List<Runnable> droppedTasks = executorService.shutdownNow();
         if (!droppedTasks.isEmpty()) {
-            logger.info("Global executor shutdown forced: " + droppedTasks.size() + " tasks will be skipped...");
+            logger.debug(droppedTasks.size() + " tasks dropped!");
         }
         try {
             if (!executorService.awaitTermination(shutdownTimeout, timeUnit)) {
@@ -293,5 +299,10 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                 return returnValue;
             }
         });
+    }
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
     }
 }

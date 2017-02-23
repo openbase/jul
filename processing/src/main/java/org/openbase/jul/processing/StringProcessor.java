@@ -27,6 +27,12 @@ package org.openbase.jul.processing;
  */
 public class StringProcessor {
 
+    public enum Alignment {
+        LEFT,
+        CENTER,
+        RIGHT
+    }
+
     public static String insertSpaceBetweenCamelCase(String input) {
         String output = "";
         String[] split = input.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
@@ -81,13 +87,44 @@ public class StringProcessor {
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
 
-    public static String fillWithSpaces(String input, int size) {
+    /**
+     * Method fills the given input string with width-spaces until the given string length is reached.
+     *
+     * Note: The origin input string will aligned to the left.
+     *
+     * @param input the original input string
+     * @param lenght the requested input string length.
+     * @return the extended input string
+     */
+    public static String fillWithSpaces(String input, int lenght) {
+        return fillWithSpaces(input, lenght, Alignment.LEFT);
+    }
+
+    /**
+     * Method fills the given input string with width-spaces until the given string length is reached.
+     *
+     * Note: The origin input string will aligned to the left.
+     *
+     * @param input the original input string
+     * @param lenght the requested input string length.
+     * @param textAlignment the alignment of the origin input string.
+     * @return the extended input string
+     */
+    public static String fillWithSpaces(String input, int lenght, final Alignment textAlignment) {
         String spaces = "";
-        for (int i = size - input.length(); i > 0; i--) {
+        for (int i = lenght - input.length(); i > 0; i--) {
             spaces += " ";
         }
-        return input + spaces;
-
+        switch (textAlignment) {
+            case RIGHT:
+                return spaces + input;
+            case CENTER:
+                final int half_spaces_size = (lenght - input.length()) / 2;
+                return spaces.substring(0, half_spaces_size - 1) + input + spaces.substring(half_spaces_size, spaces.length());
+            case LEFT:
+            default:
+                return input + spaces;
+        }
     }
 
     public static String transformToIdString(String input) {
