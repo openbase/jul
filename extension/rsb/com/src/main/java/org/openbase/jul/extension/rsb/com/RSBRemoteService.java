@@ -309,7 +309,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Method unlocks this instance.
      *
      * @param maintainer the instance which currently holds the lock.
-     * @throws CouldNotPerformException is thrown if the instance could not be unlocked.
+     * @throws CouldNotPerformException is thrown if the instance could not be
+     * unlocked.
      */
     @Override
     public void unlock(final Object maintainer) throws CouldNotPerformException {
@@ -443,12 +444,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 return;
             }
 
-            // update state and notify
-            this.connectionState = connectionState;
-
+            // print on info level if connection was aborted before
             if (connectionState == CONNECTED) {
                 logger.debug("Connection established " + this);
             }
+
+            // update state and notify
+            this.connectionState = connectionState;
 
             // init ping
             if (connectionState.equals(CONNECTED)) {

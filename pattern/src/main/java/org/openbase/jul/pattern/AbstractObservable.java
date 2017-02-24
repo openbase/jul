@@ -10,12 +10,12 @@ package org.openbase.jul.pattern;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -48,8 +48,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     protected final boolean unchangedValueFilter;
 
-    protected final Object NOTIFICATION_LOCK = new String("ObservableNotificationLock");
-    private final Object OBSERVER_LOCK = new String("ObserverLock");
+    protected final Object NOTIFICATION_LOCK = "ObservableNotificationLock";
+    private final Object OBSERVER_LOCK = "ObserverLock";
+    private final Object NOTIFICATION_METHOD_LOCK = "notifyObserverMethodLock";
     protected final List<Observer<T>> observers;
     protected int latestValueHash;
     private Object source;
@@ -73,7 +74,8 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     /**
      * Construct new Observable
      *
-     * @param unchangedValueFilter defines if the observer should be informed even if the value is the same than notified before.
+     * @param unchangedValueFilter defines if the observer should be informed even if the value is
+     * the same than notified before.
      */
     public AbstractObservable(final boolean unchangedValueFilter) {
         this(unchangedValueFilter, DEFAULT_SOURCE);
@@ -84,7 +86,8 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *
      * If the source is not defined the observable itself will be used as notification source.
      *
-     * @param unchangedValueFilter defines if the observer should be informed even if the value is the same than notified before.
+     * @param unchangedValueFilter defines if the observer should be informed even if the value is
+     * the same than notified before.
      * @param source the responsible source of the value notifications.
      */
     public AbstractObservable(final boolean unchangedValueFilter, final Object source) {
@@ -132,9 +135,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     }
 
     /**
-     * Notify all changes of the observable to all observers only if the observable has changed.
-     * The source of the notification is set as this.
-     * Because of data encapsulation reasons this method is not included within the Observer interface.
+     * Notify all changes of the observable to all observers only if the observable has changed. The
+     * source of the notification is set as this. Because of data encapsulation reasons this method
+     * is not included within the Observer interface.
      *
      * @param observable the value which is notified
      * @return true if the observable has changed
@@ -146,7 +149,8 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     /**
      * Notify all changes of the observable to all observers only if the observable has changed.
-     * Because of data encapsulation reasons this method is not included within the Observer interface.
+     * Because of data encapsulation reasons this method is not included within the Observer
+     * interface.
      *
      * Note: In case the given observable is null this notification will be ignored.
      *
@@ -155,79 +159,82 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @return true if the observable has changed
      * @throws MultiException thrown if the notification to at least one observer fails
      */
-    public synchronized boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException {
-        if (observable == null) {
-            LOGGER.debug("Skip notification because observable is null!");
-            return false;
-        }
-
-        ExceptionStack exceptionStack = null;
-        final Map<Observer<T>, Future<Void>> notificationFutureList = new HashMap<>();
-
-        final ArrayList<Observer<T>> tempObserverList;
-
-        try {
-            if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
-                LOGGER.debug("Skip notification because " + this + " has not been changed!");
+    public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException {
+        synchronized (NOTIFICATION_METHOD_LOCK) {
+            if (observable == null) {
+                LOGGER.debug("Skip notification because observable is null!");
                 return false;
             }
 
-            applyValueUpdate(observable);
-            latestValueHash = observable.hashCode();
+            ExceptionStack exceptionStack = null;
+            final Map<Observer<T>, Future<Void>> notificationFutureList = new HashMap<>();
 
-            synchronized (OBSERVER_LOCK) {
-                tempObserverList = new ArrayList<>(observers);
-            }
-            for (final Observer<T> observer : tempObserverList) {
+            final ArrayList<Observer<T>> tempObserverList;
 
-                if (executorService == null) {
+            try {
+                if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
+                    LOGGER.debug("Skip notification because " + this + " has not been changed!");
+                    return false;
+                }
 
-                    if (Thread.currentThread().isInterrupted()) {
-                        break;
+                applyValueUpdate(observable);
+                latestValueHash = observable.hashCode();
+
+                synchronized (OBSERVER_LOCK) {
+                    tempObserverList = new ArrayList<>(observers);
+                }
+                for (final Observer<T> observer : tempObserverList) {
+
+                    if (executorService == null) {
+
+                        if (Thread.currentThread().isInterrupted()) {
+                            break;
+                        }
+
+                        // synchron notification
+                        try {
+                            observer.update(source, observable);
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                            return true;
+                        } catch (Exception ex) {
+                            exceptionStack = MultiException.push(observer, ex, exceptionStack);
+                        }
+                    } else {
+                        // asynchron notification
+                        notificationFutureList.put(observer, executorService.submit(new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                observer.update(source, observable);
+                                return null;
+                            }
+                        }));
                     }
+                }
+            } finally {
+                assert observable != null;
+                synchronized (NOTIFICATION_LOCK) {
+                    NOTIFICATION_LOCK.notifyAll();
+                }
+            }
 
-                    // synchron notification
+            // handle exeception printing for async variant
+            if (executorService == null) {
+                for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
                     try {
-                        observer.update(source, observable);
+                        notificationFuture.getValue().get();
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                         return true;
                     } catch (Exception ex) {
-                        exceptionStack = MultiException.push(observer, ex, exceptionStack);
+                        exceptionStack = MultiException.push(notificationFuture.getKey(), ex, exceptionStack);
                     }
-                } else {
-                    // asynchron notification
-                    notificationFutureList.put(observer, executorService.submit(new Callable<Void>() {
-                        @Override
-                        public Void call() throws Exception {
-                            observer.update(source, observable);
-                            return null;
-                        }
-                    }));
+
                 }
             }
-        } finally {
-            synchronized (NOTIFICATION_LOCK) {
-                NOTIFICATION_LOCK.notifyAll();
-            }
+            MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
+            return true;
         }
-
-        // handle exeception printing for async variant
-        if (executorService == null) {
-            for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
-                try {
-                    notificationFuture.getValue().get();
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                    return true;
-                } catch (Exception ex) {
-                    exceptionStack = MultiException.push(notificationFuture.getKey(), ex, exceptionStack);
-                }
-
-            }
-        }
-        MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
-        return true;
     }
 
     /**
