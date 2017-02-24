@@ -435,6 +435,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         return connectionState == CONNECTED;
     }
 
+    private boolean connectionFailure = false;
+
     private void setConnectionState(final ConnectionState connectionState) {
         synchronized (connectionMonitor) {
 
@@ -444,15 +446,34 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
 
             // update state and notify
+            final ConnectionState oldConnectionState = this.connectionState;
             this.connectionState = connectionState;
 
-            if (connectionState == CONNECTED) {
-                logger.debug("Connection established " + this);
-            }
-
-            // init ping
-            if (connectionState.equals(CONNECTED)) {
-                ping();
+            // handle state related actions
+            switch (connectionState) {
+                case DISCONNECTED:
+                    break;
+                case CONNECTING:
+                    // if disconnected before the data request is already initiated.
+                    if (isActive() && oldConnectionState != DISCONNECTED) {
+                        connectionFailure = true;
+                        try {
+                            requestData();
+                        } catch (CouldNotPerformException ex) {
+                            ExceptionPrinter.printHistory(new CouldNotPerformException("Reconnection failed!", ex), logger, LogLevel.WARN);
+                        }
+                    }
+                    break;
+                case CONNECTED:
+                    if(connectionFailure) {
+                        logger.info("Connection reestablished " + this);
+                    } else {
+                        logger.debug("Connection established " + this);
+                    }
+                    connectionFailure = false;
+                    // initial ping to detect connection quallity
+                    ping();
+                    break;
             }
 
             this.connectionMonitor.notifyAll();
@@ -1161,7 +1182,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                         // init reconnection
                         setConnectionState(CONNECTING);
-                        requestData();
                     }
                 }
                 throw ex;
