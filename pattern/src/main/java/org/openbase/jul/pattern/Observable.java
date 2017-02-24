@@ -23,8 +23,11 @@ package org.openbase.jul.pattern;
  */
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Shutdownable;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -34,13 +37,14 @@ import org.openbase.jul.iface.Shutdownable;
 public interface Observable<T> extends Shutdownable {
 
     /**
-     * Method blocks until the observable is available.
-     * In case the given timeout is reached an TimeoutException is thrown.
+     * Method blocks until the observable is available. In case the given timeout is reached an
+     * TimeoutException is thrown.
      *
      * @param timeout is the timeout related to the given {@link TimeUnit}.
      * @param timeUnit is the unit of the timeout.
      * @throws InterruptedException is thrown if the current thread was interrupted externally.
-     * @throws CouldNotPerformException is thrown with a TimeoutException cause if the given timeout is reached.
+     * @throws CouldNotPerformException is thrown with a TimeoutException cause if the given timeout
+     * is reached.
      */
     public void waitForValue(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 
@@ -55,7 +59,7 @@ public interface Observable<T> extends Shutdownable {
             waitForValue(0, TimeUnit.MILLISECONDS);
         } catch (NotAvailableException ex) {
             // Should never happen because no timeout was given.
-            assert false;
+            ExceptionPrinter.printHistory(new FatalImplementationErrorException("Observable has notified without valid value!", this, ex), LoggerFactory.getLogger(getClass()));
         }
     }
 
@@ -83,10 +87,11 @@ public interface Observable<T> extends Shutdownable {
 
     /**
      * Checks if a value was ever notified.
+     *
      * @return true if the value is available.
      */
     public boolean isValueAvailable();
-    
+
     /**
      * Method returns the latest observable value.
      *

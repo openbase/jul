@@ -309,7 +309,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Method unlocks this instance.
      *
      * @param maintainer the instance which currently holds the lock.
-     * @throws CouldNotPerformException is thrown if the instance could not be unlocked.
+     * @throws CouldNotPerformException is thrown if the instance could not be
+     * unlocked.
      */
     @Override
     public void unlock(final Object maintainer) throws CouldNotPerformException {
