@@ -10,12 +10,12 @@ package org.openbase.jul.pattern;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -48,9 +48,27 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     protected final boolean unchangedValueFilter;
 
-    protected final Object NOTIFICATION_LOCK = "ObservableNotificationLock";
-    private final Object OBSERVER_LOCK = "ObserverLock";
-    private final Object NOTIFICATION_METHOD_LOCK = "notifyObserverMethodLock";
+    protected final Object NOTIFICATION_LOCK = new Object() {
+        @Override
+        public String toString() {
+            return "ObservableNotificationLock";
+        }
+    };
+
+    private final Object OBSERVER_LOCK = new Object() {
+        @Override
+        public String toString() {
+            return "ObserverLock";
+        }
+    };
+
+    private final Object NOTIFICATION_METHOD_LOCK = new Object() {
+        @Override
+        public String toString() {
+            return "notifyObserverMethodLock";
+        }
+    };
+
     protected final List<Observer<T>> observers;
     protected int latestValueHash;
     private Object source;
