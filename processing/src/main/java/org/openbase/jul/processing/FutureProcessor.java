@@ -23,6 +23,11 @@ package org.openbase.jul.processing;
  */
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  *
@@ -51,4 +56,42 @@ public class FutureProcessor {
         });
         return future;
     }
+
+    /**
+     * Method returns a future which is already canceled by the given cause.
+     *
+     * @param <T> the type of the future
+     * @param futureType the type class of the future
+     * @param cause the reason why the future was canceled.
+     * @return the canceled future.
+     */
+    public static <T> Future<T> canceledFuture(final Class<T> futureType, final Exception cause) {
+        return new Future<T>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return true;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return true;
+            }
+
+            @Override
+            public boolean isDone() {
+                return true;
+            }
+
+            @Override
+            public T get() throws InterruptedException, ExecutionException {
+                throw new ExecutionException("Future was canceled!", cause);
+            }
+
+            @Override
+            public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                throw new ExecutionException("Future was canceled!", cause);
+            }
+        };
+    }
+
 }

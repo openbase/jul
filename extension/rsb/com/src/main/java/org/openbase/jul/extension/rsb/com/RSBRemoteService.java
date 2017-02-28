@@ -466,7 +466,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
                     break;
                 case CONNECTED:
-                    if(connectionFailure) {
+                    if (connectionFailure) {
                         logger.info("Connection reestablished " + this);
                     } else {
                         logger.debug("Connection established " + this);
@@ -558,11 +558,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
 
+        final String shortArgument = RPCHelper.argumentToString(argument);
         validateActivation();
         long retryTimeout = METHOD_CALL_START_TIMEOUT;
         long validTimeout = timeout;
+
         try {
-            logger.debug("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
+            logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
             if (!isConnected()) {
                 waitForConnectionState(CONNECTED);
             }
@@ -578,11 +580,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
 
                 try {
-                    logger.debug("Calling method [" + methodName + "(" + argument + ")] on scope: " + remoteServer.getScope().toString());
+                    logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
                     final R returnValue = remoteServer.call(methodName, argument, retryTimeout);
 
                     if (retryTimeout != METHOD_CALL_START_TIMEOUT && retryTimeout > 15000) {
-                        logger.info("Methode[" + methodName + "(" + argument + ")] returned! Continue processing...");
+                        logger.info("Methode[" + methodName + "(" + shortArgument + ")] returned! Continue processing...");
                     }
                     return returnValue;
 
@@ -593,7 +595,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         validTimeout -= retryTimeout;
                         if (validTimeout <= 0) {
                             ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                            throw new TimeoutException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
+                            throw new TimeoutException("Could not call remote Methode[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
                         }
                         retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
                     } else {
@@ -603,10 +605,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     // only print warning if timeout is too long.
                     if (retryTimeout > 15000) {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                        logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
+                        logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     } else {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
-                        logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + argument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
+                        logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     }
 
                     Thread.yield();
@@ -615,7 +617,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (TimeoutException ex) {
             throw ex;
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
 
@@ -639,9 +641,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
             @Override
             public R call() throws Exception {
+
+                final String shortArgument = RPCHelper.argumentToString(argument);
+
                 try {
                     try {
-                        logger.debug("Calling method [" + methodName + "(" + (argument != null ? argument.toString() : "") + ")] on scope: " + remoteServer.getScope().toString());
+                        logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
 
                         if (!isConnected()) {
                             waitForConnectionState(CONNECTED);
@@ -673,7 +678,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         throw ex;
                     }
                 } catch (CouldNotPerformException | ExecutionException | CancellationException | InterruptedException ex) {
-                    throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + argument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+                    throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
                 }
             }
         });

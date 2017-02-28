@@ -84,7 +84,7 @@ public class RPCHelper {
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new Callback.UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToString(event) + ")]!", ex)), logger);
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new Callback.UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")]!", ex)), logger);
                 }
                 return new Event(Void.class);
             }
@@ -129,13 +129,23 @@ public class RPCHelper {
         }
     }
 
-    private static String eventDataToString(Event event) {
-        if (event.getData() == null) {
+    public static String eventDataToArgumentString(final Event event) {
+        if (event == null) {
             return "Void";
         }
-        String rep = event.getData().toString();
+        return argumentToString(event.getData());
+
+    }
+
+    public static String argumentToString(final Object argument) {
+        if (argument == null) {
+            return "Void";
+        }
+
+        final String rep = argument.toString();
+
         if (rep.length() > 10) {
-            return event.getData().getClass().getSimpleName();
+            return argument.getClass().getSimpleName();
         }
         return rep;
     }
