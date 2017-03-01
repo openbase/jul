@@ -100,7 +100,7 @@ public class ConfigurableControllerAndRemoteTest {
 
     @Test(timeout = 10000)
     public void applyConfigUpdateTest() throws Exception {
-        System.out.println("initTest");
+        System.out.println("applyConfigUpdateTest");
 
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 

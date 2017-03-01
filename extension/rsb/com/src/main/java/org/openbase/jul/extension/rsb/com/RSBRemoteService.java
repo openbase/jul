@@ -407,6 +407,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (remoteServerWatchDog != null) {
             remoteServerWatchDog.deactivate();
         }
+        synchronized (connectionMonitor) {
+            connectionMonitor.notifyAll();
+        }
     }
 
     public void reset() throws CouldNotPerformException {
@@ -646,7 +649,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 try {
                     try {
-                        logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
+                        logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
 
                         if (!isConnected()) {
                             waitForConnectionState(CONNECTED);
@@ -967,8 +970,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * interrupted.
      * @throws org.openbase.jul.exception.TimeoutException is thrown in case the
      * timeout is expired without reaching the connection state.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
+     * the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
      */
-    public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException {
+    public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException {
         synchronized (connectionMonitor) {
             boolean delayDetected = false;
             while (!Thread.currentThread().isInterrupted()) {
@@ -981,13 +986,33 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
+                switch (connectionState) {
+                    case CONNECTED:
+                    case CONNECTING:
+                        if (!isActive()) {
+                            throw new InvalidStateException("Remote service is not active!");
+                        }
+                }
+
                 // detect delay for long term wait
                 if (timeout == 0) {
+//                    System.out.println("Wait for 15 seconds!");
                     connectionMonitor.wait(15000);
+//                    System.out.println("Woke up from waiting");
                     if (!this.connectionState.equals(connectionState)) {
+                        switch (connectionState) {
+                            case CONNECTED:
+                            case CONNECTING:
+                                if (!isActive()) {
+//                                    System.out.println("Skipped further waiting");
+                                    throw new InvalidStateException("Remote service is not active!");
+                                }
+                        }
                         delayDetected = true;
                         logger.info("Wait that " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] is " + connectionState.name().toLowerCase() + "...");
+//                        System.out.println("Waitiing unlimited!");
                         connectionMonitor.wait();
+//                        System.out.println("Woke up from waiting!");
                     }
                     continue;
                 }
@@ -1015,8 +1040,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @param connectionState the desired connection state
      * @throws InterruptedException is thrown in case the thread is externally
      * interrupted.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
+     * the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
      */
-    public void waitForConnectionState(final ConnectionState connectionState) throws InterruptedException {
+    public void waitForConnectionState(final ConnectionState connectionState) throws InterruptedException, CouldNotPerformException {
         try {
             waitForConnectionState(connectionState, 0);
         } catch (TimeoutException ex) {

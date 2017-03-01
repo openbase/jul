@@ -321,8 +321,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         validateInitialization();
         logger.debug("Activate RSBCommunicationService for: " + this);
         setControllerAvailabilityState(ControllerAvailabilityState.ACTIVATING);
-        informerWatchDog.activate();
         serverWatchDog.activate();
+        informerWatchDog.activate();
     }
 
     /**
