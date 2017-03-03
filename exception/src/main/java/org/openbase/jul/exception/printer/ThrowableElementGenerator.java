@@ -21,7 +21,6 @@ package org.openbase.jul.exception.printer;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.MultiException;
 
 /**
@@ -42,9 +41,9 @@ public class ThrowableElementGenerator implements ElementGenerator<Throwable> {
     @Override
     public void printElement(Throwable element, final Printer printer, String rootPrefix, final String childPrefix) {
         if (element instanceof MultiException) {
-            ExceptionPrinter.printHistory(element, printer, rootPrefix, childPrefix + " ║ ");
+            ExceptionPrinter.printHistory(element, printer, rootPrefix, childPrefix + TREE_ELEMENT_SPACER);
         } else {
-            printer.print(rootPrefix + " " + generateRoot(element));
+            printer.print(rootPrefix + LEAF_ENTRY_SPACER_SINGLE + generateRoot(element));
         }
     }
 };

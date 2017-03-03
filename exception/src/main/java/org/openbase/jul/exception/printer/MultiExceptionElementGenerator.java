@@ -36,7 +36,7 @@ public class MultiExceptionElementGenerator implements ElementGenerator<MultiExc
 
     @Override
     public void printRootElement(final MultiException.SourceExceptionEntry element, final Printer printer, final String rootPrefix, final String childPrefix) {
-        printer.print(rootPrefix + " " + generateRoot(element));
+        printer.print(rootPrefix + LEAF_ENTRY_SPACER_MULTI + generateRoot(element));
     }
 
     @Override

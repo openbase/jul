@@ -121,6 +121,50 @@ public class ExceptionPrinterTest {
 
     }
 
+    /**
+     * Test of printHistory method, of class ExceptionPrinter.
+     */
+    @Test(timeout = 30000)
+    public void testPrintMultiExceptionHistory() {
+        System.out.println("printHistory");
+        Logger logger = LoggerFactory.getLogger(ExceptionPrinterTest.class);
+        
+        ExceptionStack innerStack = null;
+        ExceptionStack outerStack = null;
+
+        Exception ex1 = new CouldNotPerformException("No Way 1", new NullPointerException());
+        Exception ex2 = new CouldNotPerformException("No Way 2", new NullPointerException());
+        Exception ex3 = new CouldNotPerformException("No Way 3", new NullPointerException());
+        Exception ex4 = new CouldNotPerformException("No Way 4", new NullPointerException());
+        Exception ex5 = new CouldNotPerformException("No Way 5", new NullPointerException());
+        Exception ex6 = new CouldNotPerformException("No Way 6", new NullPointerException());
+        Exception ex7 = new CouldNotPerformException("No Way 7", new NullPointerException());
+
+        innerStack = MultiException.push(this, ex1, innerStack);
+        innerStack = MultiException.push(this, ex2, innerStack);
+        innerStack = MultiException.push(this, ex3, innerStack);
+        innerStack = MultiException.push(this, ex4, innerStack);
+        innerStack = MultiException.push(this, ex5, innerStack);
+        innerStack = MultiException.push(this, ex6, innerStack);
+        innerStack = MultiException.push(this, ex7, innerStack);
+
+        try {
+            MultiException.checkAndThrow("InnerMultiException", innerStack);
+        } catch (MultiException ex) {
+            outerStack = MultiException.push(this, new NotAvailableException("first"), outerStack);
+            outerStack = MultiException.push(this, ex, outerStack);
+            outerStack = MultiException.push(this, new NotAvailableException("third"), outerStack);
+        }
+
+        try {
+            MultiException.checkAndThrow("OuterMultiException", outerStack);
+        } catch (MultiException ex) {
+//            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Base 1", ex), logger, LogLevel.ERROR);
+        }
+
+    }
+    
     @Override
     public String toString() {
         return getClass().getSimpleName();

@@ -285,18 +285,18 @@ public class ExceptionPrinter {
             printSequenze(buildThrowableList(th), THROWABLE_ELEMENT_GENERATOR, printer, rootPrefix, childPrefix);
         }
     }
+    
+    private static List<Throwable> buildThrowableList(Throwable throwable) {
+        final List<Throwable> throwableList = new ArrayList<>();
+        while (throwable != null) {
+            throwableList.add(throwable);
 
-    private static List<Throwable> buildThrowableList(Throwable ex) {
-        List<Throwable> throwableList = new ArrayList<>();
-        if (ex == null) {
-            return throwableList;
-        }
-        throwableList.add(ex);
+            // do not add further causes of multi exceptions because these ones are already printed as subtree.
+            if (throwable instanceof MultiException) {
+                return throwableList;
+            }
 
-        Throwable cause = ex.getCause();
-        while (cause != null) {
-            throwableList.add(cause);
-            cause = cause.getCause();
+            throwable = throwable.getCause();
         }
         return throwableList;
     }
@@ -314,16 +314,19 @@ public class ExceptionPrinter {
         String offset = "";
 
         for (int i = 1; i < elementList.size(); i++) {
-
-            // update offset
-            offset += " ";
-
             // check if i is last element
             if (i + 1 == elementList.size()) {
-                generator.printElement(elementList.get(i), printer, childPrefix + offset + "╚══", childPrefix + offset);
+                if (elementList.get(i) instanceof MultiException) {
+                    generator.printElement(elementList.get(i), printer, childPrefix + offset + " ╚═", childPrefix + offset);
+                } else {
+                    generator.printElement(elementList.get(i), printer, childPrefix + offset + " ╚════", childPrefix + offset);
+                }
             } else {
-                generator.printElement(elementList.get(i), printer, childPrefix + offset + "╚╦═", childPrefix + offset);
+                generator.printElement(elementList.get(i), printer, childPrefix + offset + " ╚══╦═",  childPrefix + offset);
             }
+
+            // update offset
+            offset += ElementGenerator.TREE_ELEMENT_SPACER;
         }
     }
 
@@ -342,7 +345,7 @@ public class ExceptionPrinter {
         for (int i = 0; i < elementList.size(); i++) {
             // check if i is last element
             if (i + 1 == elementList.size()) {
-                generator.printElement(elementList.get(i), printer, childPrefix + " ╚═", childPrefix + "   ");
+                generator.printElement(elementList.get(i), printer, childPrefix + " ╚═", childPrefix + ElementGenerator.TREE_ELEMENT_SPACER);
             } else {
                 generator.printElement(elementList.get(i), printer, childPrefix + " ╠═", childPrefix + " ║ ");
             }
@@ -359,9 +362,5 @@ public class ExceptionPrinter {
         }
 
         return throwable.getMessage().replaceAll("\n", "").trim();
-    }
-
-    public static void printHistory(String could_not_deactivate_listener_which_was_t, Exception exx, Logger logger, LogLevel logLevel) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

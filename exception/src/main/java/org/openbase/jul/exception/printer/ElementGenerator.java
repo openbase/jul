@@ -21,13 +21,16 @@ package org.openbase.jul.exception.printer;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <E>
  */
 public interface ElementGenerator<E> {
+
+    public static final String LEAF_ENTRY_SPACER_SINGLE = "⚀ ";
+    public static final String LEAF_ENTRY_SPACER_MULTI = "⚄ ";
+    public static final String TREE_ELEMENT_SPACER = "   ";
 
     /**
      *
