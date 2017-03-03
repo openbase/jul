@@ -60,7 +60,33 @@ public interface DataBuilderProvider<M extends GeneratedMessage, MB extends M.Bu
      *
      * @param consumer
      * @return a new builder wrapper with a locked builder instance.
-     * @return
      */
     public ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
+
+    /**
+     * This method generates a closable data builder wrapper including the
+     * internal builder instance. Be informed that the internal builder is
+     * directly locked and all internal builder operations are queued. Therefore please
+     * call the close method soon as possible to release the builder lock after
+     * you builder modifications, otherwise the overall processing pipeline is
+     * delayed.
+     *
+     *
+     * <pre>
+     * {@code Usage Example:
+     *
+     *     try (ClosableDataBuilder<MotionSensor.Builder> dataBuilder = getDataBuilder(this)) {
+     *         dataBuilder.getInternalBuilder().setMotionState(motion);
+     *     } catch (Exception ex) {
+     *         throw new CouldNotPerformException("Could not apply data change!", ex);
+     *     }
+     * }
+     * </pre> In this example the ClosableDataBuilder.close method is be called
+     * in background after leaving the try brackets.
+     *
+     * @param consumer
+     * @param notifyChange this flag defines if notifyChange is done after unlocking.
+     * @return a new builder wrapper with a locked builder instance.
+     */
+    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange);
 }

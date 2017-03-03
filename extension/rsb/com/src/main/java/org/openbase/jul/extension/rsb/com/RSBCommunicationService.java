@@ -245,7 +245,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
-            this.serverWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+            this.informerWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
                 if (data == WatchDog.ServiceState.RUNNING) {
 
                     setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
@@ -253,6 +253,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     // Sync data after service start.
                     GlobalCachedExecutorService.submit(() -> {
                         try {
+                            informerWatchDog.waitForActivation();
                             serverWatchDog.waitForActivation();
                             logger.debug("trigger initial sync");
                             notifyChange();
@@ -505,6 +506,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * {@inheritDoc}
      *
+     * @param consumer {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
+    public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange) {
+        return new ClosableDataBuilder<>(getBuilderSetup(), consumer, notifyChange);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      * @throws NotAvailableException {@inheritDoc}
      */
@@ -527,8 +539,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         logger.debug("Notify data change of " + this);
         validateInitialization();
         if (!informer.isActive()) {
-            logger.debug("Skip update notification because connection not established.");
-            return;
+            throw new CouldNotPerformException("Could not notifyChange because informer is not active!");
         }
 
         M newData = getData();

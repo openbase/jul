@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -135,6 +135,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
         try {
             entryConfigDiff.diff(remoteRegistry.getMessages());
+            int skippedChanges = 0;
 
             MultiException.ExceptionStack removeExceptionStack = null;
             for (CONFIG_M config : entryConfigDiff.getRemovedMessageMap().getMessages()) {
@@ -164,6 +165,8 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                 try {
                     if (verifyConfig(config)) {
                         register(config);
+                    } else {
+                        skippedChanges++;
                     }
                 } catch (CouldNotPerformException ex) {
                     registerExceptionStack = MultiException.push(this, ex, registerExceptionStack);
@@ -171,7 +174,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
             }
 
             int errorCounter = MultiException.size(removeExceptionStack) + MultiException.size(updateExceptionStack) + MultiException.size(registerExceptionStack);
-            logger.info(entryConfigDiff.getChangeCounter() + " registry changes applied. " + errorCounter + " are skipped.");
+            logger.info((entryConfigDiff.getChangeCounter() - skippedChanges) + " registry changes applied. " + errorCounter + " are skipped.");
 
             // sync origin list.
             IdentifiableMessageMap<KEY, CONFIG_M, CONFIG_MB> newOriginEntryMap = new IdentifiableMessageMap<>();

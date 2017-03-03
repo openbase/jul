@@ -32,11 +32,17 @@ public class ClosableDataBuilder<MB extends Builder<MB>> implements java.lang.Au
 
     private final BuilderSyncSetup<MB> builderSetup;
     private final Object consumer;
+    private final boolean notifyChange;
 
     public ClosableDataBuilder(final BuilderSyncSetup<MB> builderSetup, final Object consumer) {
+        this(builderSetup, consumer, true);
+    }
+
+    public ClosableDataBuilder(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final boolean notifyChange) {
         this.builderSetup = builderSetup;
         this.consumer = consumer;
         builderSetup.lockWrite(consumer);
+        this.notifyChange = notifyChange;
     }
 
     public MB getInternalBuilder() {
@@ -45,6 +51,6 @@ public class ClosableDataBuilder<MB extends Builder<MB>> implements java.lang.Au
 
     @Override
     public void close() throws CouldNotPerformException {
-        builderSetup.unlockWrite();
+        builderSetup.unlockWrite(notifyChange);
     }
 }
