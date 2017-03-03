@@ -21,8 +21,8 @@ package org.openbase.jul.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.iface.annotations.RPCMethod;
 
 /**
  *
@@ -30,7 +30,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @param <T> The status type to request.
  */
 public interface Requestable<T> {
-    
+
     // todo next release: replace by requestData and rename in DataRequestable<T>
+    @RPCMethod
     public T requestStatus() throws CouldNotPerformException;
 }

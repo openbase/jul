@@ -10,17 +10,18 @@ package org.openbase.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.iface.annotations.RPCMethod;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
@@ -45,7 +46,9 @@ public class RPCHelper {
 //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
     public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
         for (final Method method : interfaceClass.getMethods()) {
-            registerMethod(method, instance, server);
+            if (method.getAnnotation(RPCMethod.class) != null) {
+                registerMethod(method, instance, server);
+            }
         }
     }
 
