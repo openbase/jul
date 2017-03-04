@@ -93,7 +93,6 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
-        logger.info("activate " + this);
         remoteRegistry.waitForValue();
         remoteRegistry.addObserver(remoteRegistryChangeObserver);
 
@@ -131,7 +130,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     }
 
     private synchronized void internalSync() throws CouldNotPerformException, InterruptedException {
-        logger.info("Perform registry sync...");
+        logger.debug("Perform registry sync...");
 
         try {
             entryConfigDiff.diff(remoteRegistry.getMessages());

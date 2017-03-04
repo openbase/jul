@@ -340,6 +340,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // was never initialized!
             return;
         }
+        
+        logger.debug("Deactivate RSBCommunicationService for: " + this);
         // clear existing instances.
         setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
         if (informerWatchDog != null) {

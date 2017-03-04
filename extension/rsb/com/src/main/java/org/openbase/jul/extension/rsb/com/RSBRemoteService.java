@@ -952,7 +952,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new InvalidStateException(this + " not activated!");
         }
     }
-
+    
     public void validateData() throws InvalidStateException {
         if (!isDataAvailable()) {
             throw new InvalidStateException(this + " not synchronized yet!", new NotAvailableException("data"));

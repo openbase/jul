@@ -21,7 +21,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.HashMap;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Identifiable;
@@ -41,5 +40,13 @@ public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends Abstract
 
     public RegistryImpl() throws InstantiationException {
         super(new HashMap<>());
+    }
+
+    /**
+     * Just print on debug level.
+     * @param message 
+     */
+    public void info(final String message) {
+        logger.debug(message);
     }
 }
