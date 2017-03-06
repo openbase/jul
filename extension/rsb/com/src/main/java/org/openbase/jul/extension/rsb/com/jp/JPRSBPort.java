@@ -21,41 +21,29 @@ package org.openbase.jul.extension.rsb.com.jp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
-import org.openbase.jps.preset.AbstractJPEnum;
+import org.openbase.jps.preset.AbstractJPInteger;
 
 /**
  *
- * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class JPRSBTransport extends AbstractJPEnum<JPRSBTransport.TransportType> {
+public class JPRSBPort extends AbstractJPInteger {
 
-    public final static String[] COMMAND_IDENTIFIERS = {"--rsb-transport"};
+    public final static String[] COMMAND_IDENTIFIERS = {"--rsb-port"};
 
-    public JPRSBTransport() {
+    public JPRSBPort() {
         super(COMMAND_IDENTIFIERS);
     }
 
-    public enum TransportType {
-
-        DEFAULT,
-        SPREAD,
-        SOCKET,
-        INPROCESS;
-    }
-
     @Override
-    protected TransportType getPropertyDefaultValue() throws JPNotAvailableException {
-        if (JPService.testMode()) {
-            return TransportType.INPROCESS;
-        }
-        return TransportType.DEFAULT;
+    protected Integer getPropertyDefaultValue() throws JPNotAvailableException {
+        return 4803;
     }
 
     @Override
     public String getDescription() {
-        return "Setup the rsb transport type which is used by the application.";
+        return "Setup the rsb port which is used by the application.";
     }
 
 }

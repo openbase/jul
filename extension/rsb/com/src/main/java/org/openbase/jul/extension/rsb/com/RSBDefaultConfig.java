@@ -25,12 +25,16 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.rsb.com.jp.JPRSBHost;
+import org.openbase.jul.extension.rsb.com.jp.JPRSBPort;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
+import rsb.util.Properties;
+import rsb.util.Property;
 
 /**
  *
@@ -52,6 +56,20 @@ public class RSBDefaultConfig {
         try {
             // activate transport communication set by the JPRSBTransport property.
             enableTransport(participantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), LOGGER);
+        }
+
+        try {
+            // activate transport communication set by the JPRSBTransport property.
+            setupHost(participantConfig, JPService.getProperty(JPRSBHost.class).getValue());
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), LOGGER);
+        }
+
+        try {
+            // activate transport communication set by the JPRSBTransport property.
+            setupPort(participantConfig, JPService.getProperty(JPRSBPort.class).getValue());
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), LOGGER);
         }
@@ -81,5 +99,44 @@ public class RSBDefaultConfig {
             transport.setEnabled(false);
         }
         participantConfig.getOrCreateTransport(type.name().toLowerCase()).setEnabled(true);
+    }
+
+    public static void setupHost(final ParticipantConfig participantConfig, final String host) {
+        for (TransportConfig config : participantConfig.getTransports().values()) {
+
+            if (!config.isEnabled()) {
+                continue;
+            }
+
+            final String hostProperty = "transport." + config.getName() + ".host";
+
+            // remove configured host
+            if (config.getOptions().hasProperty(hostProperty)) {
+                config.getOptions().remove(hostProperty);
+            }
+
+            // setup host
+            config.getOptions().setProperty(hostProperty, host);
+
+        }
+    }
+
+    public static void setupPort(final ParticipantConfig participantConfig, final Integer port) {
+        for (TransportConfig config : participantConfig.getTransports().values()) {
+
+            if (!config.isEnabled()) {
+                continue;
+            }
+
+            final String portProperty = "transport." + config.getName() + ".port";
+
+            // remove configured host
+            if (config.getOptions().hasProperty(portProperty)) {
+                config.getOptions().remove(portProperty);
+            }
+
+            // setup host
+            config.getOptions().setProperty(portProperty, Integer.toString(port));
+        }
     }
 }
