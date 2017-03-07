@@ -71,10 +71,6 @@ import rst.rsb.ScopeType.Scope;
  */
 public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M> {
 
-    static {
-        RSBSharedConnectionConfig.load();
-    }
-
     public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
     public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
 
@@ -340,7 +336,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // was never initialized!
             return;
         }
-        
+
         logger.debug("Deactivate RSBCommunicationService for: " + this);
         // clear existing instances.
         setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
