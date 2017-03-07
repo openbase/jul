@@ -338,13 +338,16 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
 
         logger.debug("Deactivate RSBCommunicationService for: " + this);
-        // clear existing instances.
+        // The order is important: The informer publishes a zero event when the controllerAvailabilityState is set to deactivating which leads remotes to disconnect
+        // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
+        // and the remotes will think that the server is still there..
+        if (serverWatchDog != null) {
+            serverWatchDog.deactivate();
+        }
+        // inform remotes about shutdown
         setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
         if (informerWatchDog != null) {
             informerWatchDog.deactivate();
-        }
-        if (serverWatchDog != null) {
-            serverWatchDog.deactivate();
         }
         setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
     }

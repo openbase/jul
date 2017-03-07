@@ -952,7 +952,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new InvalidStateException(this + " not activated!");
         }
     }
-    
+
     public void validateData() throws InvalidStateException {
         if (!isDataAvailable()) {
             throw new InvalidStateException(this + " not synchronized yet!", new NotAvailableException("data"));
@@ -1009,7 +1009,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                 }
                         }
                         delayDetected = true;
-                        logger.info("Wait that " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] is " + connectionState.name().toLowerCase() + "...");
+                        logger.info("Wait for " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] to be " + connectionState.name().toLowerCase() + "...");
 //                        System.out.println("Waitiing unlimited!");
                         connectionMonitor.wait();
 //                        System.out.println("Woke up from waiting!");
