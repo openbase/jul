@@ -150,10 +150,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * {@inheritDoc}
+     * Initialize the remote on a scope.
      *
-     * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @param scope the scope where the remote communicates
+     * @throws InitializationException if the initialization fails
+     * @throws InterruptedException if the initialization is interrupted
      */
     @Override
     public void init(final String scope) throws InitializationException, InterruptedException {
@@ -163,7 +164,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new InitializationException(this, ex);
         }
     }
-
+    
     /**
      * {@inheritDoc}
      *
@@ -279,6 +280,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isLocked() {
         synchronized (maintainerLock) {
@@ -830,24 +835,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             } catch (CouldNotPerformException | InterruptedException ex) {
                 ExceptionPrinter.printHistory("Could not shutdown " + this + "!", ex, logger);
             }
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @return {@inheritDoc}
-     * @throws CouldNotPerformException {@inheritDoc}
-     */
-    @Override
-    public CompletableFuture<M> getDataFuture() throws CouldNotPerformException {
-        try {
-            if (data == null) {
-                return requestData();
-            }
-            return CompletableFuture.completedFuture(data);
-        } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException("data", ex);
         }
     }
 
