@@ -10,12 +10,12 @@ package org.openbase.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -745,6 +745,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             this.relatedFuture = relatedFuture;
         }
 
+        private boolean isRelatedFutureCancelled() {
+            return relatedFuture != null && relatedFuture.isCancelled();
+        }
+
         @Override
         public M call() throws CouldNotPerformException, InterruptedException {
 
@@ -765,11 +769,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         try {
                             internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                             dataUpdate = messageProcessor.process((GeneratedMessage) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData());
-                            if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000) {
+                            if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
                             }
                             break;
                         } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
+                            // if sync was already performed by global data update skip sync
+                            if (isRelatedFutureCancelled()) {
+                                return data;
+                            }
 
                             timeout = generateTimeout(timeout);
 
