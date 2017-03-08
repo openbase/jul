@@ -23,6 +23,9 @@ package org.openbase.jul.extension.rsb.com.jp;
  */
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.AbstractJPInteger;
+import rsb.Factory;
+import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 
 /**
  *
@@ -38,12 +41,33 @@ public class JPRSBPort extends AbstractJPInteger {
 
     @Override
     protected Integer getPropertyDefaultValue() throws JPNotAvailableException {
-        return 4803;
+        return loadPortFromParticipantConfig();
     }
 
     @Override
     public String getDescription() {
         return "Setup the rsb port which is used by the application.";
+    }
+    
+    private int loadPortFromParticipantConfig() {
+        ParticipantConfig defaultParticipantConfig = Factory.getInstance().getDefaultParticipantConfig();
+        for (TransportConfig config : defaultParticipantConfig.getTransports().values()) {
+
+            if (!config.isEnabled()) {
+                continue;
+            }
+
+            final String portProperty = "transport." + config.getName() + ".port";
+
+            // load host
+            if (config.getOptions().hasProperty(portProperty)) {
+                return config.getOptions().getProperty(portProperty).asInteger();
+            }
+
+        }
+        
+        // return default host
+        return 4803;
     }
 
 }

@@ -23,6 +23,9 @@ package org.openbase.jul.extension.rsb.com.jp;
  */
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.AbstractJPString;
+import rsb.Factory;
+import rsb.config.ParticipantConfig;
+import rsb.config.TransportConfig;
 
 /**
  *
@@ -38,7 +41,7 @@ public class JPRSBHost extends AbstractJPString {
 
     @Override
     protected String getPropertyDefaultValue() throws JPNotAvailableException {
-        return "localhost";
+        return loadHostFromParticipantConfig();
     }
 
     @Override
@@ -46,4 +49,24 @@ public class JPRSBHost extends AbstractJPString {
         return "Setup the rsb host which is used by the application.";
     }
 
+    private String loadHostFromParticipantConfig() {
+        ParticipantConfig defaultParticipantConfig = Factory.getInstance().getDefaultParticipantConfig();
+        for (TransportConfig config : defaultParticipantConfig.getTransports().values()) {
+
+            if (!config.isEnabled()) {
+                continue;
+            }
+
+            final String hostProperty = "transport." + config.getName() + ".host";
+
+            // load host
+            if (config.getOptions().hasProperty(hostProperty)) {
+                return config.getOptions().getProperty(hostProperty).asString();
+            }
+
+        }
+        
+        // return default host
+        return "localhost";
+    }
 }
