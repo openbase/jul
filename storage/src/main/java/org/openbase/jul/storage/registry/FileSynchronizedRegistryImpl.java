@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -273,6 +274,19 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
         if (JPService.testMode()) {
             return;
+        }
+
+        try {
+            if (!JPService.getProperty(JPForce.class).getValue() && isReadOnly()) {
+                logger.warn("Skipping save of Registry[" + getName() + "] because its read only.");
+                return;
+            }
+        } catch (JPNotAvailableException ex) {
+            logger.error("Could not check JPFoceProperty!", ex);
+            if (isReadOnly()) {
+                logger.warn("Skipping save of Registry[" + getName() + "] because its read only.");
+                return;
+            }
         }
 
         logger.debug("Save " + this + " into " + databaseDirectory + "...");
