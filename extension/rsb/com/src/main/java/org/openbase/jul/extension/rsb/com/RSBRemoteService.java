@@ -114,6 +114,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.dataClass = dataClass;
         this.mainHandler = new InternalUpdateHandler();
         this.initialized = false;
+        this.shutdownInitiated = false;
         this.remoteServer = new NotInitializedRSBRemoteServer();
         this.listener = new NotInitializedRSBListener();
         this.connectionState = DISCONNECTED;
@@ -814,9 +815,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
             } catch (CouldNotPerformException ex) {
                 if (shutdownInitiated) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger, LogLevel.DEBUG);
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger);
                 }
             }
         }

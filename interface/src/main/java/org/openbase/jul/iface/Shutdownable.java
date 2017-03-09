@@ -49,16 +49,16 @@ public interface Shutdownable {
     static void registerShutdownHook(final Shutdownable shutdownable) {
         Runtime.getRuntime().addShutdownHook(new ShutdownDeamon(shutdownable, 0));
     }
-    
+
     /**
      * Method registers a runtime shutdown hook for the given Shutdownable.
      * In case the application is finalizing the shutdown method of the Shutdownable will be invoked.
-     * The given delay can be used to delay the shutdown. 
-     * 
-     * Note: This method should be used with care because to delay the shutdown process can result in skipping the shutdown method call in case the operating system mark this application as not responding. 
+     * The given delay can be used to delay the shutdown.
+     *
+     * Note: This method should be used with care because to delay the shutdown process can result in skipping the shutdown method call in case the operating system mark this application as not responding.
      *
      * @param shutdownable the instance which is automatically shutting down in case the application is finalizing.
-     * @param shutdownDelay this time in milliseconds defines the delay of the shutdown after the application shutdown was initiated. 
+     * @param shutdownDelay this time in milliseconds defines the delay of the shutdown after the application shutdown was initiated.
      */
     static void registerShutdownHook(final Shutdownable shutdownable, final long shutdownDelay) {
         Runtime.getRuntime().addShutdownHook(new ShutdownDeamon(shutdownable, shutdownDelay));
@@ -80,10 +80,12 @@ public interface Shutdownable {
         @Override
         public void run() {
             try {
-                try {
-                    Thread.sleep(delay);
-                } catch (InterruptedException ex) {
-                    // skip delay and continue shutdown
+                if (delay > 0) {
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ex) {
+                        // skip delay and continue shutdown
+                    }
                 }
                 shutdownable.shutdown();
             } catch (Exception ex) {
