@@ -42,7 +42,6 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
-import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -51,6 +50,7 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
+import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTED;
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTING;
 import static org.openbase.jul.pattern.Remote.ConnectionState.DISCONNECTED;
@@ -108,6 +108,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
     private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
+    private boolean shutdownInitiated;
 
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
@@ -164,7 +165,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new InitializationException(this, ex);
         }
     }
-    
+
     /**
      * {@inheritDoc}
      *
@@ -282,6 +283,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -811,7 +813,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return null;
                 }
             } catch (CouldNotPerformException ex) {
-                throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
+                if (shutdownInitiated) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger, LogLevel.DEBUG);
+                } else {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted!", ex), logger);
+                }
             }
         }
     }
@@ -826,6 +832,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (VerificationFailedException ex) {
             throw new RuntimeException("Can not shutdown " + this + "!", ex);
         }
+
+        this.shutdownInitiated = true;
 
         try {
             dataObservable.shutdown();
