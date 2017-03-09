@@ -79,6 +79,10 @@ public final class OpenhabCommandTransformer {
                         return ButtonStateTransformer.transform(command.getOnOff().getState());
                     case POWER_STATE_SERVICE:
                         return PowerStateTransformer.transform(command.getOnOff().getState());
+                    // openhab posts the on/off state for dimmer in color items which we already receive for powerItems and thus can be ignored
+                    case BRIGHTNESS_STATE_SERVICE:
+                    case COLOR_STATE_SERVICE:
+                        return null;
                     default:
                         throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
                 }
