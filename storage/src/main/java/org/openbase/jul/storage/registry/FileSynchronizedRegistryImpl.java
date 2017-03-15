@@ -71,9 +71,10 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     private final FileProcessor<ENTRY> fileProcessor;
     private final FileProvider<Identifiable<KEY>> fileProvider;
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
+    private final String databaseName;
+    private boolean readOnlyFlag = false;
     private DBVersionControl versionControl;
     private DatabaseState databaseState;
-    private final String databaseName;
 
     public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
@@ -235,8 +236,14 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             throw new NotAvailableException("Could not load registry because database directory[" + databaseDirectory.getAbsolutePath() + "] is empty!");
         }
 
-        for (File file : listFiles) {
+        for (final File file : listFiles) {
             try {
+                // check if entry is writeable otherwise mark db as readonly.
+                if (!file.canWrite()) {
+                    readOnlyFlag = true;
+                }
+
+                // init file synchronizer
                 FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
                 ENTRY entry = fileSynchronizer.getData();
                 fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
@@ -267,6 +274,10 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         }
 
         notifyObservers();
+
+        if (isReadOnly()) {
+            logger.info("=== " + getName() + " is started in read only mode! ======");
+        }
     }
 
     @Override
@@ -334,8 +345,14 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
     @Override
     public void checkWriteAccess() throws RejectedException {
+
+        // check if db entries are writeable
+        if (readOnlyFlag) {
+            throw new RejectedException("Database[" + databaseDirectory.getAbsolutePath() + "] or at least some entries does not provide write access!");
+        }
+
         try {
-            if (JPService.getProperty(JPForce.class).getValue()) { // || JPService.getProperty(JPTestMode.class).getValue()
+            if (JPService.getProperty(JPForce.class).getValue()) {
                 return;
             }
         } catch (JPServiceException ex) {
