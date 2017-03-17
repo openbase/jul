@@ -1089,6 +1089,24 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
+     * Just a hack to support unit group remotes.
+     * TODO: redesign needed.
+     */
+    protected void applyExternalDataUpdate(final M data) throws CouldNotPerformException {
+        boolean remoteCommunicationServiceIsActive;
+        try {
+            remoteCommunicationServiceIsActive = listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
+        } catch (NullPointerException ex) {
+            remoteCommunicationServiceIsActive = false;
+        }
+
+        if (remoteCommunicationServiceIsActive) {
+            throw new InvalidStateException("Because of synchronization reasons data updates can not be applied on active remote services.");
+        }
+        applyDataUpdate(data);
+    }
+
+    /**
      * Method is used to internally update the data object.
      *
      * @param data
