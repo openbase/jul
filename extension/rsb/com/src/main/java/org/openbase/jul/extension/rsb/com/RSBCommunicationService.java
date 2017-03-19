@@ -249,8 +249,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     // Sync data after service start.
                     GlobalCachedExecutorService.submit(() -> {
                         try {
-                            informerWatchDog.waitForActivation();
-                            serverWatchDog.waitForActivation();
+                            informerWatchDog.waitForServiceActivation();
+                            serverWatchDog.waitForServiceActivation();
                             logger.debug("trigger initial sync");
                             notifyChange();
                         } catch (InterruptedException | CouldNotPerformException ex) {

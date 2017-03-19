@@ -72,7 +72,7 @@ public class WatchDog implements Activatable, Shutdownable {
             ExceptionPrinter.printHistory("Could not register shutdown watchdog hook!", ex, logger);
         }
     }
-    
+
     private final Object EXECUTION_LOCK;
     private final SyncObject STATE_LOCK;
 
@@ -125,13 +125,13 @@ public class WatchDog implements Activatable, Shutdownable {
                 minder.setFuture(GlobalScheduledExecutorService.scheduleAtFixedRate(minder, 0, getRate(), TimeUnit.MILLISECONDS));
             }
         }
-
-        try {
-            waitForActivation();
-        } catch (CouldNotPerformException | InterruptedException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
-            throw ex;
-        }
+//
+//        try {
+//            waitForActivation();
+//        } catch (CouldNotPerformException | InterruptedException ex) {
+//            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
+//            throw ex;
+//        }
     }
 
     @Override
@@ -166,11 +166,19 @@ public class WatchDog implements Activatable, Shutdownable {
         return serviceName;
     }
 
-    public void waitForActivation() throws InterruptedException, CouldNotPerformException {
+    public void waitForServiceActivation() throws InterruptedException, CouldNotPerformException {
         waitForServiceState(ServiceState.RUNNING);
     }
 
+    public void waitForServiceActivation(final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
+        waitForServiceState(ServiceState.RUNNING, timeout, timeUnit);
+    }
+
     public void waitForServiceState(final ServiceState serviceSatet) throws InterruptedException, CouldNotPerformException {
+        waitForServiceState(serviceSatet, 0, TimeUnit.MILLISECONDS);
+    }
+
+    public void waitForServiceState(final ServiceState serviceSatet, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
         synchronized (STATE_LOCK) {
             while (true) {
                 if (Thread.interrupted()) {
@@ -184,7 +192,12 @@ public class WatchDog implements Activatable, Shutdownable {
                 if (minder == null || minder.getFuture().isDone() && (serviceSatet == ServiceState.RUNNING || serviceSatet == ServiceState.INITIALIZING)) {
                     throw new CouldNotPerformException("Could not wait for minder State[" + serviceSatet.name() + "] because minder is finished.");
                 }
-                STATE_LOCK.wait();
+
+                if (timeout <= 0) {
+                    STATE_LOCK.wait();
+                } else {
+                    STATE_LOCK.wait(timeUnit.toMillis(timeout));
+                }
             }
         }
     }
