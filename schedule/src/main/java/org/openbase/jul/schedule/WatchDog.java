@@ -190,7 +190,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 }
 
                 if (minder == null || minder.getFuture().isDone() && (serviceSatet == ServiceState.RUNNING || serviceSatet == ServiceState.INITIALIZING)) {
-                    throw new CouldNotPerformException("Could not wait for minder State[" + serviceSatet.name() + "] because minder is finished.");
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceSatet.name() + "] because service is not active!");
                 }
 
                 if (timeout <= 0) {
