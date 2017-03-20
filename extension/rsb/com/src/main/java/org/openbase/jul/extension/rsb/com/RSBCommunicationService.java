@@ -539,16 +539,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void notifyChange() throws CouldNotPerformException, InterruptedException {
         logger.debug("Notify data change of " + this);
         validateInitialization();
-        if (!informer.isActive()) {
-            throw new CouldNotPerformException("Could not notifyChange because informer is not active!");
-        }
 
         M newData = getData();
 
-        try {
-            informer.publish(newData);
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+        if (informer.isActive()) {
+            try {
+                informer.publish(newData);
+            } catch (CouldNotPerformException ex) {
+                throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+            }
         }
 
         dataObserver.notifyObservers(newData);
