@@ -269,7 +269,7 @@ public class RSBCommunicationServiceTest {
         remoteService.shutdown();
     }
 
-    @Test(timeout = 5000)
+    @Test(timeout = 10000)
     public void testRemoteInterference() throws Exception {
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();

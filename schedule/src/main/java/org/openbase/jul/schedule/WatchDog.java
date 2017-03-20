@@ -126,12 +126,12 @@ public class WatchDog implements Activatable, Shutdownable {
             }
         }
 
-        try {
-            waitForServiceActivation();
-        } catch (CouldNotPerformException | InterruptedException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
-            throw ex;
-        }
+//        try {
+//            waitForServiceActivation();
+//        } catch (CouldNotPerformException | InterruptedException ex) {
+//            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
+//            throw ex;
+//        }
     }
 
     @Override
@@ -178,19 +178,25 @@ public class WatchDog implements Activatable, Shutdownable {
         waitForServiceState(serviceSatet, 0, TimeUnit.MILLISECONDS);
     }
 
-    public void waitForServiceState(final ServiceState serviceSatet, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
+    public void waitForServiceState(final ServiceState serviceState, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
         synchronized (STATE_LOCK) {
             while (true) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
 
-                if (this.serviceState.equals(serviceSatet)) {
+                if (this.serviceState.equals(serviceState)) {
                     return;
                 }
 
-                if (minder == null || minder.getFuture().isDone() && (serviceSatet == ServiceState.RUNNING || serviceSatet == ServiceState.INITIALIZING)) {
-                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceSatet.name() + "] because service is not active!");
+                // skip if watchdog is not active
+                if (!isActive()) {
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog is not active!");
+                }
+                
+                // skip if state is already passed.
+                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because service is already done!");
                 }
 
                 if (timeout <= 0) {
