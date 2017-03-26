@@ -24,6 +24,7 @@ package org.openbase.jul.extension.rsb.com;
 import org.openbase.jul.iface.annotations.RPCMethod;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -74,8 +75,8 @@ public class RPCHelper {
 
                     // Implementation of Future support by resolving result to reache inner future object.
                     if (result instanceof Future) {
-                        result = ((Future) result).get();
-                    }
+                        result = ((Future) result).get(); 
+                   }
 
                     if (result == null) {
                         payloadType = Void.class;
@@ -85,7 +86,7 @@ public class RPCHelper {
                     return new Event(payloadType, result);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
-                } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException ex) {
+                } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException | CancellationException ex) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new Callback.UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")]!", ex)), logger);
                 }
                 return new Event(Void.class);

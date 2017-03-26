@@ -824,6 +824,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
+    @Override
+    public boolean isReady() {
+        return isConsistent() && !isBusy();
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void shutdown() {

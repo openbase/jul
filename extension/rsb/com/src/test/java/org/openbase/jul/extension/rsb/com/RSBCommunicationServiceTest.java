@@ -286,15 +286,19 @@ public class RSBCommunicationServiceTest {
         remoteService1.activate();
         remoteService2.activate();
 
+        System.out.println("remoteService1.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
         remoteService1.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+        System.out.println("remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
         remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED);
 
         remoteService1.shutdown();
+        System.out.println("remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED)");
         remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
         assertEquals("Remote connected to the same service got shutdown too", Remote.ConnectionState.CONNECTED, remoteService2.getConnectionState());
         remoteService2.requestData().get();
-
+        System.out.println("communicationService.shutdown()");
         communicationService.shutdown();
+        System.out.println("remoteService2.shutdown()");
         remoteService2.shutdown();
     }
 

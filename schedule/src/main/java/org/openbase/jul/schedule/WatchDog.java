@@ -161,6 +161,11 @@ public class WatchDog implements Activatable, Shutdownable {
     public boolean isActive() {
         return minder != null;
     }
+    
+    public boolean isServiceDone() {
+        return minder == null || minder.getFuture().isDone();
+    }
+
 
     public String getServiceName() {
         return serviceName;
