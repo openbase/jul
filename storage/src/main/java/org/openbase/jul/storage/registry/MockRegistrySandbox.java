@@ -182,6 +182,11 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
+    public boolean isReady() {
+        return true;
+    }
+    
+    @Override
     public void waitForValue(long timeout, TimeUnit timeUnit) throws NotAvailableException, InterruptedException {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }

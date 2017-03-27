@@ -72,7 +72,7 @@ public class WatchDog implements Activatable, Shutdownable {
             ExceptionPrinter.printHistory("Could not register shutdown watchdog hook!", ex, logger);
         }
     }
-    
+
     private final Object EXECUTION_LOCK;
     private final SyncObject STATE_LOCK;
 
@@ -126,12 +126,12 @@ public class WatchDog implements Activatable, Shutdownable {
             }
         }
 
-        try {
-            waitForActivation();
-        } catch (CouldNotPerformException | InterruptedException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
-            throw ex;
-        }
+//        try {
+//            waitForServiceActivation();
+//        } catch (CouldNotPerformException | InterruptedException ex) {
+//            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
+//            throw ex;
+//        }
     }
 
     @Override
@@ -161,30 +161,54 @@ public class WatchDog implements Activatable, Shutdownable {
     public boolean isActive() {
         return minder != null;
     }
+    
+    public boolean isServiceDone() {
+        return minder == null || minder.getFuture().isDone();
+    }
+
 
     public String getServiceName() {
         return serviceName;
     }
 
-    public void waitForActivation() throws InterruptedException, CouldNotPerformException {
+    public void waitForServiceActivation() throws InterruptedException, CouldNotPerformException {
         waitForServiceState(ServiceState.RUNNING);
     }
 
+    public void waitForServiceActivation(final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
+        waitForServiceState(ServiceState.RUNNING, timeout, timeUnit);
+    }
+
     public void waitForServiceState(final ServiceState serviceSatet) throws InterruptedException, CouldNotPerformException {
+        waitForServiceState(serviceSatet, 0, TimeUnit.MILLISECONDS);
+    }
+
+    public void waitForServiceState(final ServiceState serviceState, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
         synchronized (STATE_LOCK) {
             while (true) {
                 if (Thread.interrupted()) {
                     throw new InterruptedException();
                 }
 
-                if (this.serviceState.equals(serviceSatet)) {
+                if (this.serviceState.equals(serviceState)) {
                     return;
                 }
 
-                if (minder == null || minder.getFuture().isDone() && (serviceSatet == ServiceState.RUNNING || serviceSatet == ServiceState.INITIALIZING)) {
-                    throw new CouldNotPerformException("Could not wait for minder State[" + serviceSatet.name() + "] because minder is finished.");
+                // skip if watchdog is not active
+                if (!isActive()) {
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog is not active!");
                 }
-                STATE_LOCK.wait();
+                
+                // skip if state is already passed.
+                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because service is already done!");
+                }
+
+                if (timeout <= 0) {
+                    STATE_LOCK.wait();
+                } else {
+                    STATE_LOCK.wait(timeUnit.toMillis(timeout));
+                }
             }
         }
     }

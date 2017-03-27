@@ -260,7 +260,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 logger.debug("listener state update: " + data1.name());
                 // Sync data after service start.
                 if (data1 == WatchDog.ServiceState.RUNNING) {
-                    remoteServerWatchDog.waitForActivation();
+                    remoteServerWatchDog.waitForServiceActivation();
                     requestData();
                 }
             });
@@ -588,6 +588,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 try {
                     logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
+                    remoteServerWatchDog.waitForServiceActivation(timeout, TimeUnit.MILLISECONDS);
                     final R returnValue = remoteServer.call(methodName, argument, retryTimeout);
 
                     if (retryTimeout != METHOD_CALL_START_TIMEOUT && retryTimeout > 15000) {
@@ -658,7 +659,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         if (!isConnected()) {
                             waitForConnectionState(CONNECTED);
                         }
-
+                        remoteServerWatchDog.waitForServiceActivation();
                         internalCallFuture = remoteServer.callAsync(methodName, argument);
                         while (true) {
                             try {
@@ -771,6 +772,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         }
 
                         try {
+                            remoteServerWatchDog.waitForServiceActivation();
                             internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                             dataUpdate = messageProcessor.process((GeneratedMessage) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData());
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
@@ -814,7 +816,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return null;
                 }
             } catch (CouldNotPerformException ex) {
-                if (shutdownInitiated) {
+                if (shutdownInitiated || !isActive() || getConnectionState().equals(DISCONNECTED)) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger);
@@ -996,23 +998,18 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 // detect delay for long term wait
                 if (timeout == 0) {
-//                    System.out.println("Wait for 15 seconds!");
                     connectionMonitor.wait(15000);
-//                    System.out.println("Woke up from waiting");
                     if (!this.connectionState.equals(connectionState)) {
                         switch (connectionState) {
                             case CONNECTED:
                             case CONNECTING:
                                 if (!isActive()) {
-//                                    System.out.println("Skipped further waiting");
                                     throw new InvalidStateException("Remote service is not active!");
                                 }
                         }
                         delayDetected = true;
                         logger.info("Wait for " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] to be " + connectionState.name().toLowerCase() + "...");
-//                        System.out.println("Waitiing unlimited!");
                         connectionMonitor.wait();
-//                        System.out.println("Woke up from waiting!");
                     }
                     continue;
                 }
@@ -1086,6 +1083,24 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
             }
         }
+    }
+
+    /**
+     * Just a hack to support unit group remotes.
+     * TODO: redesign needed.
+     */
+    protected void applyExternalDataUpdate(final M data) throws CouldNotPerformException {
+        boolean remoteCommunicationServiceIsActive;
+        try {
+            remoteCommunicationServiceIsActive = listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
+        } catch (NullPointerException ex) {
+            remoteCommunicationServiceIsActive = false;
+        }
+
+        if (remoteCommunicationServiceIsActive) {
+            throw new InvalidStateException("Because of synchronization reasons data updates can not be applied on active remote services.");
+        }
+        applyDataUpdate(data);
     }
 
     /**

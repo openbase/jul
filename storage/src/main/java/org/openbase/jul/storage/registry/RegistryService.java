@@ -21,22 +21,29 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.InitializationException;
-import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.iface.annotations.RPCMethod;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <M>
  */
-public interface RegistryRemote<M> extends Remote<M>, RegistryService {
+public interface RegistryService {
 
     /**
-     * Method initializes the remote with the default registry connection scope.
+     * This method checks if the registry is not handling any tasks and is currently consistent.
      *
-     * @throws InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @return Returns true if this registry is consistent and not busy.
+     * @throws java.lang.InterruptedException
      */
-    public void init() throws InitializationException, InterruptedException;
+    @RPCMethod
+    public Boolean isReady() throws InterruptedException;
 
+    /**
+     * Method blocks until the registry is not handling any tasks and is currently consistent.
+     *
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the wait could not be performed.
+     */
+    @RPCMethod
+    public void waitUntilReady() throws InterruptedException, CouldNotPerformException;
 }

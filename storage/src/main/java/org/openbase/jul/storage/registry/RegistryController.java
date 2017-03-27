@@ -29,6 +29,6 @@ import org.openbase.jul.pattern.Controller;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
-public interface RegistryController<M> extends Controller<M>, DefaultInitializable {
+public interface RegistryController<M> extends Controller<M>, DefaultInitializable, RegistryService {
 
 }

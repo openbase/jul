@@ -214,6 +214,11 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 public boolean isEmpty() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
+                
+                @Override
+                public boolean isReady() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
 
                 @Override
                 public boolean isValueAvailable() {

@@ -145,12 +145,7 @@ public class WatchDogTest {
             }
         };
         disableTask.start();
-
-        try {
-            watchDog.activate();
-            assertTrue("No exception thrown for bad service activation!", false);
-        } catch (CouldNotPerformException | InterruptedException ex) {
-        }
+        watchDog.activate();
         disableTask.join();
         assertEquals(false, watchDog.isActive());
         System.out.println("Tests finished.");

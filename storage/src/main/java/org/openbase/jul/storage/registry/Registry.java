@@ -70,6 +70,13 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
     public boolean isSandbox();
 
     /**
+     * This method checks if the registry is not handling any tasks and is currently consistent.
+     *
+     * @return Returns true if this registry is consistent and not busy.
+     */
+    public boolean isReady();
+
+    /**
      * Return true if this registry does not contain any entries.
      *
      * @return is true if the registry is empty.

@@ -269,7 +269,7 @@ public class RSBCommunicationServiceTest {
         remoteService.shutdown();
     }
 
-    @Test(timeout = 5000)
+    @Test(timeout = 10000)
     public void testRemoteInterference() throws Exception {
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
@@ -286,15 +286,19 @@ public class RSBCommunicationServiceTest {
         remoteService1.activate();
         remoteService2.activate();
 
+        System.out.println("remoteService1.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
         remoteService1.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+        System.out.println("remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
         remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED);
 
         remoteService1.shutdown();
+        System.out.println("remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED)");
         remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
         assertEquals("Remote connected to the same service got shutdown too", Remote.ConnectionState.CONNECTED, remoteService2.getConnectionState());
         remoteService2.requestData().get();
-
+        System.out.println("communicationService.shutdown()");
         communicationService.shutdown();
+        System.out.println("remoteService2.shutdown()");
         remoteService2.shutdown();
     }
 

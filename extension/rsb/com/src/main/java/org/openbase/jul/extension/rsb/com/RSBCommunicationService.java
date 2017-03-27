@@ -97,6 +97,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private boolean initialized;
 
     private final DataObserver dataObserver;
+    private Future initialDataSyncFuture;
 
     /**
      * Create a communication service.
@@ -207,12 +208,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             final boolean alreadyActivated = isActive();
             ParticipantConfig internalParticipantConfig = participantConfig;
 
-//            try {
-//                // activate transport communication set by the JPRSBTransport property.
-//                enableTransport(internalParticipantConfig, JPService.getProperty(JPRSBTransport.class).getValue());
-//            } catch (JPServiceException ex) {
-//                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-//            }
             if (scope == null) {
                 throw new NotAvailableException("scope");
             }
@@ -247,13 +242,20 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
 
                     // Sync data after service start.
-                    GlobalCachedExecutorService.submit(() -> {
+                    initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
                         try {
-                            informerWatchDog.waitForActivation();
-                            serverWatchDog.waitForActivation();
+                            // skip if shutdown was already initiated
+                            if(informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
+                                return;
+                            }
+                            
+                            informerWatchDog.waitForServiceActivation();
+                            serverWatchDog.waitForServiceActivation();
                             logger.debug("trigger initial sync");
                             notifyChange();
-                        } catch (InterruptedException | CouldNotPerformException ex) {
+                        } catch (InterruptedException ex) {
+                            logger.debug("Initial sync was skipped because of controller shutdown.");
+                        } catch (CouldNotPerformException ex) {
                             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
                         }
                     });
@@ -335,6 +337,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         } catch (InvalidStateException ex) {
             // was never initialized!
             return;
+        }
+
+        // skip initial data sync if still running
+        if (initialDataSyncFuture != null && !initialDataSyncFuture.isDone()) {
+            initialDataSyncFuture.cancel(true);
         }
 
         logger.debug("Deactivate RSBCommunicationService for: " + this);
@@ -539,16 +546,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public void notifyChange() throws CouldNotPerformException, InterruptedException {
         logger.debug("Notify data change of " + this);
         validateInitialization();
-        if (!informer.isActive()) {
-            throw new CouldNotPerformException("Could not notifyChange because informer is not active!");
-        }
 
         M newData = getData();
 
-        try {
-            informer.publish(newData);
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+        if (informer.isActive()) {
+            try {
+                informer.publish(newData);
+            } catch (CouldNotPerformException ex) {
+                throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+            }
         }
 
         dataObserver.notifyObservers(newData);
