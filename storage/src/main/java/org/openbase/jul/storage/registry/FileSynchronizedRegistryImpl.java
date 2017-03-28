@@ -31,6 +31,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
+import org.openbase.jps.preset.JPShareDirectory;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
@@ -234,6 +235,15 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
         if (listFiles == null) {
             throw new NotAvailableException("Could not load registry because database directory[" + databaseDirectory.getAbsolutePath() + "] is empty!");
+        }
+        
+        try {
+            // check if db is based on share folder and mark db ready only
+            if(databaseDirectory.getAbsolutePath().startsWith(JPService.getProperty(JPShareDirectory.class).getValue().getAbsolutePath())) {
+                readOnlyFlag = true;
+            }
+        } catch (JPNotAvailableException ex) {
+            // do nothing if property could not be detected.
         }
 
         for (final File file : listFiles) {
