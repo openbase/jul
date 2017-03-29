@@ -89,7 +89,14 @@ public final class OpenhabCommandTransformer {
             case OPENCLOSED:
                 return OpenClosedStateTransformer.transform(command.getOpenClosed().getState());
             case PERCENT:
-                return command.getPercent().getValue();
+                switch (serviceType) {
+                    case BRIGHTNESS_STATE_SERVICE:
+                        return BrightnessStateTransformer.transform(command.getPercent().getValue());
+                    case BLIND_STATE_SERVICE:
+                        return BlindStateTransformer.transform(command.getPercent().getValue());
+                    default:
+                        return command.getPercent().getValue();
+                }
             case STOPMOVE:
                 return StopMoveStateTransformer.transform(command.getStopMove().getState());
             case STRING:
