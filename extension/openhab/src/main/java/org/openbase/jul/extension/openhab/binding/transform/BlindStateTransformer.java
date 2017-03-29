@@ -45,7 +45,7 @@ public class BlindStateTransformer {
     /**
      * Get the brightness value.
      *
-     * @param brightnessState the state
+     * @param blindState the state to transform
      * @return the current brightness value
      */
     public static Double transform(BlindState blindState) {
