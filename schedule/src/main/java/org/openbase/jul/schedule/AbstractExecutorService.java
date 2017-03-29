@@ -22,6 +22,7 @@ package org.openbase.jul.schedule;
  * #L%
  */
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -32,7 +33,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPDebugMode;
@@ -40,6 +40,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.Shutdownable;
+import static org.openbase.jul.schedule.GlobalCachedExecutorService.getInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -273,6 +274,42 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                 return resultProcessor.process(futureList);
             }
         });
+    }
+    
+    /**
+     * This method applies an error handler to the given future object.
+     * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
+     * The receive a future should be submitted to any execution service or handled externally.
+     *
+     * @param future the future on which is the error processor is registered.
+     * @param timeout the timeout.
+     * @param errorProcessor the processable which handles thrown exceptions
+     * @param timeUnit the unit of the timeout.
+     * @return the future of the error handler.
+     * @throws CouldNotPerformException thrown by the errorProcessor
+     */
+    public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException {
+        return AbstractExecutorService.applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
+    }
+
+    public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {
+        return allOf(actionProcessor, (Collection<Future<Void>> input) -> null, inputList, getInstance().getExecutorService());
+    }
+
+    public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList) {
+        return allOf(actionProcessor, resultProcessor, inputList, getInstance().getExecutorService());
+    }
+
+    public static Future<Void> allOf(final Future ... futures) {
+        return allOf(Arrays.asList(futures), null);
+    }
+    
+    public static Future<Void> allOf(final Collection<Future> futureCollection) {
+        return allOf(futureCollection, null);
+    }
+    
+    public static <T> Future<T> allOf(final Collection<Future> futureCollection, T returnValue) {
+        return allOf(futureCollection, returnValue, getInstance().getExecutorService());
     }
 
     public static <T> Future<T> allOf(final Collection<Future> futureCollection, T returnValue, final ExecutorService executorService) {
