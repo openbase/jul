@@ -23,7 +23,11 @@ package org.openbase.jul.extension.rsb.com;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
+import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -73,7 +77,18 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
                     throw new NotAvailableException("config");
                 }
                 currentScope = detectScope(config);
-                applyConfigUpdate(config);
+                try {
+                    applyConfigUpdate(config);
+                } catch (CouldNotPerformException ex) {
+                    ExceptionPrinter.printHistory("Could not apply config update for " + this, ex, logger);
+                    try {
+                        if (JPService.getProperty(JPTestMode.class).getValue()) {
+                            throw new FatalImplementationErrorException("Could not apply config update for " + this, this, ex);
+                        }
+                    } catch (JPNotAvailableException ex1) {
+                        // to nothing if property could not be resovled.
+                    }
+                }
                 super.init(currentScope);
             } catch (CouldNotPerformException ex) {
                 throw new InitializationException(this, ex);
