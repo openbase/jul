@@ -75,8 +75,8 @@ public class RPCHelper {
 
                     // Implementation of Future support by resolving result to reache inner future object.
                     if (result instanceof Future) {
-                        result = ((Future) result).get(); 
-                   }
+                        result = ((Future) result).get();
+                    }
 
                     if (result == null) {
                         payloadType = Void.class;
