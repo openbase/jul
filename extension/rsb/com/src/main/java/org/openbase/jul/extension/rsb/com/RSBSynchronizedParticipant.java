@@ -21,7 +21,6 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -38,12 +37,10 @@ import rsb.Factory;
 import rsb.InitializeException;
 import rsb.Participant;
 import rsb.ParticipantId;
-import rsb.RSBException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import org.openbase.jul.extension.rsb.iface.RSBParticipant;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import org.openbase.jul.schedule.GlobalScheduledExecutorService;
 
 /**
  *
