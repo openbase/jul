@@ -23,7 +23,7 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.domotic.binding.openhab.OnOffHolderType;
+import rst.domotic.binding.openhab.OnOffHolderType.OnOffHolder;
 import rst.domotic.state.ActivationStateType.ActivationState;
 
 /**
@@ -32,25 +32,25 @@ import rst.domotic.state.ActivationStateType.ActivationState;
  */
 public class ActivationStateTransformer {
 
-    public static ActivationState transform(OnOffHolderType.OnOffHolder.OnOff onOffType) throws CouldNotTransformException {
+    public static ActivationState transform(final OnOffHolder.OnOff onOffType) throws CouldNotTransformException {
         switch (onOffType) {
             case OFF:
                 return ActivationState.newBuilder().setValue(ActivationState.State.DEACTIVE).build();
             case ON:
                 return ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build();
             default:
-                throw new CouldNotTransformException("Could not transform " + OnOffHolderType.OnOffHolder.OnOff.class.getName() + "! " + OnOffHolderType.OnOffHolder.OnOff.class.getSimpleName() + "[" + onOffType.name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + OnOffHolder.OnOff.class.getName() + "! " + OnOffHolder.OnOff.class.getSimpleName() + "[" + onOffType.name() + "] is unknown!");
         }
     }
 
-    public static OnOffHolderType.OnOffHolder transform(ActivationState.State activationState) throws TypeNotSupportedException, CouldNotTransformException {
+    public static OnOffHolder transform(final ActivationState.State activationState) throws TypeNotSupportedException, CouldNotTransformException {
         switch (activationState) {
             case DEACTIVE:
-                return OnOffHolderType.OnOffHolder.newBuilder().setState(OnOffHolderType.OnOffHolder.OnOff.OFF).build();
+                return OnOffHolder.newBuilder().setState(OnOffHolder.OnOff.OFF).build();
             case ACTIVE:
-                return OnOffHolderType.OnOffHolder.newBuilder().setState(OnOffHolderType.OnOffHolder.OnOff.ON).build();
+                return OnOffHolder.newBuilder().setState(OnOffHolder.OnOff.ON).build();
             case UNKNOWN:
-                throw new TypeNotSupportedException(activationState, OnOffHolderType.OnOffHolder.OnOff.class);
+                throw new TypeNotSupportedException(activationState, OnOffHolder.OnOff.class);
             default:
                 throw new CouldNotTransformException("Could not transform " + ActivationState.State.class.getName() + "! " + ActivationState.State.class.getSimpleName() + "[" + activationState.name() + "] is unknown!");
         }
