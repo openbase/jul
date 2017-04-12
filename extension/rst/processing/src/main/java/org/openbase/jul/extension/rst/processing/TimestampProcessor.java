@@ -58,58 +58,54 @@ public class TimestampProcessor {
      * @throws CouldNotPerformException
      */
     public static <M extends MessageOrBuilder> M updateTimestampWithCurrentTime(final M messageOrBuilder) throws CouldNotPerformException {
-        try {
-
-            // handle builder
-            if (messageOrBuilder.getClass().getSimpleName().equals("Builder")) {
-                messageOrBuilder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(messageOrBuilder, getCurrentTimestamp());
-                return messageOrBuilder;
-            }
-
-            //handle message
-            final Object builder = messageOrBuilder.getClass().getMethod("toBuilder").invoke(messageOrBuilder);
-            builder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(builder, getCurrentTimestamp());
-            return (M) builder.getClass().getMethod("build").invoke(builder);
-
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
-            throw new CouldNotPerformException("Could not update timestemp! ", new NotSupportedException("Field[Timestamp]", messageOrBuilder.getClass().getName(), ex));
-        }
+        return updateTimestamp(System.currentTimeMillis(), messageOrBuilder);
     }
 
     /**
      * Method updates the timestamp field of the given message with the given timestamp.
      *
-     * @param <M> the message type of the message to update.
+     * @param <M> the message type of the message to milliseconds.
      * @param millisecunds the time to update
-     * @param message the message
+     * @param messageOrBuilder the message
      * @return the updated message
      * @throws CouldNotPerformException
      */
-    public static <M extends MessageOrBuilder> M updateTimestamp(final long millisecunds, final M message) throws CouldNotPerformException {
+    public static <M extends MessageOrBuilder> M updateTimestamp(final long milliseconds, final M messageOrBuilder) throws CouldNotPerformException {
         try {
-            message.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(message, TimestampJavaTimeTransform.transform(millisecunds));
+            // handle builder
+            if (messageOrBuilder.getClass().getSimpleName().equals("Builder")) {
+                messageOrBuilder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(messageOrBuilder, TimestampJavaTimeTransform.transform(milliseconds));
+                return messageOrBuilder;
+            }
+
+            //handle message
+            final Object builder = messageOrBuilder.getClass().getMethod("toBuilder").invoke(messageOrBuilder);
+            builder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
+            return (M) builder.getClass().getMethod("build").invoke(builder);
+
+//            message.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(message, TimestampJavaTimeTransform.transform(millisecunds));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
-            throw new CouldNotPerformException("Could not update timestemp! ", new NotSupportedException("Field[Timestamp]", message.getClass().getName(), ex));
+            throw new CouldNotPerformException("Could not update timestemp! ", new NotSupportedException("Field[Timestamp]", messageOrBuilder.getClass().getName(), ex));
         }
-        return message;
+//        return message;
     }
 
     /**
      * Method updates the timestamp field of the given message with the given timestamp.
      * In case of an error the original message is returned.
      *
-     * @param <M> the message type of the message to update. 
+     * @param <M> the message type of the message to update.
      * @param timestamp the timestamp to update
-     * @param message the message
+     * @param messageOrBuilder the message
      * @param logger the logger which is used for printing the exception stack in case something went wrong.
      * @return the updated message or the original one in case of errors.
      */
-    public static <M extends MessageOrBuilder> M updateTimestamp(final long timestamp, final M message, final Logger logger) {
+    public static <M extends MessageOrBuilder> M updateTimestamp(final long timestamp, final M messageOrBuilder, final Logger logger) {
         try {
-            return updateTimestamp(timestamp, message);
+            return updateTimestamp(timestamp, messageOrBuilder);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(ex, logger);
-            return message;
+            return messageOrBuilder;
         }
     }
 
@@ -118,16 +114,16 @@ public class TimestampProcessor {
      * In case of an error the original message is returned.
      *
      * @param <M> the message type of the message to update.
-     * @param message the message
+     * @param messageOrBuilder the message
      * @param logger the logger which is used for printing the exception stack in case something went wrong.
      * @return the updated message or the original one in case of errors.
      */
-    public static <M extends MessageOrBuilder> M updateTimestampWithCurrentTime(final M message, final Logger logger) {
+    public static <M extends MessageOrBuilder> M updateTimestampWithCurrentTime(final M messageOrBuilder, final Logger logger) {
         try {
-            return updateTimestampWithCurrentTime(message);
+            return updateTimestampWithCurrentTime(messageOrBuilder);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(ex, logger);
-            return message;
+            return messageOrBuilder;
         }
     }
 }
