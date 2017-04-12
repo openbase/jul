@@ -82,12 +82,9 @@ public class TimestampProcessor {
             final Object builder = messageOrBuilder.getClass().getMethod("toBuilder").invoke(messageOrBuilder);
             builder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
             return (M) builder.getClass().getMethod("build").invoke(builder);
-
-//            message.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(message, TimestampJavaTimeTransform.transform(millisecunds));
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
             throw new CouldNotPerformException("Could not update timestemp! ", new NotSupportedException("Field[Timestamp]", messageOrBuilder.getClass().getName(), ex));
         }
-//        return message;
     }
 
     /**
