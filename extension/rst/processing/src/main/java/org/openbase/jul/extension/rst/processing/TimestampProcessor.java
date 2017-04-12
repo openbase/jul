@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rst.processing;
  */
 import com.google.protobuf.MessageOrBuilder;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -65,12 +66,28 @@ public class TimestampProcessor {
      * Method updates the timestamp field of the given message with the given timestamp.
      *
      * @param <M> the message type of the message to milliseconds.
-     * @param millisecunds the time to update
+     * @param milliseconds the time to update
      * @param messageOrBuilder the message
      * @return the updated message
      * @throws CouldNotPerformException
      */
     public static <M extends MessageOrBuilder> M updateTimestamp(final long milliseconds, final M messageOrBuilder) throws CouldNotPerformException {
+        return updateTimestamp(milliseconds, messageOrBuilder, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Method updates the timestamp field of the given message with the given time in the given timeUnit.
+     *
+     * @param <M> the message type of the message which is updated
+     * @param time the time which is put in the timestamp field
+     * @param messageOrBuilder the message
+     * @param timeUnit the unit of time
+     * @return the updated message
+     * @throws CouldNotPerformException
+     */
+    public static <M extends MessageOrBuilder> M updateTimestamp(final long time, final M messageOrBuilder, final TimeUnit timeUnit) throws CouldNotPerformException {
+        long milliseconds = TimeUnit.MILLISECONDS.convert(time, timeUnit);
+
         try {
             // handle builder
             if (messageOrBuilder.getClass().getSimpleName().equals("Builder")) {

@@ -22,6 +22,7 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * #L%
  */
 import com.google.protobuf.Message;
+import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.NotSupportedException;
@@ -143,7 +144,7 @@ public final class OpenhabCommandTransformer {
                 throw new CouldNotTransformException("No corresponding data found for " + command + ".");
         }
 
-        return TimestampProcessor.updateTimestamp(command.getTimestamp().getTime(), msg, LOGGER);
+        return TimestampProcessor.updateTimestamp(command.getTimestamp().getTime(), msg, TimeUnit.MICROSECONDS);
     }
 
     public static Object getCommandData(final OpenhabCommand command) throws CouldNotPerformException {
