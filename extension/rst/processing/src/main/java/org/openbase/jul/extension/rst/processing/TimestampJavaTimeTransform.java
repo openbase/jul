@@ -21,7 +21,6 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import rst.timing.TimestampType.Timestamp;
 
 /**
@@ -35,11 +34,11 @@ public class TimestampJavaTimeTransform {
     /**
      * Method transforms the given time in milliseconds into an Timestamp object.
      *
-     * @param millisecunds the time in milliseconds.
+     * @param milliseconds the time in milliseconds.
      * @return a timestamp object representing the given time.
      */
-    public static Timestamp transform(final long millisecunds) {
-        return Timestamp.newBuilder().setTime(millisecunds * FROM_MILLI_TO_MICRO_MULTIPLIER).build();
+    public static Timestamp transform(final long milliseconds) {
+        return Timestamp.newBuilder().setTime(milliseconds * FROM_MILLI_TO_MICRO_MULTIPLIER).build();
     }
 
     /**

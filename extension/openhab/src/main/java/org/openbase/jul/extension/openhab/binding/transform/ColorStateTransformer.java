@@ -21,7 +21,6 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.CouldNotTransformException;
 import rst.domotic.binding.openhab.HSBType;
 import rst.domotic.state.ColorStateType.ColorState;
@@ -34,7 +33,7 @@ import rst.vision.HSBColorType.HSBColor;
  */
 public class ColorStateTransformer {
 
-    public static ColorState transform(HSBType.HSB hsbColor) throws CouldNotTransformException {
+    public static ColorState transform(final HSBType.HSB hsbColor) throws CouldNotTransformException {
         try {
             HSBColor hsbColorBuilder = HSBColor.newBuilder().setHue(hsbColor.getHue()).setSaturation(hsbColor.getSaturation()).setBrightness(hsbColor.getBrightness()).build();
             Color color = Color.newBuilder().setHsbColor(hsbColorBuilder).setType(Color.Type.HSB).build();
@@ -44,7 +43,7 @@ public class ColorStateTransformer {
         }
     }
 
-    public static HSBType.HSB transform(ColorState colorState) throws CouldNotTransformException {
+    public static HSBType.HSB transform(final ColorState colorState) throws CouldNotTransformException {
         try {
             HSBColor color = colorState.getColor().getHsbColor();
             return HSBType.HSB.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation()).setBrightness(color.getBrightness()).build();
