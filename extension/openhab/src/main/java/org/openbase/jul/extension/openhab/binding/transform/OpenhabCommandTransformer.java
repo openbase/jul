@@ -21,10 +21,15 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import com.google.protobuf.Message;
+import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.NotSupportedException;
-import rst.domotic.binding.openhab.OpenhabCommandType;
+import org.openbase.jul.extension.rst.processing.TimestampProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import rst.domotic.binding.openhab.OpenhabCommandType.OpenhabCommand;
 import rst.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType;
 
 /**
@@ -33,52 +38,69 @@ import rst.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType;
  */
 public final class OpenhabCommandTransformer {
 
-    public static Object getServiceData(OpenhabCommandType.OpenhabCommand command, ServiceType serviceType) throws CouldNotPerformException {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenhabCommandTransformer.class);
+
+    public static Object getServiceData(OpenhabCommand command, ServiceType serviceType) throws CouldNotPerformException {
+        Message msg;
 
         // Transform service data.
         switch (command.getType()) {
             case DECIMAL:
                 switch (serviceType) {
                     case POWER_CONSUMPTION_STATE_SERVICE:
-                        return PowerConsumptionStateTransformer.transform(command.getDecimal());
+                        msg = PowerConsumptionStateTransformer.transform(command.getDecimal());
+                        break;
                     case MOTION_STATE_SERVICE:
-                        return MotionStateTransformer.transform(command.getDecimal());
+                        msg = MotionStateTransformer.transform(command.getDecimal());
+                        break;
                     case TAMPER_STATE_SERVICE:
-                        return TamperStateTransformer.transform(command.getDecimal());
+                        msg = TamperStateTransformer.transform(command.getDecimal());
+                        break;
                     case BATTERY_STATE_SERVICE:
-                        return BatteryStateTransformer.transform(command.getDecimal());
+                        msg = BatteryStateTransformer.transform(command.getDecimal());
+                        break;
                     case TEMPERATURE_ALARM_STATE_SERVICE:
                     case SMOKE_ALARM_STATE_SERVICE:
-                        return AlarmStateTransformer.transform(command.getDecimal());
+                        msg = AlarmStateTransformer.transform(command.getDecimal());
+                        break;
                     case SMOKE_STATE_SERVICE:
-                        return SmokeStateTransformer.transform(command.getDecimal());
+                        msg = SmokeStateTransformer.transform(command.getDecimal());
+                        break;
                     case TEMPERATURE_STATE_SERVICE:
                     case TARGET_TEMPERATURE_STATE_SERVICE:
-                        return TemperatureStateTransformer.transform(command.getDecimal());
+                        msg = TemperatureStateTransformer.transform(command.getDecimal());
+                        break;
                     case BRIGHTNESS_STATE_SERVICE:
-                        return BrightnessStateTransformer.transform(command.getDecimal());
+                        msg = BrightnessStateTransformer.transform(command.getDecimal());
+                        break;
                     case ILLUMINANCE_STATE_SERVICE:
-                        return IlluminanceStateTransformer.transform(command.getDecimal());
+                        msg = IlluminanceStateTransformer.transform(command.getDecimal());
+                        break;
                     default:
                         // native double type
                         return command.getDecimal();
                 }
+                break;
             case HSB:
                 switch (serviceType) {
                     case COLOR_STATE_SERVICE:
-                        return ColorStateTransformer.transform(command.getHsb());
+                        msg = ColorStateTransformer.transform(command.getHsb());
+                        break;
                     default:
                         throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
                 }
+                break;
             case INCREASEDECREASE:
 //				return IncreaseDecreaseTransformer(command.getIncreaseDecrease());
                 throw new NotSupportedException(command.getType(), OpenhabCommandTransformer.class);
             case ONOFF:
                 switch (serviceType) {
                     case BUTTON_STATE_SERVICE:
-                        return ButtonStateTransformer.transform(command.getOnOff().getState());
+                        msg = ButtonStateTransformer.transform(command.getOnOff().getState());
+                        break;
                     case POWER_STATE_SERVICE:
-                        return PowerStateTransformer.transform(command.getOnOff().getState());
+                        msg = PowerStateTransformer.transform(command.getOnOff().getState());
+                        break;
                     // openhab posts the on/off state for dimmer in color items which we already receive for powerItems and thus can be ignored
                     case BRIGHTNESS_STATE_SERVICE:
                     case COLOR_STATE_SERVICE:
@@ -86,36 +108,46 @@ public final class OpenhabCommandTransformer {
                     default:
                         throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
                 }
+                break;
             case OPENCLOSED:
-                return OpenClosedStateTransformer.transform(command.getOpenClosed().getState());
+                msg = OpenClosedStateTransformer.transform(command.getOpenClosed().getState());
+                break;
             case PERCENT:
                 switch (serviceType) {
                     case BRIGHTNESS_STATE_SERVICE:
-                        return BrightnessStateTransformer.transform(command.getPercent().getValue());
+                        msg = BrightnessStateTransformer.transform(command.getPercent().getValue());
+                        break;
                     case BLIND_STATE_SERVICE:
-                        return BlindStateTransformer.transform(command.getPercent().getValue());
+                        msg = BlindStateTransformer.transform(command.getPercent().getValue());
+                        break;
                     default:
                         return command.getPercent().getValue();
                 }
+                break;
             case STOPMOVE:
-                return StopMoveStateTransformer.transform(command.getStopMove().getState());
+                msg = StopMoveStateTransformer.transform(command.getStopMove().getState());
+                break;
             case STRING:
                 switch (serviceType) {
                     case HANDLE_STATE_SERVICE:
-                        return HandleStateTransformer.transform(command.getText());
+                        msg = HandleStateTransformer.transform(command.getText());
+                        break;
                     default:
                         // native string type
                         return command.getText();
                 }
-
+                break;
             case UPDOWN:
-                return UpDownStateTransformer.transform(command.getUpDown().getState());
+                msg = UpDownStateTransformer.transform(command.getUpDown().getState());
+                break;
             default:
                 throw new CouldNotTransformException("No corresponding data found for " + command + ".");
         }
+
+        return TimestampProcessor.updateTimestamp(command.getTimestamp().getTime(), msg, TimeUnit.MICROSECONDS);
     }
 
-    public static Object getCommandData(final OpenhabCommandType.OpenhabCommand command) throws CouldNotPerformException {
+    public static Object getCommandData(final OpenhabCommand command) throws CouldNotPerformException {
 
         switch (command.getType()) {
             case DECIMAL:

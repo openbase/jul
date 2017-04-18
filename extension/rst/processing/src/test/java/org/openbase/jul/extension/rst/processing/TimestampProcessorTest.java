@@ -21,16 +21,14 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import com.google.protobuf.GeneratedMessage;
 import org.junit.After;
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
 import rst.domotic.state.PowerStateType;
-import rst.timing.TimestampType;
 
 /**
  *
@@ -77,7 +75,7 @@ public class TimestampProcessorTest {
      */
     @Test
     public void testUpdateTimeStampWithCurrentTime() throws Exception {
-       System.out.println("updateTimeStampWithCurrentTime");
+        System.out.println("updateTimeStampWithCurrentTime");
         PowerStateType.PowerState powerState = PowerStateType.PowerState.newBuilder().build();
         long time1 = System.currentTimeMillis();
         Thread.sleep(1);
@@ -86,7 +84,7 @@ public class TimestampProcessorTest {
         long time3 = System.currentTimeMillis();
         assertTrue(time1 < time2);
         assertTrue(time2 < time3);
-        
+
     }
 
     /**
@@ -98,6 +96,18 @@ public class TimestampProcessorTest {
         PowerStateType.PowerState.Builder powerState = PowerStateType.PowerState.newBuilder();
         long time = 9999;
         TimestampProcessor.updateTimestamp(time, powerState);
+        assertEquals(TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());
+    }
+
+    /**
+     * Test id updating the timestamp also works for messages and not only builder.
+     */
+    @Test
+    public void setTimestampForMessage() throws Exception {
+        System.out.println("setTimestampForMessage");
+        PowerStateType.PowerState powerState = PowerStateType.PowerState.getDefaultInstance();
+        long time = 1238;
+        powerState = TimestampProcessor.updateTimestamp(time, powerState);
         assertEquals(TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());
     }
 }

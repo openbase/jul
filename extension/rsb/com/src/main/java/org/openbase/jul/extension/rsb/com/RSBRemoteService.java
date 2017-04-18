@@ -592,7 +592,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     final R returnValue = remoteServer.call(methodName, argument, retryTimeout);
 
                     if (retryTimeout != METHOD_CALL_START_TIMEOUT && retryTimeout > 15000) {
-                        logger.info("Methode[" + methodName + "(" + shortArgument + ")] returned! Continue processing...");
+                        logger.info("Method[" + methodName + "(" + shortArgument + ")] returned! Continue processing...");
                     }
                     return returnValue;
 
@@ -603,7 +603,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         validTimeout -= retryTimeout;
                         if (validTimeout <= 0) {
                             ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                            throw new TimeoutException("Could not call remote Methode[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
+                            throw new TimeoutException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
                         }
                         retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
                     } else {
@@ -625,7 +625,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (TimeoutException ex) {
             throw ex;
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+            throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
         }
     }
 
@@ -686,7 +686,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         throw ex;
                     }
                 } catch (CouldNotPerformException | ExecutionException | CancellationException | InterruptedException ex) {
-                    throw new CouldNotPerformException("Could not call remote Methode[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+                    throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
                 }
             }
         });

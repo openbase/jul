@@ -23,7 +23,7 @@ package org.openbase.jul.extension.openhab.binding.transform;
  */
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.domotic.binding.openhab.OnOffHolderType;
+import rst.domotic.binding.openhab.OnOffHolderType.OnOffHolder;
 import rst.domotic.state.ButtonStateType.ButtonState;
 import rst.domotic.state.ButtonStateType.ButtonState.State;
 
@@ -33,25 +33,25 @@ import rst.domotic.state.ButtonStateType.ButtonState.State;
  */
 public class ButtonStateTransformer {
 
-    public static ButtonState transform(OnOffHolderType.OnOffHolder.OnOff onOffType) throws CouldNotTransformException {
+    public static ButtonState transform(final OnOffHolder.OnOff onOffType) throws CouldNotTransformException {
         switch (onOffType) {
             case OFF:
                 return ButtonState.newBuilder().setValue(State.RELEASED).build();
             case ON:
                 return ButtonState.newBuilder().setValue(State.PRESSED).build();
             default:
-                throw new CouldNotTransformException("Could not transform " + OnOffHolderType.OnOffHolder.OnOff.class.getName() + "! " + OnOffHolderType.OnOffHolder.OnOff.class.getSimpleName() + "[" + onOffType.name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + OnOffHolder.OnOff.class.getName() + "! " + OnOffHolder.OnOff.class.getSimpleName() + "[" + onOffType.name() + "] is unknown!");
         }
     }
 
-    public static OnOffHolderType.OnOffHolder transform(ButtonState buttonState) throws TypeNotSupportedException, CouldNotTransformException {
+    public static OnOffHolder transform(final ButtonState buttonState) throws TypeNotSupportedException, CouldNotTransformException {
         switch (buttonState.getValue()) {
             case RELEASED:
-                return OnOffHolderType.OnOffHolder.newBuilder().setState(OnOffHolderType.OnOffHolder.OnOff.OFF).build();
+                return OnOffHolder.newBuilder().setState(OnOffHolder.OnOff.OFF).build();
             case PRESSED:
-                return OnOffHolderType.OnOffHolder.newBuilder().setState(OnOffHolderType.OnOffHolder.OnOff.ON).build();
+                return OnOffHolder.newBuilder().setState(OnOffHolder.OnOff.ON).build();
             case UNKNOWN:
-                throw new TypeNotSupportedException(buttonState, OnOffHolderType.OnOffHolder.OnOff.class);
+                throw new TypeNotSupportedException(buttonState, OnOffHolder.OnOff.class);
             default:
                 throw new CouldNotTransformException("Could not transform " + ButtonState.State.class.getName() + "! " + ButtonState.State.class.getSimpleName() + "[" + buttonState.getValue().name() + "] is unknown!");
         }
