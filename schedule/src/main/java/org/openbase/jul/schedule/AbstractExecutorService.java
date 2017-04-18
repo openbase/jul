@@ -38,9 +38,11 @@ import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
+import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.Shutdownable;
-import static org.openbase.jul.schedule.GlobalCachedExecutorService.getInstance;
+import static org.openbase.jul.schedule.GlobalScheduledExecutorService.getInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -238,44 +240,6 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         });
     }
 
-    public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList, final ExecutorService executorService) {
-        return allOf(actionProcessor, (Collection<Future<Void>> input) -> null, inputList, executorService);
-    }
-
-    public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList, final ExecutorService executorService) {
-        return executorService.submit(new Callable<R>() {
-            @Override
-            public R call() throws Exception {
-                MultiException.ExceptionStack exceptionStack = null;
-                List<Future<O>> futureList = new ArrayList<>();
-                for (I input : inputList) {
-                    try {
-                        futureList.add(actionProcessor.process(input));
-                    } catch (CouldNotPerformException ex) {
-                        exceptionStack = MultiException.push(this, ex, exceptionStack);
-                    }
-                }
-                try {
-                    for (Future<O> future : futureList) {
-                        try {
-                            future.get();
-                        } catch (ExecutionException ex) {
-                            exceptionStack = MultiException.push(this, ex, exceptionStack);
-                        }
-                    }
-                } catch (InterruptedException ex) {
-                    // cancel all pending actions.
-                    futureList.stream().forEach((future) -> {
-                        future.cancel(true);
-                    });
-                    throw ex;
-                }
-                MultiException.checkAndThrow("Could not apply all actions!", exceptionStack);
-                return resultProcessor.process(futureList);
-            }
-        });
-    }
-    
     /**
      * This method applies an error handler to the given future object.
      * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
@@ -292,52 +256,291 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         return AbstractExecutorService.applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
     }
 
-    public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {
-        return allOf(actionProcessor, (Collection<Future<Void>> input) -> null, inputList, getInstance().getExecutorService());
+    /**
+     *
+     * @param <I>
+     * @param taskProcessor
+     * @param inputList
+     * @param executorService
+     * @return
+     * @throws CouldNotPerformException
+     * @throws InterruptedException
+     * @deprecated Please use allOf(final ExecutorService executorService, final Collection inputList, final Processable taskProcessor) instead.
+     */
+    @Deprecated
+    public static <I> Future<Void> allOf(final Processable<I, Future<Void>> taskProcessor, final Collection<I> inputList, final ExecutorService executorService) {
+        return allOf(executorService, inputList, taskProcessor);
     }
 
-    public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList) {
-        return allOf(actionProcessor, resultProcessor, inputList, getInstance().getExecutorService());
+    public static <I> Future<Void> allOf(final ExecutorService executorService, final Collection<I> inputList, final Processable<I, Future<Void>> taskProcessor) {
+        return allOf(executorService, inputList, (Collection<Future<Void>> input) -> null, taskProcessor);
     }
 
-    public static Future<Void> allOf(final Future ... futures) {
-        return allOf(Arrays.asList(futures), null);
+    public static <I> Future<Void> allOf(final Collection<I> inputList, final Processable<I, Future<Void>> taskProcessor) throws CouldNotPerformException {
+        return allOf(getInstance().getExecutorService(), inputList, (Collection<Future<Void>> input) -> null, taskProcessor);
     }
-    
+
+    public static <I, O, R> Future<R> allOf(final Collection<I> inputList, final Processable<Collection<Future<O>>, R> resultProcessor, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException, InterruptedException {
+        return allOf(getInstance().getExecutorService(), inputList, resultProcessor, taskProcessor);
+    }
+
+    public static Future<Void> allOf(final Future... futures) {
+        return allOf(Arrays.asList(futures));
+    }
+
+    public static Future<Void> allOf(final Callable resultCallable, final Future... futures) {
+        return allOf(getInstance().getExecutorService(), resultCallable, Arrays.asList(futures));
+    }
+
+    public static <R> Future<R> allOfInclusiveResultFuture(final Future<R> resultFuture, final Future... futures) {
+        final List<Future> futureList = Arrays.asList(futures);
+
+        // Add result future to future list to make sure that the result is available if requested.
+        futureList.add(resultFuture);
+
+        return allOf(getInstance().getExecutorService(), () -> resultFuture.get(), futureList);
+    }
+
     public static Future<Void> allOf(final Collection<Future> futureCollection) {
-        return allOf(futureCollection, null);
-    }
-    
-    public static <T> Future<T> allOf(final Collection<Future> futureCollection, T returnValue) {
-        return allOf(futureCollection, returnValue, getInstance().getExecutorService());
+        return allOf(getInstance().getExecutorService(), () -> null, futureCollection);
     }
 
-    public static <T> Future<T> allOf(final Collection<Future> futureCollection, T returnValue, final ExecutorService executorService) {
-        return executorService.submit(new Callable<T>() {
+    /**
+     *
+     * @param <T>
+     * @param futureCollection
+     * @param returnValue
+     * @return
+     * @deprecated please use allOf(final T returnValue, final Collection<Future<?>> futureCollection) instead.
+     */
+    @Deprecated
+    public static <R> Future<R> allOf(final Collection<Future> futureCollection, R returnValue) {
+        return allOf(returnValue, futureCollection);
+    }
+
+    public static <R> Future<R> allOf(final R returnValue, final Collection<Future> futureCollection) {
+        return allOf(getInstance().getExecutorService(), returnValue, futureCollection);
+    }
+
+    /**
+     *
+     * @param <T>
+     * @param futureCollection
+     * @param returnValue
+     * @param executorService
+     * @return
+     * @deprecated please use allOf(final ExecutorService executorService, T returnValue, final Collection<Future> futureCollection) instead.
+     */
+    @Deprecated
+    public static <R> Future<R> allOf(final Collection<Future> futureCollection, R returnValue, final ExecutorService executorService) {
+        return allOf(executorService, returnValue, futureCollection);
+    }
+
+    public static <R> Future<R> allOf(final ExecutorService executorService, R returnValue, final Collection<Future> futureCollection) {
+        return allOf(executorService, () -> returnValue, futureCollection);
+    }
+
+    /**
+     *
+     * @param <I>
+     * @param <O>
+     * @param <R>
+     * @param taskProcessor
+     * @param resultProcessor
+     * @param inputList
+     * @param executorService
+     * @return
+     * @deprecated Please use allOf(final ExecutorService executorService, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException, InterruptedException { instaed.
+     */
+    public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> taskProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList, final ExecutorService executorService) {
+        return allOf(executorService, inputList, resultProcessor, taskProcessor);
+    }
+
+    public static <I, O, R> Future<R> allOf(final ExecutorService executorService, final Collection<I> inputList, final Processable<Collection<Future<O>>, R> resultProcessor, final Processable<I, Future<O>> taskProcessor) {
+        return executorService.submit(new Callable<R>() {
             @Override
-            public T call() throws Exception {
-                MultiException.ExceptionStack exceptionStack = null;
+            public R call() throws Exception {
                 try {
-                    for (Future future : futureCollection) {
-                        try {
-                            future.get();
-                        } catch (ExecutionException ex) {
-                            exceptionStack = MultiException.push(this, ex, exceptionStack);
+                    MultiException.ExceptionStack exceptionStack = null;
+                    Collection<Future<O>> futureCollection = buildFutureCollection(inputList, taskProcessor);
+
+                    try {
+                        for (final Future<O> future : futureCollection) {
+                            try {
+                                future.get();
+                            } catch (ExecutionException ex) {
+                                exceptionStack = MultiException.push(this, ex, exceptionStack);
+                            }
                         }
+                    } catch (InterruptedException ex) {
+                        // cancel all pending actions.
+                        futureCollection.stream().forEach((future) -> {
+                            future.cancel(true);
+                        });
+                        throw ex;
                     }
+                    MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                    return resultProcessor.process(futureCollection);
                 } catch (InterruptedException ex) {
-                    // cancel all pending actions.
-                    futureCollection.stream().forEach((future) -> {
-                        future.cancel(true);
-                    });
                     throw ex;
+                } catch (CouldNotPerformException ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
                 }
-                MultiException.checkAndThrow("Could not apply all actions!", exceptionStack);
-                return returnValue;
             }
         });
     }
 
+    /**
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultCallable.
+     *
+     * @param <R> The result type of the outer future.
+     * @param resultCallable the callable which provides the result of the outer future.
+     * @param futureCollection the inner future collection.2. Sonderfall Umzug: Vertragsübernahme durch den Nachmieter
+     * @return the outer future.
+     */
+    public static <R> Future<R> allOf(final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+        return allOf(getInstance().getExecutorService(), resultCallable, futureCollection);
+    }
+
+    /**
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultCallable.
+     *
+     * @param <R> The result type of the outer future.
+     * @param executorService the execution service which is used for the outer future execution.
+     * @param resultCallable the callable which provides the result of the outer future.
+     * @param futureCollection the inner future collection.
+     * @return the outer future.
+     */
+    public static <R> Future<R> allOf(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+        return executorService.submit(new Callable<R>() {
+            @Override
+            public R call() throws Exception {
+                try {
+                    MultiException.ExceptionStack exceptionStack = null;
+                    try {
+                        for (final Future future : futureCollection) {
+                            try {
+                                future.get();
+                            } catch (ExecutionException ex) {
+                                exceptionStack = MultiException.push(this, ex, exceptionStack);
+                            }
+                        }
+                    } catch (InterruptedException ex) {
+                        // cancel all pending actions.
+                        futureCollection.stream().forEach((future) -> {
+                            future.cancel(true);
+                        });
+                        throw ex;
+                    }
+                    MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                    if (resultCallable == null) {
+                        throw new NotAvailableException("resultCallable");
+                    }
+                    return resultCallable.call();
+                } catch (CouldNotPerformException | InterruptedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
+                }
+            }
+        });
+    }
+
+    /**
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultProcessor.
+     *
+     * Node: For this method it's important that all futures provided by the future collection provide the same result type.
+     *
+     * @param <O> The output or result type of the futures provided by the future collection.
+     * @param <R> The result type of the outer future.
+     * @param resultProcessor the processor which provides the outer future result.
+     * @param futureCollection the inner future collection.
+     * @return the outer future.
+     */
+    public static <O, R> Future<R> allOf(final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureCollection) {
+        return allOf(getInstance().getExecutorService(), resultProcessor, futureCollection);
+    }
+
+    /**
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultProcessor.
+     *
+     * Node: For this method it's important that all futures provided by the future collection provide the same result type.
+     *
+     * @param <O> The output or result type of the futures provided by the future collection.
+     * @param <R> The result type of the outer future.
+     * @param executorService the execution service which is used for the outer future execution.
+     * @param resultProcessor the processor which provides the outer future result.
+     * @param futureCollection the inner future collection.
+     * @return the outer future.
+     */
+    public static <O, R> Future<R> allOf(final ExecutorService executorService, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureCollection) {
+        return executorService.submit(new Callable<R>() {
+            @Override
+            public R call() throws Exception {
+                try {
+                    MultiException.ExceptionStack exceptionStack = null;
+                    try {
+                        for (final Future<O> future : futureCollection) {
+                            try {
+                                future.get();
+                            } catch (ExecutionException ex) {
+                                exceptionStack = MultiException.push(this, ex, exceptionStack);
+                            }
+                        }
+                    } catch (InterruptedException ex) {
+                        // cancel all pending actions.
+                        futureCollection.stream().forEach((future) -> {
+                            future.cancel(true);
+                        });
+                        throw ex;
+                    }
+                    MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                    return resultProcessor.process(futureCollection);
+                } catch (CouldNotPerformException | InterruptedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
+                }
+            }
+        });
+    }
+
+    /**
+     * Method builds a future collection with the given task processor. The input list is passed to the future build process so the input is availbale during the build.
+     *
+     * @param <I> The type of the input value used for the future build.
+     * @param <O> The type of the output value whiche the futures provide.
+     * @param inputList the input list which is needed for the build process.
+     * @param taskProcessor the task processor to build the futures.
+     * @return the collection of all builded future instances.
+     * @throws CouldNotPerformException is thrown if the future collection could not be generated.
+     * @throws InterruptedException is thrown if the thread was externally interrupted.
+     */
+    public static <I, O> Collection<Future<O>> buildFutureCollection(final Collection<I> inputList, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException, InterruptedException {
+        try {
+            MultiException.ExceptionStack exceptionStack = null;
+            List<Future<O>> futureList = new ArrayList<>();
+            for (final I input : inputList) {
+                try {
+                    futureList.add(taskProcessor.process(input));
+                } catch (final CouldNotPerformException ex) {
+                    exceptionStack = MultiException.push(AbstractExecutorService.class, ex, exceptionStack);
+                }
+            }
+            MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+            return futureList;
+        } catch (CouldNotPerformException | InterruptedException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not build future collection!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
+        }
+    }
+
+    /**
+     * Simply prints the class name.
+     *
+     * @return the class name of this instance.
+     */
     @Override
     public String toString() {
         return getClass().getSimpleName();

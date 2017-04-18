@@ -1,8 +1,8 @@
-package org.openbase.jul.processing;
+package org.openbase.jul.schedule;
 
 /*
  * #%L
- * JUL Processing
+ * JUL Schedule
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -31,9 +31,7 @@ import java.util.concurrent.TimeoutException;
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @deprecated Please use package org.openbase.jul.schedule.FutureProcessor instead!;
  */
-@Deprecated
 public class FutureProcessor {
 
     /**
@@ -90,6 +88,41 @@ public class FutureProcessor {
 
             @Override
             public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+                throw new ExecutionException("Future was canceled!", cause);
+            }
+        };
+    }
+    
+    /**
+     * Method returns a future which is already canceled by the given cause.
+     *
+     * @param cause the reason why the future was canceled.
+     * @return the canceled future.
+     */
+    public static Future canceledFuture(final Exception cause) {
+        return new Future() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return true;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return true;
+            }
+
+            @Override
+            public boolean isDone() {
+                return true;
+            }
+
+            @Override
+            public Object get() throws InterruptedException, ExecutionException {
+                throw new ExecutionException("Future was canceled!", cause);
+            }
+
+            @Override
+            public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
                 throw new ExecutionException("Future was canceled!", cause);
             }
         };

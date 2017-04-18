@@ -21,7 +21,6 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -31,8 +30,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.iface.Processable;
-import static org.openbase.jul.schedule.AbstractExecutorService.allOf;
 
 /**
  *
@@ -163,33 +160,4 @@ public class GlobalScheduledExecutorService extends AbstractExecutorService<Sche
         }
         return getInstance().executorService.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
-
-    /**
-     * This method applies an error handler to the given future object.
-     * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
-     * The receive a future should be submitted to any execution service or handled externally.
-     *
-     * @param future the future on which is the error processor is registered.
-     * @param timeout the timeout.
-     * @param errorProcessor the processable which handles thrown exceptions
-     * @param timeUnit the unit of the timeout.
-     * @return the future of the error handler.
-     * @throws CouldNotPerformException thrown by the errorProcessor
-     */
-    public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException {
-        return AbstractExecutorService.applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
-    }
-
-    public static <I> Future<Void> allOf(final Processable<I, Future<Void>> actionProcessor, final Collection<I> inputList) {
-        return allOf(actionProcessor, (Collection<Future<Void>> input) -> null, inputList, getInstance().getExecutorService());
-    }
-
-    public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> actionProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList) {
-        return allOf(actionProcessor, resultProcessor, inputList, getInstance().getExecutorService());
-    }
-
-    public static <T> Future<T> allOf(final Collection<Future> futureCollection, T returnValue) {
-        return allOf(futureCollection, returnValue, getInstance().getExecutorService());
-    }
-
 }
