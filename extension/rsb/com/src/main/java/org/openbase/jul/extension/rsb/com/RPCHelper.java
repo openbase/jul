@@ -95,22 +95,22 @@ public class RPCHelper {
     }
 
     public static Future<Object> callRemoteMethod(final RSBRemote remote) throws CouldNotPerformException {
-        return callRemoteMethod(null, remote, Object.class, 3);
+        return internalCallRemoteMethod(null, remote, Object.class);
     }
 
     public static Future<Object> callRemoteMethod(final Object argument, final RSBRemote remote) throws CouldNotPerformException {
-        return callRemoteMethod(argument, remote, Object.class, 3);
+        return internalCallRemoteMethod(argument, remote, Object.class);
     }
 
     public static <RETURN> Future<RETURN> callRemoteMethod(final RSBRemote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
-        return callRemoteMethod(null, remote, returnClass, 3);
+        return internalCallRemoteMethod(null, remote, returnClass);
     }
 
     public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
-        return callRemoteMethod(argument, remote, returnClass, 3);
+        return internalCallRemoteMethod(argument, remote, returnClass);
     }
 
-    private static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemote remote, final Class<? extends RETURN> returnClass, int methodStackDepth) throws CouldNotPerformException {
+    private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RSBRemote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
 
         String methodName = "?";
         try {
@@ -122,7 +122,12 @@ public class RPCHelper {
             }
 
             try {
-                methodName = stackTrace[methodStackDepth].getMethodName();
+                for (int i = 0; i < stackTrace.length; i++) {
+                    if (stackTrace[i].getMethodName().equals("callRemoteMethod")) {
+                        methodName = stackTrace[i+1].getMethodName();
+                        break;
+                    }
+                }
             } catch (NullPointerException | IndexOutOfBoundsException ex) {
                 throw new CouldNotPerformException("Could not detect method name!");
             }
