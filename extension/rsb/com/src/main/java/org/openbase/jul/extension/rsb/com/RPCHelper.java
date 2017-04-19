@@ -44,6 +44,8 @@ import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 public class RPCHelper {
 
 //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
+    private static final String INTERNAL_CALL_REMOTE_METHOD_NAME = "internalCallRemoteMethod";
+
     public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
         for (final Method method : interfaceClass.getMethods()) {
             if (method.getAnnotation(RPCMethod.class) != null) {
@@ -123,8 +125,8 @@ public class RPCHelper {
 
             try {
                 for (int i = 0; i < stackTrace.length; i++) {
-                    if (stackTrace[i].getMethodName().equals("callRemoteMethod")) {
-                        methodName = stackTrace[i+1].getMethodName();
+                    if (stackTrace[i].getMethodName().equals(INTERNAL_CALL_REMOTE_METHOD_NAME)) {
+                        methodName = stackTrace[i+2].getMethodName();
                         break;
                     }
                 }
