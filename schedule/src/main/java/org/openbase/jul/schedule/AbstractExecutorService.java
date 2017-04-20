@@ -263,8 +263,6 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
      * @param inputList
      * @param executorService
      * @return
-     * @throws CouldNotPerformException
-     * @throws InterruptedException
      * @deprecated Please use allOf(final ExecutorService executorService, final Collection inputList, final Processable taskProcessor) instead.
      */
     @Deprecated
@@ -307,11 +305,11 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     /**
      *
-     * @param <T>
+     * @param <R>
      * @param futureCollection
      * @param returnValue
      * @return
-     * @deprecated please use allOf(final T returnValue, final Collection<Future<?>> futureCollection) instead.
+     * @deprecated please use allOf(final T returnValue, final Collection futureCollection) instead.
      */
     @Deprecated
     public static <R> Future<R> allOf(final Collection<Future> futureCollection, R returnValue) {
@@ -324,12 +322,12 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     /**
      *
-     * @param <T>
+     * @param <R>
      * @param futureCollection
      * @param returnValue
      * @param executorService
      * @return
-     * @deprecated please use allOf(final ExecutorService executorService, T returnValue, final Collection<Future> futureCollection) instead.
+     * @deprecated please use allOf(final ExecutorService executorService, T returnValue, final Collection futureCollection) instead.
      */
     @Deprecated
     public static <R> Future<R> allOf(final Collection<Future> futureCollection, R returnValue, final ExecutorService executorService) {
@@ -350,7 +348,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
      * @param inputList
      * @param executorService
      * @return
-     * @deprecated Please use allOf(final ExecutorService executorService, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException, InterruptedException { instaed.
+     * @deprecated Please use allOf(final ExecutorService executorService, final Processable resultProcessor, final Collection inputList, final Processable taskProcessor) throws CouldNotPerformException, InterruptedException { instead.
      */
     public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> taskProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList, final ExecutorService executorService) {
         return allOf(executorService, inputList, resultProcessor, taskProcessor);
@@ -391,11 +389,11 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     /**
-     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultCallable.
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultCallable.
      *
      * @param <R> The result type of the outer future.
      * @param resultCallable the callable which provides the result of the outer future.
-     * @param futureCollection the inner future collection.2. Sonderfall Umzug: Vertragsübernahme durch den Nachmieter
+     * @param futureCollection the inner future collection.
      * @return the outer future.
      */
     public static <R> Future<R> allOf(final Callable<R> resultCallable, final Collection<Future> futureCollection) {
@@ -403,7 +401,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     /**
-     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultCallable.
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultCallable.
      *
      * @param <R> The result type of the outer future.
      * @param executorService the execution service which is used for the outer future execution.
@@ -447,7 +445,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     /**
-     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultProcessor.
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultProcessor.
      *
      * Node: For this method it's important that all futures provided by the future collection provide the same result type.
      *
@@ -462,7 +460,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     /**
-     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are sucessfully finished the outer future will be completed with the result provided by the resultProcessor.
+     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultProcessor.
      *
      * Node: For this method it's important that all futures provided by the future collection provide the same result type.
      *
@@ -506,10 +504,10 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     /**
-     * Method builds a future collection with the given task processor. The input list is passed to the future build process so the input is availbale during the build.
+     * Method builds a future collection with the given task processor. The input list is passed to the future build process so the input is available during the build.
      *
      * @param <I> The type of the input value used for the future build.
-     * @param <O> The type of the output value whiche the futures provide.
+     * @param <O> The type of the output value which the futures provide.
      * @param inputList the input list which is needed for the build process.
      * @param taskProcessor the task processor to build the futures.
      * @return the collection of all builded future instances.
