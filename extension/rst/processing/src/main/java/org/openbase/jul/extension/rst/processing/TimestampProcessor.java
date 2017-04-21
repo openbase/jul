@@ -111,6 +111,26 @@ public class TimestampProcessor {
      * @param <M> the message type of the message to update.
      * @param timestamp the timestamp to update
      * @param messageOrBuilder the message
+     * @param timeUnit the timeUnit of the timeStamp
+     * @param logger the logger which is used for printing the exception stack in case something went wrong.
+     * @return the updated message or the original one in case of errors.
+     */
+    public static <M extends MessageOrBuilder> M updateTimestamp(final long timestamp, final M messageOrBuilder, final TimeUnit timeUnit, final Logger logger) {
+        try {
+            return updateTimestamp(timestamp, messageOrBuilder, timeUnit);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(ex, logger);
+            return messageOrBuilder;
+        }
+    }
+
+    /**
+     * Method updates the timestamp field of the given message with the given timestamp.
+     * In case of an error the original message is returned.
+     *
+     * @param <M> the message type of the message to update.
+     * @param timestamp the timestamp to update
+     * @param messageOrBuilder the message
      * @param logger the logger which is used for printing the exception stack in case something went wrong.
      * @return the updated message or the original one in case of errors.
      */
