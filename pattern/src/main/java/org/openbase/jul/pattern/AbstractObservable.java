@@ -190,13 +190,14 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             final ArrayList<Observer<T>> tempObserverList;
 
             try {
-                if (unchangedValueFilter && isValueAvailable() && observable.hashCode() == latestValueHash) {
+                final int hashCode = computeHash(observable);
+                if (unchangedValueFilter && isValueAvailable() && hashCode == latestValueHash) {
                     LOGGER.debug("Skip notification because " + this + " has not been changed!");
                     return false;
                 }
 
                 applyValueUpdate(observable);
-                latestValueHash = observable.hashCode();
+                latestValueHash = hashCode;
 
                 synchronized (OBSERVER_LOCK) {
                     tempObserverList = new ArrayList<>(observers);
@@ -275,5 +276,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     @Override
     public String toString() {
         return Observable.class.getSimpleName() + "[" + (source == this ? source.getClass().getSimpleName() : source) + "]";
+    }
+
+    protected int computeHash(final T value) {
+        return value.hashCode();
     }
 }
