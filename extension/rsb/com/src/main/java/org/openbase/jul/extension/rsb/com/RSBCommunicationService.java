@@ -21,6 +21,7 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.extension.protobuf.MessageObservable;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 import java.util.concurrent.CompletableFuture;
@@ -49,7 +50,6 @@ import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Requestable;
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
-import org.openbase.jul.pattern.AbstractObservable;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
@@ -96,7 +96,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private ControllerAvailabilityState controllerAvailabilityState;
     private boolean initialized;
 
-    private final DataObserver dataObserver;
+    private final MessageObservable dataObserver;
     private Future initialDataSyncFuture;
 
     /**
@@ -121,7 +121,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
-            this.dataObserver = new DataObserver(this);
+            this.dataObserver = new MessageObservable(this);
             this.dataObserver.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
             this.initialized = false;
             registerShutdownHook(this);
@@ -245,10 +245,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
                         try {
                             // skip if shutdown was already initiated
-                            if(informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
+                            if (informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
                                 return;
                             }
-                            
+
                             informerWatchDog.waitForServiceActivation();
                             serverWatchDog.waitForServiceActivation();
                             logger.debug("trigger initial sync");
@@ -762,27 +762,5 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public void removeDataObserver(Observer<M> observer) {
         dataObserver.removeObserver(observer);
-    }
-
-    private class DataObserver extends AbstractObservable<M> {
-
-        public DataObserver(Object source) {
-            super(source);
-        }
-
-        @Override
-        public void waitForValue(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
-            waitForData();
-        }
-
-        @Override
-        public M getValue() throws NotAvailableException {
-            return getData();
-        }
-
-        @Override
-        public boolean isValueAvailable() {
-            return isDataAvailable();
-        }
     }
 }
