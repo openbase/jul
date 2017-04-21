@@ -33,7 +33,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
-import rst.domotic.state.PowerStateType;
+import org.openbase.jul.schedule.Stopwatch;
 import rst.domotic.state.PowerStateType.PowerState;
 import rst.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
 import rst.timing.TimestampType.Timestamp;
@@ -73,8 +73,8 @@ public class MessageObservableTest {
         final Timestamp timestamp1 = Timestamp.newBuilder().setTime(20).build();
         final Timestamp timestamp2 = Timestamp.newBuilder().setTime(100).build();
 
-        final PowerState powerState1 = PowerState.newBuilder().setValue(PowerStateType.PowerState.State.ON).setTimestamp(timestamp1).build();
-        final PowerState powerState2 = PowerState.newBuilder().setValue(PowerStateType.PowerState.State.ON).setTimestamp(timestamp2).build();
+        final PowerState powerState1 = PowerState.newBuilder().setTimestamp(timestamp1).setValue(PowerState.State.ON).build();
+        final PowerState powerState2 = PowerState.newBuilder().setTimestamp(timestamp2).setValue(PowerState.State.ON).build();
 
         final ColorableLightData colorableLightData1 = ColorableLightData.newBuilder().setPowerState(powerState1).build();
         final ColorableLightData colorableLightData2 = ColorableLightData.newBuilder().setPowerState(powerState2).build();
@@ -119,12 +119,20 @@ public class MessageObservableTest {
 
             @Override
             public void update(Observable<ColorableLightData> source, ColorableLightData data) throws Exception {
-                assertEquals("Received unexpected colorableLight update", data, colorableLightData1);
+                assertEquals("Received unexpected update", colorableLightData1, data);
             }
         });
 
         instance.notifyObservers(colorableLightData1);
         instance.notifyObservers(colorableLightData2);
+
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.start();
+        for (int i = 0; i < 1000; ++i) {
+            instance.computeHash(colorableLightData1);
+        }
+        stopwatch.stop();
+        System.out.println("Computing 1000 hashes took " + stopwatch.getTime() + "ms");
     }
 
 }

@@ -23,6 +23,7 @@ package org.openbase.jul.extension.protobuf;
  */
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
+import com.google.protobuf.Message.Builder;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -30,6 +31,9 @@ import org.openbase.jul.pattern.AbstractObservable;
 import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
+ * This class computes the hashCode to check if the observed value has changed invariant of
+ * its timestamp.
+ * Currently for efficiency reasons the timestamp of messages in repeated fields is still considered.
  *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
@@ -65,27 +69,22 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
      * @return
      */
     @Override
-    protected int computeHash(M value) {
-        return computeMessageHash(value);
+    protected int computeHash(final M value) {
+        return removeTimestamps(value.toBuilder()).build().hashCode();
     }
 
-    private int computeMessageHash(Message msg) {
-        int hash = 0;
-
-        Descriptors.Descriptor descriptorForType = msg.getDescriptorForType();
+    public Builder removeTimestamps(final Builder builder) {
+        Descriptors.Descriptor descriptorForType = builder.getDescriptorForType();
         for (Descriptors.FieldDescriptor field : descriptorForType.getFields()) {
-            if (field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
-
+            // if the field is not repeated, a message and a timestamp it is cleared
+            if (!field.isRepeated() && field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
                 if (field.getMessageType().getName().equals("Timestamp")) {
-                    continue;
+                    builder.clearField(field);
+                } else {
+                    removeTimestamps(builder.getFieldBuilder(field));
                 }
-
-                hash += computeMessageHash((Message) msg.getField(field));
-            } else {
-                hash += msg.getField(field).hashCode();
             }
         }
-
-        return hash;
+        return builder;
     }
 }
