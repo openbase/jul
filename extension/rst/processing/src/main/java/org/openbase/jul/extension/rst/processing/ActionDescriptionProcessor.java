@@ -2,6 +2,8 @@ package org.openbase.jul.extension.rst.processing;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import org.openbase.jul.exception.CouldNotPerformException;
 import rst.calendar.DateTimeType.DateTime;
 import rst.communicationpatterns.ResourceAllocationType.ResourceAllocation;
 import rst.domotic.action.ActionAuthorityType.ActionAuthority;
@@ -11,6 +13,8 @@ import rst.domotic.action.ActionReferenceType.ActionReference;
 import rst.domotic.service.ServiceStateDescriptionType.ServiceStateDescription;
 import rst.domotic.state.ActionStateType.ActionState;
 import rst.domotic.unit.UnitTemplateType.UnitTemplate;
+import rst.timing.IntervalType.Interval;
+import rst.timing.TimestampType.Timestamp;
 
 /*-
  * #%L
@@ -39,6 +43,13 @@ import rst.domotic.unit.UnitTemplateType.UnitTemplate;
  */
 public class ActionDescriptionProcessor {
 
+    public static final String USER_KEY = "USER";
+    public static final String SERVICE_TYPE_KEY = "SERVICE_TYPE";
+    public static final String LABEL_KEY = "LABEL";
+    public static final String SERVICE_ATTIBUTE_KEY = "SERVICE_ATTIBUTE";
+    public static final String GENERIC_ACTION_LABEL = LABEL_KEY + "[" + SERVICE_ATTIBUTE_KEY + "]";
+    public static final String GENERIC_ACTION_DESCSRIPTION = USER_KEY + " changed " + SERVICE_TYPE_KEY + " of unit " + LABEL_KEY + " to " + SERVICE_ATTIBUTE_KEY + ".";
+
     /**
      * Get an ActionDescription which only misses unit and service information.
      * Fields which are still missing after:
@@ -66,17 +77,28 @@ public class ActionDescriptionProcessor {
         // initialize values which are true for every ActionDescription
         actionDecsription.setId(UUID.randomUUID().toString());
         actionDecsription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
+        actionDecsription.setLabel(GENERIC_ACTION_LABEL);
+        actionDecsription.setDescription(GENERIC_ACTION_DESCSRIPTION);
+
+        // initalize other required fields from ResourceAllocation
+        resourceAllocation.setId(actionDecsription.getId());
+        resourceAllocation.setSlot(Interval.getDefaultInstance());
+        resourceAllocation.setState(ResourceAllocation.State.REQUESTED);
 
         // add Authority and ResourceAllocation.Initiator
         actionDecsription.setActionAuthority(actionAuthority);
         resourceAllocation.setInitiator(initiator);
 
         // add values from ActionParameter
-        resourceAllocation.setPriority(actionParameter.getPriority());
-        resourceAllocation.setPolicy(actionParameter.getPolicy());
-        serviceStateDescription.setUnitType(actionParameter.getUnitType());
         actionDecsription.setExecutionTimePeriod(actionParameter.getExecutionTimePeriod());
         actionDecsription.setExecutionValidity(actionParameter.getExecutionValidity());
+        if (actionDecsription.getExecutionTimePeriod() != 0 && actionParameter.getPolicy() != ResourceAllocation.Policy.PRESERVE) {
+            resourceAllocation.setPolicy(ResourceAllocation.Policy.PRESERVE);
+        } else {
+            resourceAllocation.setPolicy(actionParameter.getPolicy());
+        }
+        resourceAllocation.setPriority(actionParameter.getPriority());
+        serviceStateDescription.setUnitType(actionParameter.getUnitType());
         // if an initiator action is defined in ActionParameter the actionChain is updated
         if (actionParameter.hasInitiator()) {
             List<ActionReference> actionReferenceList = actionParameter.getInitiator().getActionChainList();
@@ -144,5 +166,27 @@ public class ActionDescriptionProcessor {
         actionParameter.setUnitType(UnitTemplate.UnitType.UNKNOWN);
 
         return actionParameter.build();
+    }
+
+    public static long MIN_ALLOCATION_TIME_MILLI = 100;
+
+    public static Interval getAllocationInterval(final long executionTimePeriod, final DateTime executionValidity) throws CouldNotPerformException {
+        Interval.Builder interval = Interval.newBuilder();
+
+        interval.setBegin(TimestampProcessor.getCurrentTimestamp());
+        Timestamp.Builder end = Timestamp.newBuilder();
+        if (executionTimePeriod > MIN_ALLOCATION_TIME_MILLI) {
+            TimestampProcessor.updateTimestamp(System.currentTimeMillis() + executionTimePeriod, end, TimeUnit.MILLISECONDS);
+        } else {
+            TimestampProcessor.updateTimestamp(System.currentTimeMillis() + MIN_ALLOCATION_TIME_MILLI, end, TimeUnit.MILLISECONDS);
+        }
+
+        return interval.build();
+    }
+
+    public static ActionDescription.Builder updateResourceAllocationSlot(final ActionDescription.Builder actionDescription) throws CouldNotPerformException {
+        final ResourceAllocation.Builder resourceAllocationBuilder = actionDescription.getResourceAllocationBuilder();
+        resourceAllocationBuilder.setSlot(getAllocationInterval(actionDescription.getExecutionTimePeriod(), actionDescription.getExecutionValidity()));
+        return actionDescription;
     }
 }
