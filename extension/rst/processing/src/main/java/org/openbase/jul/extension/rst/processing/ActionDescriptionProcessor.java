@@ -1,16 +1,15 @@
 package org.openbase.jul.extension.rst.processing;
 
+import java.util.List;
 import java.util.UUID;
-import org.openbase.jul.exception.CouldNotPerformException;
 import rst.calendar.DateTimeType.DateTime;
 import rst.communicationpatterns.ResourceAllocationType.ResourceAllocation;
 import rst.domotic.action.ActionAuthorityType.ActionAuthority;
 import rst.domotic.action.ActionDescriptionType.ActionDescription;
+import rst.domotic.action.ActionParameterType.ActionParameter;
 import rst.domotic.action.ActionReferenceType.ActionReference;
 import rst.domotic.service.ServiceStateDescriptionType.ServiceStateDescription;
-import rst.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType;
 import rst.domotic.state.ActionStateType.ActionState;
-import rst.domotic.state.PowerStateType.PowerState;
 import rst.domotic.unit.UnitTemplateType.UnitTemplate;
 
 /*-
@@ -40,41 +39,110 @@ import rst.domotic.unit.UnitTemplateType.UnitTemplate;
  */
 public class ActionDescriptionProcessor {
 
-    public static ActionDescription getActionDescription(final PowerState powerState, final String string) throws CouldNotPerformException {
-        ActionDescription.Builder actionDescription = ActionDescription.newBuilder();
-        ResourceAllocation.Builder resourceAllocation = ResourceAllocation.newBuilder();
+    /**
+     * Get an ActionDescription which only misses unit and service information.
+     * Fields which are still missing after:
+     * <ul>
+     * <li>ActionDescription.Label</li>
+     * <li>ActionDescription.Description</li>
+     * <li>ActionDescription.ResourceAllocation.ResourceId</li>
+     * <li>ActionDescription.ResourceAllocation.Description</li>
+     * <li>ActionDescription.ResourceAllocation.UnitId</li>
+     * <li>ActionDescription.ResourceAllocation.ServiceType</li>
+     * <li>ActionDescription.ResourceAllocation.ServiceAttributeType</li>
+     * <li>ActionDescription.ServiceStateDescription.ServiceAttribute</li>
+     * </ul>
+     *
+     * @param actionParameter type which contains several parameters which are updated in the actionDescription
+     * @param actionAuthority the actionAuthority for the actionDescription
+     * @param initiator the initiator type for the resourceAllocation in the actionDescription
+     * @return an ActionDescription that only misses unit and service information
+     */
+    public static ActionDescription.Builder getActionDescription(final ActionParameter actionParameter, final ActionAuthority actionAuthority, final ResourceAllocation.Initiator initiator) {
+        ActionDescription.Builder actionDecsription = ActionDescription.newBuilder();
+        ResourceAllocation.Builder resourceAllocation = actionDecsription.getResourceAllocationBuilder();
+        ServiceStateDescription.Builder serviceStateDescription = actionDecsription.getServiceStateDescriptionBuilder();
 
-        ServiceStateDescription.Builder serviceStateDescription = ServiceStateDescription.newBuilder();
+        // initialize values which are true for every ActionDescription
+        actionDecsription.setId(UUID.randomUUID().toString());
+        actionDecsription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
 
-        // can be set without parameters
-        actionDescription.setId(UUID.randomUUID().toString()); // UUID
-        actionDescription.setLabel("UnitLabel[" + powerState.getValue().name() + "]");  // unit label
-        actionDescription.setDescription("Mr. Pink changed " + ServiceType.POWER_STATE_SERVICE.name() + " of unit UNITLABEL to " + powerState.getValue().name()); // value to be set
-        actionDescription.setResourceAllocation(resourceAllocation);
-        actionDescription.setServiceStateDescription(serviceStateDescription);
+        // add Authority and ResourceAllocation.Initiator
+        actionDecsription.setActionAuthority(actionAuthority);
+        resourceAllocation.setInitiator(initiator);
 
-        //resourceAllocation.setId(UUID.randomUUID().toString()); empty
-        resourceAllocation.addResourceIds("UNITSCOPE"); // scope
-        resourceAllocation.setDescription(actionDescription.getDescription());
+        // add values from ActionParameter
+        resourceAllocation.setPriority(actionParameter.getPriority());
+        resourceAllocation.setPolicy(actionParameter.getPolicy());
+        serviceStateDescription.setUnitType(actionParameter.getUnitType());
+        actionDecsription.setExecutionTimePeriod(actionParameter.getExecutionTimePeriod());
+        actionDecsription.setExecutionValidity(actionParameter.getExecutionValidity());
+        // if an initiator action is defined in ActionParameter the actionChain is updated
+        if (actionParameter.hasInitiator()) {
+            List<ActionReference> actionReferenceList = actionParameter.getInitiator().getActionChainList();
+            ActionReference.Builder actionReference = ActionReference.newBuilder();
+            actionReference.setActionId(actionParameter.getInitiator().getId());
+            actionReference.setAuthority(actionParameter.getInitiator().getActionAuthority());
+            actionReference.setServiceStateDescription(actionParameter.getInitiator().getServiceStateDescription());
+            actionReferenceList.add(actionReference.build());
+            actionDecsription.addAllActionChain(actionReferenceList);
+        }
 
-        // enums empty or default values at beginning
-        actionDescription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
-//        resourceAllocation.setState(ResourceAllocation.State.); // empty
-//        resourceAllocation.setSlot(Interval.getDefaultInstance()); // computation in UnitAllocator from startTime and ExecutionTimePeriod
+        return actionDecsription;
+    }
 
-        // given as parameter
-        // optional
-        resourceAllocation.setPriority(ResourceAllocation.Priority.NORMAL); // default is normal
-        actionDescription.setActionChain(0, ActionReference.getDefaultInstance()); // parameter is actionDescription of initiator to build reference and chain
-        actionDescription.setExecutionTimePeriod(0); // 0 should be default value but others have to be set
-        // like actionAuthority globale parameter, dependent und priority -> lower -> longer
-        actionDescription.setExecutionValidity(DateTime.getDefaultInstance()); // default an hour
-        resourceAllocation.setPolicy(ResourceAllocation.Policy.FIRST);
-        serviceStateDescription.setUnitType(UnitTemplate.UnitType.UNKNOWN); // default unknown
+    /**
+     * Get an ActionDescription which only misses unit and service information.
+     * Is created with default ActionParameter.
+     * Fields which are still missing after:
+     * <ul>
+     * <li>ActionDescription.Label</li>
+     * <li>ActionDescription.Description</li>
+     * <li>ActionDescription.ResourceAllocation.ResourceId</li>
+     * <li>ActionDescription.ResourceAllocation.Description</li>
+     * <li>ActionDescription.ResourceAllocation.UnitId</li>
+     * <li>ActionDescription.ResourceAllocation.ServiceType</li>
+     * <li>ActionDescription.ResourceAllocation.ServiceAttributeType</li>
+     * <li>ActionDescription.ServiceStateDescription.ServiceAttribute</li>
+     * </ul>
+     *
+     * @param actionAuthority the actionAuthority for the actionDescription
+     * @param initiator the initiator type for the resourceAllocation in the actionDescription
+     * @return
+     */
+    public static ActionDescription.Builder getActionDescription(final ActionAuthority actionAuthority, final ResourceAllocation.Initiator initiator) {
+        return getActionDescription(getDefaultActionParameter(), actionAuthority, initiator);
+    }
 
-        // required
-        resourceAllocation.setInitiator(ResourceAllocation.Initiator.HUMAN); // no default value? like actionAuthority given once?
-        actionDescription.setActionAuthority(ActionAuthority.getDefaultInstance()); // every time as a paramter
-        return actionDescription.build();
+    /**
+     * Get default ActionParameter. These are:
+     * <ul>
+     * <li>Empty initiator, which means that the action has not been triggered by another action</li>
+     * <li>Priority = NORMAL</li>
+     * <li>ExecutionTimePeriod = 0</li>
+     * <li>ExecutionValidityTime = an hour after creation of the ActionParameter type</li>
+     * <li>Policy = FIRST</li>
+     * <li>UnitType = UNKNOWN</li>
+     * </ul>
+     *
+     * @return an ActionParameter type with the described values
+     */
+    public static ActionParameter getDefaultActionParameter() {
+        ActionParameter.Builder actionParameter = ActionParameter.newBuilder();
+
+        //actionParameter.setInitiator();
+        actionParameter.setPriority(ResourceAllocation.Priority.NORMAL);
+
+        actionParameter.setExecutionTimePeriod(0);
+
+        long anHourFromNow = System.currentTimeMillis() + 60 * 60 * 1000;
+        DateTime dateTime = DateTime.newBuilder().setDateTimeType(DateTime.Type.FLOATING).setMillisecondsSinceEpoch(anHourFromNow).build();
+        actionParameter.setExecutionValidity(dateTime);
+
+        actionParameter.setPolicy(ResourceAllocation.Policy.FIRST);
+
+        actionParameter.setUnitType(UnitTemplate.UnitType.UNKNOWN);
+
+        return actionParameter.build();
     }
 }
