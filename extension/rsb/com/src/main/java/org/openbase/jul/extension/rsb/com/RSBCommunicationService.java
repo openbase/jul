@@ -421,7 +421,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public CompletableFuture<M> getDataFuture() {
