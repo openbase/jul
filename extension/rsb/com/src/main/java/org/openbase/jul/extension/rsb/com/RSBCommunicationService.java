@@ -418,6 +418,23 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
+     */
+    @Override
+    public CompletableFuture<M> getDataFuture() {
+        try {
+            return CompletableFuture.completedFuture(getData());
+        } catch (NotAvailableException ex) {
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(ex);
+            return future;
+        }
+    }
+
+    /**
      *
      * @param controllerAvailability
      * @throws InterruptedException

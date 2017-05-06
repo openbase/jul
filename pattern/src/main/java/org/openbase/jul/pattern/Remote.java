@@ -97,17 +97,19 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, DataProv
      * future can be used to wait for the data object.
      *
      * @return a future object delivering the data if available.
-     * @throws CouldNotPerformException In case something went wrong a
-     * CouldNotPerformException is thrown.
      */
-    public default CompletableFuture<M> getDataFuture() throws CouldNotPerformException {
-         try {
+    @Override
+    public default CompletableFuture<M> getDataFuture() {
+        try {
             if (!isDataAvailable()) {
                 return requestData();
             }
             return CompletableFuture.completedFuture(getData());
+
         } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException("data", ex);
+            CompletableFuture future = new CompletableFuture();
+            future.completeExceptionally(ex);
+            return future;
         }
     }
 
