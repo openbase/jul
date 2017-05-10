@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> implements Activatable, Shutdownable {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final SynchronizableRegistry<KEY, ENTRY> localRegistry;
+    protected final SynchronizableRegistry<KEY, ENTRY> localRegistry;
     private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteRegistryChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;

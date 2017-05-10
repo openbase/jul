@@ -21,7 +21,6 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
@@ -69,6 +68,15 @@ public abstract class EnableableEntryRegistrySynchronizer<KEY, ENTRY extends Con
         ENTRY entry = super.remove(config);
         entry.disable();
         return entry;
+    }
+
+    @Override
+    public void deactivate() throws CouldNotPerformException, InterruptedException {
+        super.deactivate();
+
+        for (ENTRY entry : localRegistry.getEntries()) {
+            entry.disable();
+        }
     }
 
     public abstract boolean enablingCondition(final CONFIG_M config);
