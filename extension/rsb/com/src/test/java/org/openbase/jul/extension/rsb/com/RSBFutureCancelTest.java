@@ -45,24 +45,24 @@ import rsb.config.ParticipantConfig;
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class RSBFutureCancelTest implements Requestable<Object> {
-    
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     private RSBLocalServer localServer;
     private RSBRemoteServer remoteServer;
-    
+
     public RSBFutureCancelTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Override
     public Object requestStatus() throws CouldNotPerformException {
         System.out.println("RequestStatus");
@@ -84,31 +84,33 @@ public class RSBFutureCancelTest implements Requestable<Object> {
         } catch (Throwable ex) {
             System.out.println("Test" + ex);
         }
-        
+
         return null;
     }
-    
+
+    /**
+     * This test shows that the method executed by the local server does not
+     * get interrupted through canceling the future.
+     *
+     * @throws Exception
+     */
     @Test
     public void testFutureCancellation() throws Exception {
         System.out.println("TestFutureCancellation");
-        
+
         Scope scope = new Scope("/test/futureCancel");
         ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig();
-        
+
         localServer = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(scope, participantConfig);
         remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope, participantConfig);
 
         // register rpc methods.
         RPCHelper.registerInterface(Requestable.class, this, localServer);
-        
+
         localServer.activate();
         remoteServer.activate();
-        
-        Future<Event> future = remoteServer.callAsync("requestStatus");
-//        System.out.println("Before sleep");
-//        Thread.sleep(2000);
-//        System.out.println("After sleep");
 
+        Future<Event> future = remoteServer.callAsync("requestStatus");
         try {
             future.get(1000, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
@@ -116,5 +118,5 @@ public class RSBFutureCancelTest implements Requestable<Object> {
             Thread.sleep(1000);
         }
     }
-    
+
 }
