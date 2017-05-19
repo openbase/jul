@@ -30,7 +30,6 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -161,11 +160,10 @@ public class WatchDog implements Activatable, Shutdownable {
     public boolean isActive() {
         return minder != null;
     }
-    
+
     public boolean isServiceDone() {
         return minder == null || minder.getFuture().isDone();
     }
-
 
     public String getServiceName() {
         return serviceName;
@@ -198,7 +196,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 if (!isActive()) {
                     throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog is not active!");
                 }
-                
+
                 // skip if state is already passed.
                 if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
                     throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because service is already done!");
@@ -346,7 +344,7 @@ public class WatchDog implements Activatable, Shutdownable {
             }
             logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
             serviceStateObserable.notifyObservers(serviceState);
-        } catch (MultiException ex) {
+        } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify state change to all instances!", ex), logger);
         }
     }

@@ -49,6 +49,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Shutdownable;
+import org.openbase.jul.pattern.HashGenerator;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -113,6 +114,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     info(getLastValue());
                 }
             };
+            setHashGenerator(new HashGenerator<Map<KEY, ENTRY>>() {
+
+                @Override
+                public int computeHash(Map<KEY, ENTRY> value) throws CouldNotPerformException {
+                    try {
+                        lock();
+                        return value.hashCode();
+                    } finally {
+                        unlock();
+                    }
+                }
+            });
 
             Shutdownable.registerShutdownHook(this);
             finishTransaction();
@@ -598,7 +611,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             }
             notificationSkiped = false;
-        } catch (MultiException ex) {
+        } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all registry observer!", ex), logger, LogLevel.ERROR);
         }
     }
