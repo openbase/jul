@@ -119,7 +119,7 @@ public class MessageObservableTest {
             }
         });
 
-        assertEquals("Hashes are not equal even though only the timestamp has changed", instance.computeHash(colorableLightData1), instance.computeHash(colorableLightData2));
+        assertEquals("Hashes are not equal even though only the timestamp has changed", instance.removeTimestamps(colorableLightData1.toBuilder()).build().hashCode(), instance.removeTimestamps(colorableLightData2.toBuilder()).build().hashCode());
 
         instance.addObserver(new Observer<ColorableLightData>() {
 
@@ -135,7 +135,7 @@ public class MessageObservableTest {
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.start();
         for (int i = 0; i < 1000; ++i) {
-            instance.computeHash(colorableLightData1);
+            instance.removeTimestamps(colorableLightData1.toBuilder()).build().hashCode();
         }
         stopwatch.stop();
         System.out.println("Computing 1000 hashes took " + stopwatch.getTime() + "ms");

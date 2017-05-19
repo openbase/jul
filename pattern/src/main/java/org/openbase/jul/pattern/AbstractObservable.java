@@ -22,6 +22,7 @@ package org.openbase.jul.pattern;
  * #L%
  */
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.slf4j.Logger;
@@ -72,6 +75,8 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     protected final List<Observer<T>> observers;
     protected int latestValueHash;
     private Object source;
+    private ExecutorService executorService;
+    private HashGenerator<T> hashGenerator;
 
     /**
      * Construct new Observable.
@@ -112,6 +117,17 @@ public abstract class AbstractObservable<T> implements Observable<T> {
         this.observers = new ArrayList<>();
         this.unchangedValueFilter = unchangedValueFilter;
         this.source = source == DEFAULT_SOURCE ? this : source; // use observer itself if source was not explicit defined.
+        this.hashGenerator = new HashGenerator<T>() {
+
+            @Override
+            public int computeHash(T value) throws CouldNotPerformException {
+                try {
+                    return value.hashCode();
+                } catch (ConcurrentModificationException ex) {
+                    throw new FatalImplementationErrorException("Observable has changed during hash computation in notification! Set a HashGenerator for the observable to control the hash computation yourself!", this, ex);
+                }
+            }
+        };
     }
 
     /**
@@ -156,12 +172,17 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * Notify all changes of the observable to all observers only if the observable has changed. The
      * source of the notification is set as this. Because of data encapsulation reasons this method
      * is not included within the Observer interface.
+     * Attention! This method is not thread safe against changes of the observable because the check if the observable has changed is
+     * done by computing its hash value. Therefore if the observable is a collection and it is changed
+     * while notifying a concurrent modification exception can occur. To avoid this compute the
+     * observable hash yourself by setting a hash generator.
      *
      * @param observable the value which is notified
      * @return true if the observable has changed
      * @throws MultiException thrown if the notification to at least one observer fails
+     * @throws CouldNotPerformException thrown if the hash computation fails
      */
-    public boolean notifyObservers(final T observable) throws MultiException {
+    public boolean notifyObservers(final T observable) throws MultiException, CouldNotPerformException {
         return notifyObservers(this, observable);
     }
 
@@ -169,6 +190,10 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * Notify all changes of the observable to all observers only if the observable has changed.
      * Because of data encapsulation reasons this method is not included within the Observer
      * interface.
+     * Attention! This method is not thread safe against changes of the observable because the check if the observable has changed is
+     * done by computing its hash value. Therefore if the observable is a collection and it is changed
+     * while notifying a concurrent modification exception can occur. To avoid this compute the
+     * observable hash yourself by setting a hash generator.
      *
      * Note: In case the given observable is null this notification will be ignored.
      *
@@ -176,8 +201,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @param observable the value which is notified
      * @return true if the observable has changed
      * @throws MultiException thrown if the notification to at least one observer fails
+     * @throws CouldNotPerformException thrown if the hash computation fails
      */
-    public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException {
+    public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException, CouldNotPerformException {
         synchronized (NOTIFICATION_METHOD_LOCK) {
             if (observable == null) {
                 LOGGER.debug("Skip notification because observable is null!");
@@ -190,14 +216,14 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             final ArrayList<Observer<T>> tempObserverList;
 
             try {
-                final int hashCode = computeHash(observable);
-                if (unchangedValueFilter && isValueAvailable() && hashCode == latestValueHash) {
+                final int observableHash = hashGenerator.computeHash(observable);
+                if (unchangedValueFilter && isValueAvailable() && observableHash == latestValueHash) {
                     LOGGER.debug("Skip notification because " + this + " has not been changed!");
                     return false;
                 }
 
                 applyValueUpdate(observable);
-                latestValueHash = hashCode;
+                latestValueHash = observableHash;
 
                 synchronized (OBSERVER_LOCK) {
                     tempObserverList = new ArrayList<>(observers);
@@ -210,7 +236,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                             break;
                         }
 
-                        // synchron notification
+                        // synchronous notification
                         try {
                             observer.update(source, observable);
                         } catch (InterruptedException ex) {
@@ -220,7 +246,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                             exceptionStack = MultiException.push(observer, ex, exceptionStack);
                         }
                     } else {
-                        // asynchron notification
+                        // asynchronous notification
                         notificationFutureList.put(observer, executorService.submit(new Callable<Void>() {
                             @Override
                             public Void call() throws Exception {
@@ -267,18 +293,22 @@ public abstract class AbstractObservable<T> implements Observable<T> {
         // overwrite for current state holding obervable implementations.
     }
 
-    private ExecutorService executorService;
-
+    /**
+     * Set an executor service for the observable. If it is set the notification
+     * will be parallelized using this service.
+     *
+     * @param executorService the executor service which will be used for parallelization
+     */
     public void setExecutorService(ExecutorService executorService) {
         this.executorService = executorService;
+    }
+
+    public void setHashGenerator(HashGenerator<T> hashGenerator) {
+        this.hashGenerator = hashGenerator;
     }
 
     @Override
     public String toString() {
         return Observable.class.getSimpleName() + "[" + (source == this ? source.getClass().getSimpleName() : source) + "]";
-    }
-
-    protected int computeHash(final T value) {
-        return value.hashCode();
     }
 }

@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.AbstractObservable;
+import org.openbase.jul.pattern.HashGenerator;
 import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
@@ -46,6 +47,13 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
         super(source);
 
         this.dataProvider = source;
+        this.setHashGenerator(new HashGenerator<M>() {
+
+            @Override
+            public int computeHash(M value) throws CouldNotPerformException {
+                return removeTimestamps(value.toBuilder()).build().hashCode();
+            }
+        });
     }
 
     @Override
@@ -66,17 +74,6 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
     @Override
     public Future<M> getValueFuture() {
         return dataProvider.getDataFuture();
-    }
-    
-    /**
-     * Compute a timestamp invariant hash code.
-     *
-     * @param value
-     * @return
-     */
-    @Override
-    protected int computeHash(final M value) {
-        return removeTimestamps(value.toBuilder()).build().hashCode();
     }
 
     public Builder removeTimestamps(final Builder builder) {

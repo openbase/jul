@@ -30,13 +30,11 @@ import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.container.MessageContainer;
-import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor;
 import org.openbase.jul.iface.Identifiable;
 import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 import org.openbase.jul.pattern.ObservableImpl;
@@ -120,11 +118,11 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             if (internalMessage == null) {
                 throw new NotAvailableException("messageOrBuilder");
             }
-            
-            if(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID) == null) {
+
+            if (internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID) == null) {
                 throw new VerificationFailedException("Given message has no id field!");
             }
-            
+
             if (!internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID))) {
                 throw new VerificationFailedException("Given message has no id field!");
             }
@@ -189,7 +187,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     public void notifyObservers() {
         try {
             observable.notifyObservers(this);
-        } catch (MultiException ex) {
+        } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
     }
@@ -230,7 +228,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
      * @return a short description of the message as string.
      */
     public String generateMessageDescription() {
-        if(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
+        if (internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
             if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
                 return (String) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
             }
