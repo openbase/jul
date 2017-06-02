@@ -36,6 +36,7 @@ import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPReadOnly;
+import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -750,7 +751,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                             // inform about modifications
                             try {
-                                if (JPService.getProperty(JPVerbose.class).getValue()) {
+                                if (JPService.getProperty(JPVerbose.class).getValue() && !JPService.getProperty(JPTestMode.class).getValue()) {
                                     info("Consistency modification applied: " + ex.getMessage());
                                 } else {
                                     logger.debug("Consistency modification applied: " + ex.getMessage());
