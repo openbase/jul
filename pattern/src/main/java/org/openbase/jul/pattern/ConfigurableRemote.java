@@ -31,7 +31,7 @@ import org.openbase.jul.iface.Manageable;
  * @param <M> Message
  * @param <CONFIG> Configuration
  */
-public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID, M>, Manageable<CONFIG> {
+public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID, M>, Manageable<CONFIG>, Remote<M> {
 
     /**
      * Method returns the current configuration of this remote instance.

@@ -44,7 +44,7 @@ public class TypeNotSupportedException extends CouldNotPerformException {
     }
 
     public TypeNotSupportedException(Object target, Class destination) {
-        super("\"Type tranformation not supported! Can not convert " + target + " to " + destination + "!");
+        super("\"Type transformation not supported! Can not convert " + target + " to " + destination + "!");
     }
 
 }
