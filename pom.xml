@@ -199,12 +199,12 @@
         <dependency.jps.version>3.2-SNAPSHOT</dependency.jps.version>
         
         <dependency.rst.stable.artifact>rst</dependency.rst.stable.artifact>
-        <dependency.rst.stable.version>[0.15,0.16-SNAPSHOT)</dependency.rst.stable.version>
+        <dependency.rst.stable.version>[0.16,0.17-SNAPSHOT)</dependency.rst.stable.version>
         <dependency.rst.sandbox.artifact>rst-sandbox</dependency.rst.sandbox.artifact>
-        <dependency.rst.sandbox.version>[0.15,0.16-SNAPSHOT)</dependency.rst.sandbox.version>
+        <dependency.rst.sandbox.version>[0.16,0.17-SNAPSHOT)</dependency.rst.sandbox.version>
         <dependency.rst.experimental.artifact>rst-experimental</dependency.rst.experimental.artifact>
-        <dependency.rst.experimental.version>[0.15,0.16-SNAPSHOT)</dependency.rst.experimental.version>
-        <dependency.rsb.version>[0.15,0.16-SNAPSHOT)</dependency.rsb.version>
+        <dependency.rst.experimental.version>0.16-SNAPSHOT</dependency.rst.experimental.version>
+        <dependency.rsb.version>[0.16,0.17-SNAPSHOT)</dependency.rsb.version>
         
         <!--<dependency.rct.version>[1.0,1.1-SNAPSHOT)</dependency.rct.version>-->
         <dependency.rct.version>1.1-SNAPSHOT</dependency.rct.version>
