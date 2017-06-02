@@ -42,6 +42,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
+import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -50,7 +51,6 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
-import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTED;
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTING;
 import static org.openbase.jul.pattern.Remote.ConnectionState.DISCONNECTED;
@@ -303,7 +303,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void lock(final Object maintainer) throws CouldNotPerformException {
         synchronized (maintainerLock) {
             if (this.maintainer != null) {
-                throw new CouldNotPerformException("Could not lock remote for because remote is already locked by another instance!");
+                throw new CouldNotPerformException("Could not lock remote because it is already locked by another instance!");
             }
             this.maintainer = maintainer;
         }
@@ -320,7 +320,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void unlock(final Object maintainer) throws CouldNotPerformException {
         synchronized (maintainerLock) {
             if (this.maintainer != null && this.maintainer != maintainer) {
-                throw new CouldNotPerformException("Could not unlock remote for because remote is locked by another instance!");
+                throw new CouldNotPerformException("Could not unlock remote because it is locked by another instance!");
             }
             this.maintainer = null;
         }
