@@ -32,7 +32,6 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Constructor;
@@ -213,13 +212,17 @@ public class DBVersionControl {
         Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshotMap = new HashMap<>();
         globalDatabaseDirectories.stream().forEach((globalDatabaseDirectory) -> {
             try {
-                if (globalDatabaseDirectory.canWrite()) {
-                    globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshotAsDBEntryDescriptors(globalDatabaseDirectory));
-                } else {
-                    logger.warn("Skip loading of global Database[" + globalDatabaseDirectory.getAbsolutePath() + "] because directory is write protected!");
+                if (!FileUtils.isSymlink(globalDatabaseDirectory)) {
+                    if (globalDatabaseDirectory.canWrite()) {
+                        globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshotAsDBEntryDescriptors(globalDatabaseDirectory));
+                    } else {
+                        logger.warn("Skip loading of global Database[" + globalDatabaseDirectory.getAbsolutePath() + "] because directory is write protected!");
+                    }
                 }
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory("Could not load db entries out of " + globalDatabaseDirectory.getAbsolutePath(), ex, logger);
+            } catch (IOException ex) {
+                ExceptionPrinter.printHistory("Could not check wether [" + globalDatabaseDirectory.getName() + "] is a symlink!", ex, logger);
             }
         });
         return globalDbSnapshotMap;
