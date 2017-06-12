@@ -2,7 +2,7 @@ package org.openbase.jul.visual.javafx.transform;
 
 /*-
  * #%L
- * JUL Visual Swing
+ * JUL Visual JavaFX
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
