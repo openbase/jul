@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.patterns.Callback;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 
 /**
  *
@@ -126,7 +127,7 @@ public class RPCHelper {
             try {
                 for (int i = 0; i < stackTrace.length; i++) {
                     if (stackTrace[i].getMethodName().equals(INTERNAL_CALL_REMOTE_METHOD_NAME)) {
-                        methodName = stackTrace[i+2].getMethodName();
+                        methodName = stackTrace[i + 2].getMethodName();
                         break;
                     }
                 }
@@ -134,6 +135,49 @@ public class RPCHelper {
                 throw new CouldNotPerformException("Could not detect method name!");
             }
             return remote.callMethodAsync(methodName, argument);
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex);
+        }
+    }
+
+    public static Future<Object> callRemoteServerMethod(final RSBRemoteServer remote) throws CouldNotPerformException {
+        return internalCallRemoteMethod(null, remote, Object.class);
+    }
+
+    public static Future<Object> callRemoteServerMethod(final Object argument, final RSBRemoteServer remote) throws CouldNotPerformException {
+        return internalCallRemoteMethod(argument, remote, Object.class);
+    }
+
+    public static <RETURN> Future<RETURN> callRemoteServerMethod(final RSBRemoteServer remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
+        return internalCallRemoteMethod(null, remote, returnClass);
+    }
+
+    public static <RETURN> Future<RETURN> callRemoteServerMethod(final Object argument, final RSBRemoteServer remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
+        return internalCallRemoteMethod(argument, remote, returnClass);
+    }
+
+    private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RSBRemoteServer remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
+
+        String methodName = "?";
+        try {
+            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+            if (stackTrace == null) {
+                throw new NotAvailableException("method stack");
+            } else if (stackTrace.length == 0) {
+                throw new InvalidStateException("Could not detect method stack!");
+            }
+
+            try {
+                for (int i = 0; i < stackTrace.length; i++) {
+                    if (stackTrace[i].getMethodName().equals(INTERNAL_CALL_REMOTE_METHOD_NAME)) {
+                        methodName = stackTrace[i + 2].getMethodName();
+                        break;
+                    }
+                }
+            } catch (NullPointerException | IndexOutOfBoundsException ex) {
+                throw new CouldNotPerformException("Could not detect method name!");
+            }
+            return remote.callAsync(methodName, argument);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex);
         }
