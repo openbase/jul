@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> implements Activatable, Shutdownable {
 
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final SynchronizableRegistry<KEY, ENTRY> localRegistry;
     private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteRegistryChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
@@ -122,6 +122,8 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     public void shutdown() {
         try {
             deactivate();
+            localRegistry.clear();
+            remoteRegistry.clear();
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         } catch (CouldNotPerformException ex) {
@@ -253,9 +255,9 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     }
 
     /**
-     * Method should return true if the given configurations is valid, otherwise false.
-     * This default implementation accepts all configurations. To implement a custom verification just overwrite this
-     * method.
+     * Method should return true if the given configurations is valid, otherwise
+     * false. This default implementation accepts all configurations. To
+     * implement a custom verification just overwrite this method.
      *
      * @param config
      * @return
