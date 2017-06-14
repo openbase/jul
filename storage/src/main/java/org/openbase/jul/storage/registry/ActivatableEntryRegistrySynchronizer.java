@@ -21,11 +21,12 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Configurable;
+import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Factory;
 
 /**
@@ -36,7 +37,7 @@ import org.openbase.jul.pattern.Factory;
  * @param <CONFIG_M>
  * @param <CONFIG_MB>
  */
-public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Activatable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
+public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Activatable & Shutdownable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
 
     public ActivatableEntryRegistrySynchronizer(SynchronizableRegistry<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         super(registry, remoteRegistry, factory);
@@ -67,6 +68,27 @@ public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Co
         ENTRY entry = super.remove(config);
         entry.deactivate();
         return entry;
+    }
+
+    @Override
+    public void deactivate() throws CouldNotPerformException, InterruptedException {
+        super.deactivate();
+
+        for (ENTRY entry : localRegistry.getEntries()) {
+            entry.deactivate();
+        }
+    }
+
+    @Override
+    public void shutdown() {
+        try {
+            for (ENTRY entry : localRegistry.getEntries()) {
+                entry.shutdown();
+            }
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(ex, logger);
+        }
+        super.shutdown();
     }
 
     public abstract boolean activationCondition(final CONFIG_M config);
