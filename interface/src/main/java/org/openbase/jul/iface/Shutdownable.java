@@ -34,47 +34,48 @@ public interface Shutdownable {
     /**
      * This method initializes the shutdown phrase of this instance.
      *
-     * All resources will be released.
-     * In case of any errors no exception will/should be thrown and the method will/should not block.
-     * These behavior guarantees a proper component shutdown without skipping any parts because of exception handling.
+     * All resources will be released. In case of any errors no exception will/should be thrown and the method will/should not block. These behavior guarantees a proper component shutdown without
+     * skipping any parts because of exception handling.
      */
     public void shutdown();
 
     /**
-     * Method registers a runtime shutdown hook for the given Shutdownable.
-     * In case the application is finalizing the shutdown method of the Shutdownable will be invoked.
+     * Method registers a runtime shutdown hook for the given Shutdownable. In case the application is finalizing the shutdown method of the Shutdownable will be invoked.
      *
+     * Note: If the shutdown was executed on the {@code shutdownable} before system exit you can cancel the {@code ShutdownDeamon} by the provided {@ode ShutdownDeamon.cancel()} method to avoid duplicated instance shutdowns.  
+     * 
      * @param shutdownable the instance which is automatically shutting down in case the application is finalizing.
      */
-    static void registerShutdownHook(final Shutdownable shutdownable) {
-        Runtime.getRuntime().addShutdownHook(new ShutdownDeamon(shutdownable, 0));
+    static ShutdownDeamon registerShutdownHook(final Shutdownable shutdownable) {
+        return new ShutdownDeamon(shutdownable, 0);
     }
 
     /**
-     * Method registers a runtime shutdown hook for the given Shutdownable.
-     * In case the application is finalizing the shutdown method of the Shutdownable will be invoked.
-     * The given delay can be used to delay the shutdown.
+     * Method registers a runtime shutdown hook for the given Shutdownable. In case the application is finalizing the shutdown method of the Shutdownable will be invoked. The given delay can be used
+     * to delay the shutdown.
      *
-     * Note: This method should be used with care because to delay the shutdown process can result in skipping the shutdown method call in case the operating system mark this application as not responding.
+     * Note: This method should be used with care because to delay the shutdown process can result in skipping the shutdown method call in case the operating system mark this application as not
+     * responding.
      *
      * @param shutdownable the instance which is automatically shutting down in case the application is finalizing.
      * @param shutdownDelay this time in milliseconds defines the delay of the shutdown after the application shutdown was initiated.
      */
-    static void registerShutdownHook(final Shutdownable shutdownable, final long shutdownDelay) {
-        Runtime.getRuntime().addShutdownHook(new ShutdownDeamon(shutdownable, shutdownDelay));
+    static ShutdownDeamon registerShutdownHook(final Shutdownable shutdownable, final long shutdownDelay) {
+        return new ShutdownDeamon(shutdownable, shutdownDelay);
     }
 
     class ShutdownDeamon extends Thread {
 
         private final static Logger LOGGER = LoggerFactory.getLogger(ShutdownDeamon.class);
 
-        private final Shutdownable shutdownable;
+        private Shutdownable shutdownable;
         private final long delay;
 
         private ShutdownDeamon(final Shutdownable shutdownable, final long delay) {
             super(ShutdownDeamon.class.getSimpleName() + "[" + shutdownable + "]");
             this.shutdownable = shutdownable;
             this.delay = delay;
+            Runtime.getRuntime().addShutdownHook(this);
         }
 
         @Override
@@ -92,6 +93,12 @@ public interface Shutdownable {
                 ExceptionPrinter.printHistory("Could not shutdown " + shutdownable + "!", ex, LOGGER);
             }
         }
-    }
 
+        public void cancel() {
+            if (!isAlive()) {
+                Runtime.getRuntime().removeShutdownHook(this);
+            }
+            shutdownable = null;
+        }
+    }
 }
