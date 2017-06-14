@@ -78,6 +78,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
+    private final ShutdownDeamon shutdownDeamon;
+    
     protected RSBInformer<Object> informer;
     protected RSBLocalServer server;
     protected WatchDog informerWatchDog;
@@ -124,7 +126,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.dataObserver = new MessageObservable(this);
             this.dataObserver.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
             this.initialized = false;
-            registerShutdownHook(this);
+            this.shutdownDeamon = registerShutdownHook(this);
 
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
@@ -384,6 +386,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             ExceptionPrinter.printHistory("Could not deactivate " + this + " during shutdown!", ex, logger);
         }
         reset();
+        shutdownDeamon.cancel();
     }
 
     /**

@@ -73,6 +73,8 @@ import org.slf4j.LoggerFactory;
 public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    
+    private final ShutdownDeamon shutdownDeamon;
 
     private String name;
 
@@ -128,7 +130,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             });
 
-            Shutdownable.registerShutdownHook(this);
+            this.shutdownDeamon = Shutdownable.registerShutdownHook(this);
             finishTransaction();
             notifyObservers();
         } catch (CouldNotPerformException ex) {
@@ -1094,6 +1096,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         @Override
         public void shutdown() {
             removeObserver(this);
+            shutdownDeamon.cancel();
         }
     }
 }
