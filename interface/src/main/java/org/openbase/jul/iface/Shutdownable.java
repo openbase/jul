@@ -42,7 +42,7 @@ public interface Shutdownable {
     /**
      * Method registers a runtime shutdown hook for the given Shutdownable. In case the application is finalizing the shutdown method of the Shutdownable will be invoked.
      *
-     * Note: If the shutdown was executed on the {@code shutdownable} before system exit you can cancel the {@code ShutdownDeamon} by the provided {@ode ShutdownDeamon.cancel()} method to avoid duplicated instance shutdowns.  
+     * Note: If the shutdown was executed on the {@code shutdownable} before system exit you can cancel the {@code ShutdownDeamon} by the provided {@code ShutdownDeamon.cancel()} method to avoid duplicated instance shutdowns.  
      * 
      * @param shutdownable the instance which is automatically shutting down in case the application is finalizing.
      */
