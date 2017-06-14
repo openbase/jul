@@ -1,0 +1,58 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.openbase</groupId>
+    <artifactId>jul.visual.javafx</artifactId>
+    <packaging>jar</packaging>
+
+    <name>JUL Visual JavaFX</name>
+    
+    <parent>
+        <groupId>org.openbase</groupId>
+        <artifactId>jul.visual</artifactId>
+        <version>1.4-SNAPSHOT</version>
+    </parent>    
+    
+    <url>https://github.com/openbase/jul/wiki</url>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
+    <repositories>
+		<!-- Swing/Netbeans -->
+		<repository>
+			<id>maven2-repository.netbeans.maven2</id>
+			<name>Netbeans Maven Repository</name>
+			<url>http://bits.netbeans.org/maven2/</url>
+			<layout>default</layout>
+		</repository> 
+	</repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.interface</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.extension.rst.interface</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.schedule</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>
