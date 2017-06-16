@@ -31,50 +31,6 @@ import org.slf4j.LoggerFactory;
 public class FatalImplementationErrorException extends CouldNotPerformException {
 
     /**
-     *
-     * @param message
-     * @deprecated please use one of the available constructors.
-     */
-    @Deprecated
-    public FatalImplementationErrorException(String message) {
-        this(message, FatalImplementationErrorException.class);
-    }
-
-    /**
-     *
-     * @param message
-     * @param cause
-     * @deprecated please use one of the available constructors.
-     */
-    @Deprecated
-    public FatalImplementationErrorException(String message, Throwable cause) {
-        this(message, FatalImplementationErrorException.class, cause);
-    }
-
-    /**
-     *
-     * @param cause
-     * @deprecated please use one of the available constructors.
-     */
-    @Deprecated
-    public FatalImplementationErrorException(Throwable cause) {
-        this(FatalImplementationErrorException.class, cause);
-    }
-
-    /**
-     *
-     * @param message
-     * @param cause
-     * @param enableSuppression
-     * @param writableStackTrace
-     * @deprecated please use one of the available constructors.
-     */
-    @Deprecated
-    public FatalImplementationErrorException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        this(message, cause);
-    }
-
-    /**
      * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer. *
      *
      * Note: In case assertions are enabled this instantiation directly results in an assertion exception.
