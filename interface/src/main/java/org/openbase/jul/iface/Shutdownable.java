@@ -106,13 +106,18 @@ public interface Shutdownable {
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory("Could not shutdown " + shutdownable + "!", ex, LOGGER);
             }
+            shutdownable = null;
         }
 
         public void cancel() {
             if (!isAlive()) {
-                Runtime.getRuntime().removeShutdownHook(this);
+                try {
+                    Runtime.getRuntime().removeShutdownHook(this);
+                    shutdownable = null;
+                } catch (IllegalStateException ex) {
+                    ExceptionPrinter.printHistory("Could not cancel shutdown hook! Maybe there are to shutdown hooks registered for the same shutdownable?", ex, LOGGER);
+                }
             }
-            shutdownable = null;
         }
     }
 }
