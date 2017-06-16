@@ -77,6 +77,7 @@ public interface Shutdownable {
 
         private Shutdownable shutdownable;
         private final long delay;
+        private boolean canceled;
 
         private ShutdownDeamon(final Shutdownable shutdownable, final long delay) throws CouldNotPerformException {
             super(ShutdownDeamon.class.getSimpleName() + "[" + shutdownable + "]");
@@ -87,6 +88,7 @@ public interface Shutdownable {
 
             this.shutdownable = shutdownable;
             this.delay = delay;
+            this.canceled = false;
             Runtime.getRuntime().addShutdownHook(this);
         }
 
@@ -100,7 +102,7 @@ public interface Shutdownable {
                         // skip delay and continue shutdown
                     }
                 }
-                if (shutdownable != null) {
+                if (shutdownable != null && !canceled) {
                     shutdownable.shutdown();
                 }
             } catch (Exception ex) {
@@ -110,12 +112,14 @@ public interface Shutdownable {
         }
 
         public void cancel() {
+            // check if the cancel is maybe called by this shutdown hook, than ignore the cancel. 
             if (!isAlive()) {
                 try {
                     Runtime.getRuntime().removeShutdownHook(this);
                     shutdownable = null;
                 } catch (IllegalStateException ex) {
-                    ExceptionPrinter.printHistory("Could not cancel shutdown hook! Maybe there are two shutdown hooks registered for the same shutdownable?", ex, LOGGER);
+                    // Is thrown if the shutdown is already in progress. This could be if there are two shutdown hooks registered for the same shutdownable.
+                    canceled = true;
                 }
             }
         }
