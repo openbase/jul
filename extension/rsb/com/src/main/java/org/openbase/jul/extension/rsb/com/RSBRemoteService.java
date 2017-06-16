@@ -1137,6 +1137,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (currentSyncTask != null && !currentSyncTask.isDone()) {
             currentSyncTask.cancel(false);
         }
+        
         setConnectionState(CONNECTED);
 
         try {
