@@ -1,5 +1,8 @@
 package org.openbase.jul.iface;
 
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +45,13 @@ public interface Shutdownable {
     /**
      * Method registers a runtime shutdown hook for the given Shutdownable. In case the application is finalizing the shutdown method of the Shutdownable will be invoked.
      *
-     * Note: If the shutdown was executed on the {@code shutdownable} before system exit you can cancel the {@code ShutdownDeamon} by the provided {@code ShutdownDeamon.cancel()} method to avoid duplicated instance shutdowns.  
-     * 
+     * Note: If the shutdown was executed on the {@code shutdownable} before system exit you can cancel the {@code ShutdownDeamon} by the provided {@code ShutdownDeamon.cancel()} method to avoid duplicated instance shutdowns.
+     *
      * @param shutdownable the instance which is automatically shutting down in case the application is finalizing.
+     * @return the for the automated shutdown responsible {@code ShutdownDeamon}.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the shutdown hook could not be registered properly.
      */
-    static ShutdownDeamon registerShutdownHook(final Shutdownable shutdownable) {
+    static ShutdownDeamon registerShutdownHook(final Shutdownable shutdownable) throws CouldNotPerformException {
         return new ShutdownDeamon(shutdownable, 0);
     }
 
@@ -59,8 +64,10 @@ public interface Shutdownable {
      *
      * @param shutdownable the instance which is automatically shutting down in case the application is finalizing.
      * @param shutdownDelay this time in milliseconds defines the delay of the shutdown after the application shutdown was initiated.
+     * @return the for the automated shutdown responsible {@code ShutdownDeamon}.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the shutdown hook could not be registered properly.
      */
-    static ShutdownDeamon registerShutdownHook(final Shutdownable shutdownable, final long shutdownDelay) {
+    static ShutdownDeamon registerShutdownHook(final Shutdownable shutdownable, final long shutdownDelay) throws CouldNotPerformException {
         return new ShutdownDeamon(shutdownable, shutdownDelay);
     }
 
@@ -71,8 +78,13 @@ public interface Shutdownable {
         private Shutdownable shutdownable;
         private final long delay;
 
-        private ShutdownDeamon(final Shutdownable shutdownable, final long delay) {
+        private ShutdownDeamon(final Shutdownable shutdownable, final long delay) throws CouldNotPerformException {
             super(ShutdownDeamon.class.getSimpleName() + "[" + shutdownable + "]");
+
+            if (shutdownable == null) {
+                throw new FatalImplementationErrorException("shutdownable argument is missing!", this, new NotAvailableException("shutdownable"));
+            }
+
             this.shutdownable = shutdownable;
             this.delay = delay;
             Runtime.getRuntime().addShutdownHook(this);
@@ -88,7 +100,9 @@ public interface Shutdownable {
                         // skip delay and continue shutdown
                     }
                 }
-                shutdownable.shutdown();
+                if (shutdownable != null) {
+                    shutdownable.shutdown();
+                }
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory("Could not shutdown " + shutdownable + "!", ex, LOGGER);
             }
