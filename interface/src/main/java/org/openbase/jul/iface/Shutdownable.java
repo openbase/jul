@@ -115,7 +115,7 @@ public interface Shutdownable {
                     Runtime.getRuntime().removeShutdownHook(this);
                     shutdownable = null;
                 } catch (IllegalStateException ex) {
-                    ExceptionPrinter.printHistory("Could not cancel shutdown hook! Maybe there are to shutdown hooks registered for the same shutdownable?", ex, LOGGER);
+                    ExceptionPrinter.printHistory("Could not cancel shutdown hook! Maybe there are two shutdown hooks registered for the same shutdownable?", ex, LOGGER);
                 }
             }
         }
