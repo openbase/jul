@@ -30,6 +30,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -54,7 +56,7 @@ public class GlobalScheduledExecutorService extends AbstractExecutorService<Sche
 
     private static GlobalScheduledExecutorService instance;
 
-    GlobalScheduledExecutorService() {
+    GlobalScheduledExecutorService() throws CouldNotPerformException {
         super((ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(DEFAULT_CORE_POOL_SIZE));
 
         // configure executor service
@@ -64,7 +66,11 @@ public class GlobalScheduledExecutorService extends AbstractExecutorService<Sche
 
     static synchronized GlobalScheduledExecutorService getInstance() {
         if (instance == null) {
-            instance = new GlobalScheduledExecutorService();
+            try {
+                instance = new GlobalScheduledExecutorService();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not create executor service!", ex, LoggerFactory.getLogger(GlobalScheduledExecutorService.class));
+            }
         }
         return instance;
     }

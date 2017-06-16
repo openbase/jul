@@ -90,7 +90,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public AbstractExecutorService(final ES executorService) {
+    public AbstractExecutorService(final ES executorService) throws CouldNotPerformException {
         this.executorService = executorService;
         this.initReportService();
         Shutdownable.registerShutdownHook(this, DEFAULT_SHUTDOWN_DELAY);

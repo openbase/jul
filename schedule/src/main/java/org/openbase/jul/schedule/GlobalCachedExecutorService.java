@@ -26,6 +26,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -37,23 +40,22 @@ public class GlobalCachedExecutorService extends AbstractExecutorService<ThreadP
      * Keep alive time in milli seconds.
      */
     public static final long DEFAULT_KEEP_ALIVE_TIME = 60000;
-    
+
     /**
      * The default maximal pool size. If this thread amount is reached further tasks will be rejected.
      */
     public static final int DEFAULT_MAX_POOL_SIZE = 2000;
-    
+
     /**
      * The core thread pool size.
      */
     public static final int DEFAULT_CORE_POOL_SIZE = 100;
-            
-    
+
     private static GlobalCachedExecutorService instance;
 
-    GlobalCachedExecutorService() {
+    GlobalCachedExecutorService() throws CouldNotPerformException {
         super((ThreadPoolExecutor) Executors.newCachedThreadPool());
-        
+
         // configure executor service
         executorService.setKeepAliveTime(DEFAULT_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS);
         executorService.setMaximumPoolSize(DEFAULT_MAX_POOL_SIZE);
@@ -63,7 +65,11 @@ public class GlobalCachedExecutorService extends AbstractExecutorService<ThreadP
 
     public static synchronized GlobalCachedExecutorService getInstance() {
         if (instance == null) {
-            instance = new GlobalCachedExecutorService();
+            try {
+                instance = new GlobalCachedExecutorService();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not create executor service!", ex, LoggerFactory.getLogger(GlobalCachedExecutorService.class));
+            }
         }
         return instance;
     }
