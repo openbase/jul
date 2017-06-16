@@ -83,7 +83,7 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
      * @param source the instance where the error has been occurred.
      */
     public FatalImplementationErrorException(final String message, final Object source) {
-        super("Fatal implementation error in " + source + ": " + message);
+        super("Fatal implementation error in or by using " + source + ": " + message);
         ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source).getClass()));
         assert false;
     }
@@ -98,7 +98,7 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
      * @param cause the exception which causes the fatal implementation error.
      */
     public FatalImplementationErrorException(final String message, final Object source, final Throwable cause) {
-        super("Fatal implementation error in " + source + ": " + message, cause);
+        super("Fatal implementation error in or by using " + source + ": " + message, cause);
         ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source).getClass()));
         assert false;
     }
@@ -112,7 +112,7 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
      * @param source the instance where the error has been occurred.
      */
     public FatalImplementationErrorException(final Object source, final Throwable cause) {
-        super("Fatal implementation error in " + source + "!", cause);
+        super("Fatal implementation error in or by using " + source + "!", cause);
         ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source).getClass()));
         assert false;
     }
