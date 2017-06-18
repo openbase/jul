@@ -146,7 +146,7 @@ public class Stopwatch {
     /**
      * Method returns the timestamp of the Stopwatch start.
      *
-     * @return the timestamp in milisecunds.
+     * @return the timestamp in milliseconds.
      * @throws org.openbase.jul.exception.NotAvailableException is thrown in case the Stopwatch was never started.
      */
     public long getStartTime() throws NotAvailableException {
@@ -159,7 +159,7 @@ public class Stopwatch {
     /**
      * Method returns the timestamp of the last Stopwatch stop.
      *
-     * @return the timestamp in milisecunds.
+     * @return the timestamp in milliseconds.
      * @throws org.openbase.jul.exception.NotAvailableException is thrown in case the Stopwatch was never started.
      */
     public long getEndTime() throws NotAvailableException {
@@ -173,7 +173,7 @@ public class Stopwatch {
      * Method blocks until the Stopwatch start or the given timeout expired.
      *
      * @param timeout max time to wait.
-     * @throws InterruptedException is thrown in case the current thread was externally interruped.
+     * @throws InterruptedException is thrown in case the current thread was externally interrupted.
      */
     public void waitForStart(final long timeout) throws InterruptedException {
         synchronized (startWaiter) {
@@ -187,7 +187,7 @@ public class Stopwatch {
     /**
      * Method blocks until the Stopwatch start.
      *
-     * @throws InterruptedException is thrown in case the current thread was externally interruped.
+     * @throws InterruptedException is thrown in case the current thread was externally interrupted.
      */
     public void waitForStart() throws InterruptedException {
         synchronized (startWaiter) {
@@ -202,7 +202,7 @@ public class Stopwatch {
      * Method blocks until the Stopwatch stop or the given timeout expired.
      *
      * @param timeout max time to wait.
-     * @throws InterruptedException is thrown in case the current thread was externally interruped.
+     * @throws InterruptedException is thrown in case the current thread was externally interrupted.
      */
     public void waitForStop(final long timeout) throws InterruptedException {
         synchronized (stopWaiter) {
@@ -216,7 +216,7 @@ public class Stopwatch {
     /**
      * Method blocks until the Stopwatch stop.
      *
-     * @throws InterruptedException is thrown in case the current thread was externally interruped.
+     * @throws InterruptedException is thrown in case the current thread was externally interrupted.
      */
     public void waitForStop() throws InterruptedException {
         synchronized (stopWaiter) {
