@@ -40,6 +40,7 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
 import org.openbase.jul.pattern.Remote.ConnectionState;
+import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,8 +90,16 @@ public class RSBCommunicationServiceTest {
     private boolean secondSync = false;
     private RSBCommunicationService communicationService;
 
+    /**
+     * Test if the initial sync that happens if a communication service starts
+     * successfully publishes its data to a remote.
+     *
+     * @throws Exception
+     */
     @Test(timeout = 6000)
     public void testInitialSync() throws Exception {
+        System.out.println("testInitialSync");
+
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         UnitConfig unit1 = UnitConfig.newBuilder().setId("Location1").build();
@@ -161,35 +170,16 @@ public class RSBCommunicationServiceTest {
         assertEquals("Remote is not disconnected after shutdown!", ConnectionState.DISCONNECTED, remoteService.getConnectionState());
     }
 
-    @Test(timeout = 5000)
-    public void testInProcessCommunication() throws Exception {
-        ParticipantConfig config = Factory.getInstance().getDefaultParticipantConfig();
-//        config = config.copy();
-
-        for (TransportConfig transport : config.getEnabledTransports()) {
-            logger.info("Disable " + transport.getName() + " communication during tests.");
-            transport.setEnabled(false);
-        }
-        logger.info("Enable inprocess communication during tests.");
-        config.getOrCreateTransport("inprocess").setEnabled(true);
-
-        for (TransportConfig transport : config.getEnabledTransports()) {
-            logger.info("Enabled: " + transport.getName());
-        }
-        // config modi
-        Informer<Object> informer = Factory.getInstance().createInformer("/test", config);
-        informer.activate();
-        informer.send("TestString");
-    }
-
     /**
      * Test if a RemoteService will reconnect when the communication service
      * restarts.
      *
      * @throws Exception
      */
-    @Test(timeout = 30000)
+    @Test(timeout = 10000)
     public void testReconnection() throws Exception {
+        System.out.println("testReconnection");
+
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
@@ -221,14 +211,15 @@ public class RSBCommunicationServiceTest {
     }
 
     /**
-     * Test if a RemoteService will reconnect when the communication service
-     * restarts.
+     * Test waiting for data from a communication service.
      *
      * @throws Exception
      */
     @Test(timeout = 5000)
     public void testWaitForData() throws Exception {
-        String scope = "/test/reconnection";
+        System.out.println("testWaitForData");
+
+        String scope = "/test/waitfordata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
@@ -243,15 +234,22 @@ public class RSBCommunicationServiceTest {
 
         communicationService.activate();
 
-        dataFuture.get();
+        assertEquals("DataFuture did not return data from communicationService!", communicationService.getData(), dataFuture.get());
 
         communicationService.shutdown();
         remoteService.shutdown();
     }
 
+    /**
+     * Test requesting data from a communication service.
+     *
+     * @throws Exception
+     */
     @Test(timeout = 5000)
     public void testRequestData() throws Exception {
-        String scope = "/test/reconnection";
+        System.out.println("testRequestData");
+
+        String scope = "/test/requestdata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
@@ -265,13 +263,23 @@ public class RSBCommunicationServiceTest {
 
         remoteService.requestData().get();
 
+        assertEquals("CommunicationService data and remoteService data do not match after requestData!", communicationService.getData(), remoteService.getData());
+
         communicationService.shutdown();
         remoteService.shutdown();
     }
 
+    /**
+     * Test if when there are 2 remotes connected to a communication service
+     * the shutdown of one remote affects the communication of the other one.
+     *
+     * @throws Exception
+     */
     @Test(timeout = 10000)
     public void testRemoteInterference() throws Exception {
-        String scope = "/test/reconnection";
+        System.out.println("testRemoteInterference");
+
+        String scope = "/test/interference";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
@@ -294,12 +302,22 @@ public class RSBCommunicationServiceTest {
         remoteService1.shutdown();
         System.out.println("remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED)");
         remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
+
         assertEquals("Remote connected to the same service got shutdown too", Remote.ConnectionState.CONNECTED, remoteService2.getConnectionState());
         remoteService2.requestData().get();
-        System.out.println("communicationService.shutdown()");
-        communicationService.shutdown();
-        System.out.println("remoteService2.shutdown()");
+
+        communicationService.deactivate();
+
+        System.out.println("remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTING)");
+        remoteService2.waitForConnectionState(ConnectionState.CONNECTING);
+
+        communicationService.activate();
+        System.out.println("remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
+        remoteService2.waitForConnectionState(ConnectionState.CONNECTED);
+        assertEquals("Remote reconnected even though it already shutdown", Remote.ConnectionState.DISCONNECTED, remoteService1.getConnectionState());
+
         remoteService2.shutdown();
+        communicationService.shutdown();
     }
 
     public static class RSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> {
