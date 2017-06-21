@@ -22,6 +22,9 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -30,8 +33,12 @@ import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.pattern.Controller;
+import org.openbase.jul.pattern.Observable;
+import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
@@ -96,6 +103,9 @@ public class ConfigurableControllerAndRemoteTest {
         remote.init(unitConfig);
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
         System.out.println("Remote reconnected after reinitialization!");
+
+        controller.shutdown();
+        remote.shutdown();
     }
 
     @Test(timeout = 10000)
@@ -130,6 +140,9 @@ public class ConfigurableControllerAndRemoteTest {
         remote.applyConfigUpdate(unitConfig);
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
         System.out.println("Remote reconnected after reinitialization!");
+
+        remote.shutdown();
+        controller.shutdown();
     }
 
     public class AbstractConfigurableControllerImpl extends AbstractConfigurableController<SceneData, SceneData.Builder, UnitConfig> {

@@ -444,6 +444,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     private boolean connectionFailure = false;
+    Future<Long> connectedPingFuture = null;
 
     private void setConnectionState(final ConnectionState connectionState) {
         synchronized (connectionMonitor) {
@@ -479,8 +480,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         logger.debug("Connection established " + this);
                     }
                     connectionFailure = false;
+
+                    // if the ping after a previous connected is still running, the controller
+                    // restarted and notified its data again the previous ping will result in a short notification of connection lost so cancel it
+                    if (connectedPingFuture != null && !connectedPingFuture.isDone()) {
+                        connectedPingFuture.cancel(true);
+                    }
+
                     // initial ping to detect connection quallity
-                    ping();
+                    connectedPingFuture = ping();
                     break;
             }
 
@@ -1137,7 +1145,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (currentSyncTask != null && !currentSyncTask.isDone()) {
             currentSyncTask.cancel(false);
         }
-        
+
         setConnectionState(CONNECTED);
 
         try {
