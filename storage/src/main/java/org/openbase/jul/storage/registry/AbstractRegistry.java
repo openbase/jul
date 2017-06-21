@@ -73,7 +73,7 @@ import org.slf4j.LoggerFactory;
 public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     private final ShutdownDeamon shutdownDeamon;
 
     private String name;
@@ -122,10 +122,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 @Override
                 public int computeHash(Map<KEY, ENTRY> value) throws CouldNotPerformException {
                     try {
-                        lock();
+                        registryLock.readLock().lock();
                         return value.hashCode();
                     } finally {
-                        unlock();
+                        registryLock.readLock().unlock();
                     }
                 }
             });
@@ -806,6 +806,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Can be overwritten for further registry actions scheduled after consistency checks.
      *
      * Don't forgett to pass-througt the call to the super class. (super.afterConsistencyCheck())
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if any plugin afterConsistencyCheck fails.
      */
     protected void afterConsistencyCheck() throws CouldNotPerformException {
         pluginPool.afterConsistencyCheck();
@@ -845,7 +846,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     @Override
     public boolean isReady() {
-        return isConsistent() && !isBusy();
+        return isConsistent() && !isBusy() && !isNotificationInProgess() && registryLock.getReadLockCount() == 0;
     }
 
     /**

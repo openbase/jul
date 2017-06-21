@@ -50,6 +50,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     private static final Object DEFAULT_SOURCE = null;
 
     protected final boolean unchangedValueFilter;
+    private boolean notificationInProgess;
 
     protected final Object NOTIFICATION_LOCK = new Object() {
         @Override
@@ -116,6 +117,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     public AbstractObservable(final boolean unchangedValueFilter, final Object source) {
         this.observers = new ArrayList<>();
         this.unchangedValueFilter = unchangedValueFilter;
+        this.notificationInProgess = false;
         this.source = source == DEFAULT_SOURCE ? this : source; // use observer itself if source was not explicit defined.
         this.hashGenerator = new HashGenerator<T>() {
 
@@ -216,6 +218,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             final ArrayList<Observer<T>> tempObserverList;
 
             try {
+                notificationInProgess = true;
                 final int observableHash = hashGenerator.computeHash(observable);
                 if (unchangedValueFilter && isValueAvailable() && observableHash == latestValueHash) {
                     LOGGER.debug("Skip notification because " + this + " has not been changed!");
@@ -258,6 +261,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                 }
             } finally {
                 assert observable != null;
+                notificationInProgess = false;
                 synchronized (NOTIFICATION_LOCK) {
                     NOTIFICATION_LOCK.notifyAll();
                 }
@@ -305,6 +309,14 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     public void setHashGenerator(HashGenerator<T> hashGenerator) {
         this.hashGenerator = hashGenerator;
+    }
+
+    /**
+     * Method checks if a notification is currently in progess.
+     * @return notificationInProgess  returns true if a notification is currently in progess. 
+     */
+    public boolean isNotificationInProgess() {
+        return notificationInProgess;
     }
 
     @Override

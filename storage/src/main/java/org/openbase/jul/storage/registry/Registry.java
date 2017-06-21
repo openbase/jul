@@ -37,8 +37,18 @@ import org.openbase.jul.pattern.Observable;
  */
 public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>> {
 
+    /**
+     * Method returns the name of this registry.
+     * @return the name as string.
+     */
     public String getName();
 
+    /**
+     * Method registers the given entry.
+     * @param entry the new entry to register which is not yet included in the registry
+     * @return the registered entry updated by all consistency checks this registry provides.
+     * @throws CouldNotPerformException is thrown if the given entry is not valid, already registered or something else went wrong during the registration.
+     */
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException;
 
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException;
@@ -61,6 +71,10 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
 
     public void clear() throws CouldNotPerformException;
 
+    /**
+     * Method returns the amount of registry entries.
+     * @return the count of entries as integer.
+     */
     public int size();
 
     public boolean isReadOnly();
@@ -70,7 +84,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
     public boolean isSandbox();
 
     /**
-     * This method checks if the registry is not handling any tasks and is currently consistent.
+     * This method checks if the registry is not handling any tasks or notification and is currently consistent.
      *
      * @return Returns true if this registry is consistent and not busy.
      */
