@@ -1,8 +1,8 @@
-package org.openbase.jul.exception;
+package org.openbase.jul.iface;
 
-/*
+/*-
  * #%L
- * JUL Exception
+ * JUL Interface
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -22,25 +22,19 @@ package org.openbase.jul.exception;
  * #L%
  */
 
+import java.util.concurrent.Future;
+import org.openbase.jul.exception.CouldNotPerformException;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class NotInitializedException extends InvalidStateException {
+public interface Executable {
 
-	public NotInitializedException(String message, Object context) {
-		super(context+" is not initialized yet: "+message);
-	}
-
-	public NotInitializedException(Object context) {
-		super(context+" is not initialized yet!");
-	}
-
-	public NotInitializedException(Object context, Throwable cause) {
-		super(context+" is not initialized yet!", cause);
-	}
-
-	public NotInitializedException(String message,Object context, Throwable cause) {
-		super(context+" is not initialized yet: "+message, cause);
-	}
+    /**
+     * Executes this executable.
+     *
+     * @return A future instance is returned which provides information about the execution state.
+     * @throws CouldNotPerformException is thrown if the execution could not be started.
+     */
+    public Future<Void> execute() throws CouldNotPerformException;
 }
