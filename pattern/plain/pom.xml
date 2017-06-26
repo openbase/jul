@@ -2,14 +2,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.openbase</groupId>
-    <artifactId>jul.pattern</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>jul.pattern.plain</artifactId>
+    <packaging>jar</packaging>
 
-    <name>JUL Pattern</name>
+    <name>JUL Pattern Plain</name>
     
     <parent>
         <groupId>org.openbase</groupId>
-        <artifactId>jul</artifactId>
+        <artifactId>jul.pattern</artifactId>
         <version>1.4-SNAPSHOT</version>
     </parent>    
     
@@ -28,16 +28,12 @@
         </plugins>
     </build>
 
-    <modules>
-        <module>plain</module>
-        <module>launch</module>
-    </modules>
-    
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.exception</artifactId>
+            <artifactId>jul.interface</artifactId>
             <version>${project.version}</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
 </project>
