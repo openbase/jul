@@ -2,7 +2,7 @@ package org.openbase.jul.pattern;
 
 /*
  * #%L
- * JUL Pattern
+ * JUL Pattern Default
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%

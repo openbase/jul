@@ -2,7 +2,7 @@ package org.openbase.jul.pattern;
 
 /*
  * #%L
- * JUL Pattern
+ * JUL Pattern Default
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,14 +21,11 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.iface.Identifiable;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <ID> the id type of the controller
- * @param <M> the data type of the controller
  */
-public interface IdentifiableController<ID, M> extends Identifiable<ID>, Controller<M> {
+public interface Manager {
 
 }

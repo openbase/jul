@@ -2,7 +2,7 @@ package org.openbase.jul.pattern;
 
 /*
  * #%L
- * JUL Pattern
+ * JUL Pattern Default
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,14 +21,22 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.iface.Identifiable;
-
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <ID> the id type of the remote
- * @param <M> the data type of the remote
+ * @param <T> the observable data type
  */
-public interface IdentifiableRemote<ID, M> extends Identifiable<ID>, Remote<M> {
+public interface Observer<T> {
 
+    /**
+     * This method is called whenever the observed object is changed. An
+     * application calls an <tt>Observable</tt> object's
+     * <code>notifyObservers</code> method to have all the object's
+     * observers notified of the change.
+     *
+     * @param source the source of the update
+     * @param data the updated data
+     * @throws java.lang.Exception a possibly thrown exception
+     */
+    public void update(final Observable<T> source, final T data) throws Exception;
 }

@@ -2,14 +2,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.openbase</groupId>
-    <artifactId>jul.pattern.plain</artifactId>
+    <artifactId>jul.pattern</artifactId>
     <packaging>jar</packaging>
 
-    <name>JUL Pattern Plain</name>
+    <name>JUL Pattern Default</name>
     
     <parent>
         <groupId>org.openbase</groupId>
-        <artifactId>jul.pattern</artifactId>
+        <artifactId>jul.pattern.module</artifactId>
         <version>1.4-SNAPSHOT</version>
     </parent>    
     

@@ -2,7 +2,7 @@ package org.openbase.jul.pattern;
 
 /*
  * #%L
- * JUL Pattern
+ * JUL Pattern Default
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,16 +21,26 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.iface.Configurable;
-import org.openbase.jul.iface.Manageable;
+import org.openbase.jul.exception.InstantiationException;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <ID> the identifier type
- * @param <M> the data type
- * @param <CONFIG> the configuration type
+ *
+ * Factory pattern interface.
+ *
+ * @param <INSTANCE> Type of instance which can be created by using this factory.
+ * @param <CONFIG> Configuration type which contains all attributes to create a new instance.
  */
-public interface ConfigurableController<ID, M, CONFIG> extends IdentifiableController<ID, M>, Manageable<CONFIG>, Configurable<ID, CONFIG> {
+public interface Factory<INSTANCE, CONFIG> {
 
+    /**
+     * Creates a new instance with the given configuration.
+     *
+     * @param config the configuration for the instance
+     * @return the created instance
+     * @throws org.openbase.jul.exception.InstantiationException if the initialization fails
+     * @throws java.lang.InterruptedException if the initialization is interrupted
+     */
+    public INSTANCE newInstance(final CONFIG config) throws InstantiationException, InterruptedException;
 }
