@@ -27,8 +27,9 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @param <T> This is the execution return type.
  */
-public interface Executable {
+public interface Executable<T> {
 
     /**
      * Executes this executable.
@@ -36,5 +37,5 @@ public interface Executable {
      * @return A future instance is returned which provides information about the execution state.
      * @throws CouldNotPerformException is thrown if the execution could not be started.
      */
-    public Future<Void> execute() throws CouldNotPerformException;
+    public Future<T> execute() throws CouldNotPerformException;
 }
