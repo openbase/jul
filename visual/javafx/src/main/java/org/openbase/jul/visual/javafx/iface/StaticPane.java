@@ -57,10 +57,14 @@ public interface StaticPane extends DefaultInitializable {
 
     @Override
     default void init() throws InitializationException, InterruptedException {
+        
+        // simple init via fx Application thread.
         if (Platform.isFxApplicationThread()) {
             initContent();
+            return;
         }
 
+        // invoke on fx application thread and wait until done.
         final SyncObject initSync = new SyncObject("StaticPaneInitSync");
         synchronized (initSync) {
             Platform.runLater(() -> {
