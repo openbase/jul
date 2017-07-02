@@ -256,26 +256,12 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         return AbstractExecutorService.applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
     }
 
-    /**
-     *
-     * @param <I>
-     * @param taskProcessor
-     * @param inputList
-     * @param executorService
-     * @return
-     * @deprecated Please use allOf(final ExecutorService executorService, final Collection inputList, final Processable taskProcessor) instead.
-     */
-    @Deprecated
-    public static <I> Future<Void> allOf(final Processable<I, Future<Void>> taskProcessor, final Collection<I> inputList, final ExecutorService executorService) {
-        return allOf(executorService, inputList, taskProcessor);
-    }
-
-    public static <I> Future<Void> allOf(final ExecutorService executorService, final Collection<I> inputList, final Processable<I, Future<Void>> taskProcessor) {
+    public static <I, R> Future<R> allOf(final ExecutorService executorService, final Collection<I> inputList, final Processable<I, Future<Void>> taskProcessor) {
         return allOf(executorService, inputList, (Collection<Future<Void>> input) -> null, taskProcessor);
     }
 
-    public static <I> Future<Void> allOf(final Collection<I> inputList, final Processable<I, Future<Void>> taskProcessor) throws CouldNotPerformException {
-        return allOf(getInstance().getExecutorService(), inputList, (Collection<Future<Void>> input) -> null, taskProcessor);
+    public static <I, R> Future<R> allOf(final Collection<I> inputList, final Processable<I, Future<R>> taskProcessor) throws CouldNotPerformException {
+        return allOf(getInstance().getExecutorService(), inputList, (Collection<Future<R>> input) -> null, taskProcessor);
     }
 
     public static <I, O, R> Future<R> allOf(final Collection<I> inputList, final Processable<Collection<Future<O>>, R> resultProcessor, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException, InterruptedException {
@@ -286,7 +272,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         return allOf(Arrays.asList(futures));
     }
 
-    public static Future<Void> allOf(final Callable resultCallable, final Future... futures) {
+    public static <R> Future<R> allOf(final Callable resultCallable, final Future... futures) {
         return allOf(getInstance().getExecutorService(), resultCallable, Arrays.asList(futures));
     }
 
@@ -299,59 +285,16 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         return allOf(getInstance().getExecutorService(), () -> resultFuture.get(), futureList);
     }
 
-    public static Future<Void> allOf(final Collection<Future> futureCollection) {
+    public static <R> Future<R> allOf(final Collection<Future> futureCollection) {
         return allOf(getInstance().getExecutorService(), () -> null, futureCollection);
-    }
-
-    /**
-     *
-     * @param <R>
-     * @param futureCollection
-     * @param returnValue
-     * @return
-     * @deprecated please use allOf(final T returnValue, final Collection futureCollection) instead.
-     */
-    @Deprecated
-    public static <R> Future<R> allOf(final Collection<Future> futureCollection, R returnValue) {
-        return allOf(returnValue, futureCollection);
     }
 
     public static <R> Future<R> allOf(final R returnValue, final Collection<Future> futureCollection) {
         return allOf(getInstance().getExecutorService(), returnValue, futureCollection);
     }
 
-    /**
-     *
-     * @param <R>
-     * @param futureCollection
-     * @param returnValue
-     * @param executorService
-     * @return
-     * @deprecated please use allOf(final ExecutorService executorService, T returnValue, final Collection futureCollection) instead.
-     */
-    @Deprecated
-    public static <R> Future<R> allOf(final Collection<Future> futureCollection, R returnValue, final ExecutorService executorService) {
-        return allOf(executorService, returnValue, futureCollection);
-    }
-
     public static <R> Future<R> allOf(final ExecutorService executorService, R returnValue, final Collection<Future> futureCollection) {
         return allOf(executorService, () -> returnValue, futureCollection);
-    }
-
-    /**
-     *
-     * @param <I>
-     * @param <O>
-     * @param <R>
-     * @param taskProcessor
-     * @param resultProcessor
-     * @param inputList
-     * @param executorService
-     * @return
-     * @deprecated Please use allOf(final ExecutorService executorService, final Processable resultProcessor, final Collection inputList, final Processable taskProcessor) throws CouldNotPerformException, InterruptedException { instead.
-     */
-    public static <I, O, R> Future<R> allOf(final Processable<I, Future<O>> taskProcessor, final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<I> inputList, final ExecutorService executorService) {
-        return allOf(executorService, inputList, resultProcessor, taskProcessor);
     }
 
     public static <I, O, R> Future<R> allOf(final ExecutorService executorService, final Collection<I> inputList, final Processable<Collection<Future<O>>, R> resultProcessor, final Processable<I, Future<O>> taskProcessor) {
