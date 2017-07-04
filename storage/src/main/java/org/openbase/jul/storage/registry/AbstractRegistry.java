@@ -85,7 +85,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected RegistrySandbox<KEY, ENTRY, MAP, R> sandbox;
 
     protected boolean consistent;
-    private final ReentrantReadWriteLock registryLock, consistencyCheckLock;
+    private final ReentrantReadWriteLock registryLock = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock consistencyCheckLock = new ReentrantReadWriteLock();
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
@@ -99,18 +100,29 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
+
         try {
+
+            // validate arguments
+            if (entryMap == null) {
+                throw new NotAvailableException("entryMap");
+            }
+
+            if (pluginPool == null) {
+                throw new NotAvailableException("pluginPool");
+            }
+
             this.randomJitter = new Random(System.currentTimeMillis());
-            this.registryLock = new ReentrantReadWriteLock();
-            this.consistencyCheckLock = new ReentrantReadWriteLock();
             this.consistent = true;
             this.notificationSkiped = false;
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
             this.pluginPool.init(this);
-            this.sandbox = new MockRegistrySandbox<>(this);
             this.consistencyHandlerList = new ArrayList<>();
             this.dependingRegistryMap = new HashMap<>();
+            this.sandbox = new MockRegistrySandbox<>(this);
+            this.shutdownDeamon = Shutdownable.registerShutdownHook(this);
+
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
                 public void relay() throws Exception {
@@ -130,7 +142,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             });
 
-            this.shutdownDeamon = Shutdownable.registerShutdownHook(this);
             finishTransaction();
             notifyObservers();
         } catch (CouldNotPerformException ex) {
@@ -141,6 +152,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected <S extends AbstractRegistry<KEY, ENTRY, MAP, R, P> & RegistrySandbox<KEY, ENTRY, MAP, R>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
         final RegistrySandbox<KEY, ENTRY, MAP, R> oldSandbox = sandbox;
         try {
+            if (sandbox == null) {
+                throw new NotAvailableException("sandbox");
+            }
+
             this.sandbox = sandbox;
             this.sandbox.sync(entryMap);
 
@@ -162,6 +177,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
+        if (entry == null) {
+            throw new NotAvailableException("entry");
+        }
         info("Register " + entry + "...");
         try {
             checkWriteAccess();
@@ -188,6 +206,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public ENTRY load(final ENTRY entry) throws CouldNotPerformException {
+        if (entry == null) {
+            throw new NotAvailableException("entry");
+        }
         logger.debug("Load " + entry + "...");
         try {
             lock();
@@ -220,6 +241,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
+        if (entry == null) {
+            throw new NotAvailableException("entry");
+        }
         info("Update " + entry + "...");
         try {
             checkWriteAccess();
@@ -272,6 +296,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public ENTRY superRemove(final ENTRY entry) throws CouldNotPerformException {
+        if (entry == null) {
+            throw new NotAvailableException("entry");
+        }
         info("Remove " + entry + "...");
         ENTRY oldEntry;
         try {
@@ -312,6 +339,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     @Override
     public ENTRY get(final KEY key) throws CouldNotPerformException {
+        if (key == null) {
+            throw new NotAvailableException("key");
+        }
         verifyID(key);
         registryLock.readLock().lock();
         try {
@@ -404,6 +434,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     @Override
     public boolean contains(final ENTRY entry) throws CouldNotPerformException {
+        if (entry == null) {
+            throw new NotAvailableException("entry");
+        }
         return contains(entry.getId());
     }
 
@@ -416,6 +449,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     @Override
     public boolean contains(final KEY key) throws CouldNotPerformException {
+        if (key == null) {
+            throw new NotAvailableException("key");
+        }
         return entryMap.containsKey(verifyID(key));
     }
 
@@ -460,6 +496,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
+        if (map == null) {
+            throw new NotAvailableException("map");
+        }
         lock();
         try {
             try {
@@ -534,6 +573,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void registerDependency(final Registry registry) throws CouldNotPerformException {
+        if (registry == null) {
+            throw new NotAvailableException("registry");
+        }
         registryLock.writeLock().lock();
         try {
             // check if already registered
@@ -551,7 +593,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @param registry the dependency to remove.
      */
-    public void removeDependency(final Registry registry) {
+    public void removeDependency(final Registry registry) throws CouldNotPerformException {
+        if (registry == null) {
+            throw new NotAvailableException("registry");
+        }
         registryLock.writeLock().lock();
         try {
             if (!dependingRegistryMap.containsKey(registry)) {
@@ -621,31 +666,48 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     protected KEY verifyID(final ENTRY entry) throws VerificationFailedException {
         try {
+            if (entry == null) {
+                throw new NotAvailableException("entry");
+            }
             return verifyID(entry.getId());
         } catch (CouldNotPerformException ex) {
             throw new VerificationFailedException("Could not verify message!", ex);
         }
     }
 
-    protected KEY verifyID(final KEY id) throws VerificationFailedException {
-        if (id == null) {
+    protected KEY verifyID(final KEY key) throws VerificationFailedException {
+        if (key == null) {
             throw new VerificationFailedException("Invalid id!", new NotAvailableException("id"));
         }
 
-        if (id instanceof String && ((String) id).isEmpty()) {
+        if (key instanceof String && ((String) key).isEmpty()) {
             throw new VerificationFailedException("Invalid id!", new InvalidStateException("id is empty!"));
         }
-        return id;
+        return key;
     }
 
     public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
-        consistencyHandlerList.add(consistencyHandler);
-        sandbox.registerConsistencyHandler(consistencyHandler);
+        try {
+            if (consistencyHandler == null) {
+                throw new NotAvailableException("consistencyHandler");
+            }
+            consistencyHandlerList.add(consistencyHandler);
+            sandbox.registerConsistencyHandler(consistencyHandler);
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not register ConsistencyHandler[" + consistencyHandler + "]", ex);
+        }
     }
 
     public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
-        consistencyHandlerList.remove(consistencyHandler);
-        sandbox.removeConsistencyHandler(consistencyHandler);
+        try {
+            if (consistencyHandler == null) {
+                throw new NotAvailableException("consistencyHandler");
+            }
+            consistencyHandlerList.remove(consistencyHandler);
+            sandbox.removeConsistencyHandler(consistencyHandler);
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not remove ConsistencyHandler[" + consistencyHandler + "]", ex);
+        }
     }
 
     @SuppressWarnings("UseSpecificCatch")
@@ -806,6 +868,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Can be overwritten for further registry actions scheduled after consistency checks.
      *
      * Don't forgett to pass-througt the call to the super class. (super.afterConsistencyCheck())
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if any plugin afterConsistencyCheck fails.
      */
     protected void afterConsistencyCheck() throws CouldNotPerformException {
@@ -856,6 +919,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public void shutdown() {
         try {
             registryLock.writeLock().lock();
+
+            if (shutdownDeamon != null) {
+                shutdownDeamon.cancel();
+            }
+
             try {
                 super.shutdown();
                 removeAllDependencies();
@@ -882,8 +950,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @throws InterruptedException is thrown if the thread is externally
      * interrupted.
      */
-    public void registerPlugin(P plugin) throws CouldNotPerformException, InterruptedException {
-        pluginPool.addPlugin(plugin);
+    public void registerPlugin(final P plugin) throws CouldNotPerformException, InterruptedException {
+        try {
+            if (plugin == null) {
+                throw new NotAvailableException("plugin");
+            }
+            pluginPool.addPlugin(plugin);
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not register Plugin[" + plugin + "]", ex);
+        }
     }
 
     /**
@@ -1097,7 +1172,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         @Override
         public void shutdown() {
             removeObserver(this);
-            shutdownDeamon.cancel();
         }
     }
 }
