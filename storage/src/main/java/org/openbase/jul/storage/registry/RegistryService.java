@@ -21,6 +21,7 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.annotations.RPCMethod;
 
@@ -40,12 +41,23 @@ public interface RegistryService {
 
     /**
      * Method blocks until the registry is not handling any tasks and is currently consistent.
-     * 
-     * Note: If you have just modified the registry this method can maybe return immediately if the task is not yet received by the registry controller. So you should prefer the futures of the modification methods for synchronization tasks.
+     *
+     * Note: If you have just modified the registry this method can maybe return immediately if the task is not yet received by the registry controller.
+     * So you should prefer the futures of the modification methods for synchronization tasks.
      *
      * @throws InterruptedException is thrown in case the thread was externally interrupted.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the wait could not be performed.
      */
     @RPCMethod
     public void waitUntilReady() throws InterruptedException, CouldNotPerformException;
+
+    /**
+     * Method blocks until the registry is not handling any tasks and is currently consistent.
+     *
+     * Note: If you have just modified the registry this method can maybe return immediately if the task is not yet received by the registry controller.
+     * So you should prefer the futures of the modification methods for synchronization tasks.
+     *
+     * @return a future which is finished if the registry is ready.
+     */
+    public Future<Void> waitUntilReadyFuture();
 }
