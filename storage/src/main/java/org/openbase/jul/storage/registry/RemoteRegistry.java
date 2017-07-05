@@ -35,6 +35,7 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.RejectedException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.openbase.jul.schedule.FutureProcessor;
@@ -204,6 +205,23 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         }
     }
 
+    /**
+     * Method blocks until the remote registry is synchronized.
+     *
+     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     */
+    public void waitForData() throws InterruptedException {
+        try {
+            if (registryRemote == null) {
+                waitForValue();
+                return;
+            }
+            getRegistryRemote().waitForData();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory("Could not wait until remote registry is ready!", ex, logger);
+        }
+    }
+
     // todo: Protect this method because external manipulation would be really bad.
     public void setRegistryRemote(final RegistryRemote<?> remote) {
         this.registryRemote = remote;
@@ -220,5 +238,17 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
             throw new NotAvailableException("RegistryRemote");
         }
         return registryRemote;
+    }
+
+    /**
+     * Check if the remote registry provides already valid data.
+     *
+     * @return if data is available
+     */
+    public boolean isDataAvalable() {
+        if (registryRemote == null) {
+            return isValueAvailable();
+        }
+        return registryRemote.isDataAvailable();
     }
 }
