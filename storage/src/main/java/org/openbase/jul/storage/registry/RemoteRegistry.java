@@ -27,6 +27,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -34,7 +37,7 @@ import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
-import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
 
 /**
@@ -46,7 +49,13 @@ import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
  */
 public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB> {
 
-    private Remote remote;
+    /**
+     * An optional configurable registryRemote where this remote is than bound to.
+     * If configured this registryRemote is used for registry state checks and synchronization issues.
+     *
+     * Note: The message type {@code M} of the RegistryRemote can be different from the message type {@code M} of this class. Thats why it is marked as unknown.
+     */
+    private RegistryRemote<?> registryRemote;
 
     public RemoteRegistry() throws InstantiationException {
         this(new HashMap<>());
@@ -55,7 +64,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public RemoteRegistry(final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
         super(internalMap);
     }
-    
+
     public synchronized void notifyRegistryUpdate(final Collection<M> values) throws CouldNotPerformException {
         Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
         for (M value : values) {
@@ -135,12 +144,12 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     }
 
     @Override
-    public void registerConsistencyHandler(ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>> consistencyHandler) throws CouldNotPerformException {
+    public void registerConsistencyHandler(final ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, final ProtoBufRegistry<KEY, M, MB>> consistencyHandler) throws CouldNotPerformException {
         throw new NotSupportedException("registerConsistencyHandler", this);
     }
 
     @Override
-    public void registerDependency(Registry registry) throws CouldNotPerformException {
+    public void registerDependency(final Registry registry) throws CouldNotPerformException {
         throw new NotSupportedException("registerDependency", this);
     }
 
@@ -156,13 +165,59 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
     @Override
     public boolean isReadOnly() {
-        if (remote != null && !remote.isConnected()) {
+        if (registryRemote != null && !registryRemote.isConnected()) {
             return true;
         }
         return super.isReadOnly();
     }
 
-    public void setRemote(Remote remote) {
-        this.remote = remote;
+    /**
+     * Method blocks until the referred registry is not handling any tasks and is currently consistent.
+     *
+     * Note: If you have just modified the registry this method can maybe return immediately if the task is not yet received by the registry controller.
+     * So you should prefer the futures of the modification methods for synchronization tasks.
+     *
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the wait could not be performed.
+     */
+    public void waitUntilReady() throws InterruptedException, CouldNotPerformException {
+        try {
+            waitUntilReadyFuture().get();
+        } catch (final ExecutionException | CancellationException ex) {
+            throw new CouldNotPerformException("Could not wait unit registry is ready.", ex);
+        }
+    }
+
+    /**
+     * Method blocks until the registry is not handling any tasks and is currently consistent.
+     *
+     * Note: If you have just modified the registry this method can maybe return immediately if the task is not yet received by the registry controller.
+     * So you should prefer the futures of the modification methods for synchronization tasks.
+     *
+     * @return a future which is finished if the registry is ready.
+     */
+    public Future<Void> waitUntilReadyFuture() {
+        try {
+            return getRegistryRemote().waitUntilReadyFuture();
+        } catch (NotAvailableException ex) {
+            return FutureProcessor.canceledFuture(null, ex);
+        }
+    }
+
+    // todo: Protect this method because external manipulation would be really bad.
+    public void setRegistryRemote(final RegistryRemote<?> remote) {
+        this.registryRemote = remote;
+    }
+
+    /**
+     * Method returns the registry remote where this instance is bound to.
+     * @return the registry remote if available.
+     * @throws NotAvailableException Because this bound is optionally this method may throws an {@code  NotAvailableException} in case the remote registry is independent of any registry remote.
+     */
+    protected RegistryRemote<?> getRegistryRemote() throws NotAvailableException {
+        if (registryRemote == null) {
+            throw new NotAvailableException("RegistryRemote");
+        }
+        return registryRemote;
     }
 }
