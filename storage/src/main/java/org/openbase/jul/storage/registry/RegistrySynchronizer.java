@@ -93,12 +93,13 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
-        remoteRegistry.waitForValue();
         remoteRegistry.addObserver(remoteRegistryChangeObserver);
 
         try {
-            remoteRegistry.waitForValue();
-            internalSync();
+            // trigger internal sync if data is available.
+            if (remoteRegistry.isDataAvalable()) {
+                internalSync();
+            }
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
         }
