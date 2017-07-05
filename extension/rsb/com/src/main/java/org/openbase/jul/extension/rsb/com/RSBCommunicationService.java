@@ -79,7 +79,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ShutdownDeamon shutdownDeamon;
-    
+
     protected RSBInformer<Object> informer;
     protected RSBLocalServer server;
     protected WatchDog informerWatchDog;
@@ -568,7 +568,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
         M newData = getData();
 
-        if (informer.isActive()) {
+        if (informer.isActive() && server.isActive()) {
             try {
                 informer.publish(newData);
             } catch (CouldNotPerformException ex) {

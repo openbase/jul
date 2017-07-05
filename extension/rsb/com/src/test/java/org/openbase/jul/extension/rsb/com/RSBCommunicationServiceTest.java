@@ -21,10 +21,14 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Before;
@@ -40,7 +44,9 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
 import org.openbase.jul.pattern.Remote.ConnectionState;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
+import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.converter.DefaultConverterRepository;
@@ -315,6 +321,36 @@ public class RSBCommunicationServiceTest {
         communicationService.shutdown();
     }
 
+    /**
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 10000)
+    public void testNotification() throws Exception {
+        System.out.println("testNotification");
+
+        String scope = "/test/notification";
+        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
+        communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
+        communicationService.init(scope);
+
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.init(scope);
+        remoteService.activate();
+
+        GlobalCachedExecutorService.submit(new NotificationCallable(communicationService));
+
+        remoteService.waitForData();
+        try {
+            remoteService.ping().get(500, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException ex) {
+            Assert.fail("Even though wait for data returned the pinging immediatly afterwards failed");
+        }
+
+        communicationService.deactivate();
+        remoteService.deactivate();
+    }
+
     public static class RSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> {
 
         public RSBCommunicationServiceImpl(UnitRegistryData.Builder builder) throws InstantiationException {
@@ -334,6 +370,54 @@ public class RSBCommunicationServiceTest {
 
         @Override
         public void notifyDataUpdate(UnitRegistryData data) throws CouldNotPerformException {
+        }
+    }
+
+    public class NotificationCallable implements Callable<Void> {
+
+        private final RSBCommunicationService communicationService;
+        private final Object watchDogUpdateLock = new Object();
+
+        public NotificationCallable(RSBCommunicationService communicationService) {
+            this.communicationService = communicationService;
+            this.communicationService.informerWatchDog.addObserver((Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+                synchronized (watchDogUpdateLock) {
+                    if (data == WatchDog.ServiceState.RUNNING) {
+                        watchDogUpdateLock.notifyAll();
+                    }
+                }
+            });
+            this.communicationService.serverWatchDog.addObserver((Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+                synchronized (watchDogUpdateLock) {
+                    if (data == WatchDog.ServiceState.RUNNING) {
+                        watchDogUpdateLock.notifyAll();
+                    }
+                }
+            });
+        }
+
+        @Override
+        public Void call() throws Exception {
+            communicationService.activate();
+            while (!stateReached()) {
+                communicationService.deactivate();
+                communicationService.activate();
+            }
+            return null;
+        }
+
+        private boolean stateReached() throws InterruptedException, CouldNotPerformException {
+            synchronized (watchDogUpdateLock) {
+                while (true) {
+                    watchDogUpdateLock.wait();
+                    if (communicationService.informer.isActive() && communicationService.server.isActive()) {
+                        communicationService.notifyChange();
+                        return true;
+                    } else if (communicationService.server.isActive()) {
+                        return false;
+                    }
+                }
+            }
         }
     }
 }
