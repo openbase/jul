@@ -1,4 +1,3 @@
-
 package org.openbase.jul.iface;
 
 /*-
@@ -22,11 +21,12 @@ package org.openbase.jul.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InitializationException;
+import org.slf4j.LoggerFactory;
 
 /**
-     * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface VoidInitializable extends DefaultInitializableImpl<Void> {
 
@@ -34,7 +34,13 @@ public interface VoidInitializable extends DefaultInitializableImpl<Void> {
     public default void init(Void config) throws InitializationException, InterruptedException {
         init();
     }
-    
+
+    @Override
+    public default void init() throws InitializationException, InterruptedException {
+        LoggerFactory.getLogger(VoidInitializable.class).warn("This Method has to be overwritten. Else using it is useless!");
+        new FatalImplementationErrorException("Did not overwrite init!", this);
+    }
+
     @Override
     public default Void getDefaultConfig() {
         return null;
