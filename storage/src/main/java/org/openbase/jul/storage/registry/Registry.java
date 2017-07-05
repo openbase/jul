@@ -101,7 +101,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * Return true if this registry does not contain any entries.
      *
      * @return is true if the registry is empty.
-     * @deprecated removed because of typo. Please use isEmpty() instead!
+     * @deprecated since 1.3: removed because of typo. Please use isEmpty() instead!
      */
     @Deprecated
     default public boolean isEmtpy() {
