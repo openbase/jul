@@ -144,7 +144,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     }
 
     @Override
-    public void registerConsistencyHandler(final ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, final ProtoBufRegistry<KEY, M, MB>> consistencyHandler) throws CouldNotPerformException {
+    public void registerConsistencyHandler(final ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>> consistencyHandler) throws CouldNotPerformException {
         throw new NotSupportedException("registerConsistencyHandler", this);
     }
 
@@ -211,6 +211,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
     /**
      * Method returns the registry remote where this instance is bound to.
+     *
      * @return the registry remote if available.
      * @throws NotAvailableException Because this bound is optionally this method may throws an {@code  NotAvailableException} in case the remote registry is independent of any registry remote.
      */
