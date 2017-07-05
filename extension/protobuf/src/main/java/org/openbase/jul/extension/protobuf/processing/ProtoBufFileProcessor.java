@@ -32,7 +32,6 @@ import com.google.protobuf.Message.Builder;
 import com.googlecode.protobuf.format.JsonFormat;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import org.apache.commons.io.FileUtils;
@@ -41,6 +40,16 @@ import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.processing.FileProcessor;
 
 /**
+ * Helper class to serialize and deserialize protobuf objects into json files and vise versa.
+ *
+ * Example Code:
+ * <pre>
+ * {@code
+ *     ProtoBufFileProcessor<UserConfig, UserConfig, UserConfig.Builder> processor = new ProtoBufFileProcessor<>(UserConfig.newBuilder());
+ *     processor.serialize(UserConfig.getDefaultInstance().newBuilderForType().setFirstName("Pink").build(), new File("/tmp/myuser.txt"));
+ *     System.out.println("Username: "+processor.deserialize(new File("/tmp/myuser.txt")).getFirstName());
+ * }
+ * </pre>
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <DT> datatype
@@ -54,6 +63,15 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
     private final Gson gson;
     private final JsonFormat jsonFormat;
     private final TypeToMessageTransformer<DT, M, MB> transformer;
+
+    /**
+     * Constructor to create a new {@code ProtoBufFileProcessor}
+     *
+     * @param messageBuilder a builder which can be used to build the message after deserialization.
+     */
+    public ProtoBufFileProcessor(final MB messageBuilder) {
+        this(new SimpleMessageTransformer(messageBuilder));
+    }
 
     public ProtoBufFileProcessor(final TypeToMessageTransformer<DT, M, MB> transformer) {
         this.transformer = transformer;
@@ -107,5 +125,24 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
         public T transform(M message) throws CouldNotTransformException;
 
         public MB newBuilderForType() throws CouldNotPerformException;
+    }
+
+    public static class SimpleMessageTransformer<M extends GeneratedMessage, MB extends M.Builder> implements TypeToMessageTransformer<M, M, MB> {
+
+        private final MB builder;
+
+        public SimpleMessageTransformer(final MB builder) {
+            this.builder = builder;
+        }
+
+        @Override
+        public MB newBuilderForType() throws CouldNotPerformException {
+            return (MB) builder.clone();
+        }
+
+        @Override
+        public M transform(final M message) {
+            return message;
+        }
     }
 }
