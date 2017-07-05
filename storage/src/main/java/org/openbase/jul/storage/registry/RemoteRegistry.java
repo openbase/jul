@@ -213,7 +213,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public void waitForData() throws InterruptedException {
         try {
             if (registryRemote == null) {
-                waitForValue();R
+                waitForValue();
                 return;
             }
             getRegistryRemote().waitForData();
