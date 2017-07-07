@@ -41,7 +41,7 @@
         </dependency>
         <dependency>
             <groupId>rsb</groupId>
-            <artifactId>rsb</artifactId>
+            <artifactId>${dependency.rsb.artifact}</artifactId>
             <version>${dependency.rsb.version}</version>
         </dependency>
         <dependency>

@@ -21,6 +21,7 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.slf4j.LoggerFactory;
 import rsb.config.ParticipantConfig;
 import rsb.transport.spread.InPushConnectorFactoryRegistry;
 import rsb.transport.spread.SharedInPushConnectorFactory;
@@ -30,6 +31,8 @@ import rsb.transport.spread.SharedInPushConnectorFactory;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RSBSharedConnectionConfig {
+
+    private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RSBSharedConnectionConfig.class);
 
     private static boolean init = false;
     private static ParticipantConfig participantConfig;
@@ -41,19 +44,18 @@ public class RSBSharedConnectionConfig {
         participantConfig = RSBDefaultConfig.getDefaultParticipantConfig();
 
         final String inPushFactoryKey = "shareIfPossible";
-        // register a (spread-specifc) factory to create the appropriate in push
+        // register a (spread-specifc) factory to create the appropriate in push    
         // connectors. In this case the factory tries to share all connections
         // except the converters differ. You can implement other strategies to
         // better match your needs.
-        InPushConnectorFactoryRegistry.getInstance().registerFactory(
-                inPushFactoryKey, new SharedInPushConnectorFactory());
+        InPushConnectorFactoryRegistry.getInstance().registerFactory(inPushFactoryKey, new SharedInPushConnectorFactory());
 
         // instruct the spread transport to use your newly registered factory
         // for creating in push connector instances
         participantConfig.getOrCreateTransport("spread")
                 .getOptions()
                 .setProperty("transport.spread.java.infactory", inPushFactoryKey);
-
+        
         init = true;
 
     }

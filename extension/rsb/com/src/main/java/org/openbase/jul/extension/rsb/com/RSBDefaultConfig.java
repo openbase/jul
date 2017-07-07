@@ -22,19 +22,23 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBHost;
+import org.openbase.jul.extension.rsb.com.jp.JPRSBIntrospection;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBPort;
+import org.openbase.jul.extension.rsb.com.jp.JPRSBThreadPooling;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
-import rsb.util.Properties;
-import rsb.util.Property;
+import rsb.eventprocessing.ExecutorEventReceivingStrategyFactory;
 
 /**
  *
@@ -74,9 +78,25 @@ public class RSBDefaultConfig {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), LOGGER);
         }
 
-        // Disable rsb introspection for test mode.
+        
+        // Setup introspection
+        // Force disabling rsb introspection for test mode because the communication is done via socked transport which is not suitable for unit tests.
         if (JPService.testMode()) {
             participantConfig.setIntrospectionEnabled(false);
+        } else {
+            try {
+                participantConfig.setIntrospectionEnabled(JPService.getProperty(JPRSBIntrospection.class).getValue());
+            } catch (JPNotAvailableException ex) {
+                ExceptionPrinter.printHistory("Could not check if introspection was enabled!", ex, LOGGER, LogLevel.WARN);
+            }
+        }
+
+        try {
+            if (JPService.getProperty(JPRSBThreadPooling.class).getValue()) {
+                participantConfig.setReceivingStrategy(new ExecutorEventReceivingStrategyFactory(GlobalCachedExecutorService.getInstance().getExecutorService()));
+            }
+        } catch (JPNotAvailableException ex) {
+            ExceptionPrinter.printHistory("Could not check if thread pooling was enabled!", ex, LOGGER, LogLevel.WARN);
         }
 
         Factory.getInstance().setDefaultParticipantConfig(participantConfig);

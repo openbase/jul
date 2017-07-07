@@ -36,7 +36,7 @@
             <exclusions>
                 <exclusion>
                     <groupId>rsb</groupId>
-                    <artifactId>rsb</artifactId>
+                    <artifactId>${dependency.rsb.artifact}</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>rsb</groupId>
