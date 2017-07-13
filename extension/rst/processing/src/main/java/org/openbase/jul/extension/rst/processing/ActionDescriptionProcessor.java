@@ -6,6 +6,7 @@ import rst.calendar.DateTimeType.DateTime;
 import rst.communicationpatterns.ResourceAllocationType.ResourceAllocation;
 import rst.domotic.action.ActionAuthorityType.ActionAuthority;
 import rst.domotic.action.ActionDescriptionType.ActionDescription;
+import rst.domotic.action.ActionDescriptionType.ActionDescriptionOrBuilder;
 import rst.domotic.action.ActionParameterType.ActionParameter;
 import rst.domotic.action.ActionReferenceType.ActionReference;
 import rst.domotic.service.ServiceStateDescriptionType.ServiceStateDescription;
@@ -39,6 +40,8 @@ import rst.timing.IntervalType.Interval;
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class ActionDescriptionProcessor {
+    
+    public static final String TOKEN_SEPERATOR = "#";
 
     public static final String USER_KEY = "USER";
     public static final String SERVICE_TYPE_KEY = "SERVICE_TYPE";
@@ -46,6 +49,8 @@ public class ActionDescriptionProcessor {
     public static final String SERVICE_ATTIBUTE_KEY = "SERVICE_ATTIBUTE";
     public static final String GENERIC_ACTION_LABEL = LABEL_KEY + "[" + SERVICE_ATTIBUTE_KEY + "]";
     public static final String GENERIC_ACTION_DESCSRIPTION = USER_KEY + " changed " + SERVICE_TYPE_KEY + " of unit " + LABEL_KEY + " to " + SERVICE_ATTIBUTE_KEY + ".";
+
+    public static long MIN_ALLOCATION_TIME_MILLI = 10000;
 
     /**
      * Get an ActionDescription which only misses unit and service information.
@@ -165,8 +170,6 @@ public class ActionDescriptionProcessor {
         return actionParameter.build();
     }
 
-    public static long MIN_ALLOCATION_TIME_MILLI = 100;
-
     public static Interval getAllocationInterval(final long executionTimePeriod, final DateTime executionValidity) {
         Interval.Builder interval = Interval.newBuilder();
 
@@ -179,6 +182,47 @@ public class ActionDescriptionProcessor {
     public static ActionDescription.Builder updateResourceAllocationSlot(final ActionDescription.Builder actionDescription) {
         final ResourceAllocation.Builder resourceAllocationBuilder = actionDescription.getResourceAllocationBuilder();
         resourceAllocationBuilder.setSlot(getAllocationInterval(actionDescription.getExecutionTimePeriod(), actionDescription.getExecutionValidity()));
+        return actionDescription;
+    }
+    
+    public static ActionReference getActionReferenceFromActionDescription(final ActionDescriptionOrBuilder actionDescription) {
+        ActionReference.Builder actionReference = ActionReference.newBuilder();
+        actionReference.setActionId(actionDescription.getId());
+        actionReference.setAuthority(actionDescription.getActionAuthority());
+        actionReference.setServiceStateDescription(actionDescription.getServiceStateDescription());
+        return actionReference.build();
+    }
+    
+    public static ActionDescription.Builder updateActionChain(final ActionDescription.Builder actionDescription, final ActionDescriptionOrBuilder parentAction) {
+        actionDescription.addActionChain(getActionReferenceFromActionDescription(parentAction));
+        actionDescription.addAllActionChain(parentAction.getActionChainList());
+        return actionDescription;
+    }
+    
+    public static boolean hasResourceAllocationToken(final ActionDescriptionOrBuilder actionDescription) {
+        return actionDescription.getResourceAllocation().getId().contains(TOKEN_SEPERATOR);
+    }
+    
+    public static ActionDescription.Builder generateToken(final ActionDescription.Builder actionDescription) {
+        ResourceAllocation.Builder resourceAllocation = actionDescription.getResourceAllocationBuilder();
+        if(hasResourceAllocationToken(actionDescription)) {
+            return actionDescription;
+        } else {
+            String token = UUID.randomUUID().toString();
+            resourceAllocation.setId(resourceAllocation.getId() + TOKEN_SEPERATOR + token);
+            return actionDescription;
+        }
+    }
+    
+    public static ActionDescription.Builder updateResourceAllocationId(final ActionDescription.Builder actionDescription) {
+        ResourceAllocation.Builder resourceAllocation = actionDescription.getResourceAllocationBuilder();
+        String newId = UUID.randomUUID().toString();
+        if(!hasResourceAllocationToken(actionDescription)) {
+            resourceAllocation.setId(newId);
+        } else {
+            String token = resourceAllocation.getId().split(TOKEN_SEPERATOR)[1];
+            resourceAllocation.setId(newId + TOKEN_SEPERATOR + token);
+        }
         return actionDescription;
     }
 }
