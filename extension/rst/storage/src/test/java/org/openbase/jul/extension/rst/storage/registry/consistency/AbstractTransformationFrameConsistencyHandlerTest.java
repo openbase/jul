@@ -330,6 +330,11 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 public Future<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> getValueFuture() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
+
+                @Override
+                public Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntryMap() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
             });
         }
 

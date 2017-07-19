@@ -63,7 +63,20 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
         return get(entry.getId());
     }
 
+    /**
+     * Copies all entries into a list.
+     * 
+     * @return a list with all values of the entry map
+     * @throws CouldNotPerformException if something fails
+     */
     public List<ENTRY> getEntries() throws CouldNotPerformException;
+    
+    /**
+     * An unmodifiable map of the current entry map.
+     * 
+     * @return the current entry map of the registry but unmodifiable 
+     */
+    public Map<KEY, ENTRY> getEntryMap();
 
     public boolean contains(final ENTRY entry) throws CouldNotPerformException;
 

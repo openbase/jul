@@ -206,4 +206,9 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     public Future<Map<KEY, ENTRY>> getValueFuture() {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
+
+    @Override
+    public Map<KEY, ENTRY> getEntryMap() {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
+    }
 }

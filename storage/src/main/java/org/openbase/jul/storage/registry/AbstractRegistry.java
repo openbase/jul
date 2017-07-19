@@ -394,6 +394,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.readLock().unlock();
         }
     }
+    
+    public Map<KEY, ENTRY> getEntryMap() {
+        registryLock.readLock().lock();
+        try {
+            return Collections.unmodifiableMap(entryMap);
+        } finally {
+            registryLock.readLock().unlock();
+        }
+    }
 
     /**
      * {@inheritDoc}
