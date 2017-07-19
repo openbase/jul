@@ -395,6 +395,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
     
+    @Override
     public Map<KEY, ENTRY> getEntryMap() {
         registryLock.readLock().lock();
         try {
