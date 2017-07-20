@@ -387,8 +387,66 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         });
     }
 
+    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future> futureCollection) {
+        return atLeastOne(() -> returnValue, futureCollection);
+    }
+  
+    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+        return allOf(getInstance().getExecutorService(), resultCallable, futureCollection);
+    }
+    
     /**
-     * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultProcessor.
+     * Method generates a new futures which represents all futures provided by the futureCollection.
+     * If at least one future successfully finishes the outer future will be completed with the result provided by the resultCallable.
+     *
+     * @param <R> The result type of the outer future.
+     * @param executorService the execution service which is used for the outer future execution.
+     * @param resultCallable the callable which provides the result of the outer future.
+     * @param futureCollection the inner future collection.
+     * @return the outer future.
+     */
+    public static <R> Future<R> atLeastOne(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+        return executorService.submit(new Callable<R>() {
+            @Override
+            public R call() throws Exception {
+                try {
+                    MultiException.ExceptionStack exceptionStack = null;
+                    boolean oneSuccesfullyFinished = false;
+
+                    try {
+                        for (final Future future : futureCollection) {
+                            try {
+                                future.get();
+                                oneSuccesfullyFinished = true;
+                            } catch (ExecutionException ex) {
+                                exceptionStack = MultiException.push(this, ex, exceptionStack);
+                            }
+                        }
+                    } catch (InterruptedException ex) {
+                        // cancel all pending actions.
+                        futureCollection.stream().forEach((future) -> {
+                            future.cancel(true);
+                        });
+                        throw ex;
+                    }
+                    if (!oneSuccesfullyFinished) {
+                        MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                    }
+                    if (resultCallable == null) {
+                        throw new NotAvailableException("resultCallable");
+                    }
+                    return resultCallable.call();
+                } catch (CouldNotPerformException | InterruptedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
+                }
+            }
+        });
+    }
+
+    /**
+     * Method generates a new futures which represents all futures provided by the futureCollection.If all futures are successfully finished the outer future will be completed with the result provided by the resultProcessor.
      *
      * Node: For this method it's important that all futures provided by the future collection provide the same result type.
      *
