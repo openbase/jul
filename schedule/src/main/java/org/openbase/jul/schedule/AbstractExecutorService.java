@@ -392,7 +392,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
   
     public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future> futureCollection) {
-        return allOf(getInstance().getExecutorService(), resultCallable, futureCollection);
+        return atLeastOne(getInstance().getExecutorService(), resultCallable, futureCollection);
     }
     
     /**
