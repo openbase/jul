@@ -419,6 +419,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void reset() throws CouldNotPerformException {
         try {
             verifyMaintainability();
+            
+            // clear init flag
+            initialized = false;
+            
             // clear existing instances.
             if (listenerWatchDog != null) {
                 listenerWatchDog.shutdown();
@@ -1131,13 +1135,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
         }
 
-        // Notify data update
-        try {
-            notifyDataUpdate(data);
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
-        }
-
         if (currentSyncFuture != null) {
             currentSyncFuture.complete(data);
         }
@@ -1148,6 +1145,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
         setConnectionState(CONNECTED);
 
+        // Notify data update
+        try {
+            notifyDataUpdate(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+        }
+        
         try {
             dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {

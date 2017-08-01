@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.iface.annotations;
 
 /*-
@@ -37,7 +32,7 @@ import java.lang.annotation.Target;
  * Important to note is that when an interface overrides a method tagged an annotation, the annotation is lost.
  * Thus if desired the annotation has to be added to the overriding method again.
  *
- * @author pleminoq
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

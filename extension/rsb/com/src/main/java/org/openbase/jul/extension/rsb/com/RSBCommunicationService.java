@@ -88,10 +88,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final MB dataBuilder;
     private final Class<M> messageClass;
 
+    public final SyncObject managableLock = new SyncObject(getClass());
+
     private final ReentrantReadWriteLock dataLock;
     private final ReadLock dataBuilderReadLock;
     private final WriteLock dataBuilderWriteLock;
-
+    
     protected Scope scope;
 
     private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
@@ -205,75 +207,77 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws InitializationException
      * @throws InterruptedException
      */
-    public synchronized void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        try {
-            final boolean alreadyActivated = isActive();
-            ParticipantConfig internalParticipantConfig = participantConfig;
+    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+        synchronized (managableLock) {
+            try {
+                final boolean alreadyActivated = isActive();
+                ParticipantConfig internalParticipantConfig = participantConfig;
 
-            if (scope == null) {
-                throw new NotAvailableException("scope");
-            }
-
-            // check if this instance was partly or fully initialized before.
-            if (initialized | informerWatchDog != null | serverWatchDog != null) {
-                deactivate();
-                reset();
-            }
-
-            this.scope = scope;
-            rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
-
-            // init new instances.
-            logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-            informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
-            informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
-
-            // get local server object which allows to expose remotely callable methods.
-            server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
-
-            // register rpc methods.
-            RPCHelper.registerInterface(Pingable.class, this, server);
-            RPCHelper.registerInterface(Requestable.class, this, server);
-            registerMethods(server);
-
-            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
-
-            this.informerWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
-                if (data == WatchDog.ServiceState.RUNNING) {
-
-                    setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
-
-                    // Sync data after service start.
-                    initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
-                        try {
-                            // skip if shutdown was already initiated
-                            if (informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
-                                return;
-                            }
-
-                            informerWatchDog.waitForServiceActivation();
-                            serverWatchDog.waitForServiceActivation();
-                            logger.debug("trigger initial sync");
-                            notifyChange();
-                        } catch (InterruptedException ex) {
-                            logger.debug("Initial sync was skipped because of controller shutdown.");
-                        } catch (CouldNotPerformException ex) {
-                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
-                        }
-                    });
+                if (scope == null) {
+                    throw new NotAvailableException("scope");
                 }
-            });
 
-            postInit();
+                // check if this instance was partly or fully initialized before.
+                if (initialized | informerWatchDog != null | serverWatchDog != null) {
+                    deactivate();
+                    reset();
+                }
 
-            initialized = true;
+                this.scope = scope;
+                rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
 
-            // check if communication service was already activated before and recover state.
-            if (alreadyActivated) {
-                activate();
+                // init new instances.
+                logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
+                informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
+                informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
+
+                // get local server object which allows to expose remotely callable methods.
+                server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
+
+                // register rpc methods.
+                RPCHelper.registerInterface(Pingable.class, this, server);
+                RPCHelper.registerInterface(Requestable.class, this, server);
+                registerMethods(server);
+
+                serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
+
+                this.informerWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+                    if (data == WatchDog.ServiceState.RUNNING) {
+
+                        setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
+
+                        // Sync data after service start.
+                        initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
+                            try {
+                                // skip if shutdown was already initiated
+                                if (informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
+                                    return;
+                                }
+
+                                informerWatchDog.waitForServiceActivation();
+                                serverWatchDog.waitForServiceActivation();
+                                logger.debug("trigger initial sync");
+                                notifyChange();
+                            } catch (InterruptedException ex) {
+                                logger.debug("Initial sync was skipped because of controller shutdown.");
+                            } catch (CouldNotPerformException ex) {
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
+                            }
+                        });
+                    }
+                });
+
+                postInit();
+
+                initialized = true;
+
+                // check if communication service was already activated before and recover state.
+                if (alreadyActivated) {
+                    activate();
+                }
+            } catch (CouldNotPerformException | NullPointerException ex) {
+                throw new InitializationException(this, ex);
             }
-        } catch (CouldNotPerformException | NullPointerException ex) {
-            throw new InitializationException(this, ex);
         }
     }
 
@@ -319,11 +323,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
-        validateInitialization();
-        logger.debug("Activate RSBCommunicationService for: " + this);
-        setControllerAvailabilityState(ControllerAvailabilityState.ACTIVATING);
-        serverWatchDog.activate();
-        informerWatchDog.activate();
+        synchronized (managableLock) {
+            validateInitialization();
+            logger.debug("Activate RSBCommunicationService for: " + this);
+            setControllerAvailabilityState(ControllerAvailabilityState.ACTIVATING);
+            assert serverWatchDog != null;
+            assert informerWatchDog != null;
+            serverWatchDog.activate();
+            informerWatchDog.activate();
+        }
     }
 
     /**
@@ -333,35 +341,41 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public void deactivate() throws InterruptedException, CouldNotPerformException {
-        try {
-            validateInitialization();
-        } catch (InvalidStateException ex) {
-            // was never initialized!
-            return;
-        }
+    public synchronized void deactivate() throws InterruptedException, CouldNotPerformException {
+        synchronized (managableLock) {
+            try {
+                validateInitialization();
+            } catch (InvalidStateException ex) {
+                // was never initialized!
+                return;
+            }
 
-        // skip initial data sync if still running
-        if (initialDataSyncFuture != null && !initialDataSyncFuture.isDone()) {
-            initialDataSyncFuture.cancel(true);
-        }
+            // skip initial data sync if still running
+            if (initialDataSyncFuture != null && !initialDataSyncFuture.isDone()) {
+                initialDataSyncFuture.cancel(true);
+            }
 
-        logger.debug("Deactivate RSBCommunicationService for: " + this);
-        // The order is important: The informer publishes a zero event when the controllerAvailabilityState is set to deactivating which leads remotes to disconnect
-        // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
-        // and the remotes will think that the server is still there..
-        if (serverWatchDog != null) {
-            serverWatchDog.deactivate();
+            logger.debug("Deactivate RSBCommunicationService for: " + this);
+            // The order is important: The informer publishes a zero event when the controllerAvailabilityState is set to deactivating which leads remotes to disconnect
+            // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
+            // and the remotes will think that the server is still there..
+            if (serverWatchDog != null) {
+                serverWatchDog.deactivate();
+            }
+            // inform remotes about shutdown
+            setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
+            if (informerWatchDog != null) {
+                informerWatchDog.deactivate();
+            }
+            setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
         }
-        // inform remotes about shutdown
-        setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
-        if (informerWatchDog != null) {
-            informerWatchDog.deactivate();
-        }
-        setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
     }
 
-    public void reset() {
+    private void reset() {
+        
+        // clear init flag
+        initialized = false;
+        
         // clear existing instances.
         if (informerWatchDog != null) {
             informerWatchDog.shutdown();
@@ -575,8 +589,25 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
             }
         }
+        
+        // Notify data update
+        try {
+            notifyDataUpdate(newData);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+        }
 
         dataObserver.notifyObservers(newData);
+    }
+    
+    /**
+     * Overwrite this method to get informed about data updates.
+     *
+     * @param data new arrived data messages.
+     * @throws CouldNotPerformException
+     */
+    protected void notifyDataUpdate(M data) throws CouldNotPerformException {
+        // dummy method, please overwrite if needed.
     }
 
     /**
