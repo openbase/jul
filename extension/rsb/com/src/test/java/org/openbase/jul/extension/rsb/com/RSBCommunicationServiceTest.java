@@ -367,10 +367,6 @@ public class RSBCommunicationServiceTest {
         public RSBRemoteServiceImpl() {
             super(UnitRegistryData.class);
         }
-
-        @Override
-        public void notifyDataUpdate(UnitRegistryData data) throws CouldNotPerformException {
-        }
     }
 
     public class NotificationCallable implements Callable<Void> {
