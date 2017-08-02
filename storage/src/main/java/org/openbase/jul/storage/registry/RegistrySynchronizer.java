@@ -179,7 +179,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
             final int errorCounter = MultiException.size(removeExceptionStack) + MultiException.size(updateExceptionStack) + MultiException.size(registerExceptionStack);
             final int changeCounter = (entryConfigDiff.getChangeCounter() - skippedChanges);
             if (changeCounter != 0 || errorCounter != 0) {
-                logger.info(changeCounter + " registry changes applied. " + errorCounter + " are skipped.");
+                logger.info(changeCounter + " registry changes applied." + (errorCounter == 0 ? "" : errorCounter + " are skipped."));
             }
 
             // sync origin list.
