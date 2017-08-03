@@ -51,7 +51,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
 
     private final Logger logger = LoggerFactory.getLogger(RSBSynchronizedParticipant.class);
 
-    private static final long DEACTIVATION_TIMEOUT = 3000;
+    private static final long DEACTIVATION_TIMEOUT = 10000;
 
     private P participant;
     protected final SyncObject participantLock = new SyncObject("participant");
@@ -205,7 +205,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                     deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
                     participant = null;
                 } catch (TimeoutException ex) {
-                    throw new CouldNotPerformException(this + " does not response in time! Deactivation stall detected!");
+                    logger.warn("Deactivation stall detected! " + this + " did not response in time!");
                 } catch (ExecutionException ex) {
                     if (ex.getCause() == null) {
                         throw ex;
@@ -232,5 +232,10 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
         synchronized (participantLock) {
             return participant != null;
         }
+    }
+
+    @Override
+    public String toString() {
+        return RSBParticipant.class.getSimpleName()+"["+scope+"]";
     }
 }
