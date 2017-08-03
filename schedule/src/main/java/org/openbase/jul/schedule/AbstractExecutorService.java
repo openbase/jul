@@ -387,14 +387,14 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         });
     }
 
-    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future> futureCollection) {
-        return atLeastOne(() -> returnValue, futureCollection);
+    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+        return atLeastOne(() -> returnValue, futureCollection, timeout, timeUnit);
     }
-  
-    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future> futureCollection) {
-        return atLeastOne(getInstance().getExecutorService(), resultCallable, futureCollection);
+
+    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+        return atLeastOne(getInstance().getExecutorService(), resultCallable, futureCollection, timeout, timeUnit);
     }
-    
+
     /**
      * Method generates a new futures which represents all futures provided by the futureCollection.
      * If at least one future successfully finishes the outer future will be completed with the result provided by the resultCallable.
@@ -402,10 +402,12 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
      * @param <R> The result type of the outer future.
      * @param executorService the execution service which is used for the outer future execution.
      * @param resultCallable the callable which provides the result of the outer future.
-     * @param futureCollection the inner future collection.
+     * @param futureCollection the inner future collect
+     * @param timeout
+     * @param timeUnit
      * @return the outer future.
      */
-    public static <R> Future<R> atLeastOne(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+    public static <R> Future<R> atLeastOne(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
         return executorService.submit(new Callable<R>() {
             @Override
             public R call() throws Exception {
@@ -416,9 +418,9 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                     try {
                         for (final Future future : futureCollection) {
                             try {
-                                future.get();
+                                future.get(timeout, timeUnit);
                                 oneSuccesfullyFinished = true;
-                            } catch (ExecutionException ex) {
+                            } catch (ExecutionException | TimeoutException ex) {
                                 exceptionStack = MultiException.push(this, ex, exceptionStack);
                             }
                         }
