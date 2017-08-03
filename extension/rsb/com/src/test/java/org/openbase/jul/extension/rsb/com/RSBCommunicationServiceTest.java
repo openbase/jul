@@ -177,8 +177,9 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 10000)
+    @Test(timeout = 20000)
     public void testReconnection() throws Exception {
+        // todo: this test takes to much time! Even more after increasing the deactivation timeout in the RSBSynchronizedParticipant class. There seems to be an issue that rsb takes to many time during deactivation.
         System.out.println("testReconnection");
 
         String scope = "/test/reconnection";

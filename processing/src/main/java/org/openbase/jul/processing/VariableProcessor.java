@@ -27,7 +27,6 @@ import org.openbase.jul.exception.NotAvailableException;
 import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.preset.JPTestMode;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -67,7 +66,7 @@ public final class VariableProcessor {
                     if (variableValue == null) {
                         continue;
                     }
-                    logger.info("Variable[" + variableIdentifier + "] = Value[" + variableValue + "] resolved by Provider[" + provider.getName() + "].");
+                    logger.debug("Variable[" + variableIdentifier + "] = Value[" + variableValue + "] resolved by Provider[" + provider.getName() + "].");
                     break;
                 } catch (NotAvailableException ex) {
                     continue;
