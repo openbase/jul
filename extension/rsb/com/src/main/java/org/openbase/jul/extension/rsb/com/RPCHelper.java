@@ -58,43 +58,51 @@ public class RPCHelper {
     public static <I, T extends I> void registerMethod(final Method method, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
         logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
-        server.addMethod(method.getName(), new Callback() {
+        try {
+            server.addMethod(method.getName(), new Callback() {
 
-            @Override
-            public Event internalInvoke(final Event event) throws Callback.UserCodeException {
-                try {
-                    if (event == null) {
-                        throw new NotAvailableException("event");
+                @Override
+                public Event internalInvoke(final Event event) throws Callback.UserCodeException {
+                    try {
+                        if (event == null) {
+                            throw new NotAvailableException("event");
+                        }
+
+                        Object result;
+                        Class<?> payloadType;
+
+                        if (event.getData() == null) {
+                            result = method.invoke(instance);
+                        } else {
+                            result = method.invoke(instance, event.getData());
+                        }
+
+                        // Implementation of Future support by resolving result to reache inner future object.
+                        if (result instanceof Future) {
+                            result = ((Future) result).get();
+                        }
+
+                        if (result == null) {
+                            payloadType = Void.class;
+                        } else {
+                            payloadType = result.getClass();
+                        }
+                        return new Event(payloadType, result);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException | CancellationException ex) {
+                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new Callback.UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")]!", ex)), logger);
                     }
-
-                    Object result;
-                    Class<?> payloadType;
-
-                    if (event.getData() == null) {
-                        result = method.invoke(instance);
-                    } else {
-                        result = method.invoke(instance, event.getData());
-                    }
-
-                    // Implementation of Future support by resolving result to reache inner future object.
-                    if (result instanceof Future) {
-                        result = ((Future) result).get();
-                    }
-
-                    if (result == null) {
-                        payloadType = Void.class;
-                    } else {
-                        payloadType = result.getClass();
-                    }
-                    return new Event(payloadType, result);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException | CancellationException ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new Callback.UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")]!", ex)), logger);
+                    return new Event(Void.class);
                 }
-                return new Event(Void.class);
+            });
+        } catch (CouldNotPerformException ex) {
+            if(ex.getCause() instanceof InvalidStateException) {
+                logger.warn("Method["+method.getName()+"] regstration failed because it is already registered");
+            } else {
+                throw ex;
             }
-        });
+        }
     }
 
     public static Future<Object> callRemoteMethod(final RSBRemote remote) throws CouldNotPerformException {
