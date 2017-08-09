@@ -25,6 +25,7 @@ package org.openbase.jul.storage.registry.jp;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.AbstractJPBoolean;
+import org.openbase.jps.preset.JPInitialize;
 
 /**
  *
@@ -32,7 +33,7 @@ import org.openbase.jps.preset.AbstractJPBoolean;
  */
 public class JPInitializeDB extends AbstractJPBoolean {
 
-    public final static String[] COMMAND_IDENTIFIERS = {"--init"};
+    public final static String[] COMMAND_IDENTIFIERS = {"--init-db"};
 
     public JPInitializeDB() {
         super(COMMAND_IDENTIFIERS);
@@ -45,7 +46,7 @@ public class JPInitializeDB extends AbstractJPBoolean {
     @Override
     protected Boolean getPropertyDefaultValue() {
         try {
-            return JPService.testMode() || JPService.getProperty(JPResetDB.class).getValue();
+            return JPService.getProperty(JPInitialize.class).getValue() || JPService.getProperty(JPResetDB.class).getValue();
         } catch (JPNotAvailableException ex) {
             JPService.printError("Could not load default value!", ex);
             return false;

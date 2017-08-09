@@ -24,7 +24,6 @@ package org.openbase.jul.storage.registry.jp;
 
 import org.openbase.jps.core.AbstractJavaProperty.ValueType;
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPBadArgumentException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.AbstractJPBoolean;
@@ -32,7 +31,8 @@ import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import java.io.IOException;
-import java.util.List;
+import org.openbase.jps.exception.JPNotAvailableException;
+import org.openbase.jps.preset.JPReset;
 
 /**
  *
@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class JPResetDB extends AbstractJPBoolean {
 
-    public final static String[] COMMAND_IDENTIFIERS = {"--reset"};
+    public final static String[] COMMAND_IDENTIFIERS = {"--reset-db"};
 
     public JPResetDB() {
         super(COMMAND_IDENTIFIERS);
@@ -48,7 +48,12 @@ public class JPResetDB extends AbstractJPBoolean {
 
     @Override
     protected Boolean getPropertyDefaultValue() {
-        return false;
+        try {
+            return JPService.getProperty(JPReset.class).getValue();
+        } catch (JPNotAvailableException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access JPReset property", ex), logger);
+            return false;
+        }
     }
 
     @Override
@@ -73,11 +78,6 @@ public class JPResetDB extends AbstractJPBoolean {
                 throw new JPValidationException("Validation failed because of invalid input state!", ex);
             }
         }
-    }
-
-    @Override
-    protected Boolean parse(List<String> arguments) throws JPBadArgumentException {
-        return super.parse(arguments);
     }
 
     @Override
