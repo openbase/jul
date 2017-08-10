@@ -43,12 +43,12 @@ public class ActionDescriptionProcessor {
     
     public static final String TOKEN_SEPERATOR = "#";
 
-    public static final String USER_KEY = "USER";
-    public static final String SERVICE_TYPE_KEY = "SERVICE_TYPE";
-    public static final String LABEL_KEY = "LABEL";
+    public static final String AUTHORITY_KEY = "$AUTHORITY";
+    public static final String SERVICE_TYPE_KEY = "$SERVICE_TYPE";
+    public static final String LABEL_KEY = "$LABEL";
     public static final String SERVICE_ATTIBUTE_KEY = "SERVICE_ATTIBUTE";
     public static final String GENERIC_ACTION_LABEL = LABEL_KEY + "[" + SERVICE_ATTIBUTE_KEY + "]";
-    public static final String GENERIC_ACTION_DESCSRIPTION = USER_KEY + " changed " + SERVICE_TYPE_KEY + " of unit " + LABEL_KEY + " to " + SERVICE_ATTIBUTE_KEY + ".";
+    public static final String GENERIC_ACTION_DESCSRIPTION = AUTHORITY_KEY + " changed " + SERVICE_TYPE_KEY + " of unit " + LABEL_KEY + " to " + SERVICE_ATTIBUTE_KEY;
 
     public static long MIN_ALLOCATION_TIME_MILLI = 10000;
 

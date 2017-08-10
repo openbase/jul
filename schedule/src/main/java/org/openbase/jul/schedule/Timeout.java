@@ -90,7 +90,7 @@ public abstract class Timeout {
             internal_start(defaultWaitTime);
         } catch (CouldNotPerformException | RejectedExecutionException ex) {
             ExceptionPrinter.printHistory("Could not start " + this, ex, logger);
-            //TODO: throw exception in next release.
+            //release TODO: throw exception in next release.
         }
     }
 
@@ -104,7 +104,7 @@ public abstract class Timeout {
             internal_start(waitTime);
         } catch (CouldNotPerformException | RejectedExecutionException ex) {
             ExceptionPrinter.printHistory("Could not start " + this, ex, logger);
-            //TODO: throw exception in next release.
+            //release TODO: throw exception in next release.
         }
     }
 

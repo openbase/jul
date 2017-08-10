@@ -93,12 +93,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final ReentrantReadWriteLock dataLock;
     private final ReadLock dataBuilderReadLock;
     private final WriteLock dataBuilderWriteLock;
-    
+
     protected Scope scope;
 
     private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
     private ControllerAvailabilityState controllerAvailabilityState;
-    private boolean initialized;
+    private boolean initialized, destroyed;
 
     private final MessageObservable dataObserver;
     private Future initialDataSyncFuture;
@@ -128,6 +128,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.dataObserver = new MessageObservable(this);
             this.dataObserver.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
             this.initialized = false;
+            this.destroyed = false;
             this.shutdownDeamon = registerShutdownHook(this);
 
         } catch (CouldNotPerformException ex) {
@@ -362,7 +363,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             if (serverWatchDog != null) {
                 serverWatchDog.deactivate();
             }
-            // inform remotes about shutdown
+            // inform remotes about deactivation
             setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
             if (informerWatchDog != null) {
                 informerWatchDog.deactivate();
@@ -372,10 +373,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     private void reset() {
-        
+
         // clear init flag
         initialized = false;
-        
+
         // clear existing instances.
         if (informerWatchDog != null) {
             informerWatchDog.shutdown();
@@ -400,7 +401,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             ExceptionPrinter.printHistory("Could not deactivate " + this + " during shutdown!", ex, logger);
         }
         reset();
-        shutdownDeamon.cancel();
+        destroyed = true;
+
+        if (shutdownDeamon != null) {
+            shutdownDeamon.cancel();
+        }
     }
 
     /**
@@ -467,27 +472,31 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.controllerAvailabilityState = controllerAvailability;
             logger.debug(this + " is now " + controllerAvailability.name());
 
-            // notify remotes about controller shutdown
-            if (controllerAvailabilityState.equals(ControllerAvailabilityState.DEACTIVATING)) {
-                try {
-                    logger.debug("Notify data change of " + this);
-                    validateInitialization();
-                    if (!informer.isActive()) {
-                        logger.debug("Skip update notification because connection not established.");
-                        return;
-                    }
+            try {
+                // notify remotes about controller shutdown
+                if (controllerAvailabilityState.equals(ControllerAvailabilityState.DEACTIVATING)) {
                     try {
-                        informer.publish(new Event(informer.getScope(), Void.class, null));
+                        logger.debug("Notify data change of " + this);
+                        validateInitialization();
+                        if (!informer.isActive()) {
+                            logger.debug("Skip update notification because connection not established.");
+                            return;
+                        }
+                        try {
+                            informer.publish(new Event(informer.getScope(), Void.class, null));
+                        } catch (CouldNotPerformException ex) {
+                            throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+                        }
+                    } catch (final NotInitializedException ex) {
+                        logger.debug("Skip update notification because instance is not initialized.");
                     } catch (CouldNotPerformException ex) {
-                        throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update communication service state in internal data object!", ex), logger);
                     }
-                } catch (CouldNotPerformException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update communication service state in internal data object!", ex), logger);
                 }
+            } finally {
+                // wakeup listener.
+                this.controllerAvailabilityMonitor.notifyAll();
             }
-
-            // wakeup listener.
-            this.controllerAvailabilityMonitor.notifyAll();
         }
     }
 
@@ -578,7 +587,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public void notifyChange() throws CouldNotPerformException, InterruptedException {
         logger.debug("Notify data change of " + this);
-        validateInitialization();
+        try {
+            validateInitialization();
+        } catch (final NotInitializedException ex) {
+            // only forward if instance was not destroyed before otherwise skip notification.
+            if (destroyed) {
+                return;
+            }
+            throw ex;
+        }
 
         M newData = getData();
 
@@ -589,7 +606,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
             }
         }
-        
+
         // Notify data update
         try {
             notifyDataUpdate(newData);
@@ -599,7 +616,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
         dataObserver.notifyObservers(newData);
     }
-    
+
     /**
      * Overwrite this method to get informed about data updates.
      *

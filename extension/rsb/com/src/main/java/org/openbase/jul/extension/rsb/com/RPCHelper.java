@@ -31,6 +31,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -97,10 +98,11 @@ public class RPCHelper {
                 }
             });
         } catch (CouldNotPerformException ex) {
-            if(ex.getCause() instanceof InvalidStateException) {
-                logger.warn("Method["+method.getName()+"] regstration failed because it is already registered");
+            if (ex.getCause() instanceof InvalidStateException) {
+                // method was already register
+                ExceptionPrinter.printHistory("Skip Method[" + method.getName() + "] registration on Scope[" + server.getScope() + "] because message was already registered!", ex, logger, LogLevel.DEBUG);
             } else {
-                throw ex;
+                throw new CouldNotPerformException("Could not register Method[" + method.getName() + "] on Scope[" + server.getScope() + "]!", ex);
             }
         }
     }

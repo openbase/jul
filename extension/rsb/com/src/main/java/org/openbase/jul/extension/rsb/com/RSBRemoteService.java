@@ -419,10 +419,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void reset() throws CouldNotPerformException {
         try {
             verifyMaintainability();
-            
+
             // clear init flag
             initialized = false;
-            
+
             // clear existing instances.
             if (listenerWatchDog != null) {
                 listenerWatchDog.shutdown();
@@ -811,7 +811,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
 
                     if (dataUpdate == null) {
-                        logger.debug("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
+                        ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
                         setConnectionState(CONNECTING);
                         return data;
                     }
@@ -1083,7 +1083,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 Object dataUpdate = event.getData();
 
                 if (dataUpdate == null) {
-                    logger.info("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.");
+                    ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
                     setConnectionState(CONNECTING);
                     return;
                 }
@@ -1151,7 +1151,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
-        
+
         try {
             dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {

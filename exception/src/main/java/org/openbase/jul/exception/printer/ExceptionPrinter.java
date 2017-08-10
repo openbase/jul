@@ -25,6 +25,8 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
@@ -285,7 +287,7 @@ public class ExceptionPrinter {
             printSequenze(buildThrowableList(th), THROWABLE_ELEMENT_GENERATOR, printer, rootPrefix, childPrefix);
         }
     }
-    
+
     private static List<Throwable> buildThrowableList(Throwable throwable) {
         final List<Throwable> throwableList = new ArrayList<>();
         while (throwable != null) {
@@ -322,7 +324,7 @@ public class ExceptionPrinter {
                     generator.printElement(elementList.get(i), printer, childPrefix + offset + " ╚════", childPrefix + offset);
                 }
             } else {
-                generator.printElement(elementList.get(i), printer, childPrefix + offset + " ╚══╦═",  childPrefix + offset);
+                generator.printElement(elementList.get(i), printer, childPrefix + offset + " ╚══╦═", childPrefix + offset);
             }
 
             // update offset
@@ -362,5 +364,24 @@ public class ExceptionPrinter {
         }
 
         return throwable.getMessage().replaceAll("\n", "").trim();
+    }
+
+    /**
+     * Method prints the given message only in verbose mode on the INFO channel, otherwise the DEBUG channel is used for printing.
+     *
+     * @param message the message to print
+     * @param logger the logger which is used for the message logging.
+     */
+    public static void printVerboseMessage(final String message, final Logger logger) {
+        try {
+            if (JPService.getProperty(JPVerbose.class).getValue()) {
+                logger.info(message);
+            } else {
+                logger.debug(message);
+            }
+        } catch (final JPServiceException ex) {
+            logger.info(message);
+            ExceptionPrinter.printHistory("Could not access verbose java property!", ex, logger);
+        }
     }
 }
