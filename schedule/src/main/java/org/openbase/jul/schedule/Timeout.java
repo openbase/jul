@@ -52,7 +52,7 @@ public abstract class Timeout {
     /**
      * Returns the currently configured time to wait until the timeout is reached after start.
      *
-     * @returnthe time in milliseconds.
+     * @return the time in milliseconds.
      */
     public long getTimeToWait() {
         return defaultWaitTime;
