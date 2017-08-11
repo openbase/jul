@@ -21,7 +21,6 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.VariableProcessor;
@@ -61,20 +60,20 @@ public class MetaConfigPool implements VariableProvider {
     }
 
     @Override
-    public Map<String, String> getValues(String variableContains) throws NotAvailableException {
+    public Map<String, String> getValues(final String variableContains) throws NotAvailableException {
         //TODO: Should be implemented.
         throw new NotAvailableException(new NotSupportedException("Method[getValues]", MetaConfigPool.class));
     }
-    
+
     @Override
     public String getName() {
         String provider = "";
         for (VariableProvider variableProvider : variableProviderPool) {
-            if(!provider.isEmpty()) {
+            if (!provider.isEmpty()) {
                 provider += ", ";
             }
             provider += variableProvider.getName();
         }
-        return getClass().getSimpleName() + "["+provider+"]";
+        return getClass().getSimpleName() + "[" + provider + "]";
     }
 }

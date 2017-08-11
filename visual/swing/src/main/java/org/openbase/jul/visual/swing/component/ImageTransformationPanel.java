@@ -77,11 +77,6 @@ public class ImageTransformationPanel extends javax.swing.JPanel {
 		this.holdRazio = razio;
 	}
 	
-	public void scaleImage() { //TODO
-//		Graphics2D g2 = new BufferedImage().;
-//		scaledImage =  
-	}
-
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
