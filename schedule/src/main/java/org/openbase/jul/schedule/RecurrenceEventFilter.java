@@ -21,7 +21,6 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPTestMode;
@@ -56,6 +55,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     /**
      * Timeout in milliseconds.
+     *
      * @param timeout
      */
     public RecurrenceEventFilter(long timeout) {
@@ -80,20 +80,24 @@ public abstract class RecurrenceEventFilter<VALUE> {
         };
     }
 
-    public synchronized void trigger(final VALUE value) {
+    public synchronized void trigger(final VALUE value) throws CouldNotPerformException {
         this.lastValue = value;
         trigger();
     }
 
-    public synchronized void trigger() {
-        if (timeout.isActive()) {
-            changeDetected = true;
-            return;
-        }
+    public synchronized void trigger() throws CouldNotPerformException {
+        try {
+            if (timeout.isActive()) {
+                changeDetected = true;
+                return;
+            }
 
-        changeDetected = false;
-        callRelay();
-        timeout.start();
+            changeDetected = false;
+            callRelay();
+            timeout.start();
+        } catch (final CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not trigger " + this, ex);
+        }
     }
 
     public void cancel() {

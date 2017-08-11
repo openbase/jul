@@ -63,7 +63,7 @@ public class RecurrenceEventFilterTest {
      * @throws java.lang.InterruptedException
      */
     @Test(timeout = 5000)
-    public void testRecurrenceEventFilter() throws InterruptedException {
+    public void testRecurrenceEventFilter() throws Exception {
         System.out.println("trigger");
         RecurrenceEventFilterImpl instance = new RecurrenceEventFilterImpl();
 
