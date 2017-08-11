@@ -238,7 +238,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                 CouldNotPerformException exx = new CouldNotPerformException("Entry registry sync failed!", ex);
                 if (JPService.testMode()) {
                     ExceptionPrinter.printHistory(exx, logger);
-                    assert false ; // exit if errors occurs during unit tests.
+                    assert false; // exit if errors occurs during unit tests.
                 }
                 throw exx;
             }
