@@ -102,7 +102,7 @@ public interface Shutdownable {
                         // skip delay and continue shutdown
                     }
                 }
-                if (shutdownable != null && !canceled) {
+                if (!canceled && shutdownable != null) {
                     shutdownable.shutdown();
                 }
             } catch (Exception ex) {

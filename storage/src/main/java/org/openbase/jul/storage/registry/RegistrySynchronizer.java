@@ -40,6 +40,7 @@ import org.openbase.jul.pattern.Factory;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
+import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,8 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry;
     private boolean active;
 
+    private final SyncObject synchronizationLock = new SyncObject("SynchronizationLock");
+
     public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.localRegistry = registry;
@@ -72,6 +75,12 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
                 @Override
                 public void relay() throws Exception {
+
+                    // skip relay if synchronizer is not active.
+                    if (!isActive()) {
+                        return;
+                    }
+
                     logger.debug("Incomming updates passed filter...");
                     try {
                         internalSync();
@@ -123,8 +132,9 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     public void shutdown() {
         try {
             deactivate();
-            localRegistry.clear();
-            remoteRegistry.clear();
+            synchronized (synchronizationLock) {
+                localRegistry.shutdown();
+            }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         } catch (CouldNotPerformException ex) {
@@ -132,104 +142,106 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         }
     }
 
-    private synchronized void internalSync() throws CouldNotPerformException, InterruptedException {
-        logger.debug("Perform registry sync...");
+    private void internalSync() throws CouldNotPerformException, InterruptedException {
+        synchronized (synchronizationLock) {
+            logger.debug("Perform registry sync...");
 
-        try {
-            entryConfigDiff.diff(remoteRegistry.getMessages());
-            int skippedChanges = 0;
+            try {
+                entryConfigDiff.diff(remoteRegistry.getMessages());
+                int skippedChanges = 0;
 
-            MultiException.ExceptionStack removeExceptionStack = null;
-            for (CONFIG_M config : entryConfigDiff.getRemovedMessageMap().getMessages()) {
-                try {
-                    remove(config);
-                } catch (CouldNotPerformException ex) {
-                    removeExceptionStack = MultiException.push(this, ex, removeExceptionStack);
-                }
-            }
-
-            MultiException.ExceptionStack updateExceptionStack = null;
-            for (CONFIG_M config : entryConfigDiff.getUpdatedMessageMap().getMessages()) {
-                try {
-                    if (verifyConfig(config)) {
-                        update(config);
-                    } else {
+                MultiException.ExceptionStack removeExceptionStack = null;
+                for (CONFIG_M config : entryConfigDiff.getRemovedMessageMap().getMessages()) {
+                    try {
                         remove(config);
-                        entryConfigDiff.getOriginMessages().removeMessage(config);
+                    } catch (CouldNotPerformException ex) {
+                        removeExceptionStack = MultiException.push(this, ex, removeExceptionStack);
                     }
-                } catch (CouldNotPerformException ex) {
-                    updateExceptionStack = MultiException.push(this, ex, updateExceptionStack);
                 }
-            }
 
-            MultiException.ExceptionStack registerExceptionStack = null;
-            for (CONFIG_M config : entryConfigDiff.getNewMessageMap().getMessages()) {
+                MultiException.ExceptionStack updateExceptionStack = null;
+                for (CONFIG_M config : entryConfigDiff.getUpdatedMessageMap().getMessages()) {
+                    try {
+                        if (verifyConfig(config)) {
+                            update(config);
+                        } else {
+                            remove(config);
+                            entryConfigDiff.getOriginMessages().removeMessage(config);
+                        }
+                    } catch (CouldNotPerformException ex) {
+                        updateExceptionStack = MultiException.push(this, ex, updateExceptionStack);
+                    }
+                }
+
+                MultiException.ExceptionStack registerExceptionStack = null;
+                for (CONFIG_M config : entryConfigDiff.getNewMessageMap().getMessages()) {
+                    try {
+                        if (verifyConfig(config)) {
+                            register(config);
+                        } else {
+                            skippedChanges++;
+                        }
+                    } catch (CouldNotPerformException ex) {
+                        registerExceptionStack = MultiException.push(this, ex, registerExceptionStack);
+                    }
+                }
+
+                // print changes
+                final int errorCounter = MultiException.size(removeExceptionStack) + MultiException.size(updateExceptionStack) + MultiException.size(registerExceptionStack);
+                final int changeCounter = (entryConfigDiff.getChangeCounter() - skippedChanges);
+                if (changeCounter != 0 || errorCounter != 0) {
+                    logger.info(changeCounter + " registry changes applied." + (errorCounter == 0 ? "" : " " + errorCounter + (errorCounter == 1 ? " is" : " are") + " skipped."));
+                }
+
+                // sync origin list.
+                IdentifiableMessageMap<KEY, CONFIG_M, CONFIG_MB> newOriginEntryMap = new IdentifiableMessageMap<>();
+                for (ENTRY entry : localRegistry.getEntries()) {
+                    newOriginEntryMap.put(remoteRegistry.get(entry.getId()));
+                }
+                entryConfigDiff.replaceOriginMap(newOriginEntryMap);
+
+                // build exception cause chain.
+                MultiException.ExceptionStack exceptionStack = null;
+                int counter;
                 try {
-                    if (verifyConfig(config)) {
-                        register(config);
+                    if (removeExceptionStack != null) {
+                        counter = removeExceptionStack.size();
                     } else {
-                        skippedChanges++;
+                        counter = 0;
                     }
+                    MultiException.checkAndThrow("Could not remove " + counter + " entries!", removeExceptionStack);
                 } catch (CouldNotPerformException ex) {
-                    registerExceptionStack = MultiException.push(this, ex, registerExceptionStack);
+                    exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
-            }
-
-            // print changes
-            final int errorCounter = MultiException.size(removeExceptionStack) + MultiException.size(updateExceptionStack) + MultiException.size(registerExceptionStack);
-            final int changeCounter = (entryConfigDiff.getChangeCounter() - skippedChanges);
-            if (changeCounter != 0 || errorCounter != 0) {
-                logger.info(changeCounter + " registry changes applied. " + errorCounter + " are skipped.");
-            }
-
-            // sync origin list.
-            IdentifiableMessageMap<KEY, CONFIG_M, CONFIG_MB> newOriginEntryMap = new IdentifiableMessageMap<>();
-            for (ENTRY entry : localRegistry.getEntries()) {
-                newOriginEntryMap.put(remoteRegistry.get(entry.getId()));
-            }
-            entryConfigDiff.replaceOriginMap(newOriginEntryMap);
-
-            // build exception cause chain.
-            MultiException.ExceptionStack exceptionStack = null;
-            int counter;
-            try {
-                if (removeExceptionStack != null) {
-                    counter = removeExceptionStack.size();
-                } else {
-                    counter = 0;
+                try {
+                    if (updateExceptionStack != null) {
+                        counter = updateExceptionStack.size();
+                    } else {
+                        counter = 0;
+                    }
+                    MultiException.checkAndThrow("Could not update " + counter + " entries!", updateExceptionStack);
+                } catch (CouldNotPerformException ex) {
+                    exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
-                MultiException.checkAndThrow("Could not remove " + counter + " entries!", removeExceptionStack);
+                try {
+                    if (registerExceptionStack != null) {
+                        counter = registerExceptionStack.size();
+                    } else {
+                        counter = 0;
+                    }
+                    MultiException.checkAndThrow("Could not register " + counter + " entries!", registerExceptionStack);
+                } catch (CouldNotPerformException ex) {
+                    exceptionStack = MultiException.push(this, ex, exceptionStack);
+                }
+                MultiException.checkAndThrow("Could not sync all entries!", exceptionStack);
             } catch (CouldNotPerformException ex) {
-                exceptionStack = MultiException.push(this, ex, exceptionStack);
-            }
-            try {
-                if (updateExceptionStack != null) {
-                    counter = updateExceptionStack.size();
-                } else {
-                    counter = 0;
+                CouldNotPerformException exx = new CouldNotPerformException("Entry registry sync failed!", ex);
+                if (JPService.testMode()) {
+                    ExceptionPrinter.printHistory(exx, logger);
+                    assert false; // exit if errors occurs during unit tests.
                 }
-                MultiException.checkAndThrow("Could not update " + counter + " entries!", updateExceptionStack);
-            } catch (CouldNotPerformException ex) {
-                exceptionStack = MultiException.push(this, ex, exceptionStack);
+                throw exx;
             }
-            try {
-                if (registerExceptionStack != null) {
-                    counter = registerExceptionStack.size();
-                } else {
-                    counter = 0;
-                }
-                MultiException.checkAndThrow("Could not register " + counter + " entries!", registerExceptionStack);
-            } catch (CouldNotPerformException ex) {
-                exceptionStack = MultiException.push(this, ex, exceptionStack);
-            }
-            MultiException.checkAndThrow("Could not sync all entries!", exceptionStack);
-        } catch (CouldNotPerformException ex) {
-            CouldNotPerformException exx = new CouldNotPerformException("Entry registry sync failed!", ex);
-            if (JPService.testMode()) {
-                ExceptionPrinter.printHistory(exx, logger);
-                assert false; // exit if errors occurs during unit tests.
-            }
-            throw exx;
         }
     }
 

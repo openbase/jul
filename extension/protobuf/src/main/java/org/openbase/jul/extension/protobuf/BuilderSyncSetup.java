@@ -109,7 +109,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         logger.debug("order lockRead by " + consumer);
         readLock.lock();
         readLockConsumer = consumer;
-        readLockTimeout.restart();
+        restartReadLockTimeout();
         logger.debug("lockRead by " + consumer);
     }
 
@@ -117,7 +117,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         boolean success = readLock.tryLock();
         if (success) {
             readLockConsumer = consumer;
-            readLockTimeout.restart();
+            restartReadLockTimeout();
         }
         return success;
     }
@@ -126,7 +126,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         boolean success = readLock.tryLock(time, unit);
         if (success) {
             readLockConsumer = consumer;
-            readLockTimeout.restart();
+            restartReadLockTimeout();
         }
         return success;
     }
@@ -145,7 +145,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         logger.debug("order lockWrite by " + consumer);
         writeLock.lock();
         writeLockConsumer = consumer;
-        writeLockTimeout.restart();
+        restartWriteLockTimeout();
         logger.debug("lockWrite by " + consumer);
     }
 
@@ -153,7 +153,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         boolean success = writeLock.tryLock();
         if (success) {
             writeLockConsumer = consumer;
-            writeLockTimeout.restart();
+            restartWriteLockTimeout();
         }
         return success;
     }
@@ -162,7 +162,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         boolean success = writeLock.tryLock(time, unit);
         if (success) {
             writeLockConsumer = consumer;
-            writeLockTimeout.restart();
+            restartWriteLockTimeout();
         }
         return success;
     }
@@ -197,6 +197,22 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
             }
+        }
+    }
+
+    private void restartReadLockTimeout() {
+        try {
+            readLockTimeout.restart();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory("Could not setup builder read lock fallback timeout!", ex, logger, LogLevel.WARN);
+        }
+    }
+
+    private void restartWriteLockTimeout() {
+        try {
+            writeLockTimeout.restart();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory("Could not setup builder write lock fallback timeout!", ex, logger, LogLevel.WARN);
         }
     }
 }

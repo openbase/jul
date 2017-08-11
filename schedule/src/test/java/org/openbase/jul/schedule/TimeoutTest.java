@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.NotAvailableException;
 
 /**
  *
@@ -62,7 +61,7 @@ public class TimeoutTest {
      * Test of getTimeToWait method, of class Timeout.
      */
     @Test(timeout = 3000)
-    public void testTimer() throws InterruptedException, NotAvailableException {
+    public void testTimer() throws Exception {
         System.out.println("getTimeToWait");
         final Stopwatch stopwatch = new Stopwatch();
         final long timeToWait = 200;

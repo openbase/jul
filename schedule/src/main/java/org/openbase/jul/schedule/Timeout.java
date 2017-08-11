@@ -49,19 +49,39 @@ public abstract class Timeout {
         this.defaultWaitTime = defaultWaitTime;
     }
 
+    /**
+     * Returns the currently configured time to wait until the timeout is reached after start.
+     *
+     * @return the time in milliseconds.
+     */
     public long getTimeToWait() {
         return defaultWaitTime;
     }
 
-    public void restart(final long waitTime) {
+    /**
+     * Method restarts the timeout.
+     *
+     * @param waitTime the new wait time to update.
+     * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     */
+    public void restart(final long waitTime) throws CouldNotPerformException {
         logger.debug("Reset timer.");
-        synchronized (lock) {
-            cancel();
-            start(waitTime);
+        try {
+            synchronized (lock) {
+                cancel();
+                start(waitTime);
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not restart timer!", ex);
         }
     }
 
-    public void restart() {
+    /**
+     * Method restarts the timeout.
+     *
+     * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     */
+    public void restart() throws CouldNotPerformException {
         restart(defaultWaitTime);
     }
 
@@ -85,29 +105,41 @@ public abstract class Timeout {
         }
     }
 
-    public void start() {
+    /**
+     * Method starts the timeout.
+     *
+     *
+     * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     */
+    public void start() throws CouldNotPerformException {
         try {
             internal_start(defaultWaitTime);
         } catch (CouldNotPerformException | RejectedExecutionException ex) {
-            ExceptionPrinter.printHistory("Could not start " + this, ex, logger);
-            //TODO: throw exception in next release.
+            throw new CouldNotPerformException("Could not start " + this, ex);
         }
     }
 
     /**
-     * Start the timeout with the given wait time. The default wait time is not modifiered and still the same as before.
+     * Start the timeout with the given wait time. The default wait time is not modified and still the same as before.
      *
-     * @param waitTime The time to wait until the timeout is thrown.
+     * @param waitTime The time to wait until the timeout is reached.
+     * @throws CouldNotPerformException is thrown in case the timeout could not be started.
      */
-    public void start(final long waitTime) {
+    public void start(final long waitTime) throws CouldNotPerformException {
         try {
             internal_start(waitTime);
         } catch (CouldNotPerformException | RejectedExecutionException ex) {
-            ExceptionPrinter.printHistory("Could not start " + this, ex, logger);
-            //TODO: throw exception in next release.
+            throw new CouldNotPerformException("Could not start " + this, ex);
         }
     }
 
+    /**
+     * Internal synchronized start method.
+     *
+     * @param waitTime The time to wait until the timeout is reached.
+     * @throws RejectedExecutionException is thrown if the timeout task could not be scheduled.
+     * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     */
     private void internal_start(final long waitTime) throws RejectedExecutionException, CouldNotPerformException {
         synchronized (lock) {
             if (isActive()) {
@@ -145,6 +177,11 @@ public abstract class Timeout {
         }
     }
 
+    /**
+     * Method cancels the a started timeout.
+     *
+     * Node: In case the timeout was never started this method does nothing.
+     */
     public void cancel() {
         logger.debug("try to cancel timer.");
         synchronized (lock) {
@@ -167,6 +204,11 @@ public abstract class Timeout {
         setDefaultWaitTime(waitTime);
     }
 
+    /**
+     * Method setup the default time to wait until the timeout is reached.
+     *
+     * @param waitTime the time to wait in milliseconds.
+     */
     public void setDefaultWaitTime(long waitTime) {
         this.defaultWaitTime = waitTime;
     }
@@ -180,6 +222,11 @@ public abstract class Timeout {
      */
     public abstract void expired() throws InterruptedException;
 
+    /**
+     * Prints a human readable representation of this timeout.
+     *
+     * @return a timeout description as string.
+     */
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[wait:" + defaultWaitTime + "]";

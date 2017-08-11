@@ -41,7 +41,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
  */
 public class MessageObservable<M extends Message> extends AbstractObservable<M> {
 
-    final DataProvider<M> dataProvider;
+    private final DataProvider<M> dataProvider;
 
     public MessageObservable(final DataProvider<M> source) {
         super(source);

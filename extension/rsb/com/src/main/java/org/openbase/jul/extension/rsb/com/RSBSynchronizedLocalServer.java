@@ -29,6 +29,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import org.openbase.jul.exception.InvalidStateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
@@ -106,6 +107,11 @@ public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServe
             if (callback == null) {
                 throw new NotAvailableException("callback");
             }
+
+            if (localMethodStack.containsKey(name)) {
+                throw new InvalidStateException("Method already registered for " + this.toString());
+            }
+
             localMethodStack.put(name, callback);
             try {
                 synchronized (participantLock) {

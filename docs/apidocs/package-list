@@ -20,10 +20,13 @@ org.openbase.jul.extension.rsb.scope.jp
 org.openbase.jul.extension.rst.iface
 org.openbase.jul.extension.rst.processing
 org.openbase.jul.extension.rst.storage.registry.consistency
+org.openbase.jul.extension.rst.transform
 org.openbase.jul.iface
 org.openbase.jul.iface.annotations
 org.openbase.jul.iface.provider
 org.openbase.jul.pattern
+org.openbase.jul.pattern.launch
+org.openbase.jul.pattern.launch.jp
 org.openbase.jul.pattern.provider
 org.openbase.jul.processing
 org.openbase.jul.schedule
@@ -43,3 +46,4 @@ org.openbase.jul.visual.swing.engine.draw2d
 org.openbase.jul.visual.swing.image
 org.openbase.jul.visual.swing.layout
 org.openbase.jul.visual.swing.screen
+org.openbase.jul.visual.swing.transform
