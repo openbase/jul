@@ -48,6 +48,7 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.exception.printer.Printer;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.HashGenerator;
@@ -126,7 +127,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
                 public void relay() throws Exception {
-                    info(getLastValue());
+                    log(getLastValue());
                 }
             };
             setHashGenerator(new HashGenerator<Map<KEY, ENTRY>>() {
@@ -180,7 +181,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         if (entry == null) {
             throw new NotAvailableException("entry");
         }
-        info("Register " + entry + "...");
+        log("Register " + entry + "...");
         try {
             checkWriteAccess();
             lock();
@@ -244,7 +245,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         if (entry == null) {
             throw new NotAvailableException("entry");
         }
-        info("Update " + entry + "...");
+        log("Update " + entry + "...");
         try {
             checkWriteAccess();
             lock();
@@ -299,7 +300,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         if (entry == null) {
             throw new NotAvailableException("entry");
         }
-        info("Remove " + entry + "...");
+        log("Remove " + entry + "...");
         ENTRY oldEntry;
         try {
             checkWriteAccess();
@@ -394,7 +395,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             registryLock.readLock().unlock();
         }
     }
-    
+
     @Override
     public Map<KEY, ENTRY> getEntryMap() {
         registryLock.readLock().lock();
@@ -560,7 +561,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         pluginPool.checkAccess();
 
         if (!consistent) {
-            logger.warn("Registry is inconsistent! To fix registry manually start the registry in force mode.");
+            log(getName() + " is inconsistent! To fix registry manually start the registry in force mode.", LogLevel.WARN);
             throw new RejectedException("Registry is inconsistent!");
         }
     }
@@ -730,12 +731,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
 
         if (isEmpty()) {
-            logger.debug("Skip consistency check because registry is empty.");
+            logger.debug("Skip consistency check because " + getName() + " is empty.");
             return modificationCounter;
         }
 
         if (!isDependingOnConsistentRegistries()) {
-            logger.warn("Skip consistency check because registry is depending on at least one inconsistent registry!");
+            logger.warn("Skip consistency check because " + getName() + " is depending on at least one inconsistent registry!");
             return modificationCounter;
         }
 
@@ -826,7 +827,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             // inform about modifications
                             try {
                                 if (JPService.getProperty(JPVerbose.class).getValue() && !JPService.getProperty(JPTestMode.class).getValue()) {
-                                    info("Consistency modification applied: " + ex.getMessage());
+                                    log("Consistency modification applied: " + ex.getMessage());
                                 } else {
                                     logger.debug("Consistency modification applied: " + ex.getMessage());
                                 }
@@ -1006,17 +1007,48 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     /**
-     * This method can be used to log registry info messages which are only printed for the origin registry.
+     * This method can be used to log registry log messages which are only printed for the origin registry.
      * Info messages of a sandbox instance are redirected to the debug channel.
      *
      * @param message the info message to print as string.
      */
+    protected void log(final String message) {
+        Printer.print(message, Printer.getFilteredLogLevel(LogLevel.INFO, isSandbox()), logger);
+    }
+
+    /**
+     * This method can be used to log registry log messages which are only printed for the origin registry.
+     * Info messages of a sandbox instance are redirected to the debug channel.
+     *
+     * @param message the info message to print as string.
+     * @param logLevel the log level to log the message.
+     * @param throwable the cause of the message.
+     */
+    protected void log(final String message, final LogLevel logLevel, final Throwable throwable) {
+        Printer.print(message, throwable, Printer.getFilteredLogLevel(logLevel, isSandbox()), logger);
+    }
+
+    /**
+     * This method can be used to log registry log messages which are only printed for the origin registry.
+     * Info messages of a sandbox instance are redirected to the debug channel.
+     *
+     * @param message the info message to print as string.
+     * @param logLevel the log level to log the message.
+     */
+    protected void log(final String message, final LogLevel logLevel) {
+        Printer.print(message, Printer.getFilteredLogLevel(logLevel, isSandbox()), logger);
+    }
+
+    /**
+     * This method can be used to log registry info messages which are only printed for the origin registry.
+     * Info messages of a sandbox instance are redirected to the debug channel.
+     *
+     * @param message the info message to print as string.
+     * @deprecated please use method {@code log(String message)}.
+     */
+    @Deprecated
     public void info(final String message) {
-        if (isSandbox()) {
-            logger.debug(message);
-        } else {
-            logger.info(message);
-        }
+        log(message);
     }
 
     /**

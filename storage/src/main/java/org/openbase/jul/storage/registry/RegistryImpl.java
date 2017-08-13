@@ -46,7 +46,7 @@ public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends Abstract
      * Just print on debug level.
      * @param message 
      */
-    public void info(final String message) {
+    public void log(final String message) {
         logger.debug(message);
     }
 }
