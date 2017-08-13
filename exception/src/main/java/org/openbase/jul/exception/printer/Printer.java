@@ -58,7 +58,7 @@ public interface Printer {
      * @param logger the message logger.
      */
     public static void print(final String message, final LogLevel logLevel, final Logger logger) {
-        print(message, logLevel, logger);
+        print(message, null, logLevel, logger);
     }
 
     /**
