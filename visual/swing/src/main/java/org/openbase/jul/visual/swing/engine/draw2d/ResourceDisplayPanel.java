@@ -65,8 +65,8 @@ public class ResourceDisplayPanel<RP extends AbstractResourcePanel> extends JPan
 
         this.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                ResourceDisplayPanel.this.mouseClicked(e);
+            public void mouseClicked(MouseEvent ex) {
+                ResourceDisplayPanel.this.mouseClicked(ex);
             }
         });
 

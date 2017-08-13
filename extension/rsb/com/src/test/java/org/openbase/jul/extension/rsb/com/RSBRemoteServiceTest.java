@@ -83,7 +83,7 @@ public class RSBRemoteServiceTest {
         try {
             instance.waitForConnectionState(Remote.ConnectionState.CONNECTING, 10);
             Assert.fail("No exception thrown.");
-        } catch (InvalidStateException e) {
+        } catch (InvalidStateException ex) {
             // should be thrown...
             Assert.assertTrue(true);
         }
@@ -94,7 +94,7 @@ public class RSBRemoteServiceTest {
         try {
             instance.waitForConnectionState(Remote.ConnectionState.CONNECTED, 10);
             Assert.fail("No exception thrown.");
-        } catch (TimeoutException e) {
+        } catch (TimeoutException ex) {
             // should be thrown...
             Assert.assertTrue(true);
         }
