@@ -28,7 +28,8 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
 
 /**
- *
+ * {@inheritdoc}
+ * 
  * @author <a href="mailto:thuppke@techfak.uni-bielefeld.de">Thoren Huppke</a>
  * @param <KEY>
  * @param <ENTRY>
