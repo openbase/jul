@@ -44,7 +44,7 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
         super(new HashMap<>());
     }
 
-    public SynchronizableRegistryImpl(HashMap<KEY, ENTRY> entryMap) throws org.openbase.jul.exception.InstantiationException {
+    public SynchronizableRegistryImpl(final HashMap<KEY, ENTRY> entryMap) throws org.openbase.jul.exception.InstantiationException {
         super(entryMap);
     }
 
@@ -64,6 +64,5 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
             throw new NotAvailableException("SynchronizationTimestamp", new InvalidStateException("ControllerRegistry was never fully synchronized yet!"));
         }
         return lastSynchronizationTimestamp;
-    }
-    
+    }  
 }
