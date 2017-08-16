@@ -21,48 +21,79 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.util.HashMap;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Identifiable;
 
 /**
- * {@inheritdoc}
- * 
+ * A simple {@code AbstractRegistry} implementation providing the timestamp of the last synchronization by implementing the {@code SynchronizableRegistry} interface.
+ *
  * @author <a href="mailto:thuppke@techfak.uni-bielefeld.de">Thoren Huppke</a>
- * @param <KEY>
- * @param <ENTRY>
+ * @param <KEY> The registry key type.
+ * @param <ENTRY> The registry entry type.
  */
-public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends RegistryImpl<KEY, ENTRY> implements SynchronizableRegistry<KEY, ENTRY>{
+public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends RegistryImpl<KEY, ENTRY> implements SynchronizableRegistry<KEY, ENTRY> {
 
-    private static final long NEVER_SYNCHRONIZED = -1;
+    /**
+     * Never synchronized constant.
+     */
+    public static final long NEVER_SYNCHRONIZED = -1;
 
+    /**
+     * This variable provides the latest synchronization timestamp.
+     */
     private long lastSynchronizationTimestamp = NEVER_SYNCHRONIZED;
 
-    public SynchronizableRegistryImpl() throws org.openbase.jul.exception.InstantiationException {
+    /**
+     * Creates a new SynchronizableRegistry with a default {@code HashMap} as internal map.
+     *
+     * @throws InstantiationException is thrown if registry could not be instantiated.
+     */
+    public SynchronizableRegistryImpl() throws InstantiationException {
         super(new HashMap<>());
     }
 
-    public SynchronizableRegistryImpl(final HashMap<KEY, ENTRY> entryMap) throws org.openbase.jul.exception.InstantiationException {
+    /**
+     * Creates a new SynchronizableRegistry where the given {@code entryMap} is used as internal map.
+     *
+     * @param entryMap a map instance to be used as internal map.
+     * @throws InstantiationException is thrown if registry could not be instantiated.
+     */
+    public SynchronizableRegistryImpl(final HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
         super(entryMap);
     }
 
+    /**
+     * {@inheritdoc}
+     */
     @Override
     public void notifySynchronization() {
         lastSynchronizationTimestamp = System.currentTimeMillis();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isInitiallySynchronized() {
         return lastSynchronizationTimestamp != NEVER_SYNCHRONIZED;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public long getLastSynchronizationTimestamp() throws NotAvailableException {
         if (!isInitiallySynchronized()) {
             throw new NotAvailableException("SynchronizationTimestamp", new InvalidStateException("ControllerRegistry was never fully synchronized yet!"));
         }
         return lastSynchronizationTimestamp;
-    }  
+    }
 }
