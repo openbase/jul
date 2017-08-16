@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.AbstractObservable;
-import org.openbase.jul.pattern.HashGenerator;
 import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
@@ -38,6 +37,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
  * Currently for efficiency reasons the timestamp of messages in repeated fields is still considered.
  *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * @param <M> the type which is notified by this observable
  */
 public class MessageObservable<M extends Message> extends AbstractObservable<M> {
 
@@ -47,13 +47,7 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
         super(source);
 
         this.dataProvider = source;
-        this.setHashGenerator(new HashGenerator<M>() {
-
-            @Override
-            public int computeHash(M value) throws CouldNotPerformException {
-                return removeTimestamps(value.toBuilder()).build().hashCode();
-            }
-        });
+        this.setHashGenerator((M value) -> removeTimestamps(value.toBuilder()).build().hashCode());
     }
 
     @Override

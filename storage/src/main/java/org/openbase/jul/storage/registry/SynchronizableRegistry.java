@@ -27,11 +27,13 @@ import org.openbase.jul.iface.Identifiable;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @param <KEY>
+ * @param <ENTRY>
  */
 public interface SynchronizableRegistry<KEY, ENTRY extends Identifiable<KEY>> extends Registry<KEY, ENTRY> {
 
     /**
-     * Informs the controller registry that the synchronization with the external controller config registry was done.
+     * Informs the controller registry that the synchronization with the external controller configuration registry was done.
      */
     public void notifySynchronization();
 
