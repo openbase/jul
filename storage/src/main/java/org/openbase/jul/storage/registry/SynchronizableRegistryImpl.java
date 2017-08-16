@@ -66,7 +66,7 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
     @Override
     public void notifySynchronization() {
