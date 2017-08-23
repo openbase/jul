@@ -204,42 +204,48 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
     @Override
-    public synchronized void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        try {
-            verifyMaintainability();
+    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+        internalInit(scope, participantConfig);
+    }
 
-            final boolean alreadyActivated = isActive();
-            ParticipantConfig internalParticipantConfig = participantConfig;
+    private void internalInit(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+        synchronized (maintainerLock) {
+            try {
+                verifyMaintainability();
 
-            if (scope == null) {
-                throw new NotAvailableException("scope");
+                final boolean alreadyActivated = isActive();
+                ParticipantConfig internalParticipantConfig = participantConfig;
+
+                if (scope == null) {
+                    throw new NotAvailableException("scope");
+                }
+
+                // check if this instance was partly or fully initialized before.
+                if (initialized | listenerWatchDog != null | remoteServerWatchDog != null) {
+                    deactivate();
+                    reset();
+                }
+
+                this.scope = scope;
+
+                rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
+                logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
+
+                initListener(internalScope, internalParticipantConfig);
+                initRemoteServer(internalScope, internalParticipantConfig);
+
+                addHandler(mainHandler, true);
+
+                postInit();
+                initialized = true;
+
+                // check if remote service was already activated before and recover state.
+                if (alreadyActivated) {
+                    activate();
+                }
+            } catch (CouldNotPerformException ex) {
+                throw new InitializationException(this, ex);
             }
-
-            // check if this instance was partly or fully initialized before.
-            if (initialized | listenerWatchDog != null | remoteServerWatchDog != null) {
-                deactivate();
-                reset();
-            }
-
-            this.scope = scope;
-
-            rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
-            logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
-
-            initListener(internalScope, internalParticipantConfig);
-            initRemoteServer(internalScope, internalParticipantConfig);
-
-            addHandler(mainHandler, true);
-
-            postInit();
-            initialized = true;
-
-            // check if remote service was already activated before and recover state.
-            if (alreadyActivated) {
-                activate();
-            }
-        } catch (CouldNotPerformException ex) {
-            throw new InitializationException(this, ex);
         }
     }
 
@@ -436,6 +442,48 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not reset " + this + "!", ex);
+        }
+    }
+
+    /**
+     * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
+     * This method can be used in case of a broken connection or if the participant config has been changed.
+     *
+     * @throws InterruptedException is thrown if the current thread was externally interrupted.
+     * @throws CouldNotPerformException is throws if the reinit has been failed.
+     */
+    protected void reinit() throws InterruptedException, CouldNotPerformException {
+        reinit(scope);
+    }
+
+    /**
+     * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
+     * This method can be used in case of a broken connection or if the participant config has been changed.
+     *
+     * @param scope the new scope to configure.
+     * @throws InterruptedException is thrown if the current thread was externally interrupted.
+     * @throws CouldNotPerformException is throws if the reinit has been failed.
+     */
+    protected void reinit(final Scope scope) throws InterruptedException, CouldNotPerformException {
+        try {
+            synchronized (maintainerLock) {
+                logger.debug("Reinit " + this);
+                // temporally unlock this remove but save maintainer
+                final Object currentMaintainer = maintainer;
+                try {
+                    maintainer = null;
+
+                    // reinit remote
+                    internalInit(scope, RSBSharedConnectionConfig.getParticipantConfig());
+                } catch (final CouldNotPerformException ex) {
+                    throw new CouldNotPerformException("Could not reinit " + this + "!", ex);
+                } finally {
+                    // restore maintainer
+                    maintainer = currentMaintainer;
+                }
+            }
+        } catch (final CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not reinitialize " + this + "!", ex);
         }
     }
 
@@ -691,13 +739,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                 throw new InterruptedException();
                             }
                         }
-                    } catch (InterruptedException ex) {
+                    } catch (final InterruptedException ex) {
                         if (internalCallFuture != null) {
                             internalCallFuture.cancel(true);
                         }
                         throw ex;
+                    } catch (final InvalidStateException ex) {
+                        // reinit remote service because middleware connection lost!
+                        try {
+                            reinit();
+                        } catch (final CouldNotPerformException exx) {
+                            ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
+                        }
+                        throw ex;
                     }
-                } catch (CouldNotPerformException | ExecutionException | CancellationException | InterruptedException ex) {
+                } catch (final CouldNotPerformException | ExecutionException | CancellationException | InterruptedException ex) {
                     throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
                 }
             }
