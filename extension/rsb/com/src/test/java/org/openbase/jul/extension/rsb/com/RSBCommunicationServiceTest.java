@@ -354,6 +354,10 @@ public class RSBCommunicationServiceTest {
 
     public static class RSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> {
 
+        static {
+            DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
+        }
+        
         public RSBCommunicationServiceImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
@@ -364,6 +368,10 @@ public class RSBCommunicationServiceTest {
     }
 
     public static class RSBRemoteServiceImpl extends RSBRemoteService<UnitRegistryData> {
+
+        static {
+            DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
+        }
 
         public RSBRemoteServiceImpl() {
             super(UnitRegistryData.class);
