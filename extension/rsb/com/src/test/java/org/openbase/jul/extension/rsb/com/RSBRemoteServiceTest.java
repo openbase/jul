@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -55,7 +56,7 @@ public class RSBRemoteServiceTest {
 
     @BeforeClass
     public static void setUpClass() throws JPServiceException {
-//        JPService.setupJUnitTestMode();
+        JPService.setupJUnitTestMode();
     }
 
     @AfterClass
@@ -124,8 +125,8 @@ public class RSBRemoteServiceTest {
         instance.shutdown();
     }
 
-//    @Test(timeout = 5000)
-    @Test
+    @Test(timeout = 5000)
+//    @Test
     public void testDeactivation() throws InterruptedException, CouldNotPerformException {
         System.out.println("testDeactivation");
 
