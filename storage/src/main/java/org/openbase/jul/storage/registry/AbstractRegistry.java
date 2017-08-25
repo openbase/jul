@@ -834,6 +834,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             } catch (JPNotAvailableException exx) {
                                 ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
                             }
+                            pluginPool.afterConsistencyModification((ENTRY) ex.getEntry());
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {
