@@ -374,6 +374,13 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private void reset() {
 
+        try {
+            throw new Exception("reset");
+        } catch (Exception ex) {
+            System.out.println("reset was called by...");
+            ex.printStackTrace();
+        }
+        
         // clear init flag
         initialized = false;
 
