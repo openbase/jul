@@ -1017,7 +1017,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected void log(final String message) {
         try {
             Printer.print(message, LogLevelFilter.getFilteredLogLevel(LogLevel.INFO, isSandbox()), logger);
-        } catch (final Exception ex) {
+        } catch (final Throwable ex) {
             System.out.println("fallback message: " + message);
         }
     }
