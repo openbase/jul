@@ -1015,7 +1015,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @param message the info message to print as string.
      */
     protected void log(final String message) {
-        Printer.print(message, LogLevelFilter.getFilteredLogLevel(LogLevel.INFO, isSandbox()), logger);
+        try {
+            Printer.print(message, LogLevelFilter.getFilteredLogLevel(LogLevel.INFO, isSandbox()), logger);
+        } catch (final Exception ex) {
+            System.out.println("fallback message: " + message);
+        }
     }
 
     /**
