@@ -139,6 +139,8 @@ public class Line3D extends Group {
             case CYLINDER:
                 cylinder.setMaterial(material);
                 break;
+            default:
+                break;
         }
     }
 
@@ -156,6 +158,8 @@ public class Line3D extends Group {
             case CYLINDER:
                 cylinder.setRadius(width * 0.5);
                 break;
+            default:
+                break;
         }
     }
 
@@ -172,6 +176,8 @@ public class Line3D extends Group {
                 break;
             case CYLINDER:
                 cylinder.setHeight(length);
+                break;
+            default:
                 break;
         }
     }
