@@ -37,10 +37,12 @@ public class Ray3D extends Line3D {
      * The default length of a ray.
      */
     private final static double DEFAULT_LENGTH = 10;
+
     /**
      * The default width of a ray.
      */
     private final static double DEFAULT_WIDTH = 0.02;
+
     /**
      * The length of this ray.
      */
@@ -58,7 +60,7 @@ public class Ray3D extends Line3D {
 
     /**
      * Constructor using default ray length (10 meters).
-     * 
+     *
      * @param material The ray material.
      */
     public Ray3D(final Material material) {
@@ -83,9 +85,9 @@ public class Ray3D extends Line3D {
      * @param ray Ray3DFloat object defining the placement data of the ray.
      */
     public void update(final Ray3DFloat ray) {
-        Point3D origin = VecToPoint(ray.getOrigin());
-        Point3D direction = VecToPoint(ray.getDirection());
-        Point3D end = origin.add(direction.normalize().multiply(rayLength));
+        final Point3D origin = VecToPoint(ray.getOrigin());
+        final Point3D direction = VecToPoint(ray.getDirection());
+        final Point3D end = origin.add(direction.normalize().multiply(rayLength));
         super.setStartEndPoints(origin, end);
     }
 }

@@ -39,14 +39,17 @@ public class Line3D extends Group {
      * Upwards vector used to calculate the rotation axis.
      */
     private final static Point3D UP = new Point3D(0, 1, 0);
+
     /**
      * The LineType used for this Line object.
      */
     private final LineType type;
+
     /**
      * JavaFX Box used in case of LineType BOX.
      */
     private Box box;
+
     /**
      * JavaFX Cylinder used in case of LineType CYLINDER.
      */
@@ -101,7 +104,7 @@ public class Line3D extends Group {
      * @param start Start point of the line.
      * @param end End point of the line.
      */
-    public Line3D(final LineType type, double width, final Material material, final Point3D start, final Point3D end) {
+    public Line3D(final LineType type, final double width, final Material material, final Point3D start, final Point3D end) {
         this(type, width, material);
         setStartEndPoints(start, end);
     }
@@ -113,10 +116,10 @@ public class Line3D extends Group {
      * @param end End point of the line.
      */
     public final void setStartEndPoints(final Point3D start, final Point3D end) {
-        Point3D direction = start.subtract(end);
-        Point3D position = start.midpoint(end);
+        final Point3D direction = start.subtract(end);
+        final Point3D position = start.midpoint(end);
         setLength(direction.magnitude());
-        Point3D axis = UP.crossProduct(direction.normalize());
+        final Point3D axis = UP.crossProduct(direction.normalize());
         super.setVisible(true);
         super.setTranslateX(position.getX());
         super.setTranslateY(position.getY());
