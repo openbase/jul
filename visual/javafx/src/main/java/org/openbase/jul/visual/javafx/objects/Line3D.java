@@ -87,7 +87,8 @@ public class Line3D extends Group {
                 cylinder.setMaterial(material);
                 super.getChildren().add(cylinder);
                 break;
-
+            default:
+                break;
         }
     }
 
