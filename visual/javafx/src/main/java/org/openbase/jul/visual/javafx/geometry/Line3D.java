@@ -1,4 +1,4 @@
-package org.openbase.jul.visual.javafx.objects;
+package org.openbase.jul.visual.javafx.geometry;
 
 /*-
  * #%L
