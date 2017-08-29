@@ -41,7 +41,7 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     private final Set<ENTRY> changedEntryList = new HashSet<>();
 
     @Override
-    public void init(Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException {
+    public void init(final Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException {
         this.registry = registry;
     }
 
@@ -50,27 +50,27 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     }
 
     @Override
-    public void beforeRegister(ENTRY entry) throws RejectedException {
+    public void beforeRegister(final ENTRY entry) throws RejectedException {
     }
 
     @Override
-    public void afterRegister(ENTRY entry) throws CouldNotPerformException {
+    public void afterRegister(final ENTRY entry) throws CouldNotPerformException {
     }
 
     @Override
-    public void beforeUpdate(ENTRY entry) throws RejectedException {
+    public void beforeUpdate(final ENTRY entry) throws RejectedException {
     }
 
     @Override
-    public void afterUpdate(ENTRY entry) throws CouldNotPerformException {
+    public void afterUpdate(final ENTRY entry) throws CouldNotPerformException {
     }
 
     @Override
-    public void beforeRemove(ENTRY entry) throws RejectedException {
+    public void beforeRemove(final ENTRY entry) throws RejectedException {
     }
 
     @Override
-    public void afterRemove(ENTRY entry) throws CouldNotPerformException {
+    public void afterRemove(final ENTRY entry) throws CouldNotPerformException {
     }
 
     @Override
@@ -78,7 +78,7 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     }
 
     @Override
-    public void beforeGet(KEY key) throws RejectedException {
+    public void beforeGet(final KEY key) throws RejectedException {
     }
 
     @Override
