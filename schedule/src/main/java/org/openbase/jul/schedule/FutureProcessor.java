@@ -46,11 +46,11 @@ public class FutureProcessor {
         CompletableFuture.runAsync(() -> {
             try {
                 future.complete(callable.call());
-            } catch (InterruptedException e) {
-                future.completeExceptionally(e);
+            } catch (InterruptedException ex) {
+                future.completeExceptionally(ex);
                 Thread.currentThread().interrupt();
-            } catch (Exception e) {
-                future.completeExceptionally(e);
+            } catch (Exception ex) {
+                future.completeExceptionally(ex);
             }
         });
         return future;

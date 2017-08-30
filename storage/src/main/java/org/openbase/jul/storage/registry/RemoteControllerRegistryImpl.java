@@ -27,7 +27,6 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.pattern.Controller;
 import org.openbase.jul.pattern.Remote;
 
 /**
@@ -53,8 +52,11 @@ public class RemoteControllerRegistryImpl<KEY, ENTRY extends Remote & Identifiab
     @Override
     public void clear() throws CouldNotPerformException {
         for (Remote remote : getEntries()) {
-            remote.shutdown();
+            if (!remote.isLocked()) {
+                remote.shutdown();
+            }
         }
+
         super.clear();
     }
 
@@ -89,5 +91,4 @@ public class RemoteControllerRegistryImpl<KEY, ENTRY extends Remote & Identifiab
         }
         return lastSynchronizationTimestamp;
     }
-
 }

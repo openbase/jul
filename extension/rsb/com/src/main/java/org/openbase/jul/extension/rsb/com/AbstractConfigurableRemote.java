@@ -115,16 +115,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
                 try {
                     if (isActive() && !currentScope.equals(detectScope(config))) {
                         currentScope = detectScope();
-
-                        if (isLocked()) {
-                            // temporally unlock for scope update and lock afterwards again.
-                            final Object latestMaintainer = maintainer;
-                            unlock(maintainer);
-                            super.init(currentScope);
-                            lock(latestMaintainer);
-                        } else {
-                            super.init(currentScope);
-                        }
+                        reinit(currentScope);
                     }
                 } catch (CouldNotPerformException ex) {
                     throw new CouldNotPerformException("Could not verify scope changes!", ex);

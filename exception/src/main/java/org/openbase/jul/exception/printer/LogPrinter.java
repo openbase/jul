@@ -21,16 +21,10 @@ package org.openbase.jul.exception.printer;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
-import static org.openbase.jul.exception.printer.LogLevel.DEBUG;
-import static org.openbase.jul.exception.printer.LogLevel.ERROR;
-import static org.openbase.jul.exception.printer.LogLevel.INFO;
-import static org.openbase.jul.exception.printer.LogLevel.TRACE;
-import static org.openbase.jul.exception.printer.LogLevel.WARN;
 import org.slf4j.Logger;
 
 /**
@@ -49,44 +43,12 @@ public class LogPrinter implements Printer {
 
     @Override
     public void print(final String message) {
-        switch (logLevel) {
-            case TRACE:
-                logger.trace(message);
-                break;
-            case DEBUG:
-                logger.debug(message);
-                break;
-            case INFO:
-                logger.info(message);
-                break;
-            case WARN:
-                logger.warn(message);
-                break;
-            case ERROR:
-                logger.error(message);
-                break;
-        }
+        Printer.print(message, logLevel, logger);
     }
 
     @Override
-    public void print(String message, Throwable throwable) {
-        switch (logLevel) {
-            case TRACE:
-                logger.trace(message, throwable);
-                break;
-            case DEBUG:
-                logger.debug(message, throwable);
-                break;
-            case INFO:
-                logger.info(message, throwable);
-                break;
-            case WARN:
-                logger.warn(message, throwable);
-                break;
-            case ERROR:
-                logger.error(message, throwable);
-                break;
-        }
+    public void print(final String message, final Throwable throwable) {
+        Printer.print(message, throwable, logLevel, logger);
     }
 
     @Override

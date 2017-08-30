@@ -21,6 +21,8 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.HashSet;
+import java.util.Set;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.RejectedException;
@@ -30,13 +32,16 @@ import org.openbase.jul.storage.registry.Registry;
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @param <KEY>
+ * @param <ENTRY>
  */
-public abstract class RegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>> implements RegistryPlugin<KEY, ENTRY> {
+public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>> implements RegistryPlugin<KEY, ENTRY> {
 
     private Registry<KEY, ENTRY> registry;
+    private final Set<ENTRY> changedEntryList = new HashSet<>();
 
     @Override
-    public void init(Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException {
+    public void init(final Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException {
         this.registry = registry;
     }
 
@@ -45,27 +50,27 @@ public abstract class RegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>
     }
 
     @Override
-    public void beforeRegister(ENTRY entry) throws RejectedException {
+    public void beforeRegister(final ENTRY entry) throws RejectedException {
     }
 
     @Override
-    public void afterRegister(ENTRY entry) throws CouldNotPerformException {
+    public void afterRegister(final ENTRY entry) throws CouldNotPerformException {
     }
 
     @Override
-    public void beforeUpdate(ENTRY entry) throws RejectedException {
+    public void beforeUpdate(final ENTRY entry) throws RejectedException {
     }
 
     @Override
-    public void afterUpdate(ENTRY entry) throws CouldNotPerformException {
+    public void afterUpdate(final ENTRY entry) throws CouldNotPerformException {
     }
 
     @Override
-    public void beforeRemove(ENTRY entry) throws RejectedException {
+    public void beforeRemove(final ENTRY entry) throws RejectedException {
     }
 
     @Override
-    public void afterRemove(ENTRY entry) throws CouldNotPerformException {
+    public void afterRemove(final ENTRY entry) throws CouldNotPerformException {
     }
 
     @Override
@@ -73,7 +78,7 @@ public abstract class RegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>
     }
 
     @Override
-    public void beforeGet(KEY key) throws RejectedException {
+    public void beforeGet(final KEY key) throws RejectedException {
     }
 
     @Override
@@ -92,7 +97,20 @@ public abstract class RegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>
     public void afterRegistryChange() throws CouldNotPerformException {
     }
 
+    /**
+     * Method triggers entry updates of all entries which was been modified during the last consistency check.
+     * @throws CouldNotPerformException 
+     */
     @Override
     public void afterConsistencyCheck() throws CouldNotPerformException {
+        for (final ENTRY entry : changedEntryList) {
+            afterUpdate(entry);
+        }
+        changedEntryList.clear();
+    }
+
+    @Override
+    public void afterConsistencyModification(ENTRY entry) throws CouldNotPerformException {
+        changedEntryList.add(entry);
     }
 }
