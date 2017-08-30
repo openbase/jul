@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.openbase</groupId>
         <artifactId>jul.pattern.module</artifactId>
-        <version>1.4.1</version>
+        <version>1.4.2-SNAPSHOT</version>
     </parent>    
     
     <url>https://github.com/openbase/jul/wiki</url>
