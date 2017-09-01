@@ -1,8 +1,8 @@
-package org.openbase.jul.storage.registry;
+package org.openbase.jul.exception.printer;
 
-/*
+/*-
  * #%L
- * JUL Storage
+ * JUL Exception
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,32 +21,24 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.HashMap;
-import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <KEY>
- * @param <ENTRY>
  */
-public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, RegistryImpl<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY>> {
-
-    public RegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
-        super(entryMap);
-    }
-
-    public RegistryImpl() throws InstantiationException {
-        super(new HashMap<>());
-    }
+public class LogLevelFilter {
 
     /**
-     * Just print on debug level.
-     * @param message 
+     * Method forces the debug log level if the {@code forceDebug} flag is {@code true}.
+     * Otherwise the given log level is bypassed.
+     *
+     * @param logLevel the log level to return if the {@code forceDebug} is not true.
+     * @param forceDebug the flag to force the debug mode.
+     * @return the desired log level.
      */
-    public void log(final String message) {
-        logger.debug(message);
+    public static LogLevel getFilteredLogLevel(final LogLevel logLevel, final boolean forceDebug) {
+        if (forceDebug) {
+            return LogLevel.DEBUG;
+        }
+        return logLevel;
     }
 }

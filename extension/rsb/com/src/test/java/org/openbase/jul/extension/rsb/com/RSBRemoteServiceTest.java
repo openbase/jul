@@ -34,10 +34,14 @@ import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TimeoutException;
+import org.openbase.jul.extension.rsb.com.RSBCommunicationServiceTest.RSBCommunicationServiceImpl;
+import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.pattern.Remote.ConnectionState;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 
 /**
  *
@@ -83,7 +87,7 @@ public class RSBRemoteServiceTest {
         try {
             instance.waitForConnectionState(Remote.ConnectionState.CONNECTING, 10);
             Assert.fail("No exception thrown.");
-        } catch (InvalidStateException e) {
+        } catch (InvalidStateException ex) {
             // should be thrown...
             Assert.assertTrue(true);
         }
@@ -94,7 +98,7 @@ public class RSBRemoteServiceTest {
         try {
             instance.waitForConnectionState(Remote.ConnectionState.CONNECTED, 10);
             Assert.fail("No exception thrown.");
-        } catch (TimeoutException e) {
+        } catch (TimeoutException ex) {
             // should be thrown...
             Assert.assertTrue(true);
         }
@@ -118,6 +122,29 @@ public class RSBRemoteServiceTest {
 
         Thread.sleep(100);
 
+        instance.shutdown();
+    }
+
+    @Test(timeout = 5000)
+//    @Test
+    public void testDeactivation() throws InterruptedException, CouldNotPerformException {
+        System.out.println("testDeactivation");
+
+        RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
+        instance.init("/test/testDeactivation");
+        instance.activate();
+
+        RSBCommunicationServiceTest.RSBCommunicationServiceImpl communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.newBuilder());
+        communicationService.init("/test/testDeactivation");
+        communicationService.activate();
+        communicationService.waitForAvailabilityState(ControllerAvailabilityState.ONLINE);
+        instance.waitForConnectionState(ConnectionState.CONNECTED);
+        instance.waitForData();
+        System.out.println("shutdown...");
+        System.out.println("main thread name: "+Thread.currentThread().getName());
+        communicationService.deactivate();
+        instance.deactivate();
+        communicationService.shutdown();
         instance.shutdown();
     }
 }

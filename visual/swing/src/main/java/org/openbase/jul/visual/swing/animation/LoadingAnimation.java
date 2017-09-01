@@ -362,7 +362,7 @@ public class LoadingAnimation extends javax.swing.JPanel implements ActionListen
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent ex) {
 		animationCounter = (animationCounter % (2 * Math.PI)) + step;
 		repaint();
 //		updateUI();

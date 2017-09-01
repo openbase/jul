@@ -64,10 +64,10 @@ public class ScreenModeController {
          * Invoked when the component's size changes.
          */
         @Override
-        public void componentResized(final ComponentEvent e) {
+        public void componentResized(final ComponentEvent ex) {
             synchronized (modeLock) {
                 if (screenMode != ScreenMode.Fullscreen) {
-                    e.getComponent().getSize(screenDimension);
+                    ex.getComponent().getSize(screenDimension);
                 }
             }
         }
@@ -76,10 +76,10 @@ public class ScreenModeController {
          * Invoked when the component's position changes.
          */
         @Override
-        public void componentMoved(final ComponentEvent e) {
+        public void componentMoved(final ComponentEvent ex) {
             synchronized (modeLock) {
                 if (screenMode != ScreenMode.Fullscreen) {
-                    e.getComponent().getLocation(screenLocation);
+                    ex.getComponent().getLocation(screenLocation);
                 }
             }
         }
@@ -155,8 +155,8 @@ public class ScreenModeController {
                     try {
                         device.setFullScreenWindow(frame); // Setzen des FullScreenmodus.
 //						frame.validate();
-                    } catch (Exception e) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Coult not enter " + mode + " mode!", e), logger);
+                    } catch (Exception ex) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Coult not enter " + mode + " mode!", ex), logger);
                         device.setFullScreenWindow(null);
                         setScreenMode(ScreenMode.Normal);
                     }
@@ -179,8 +179,8 @@ public class ScreenModeController {
 
                     try {
                         device.setFullScreenWindow(null);
-                    } catch (Exception e) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not reset fullscreenwindow!", e), logger);
+                    } catch (Exception ex) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not reset fullscreenwindow!", ex), logger);
                     }
 
                     frame.setLocation(originalPosition);
