@@ -138,6 +138,10 @@ public class ProtoBufFieldProcessor {
         }
         fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 1]);
         Object field = tmpBuilder.getField(fieldDescriptor);
+        //Todo: remove with protobuf 3
+        if(fieldDescriptor.getName().equals("qw")) {
+            field = 1.0;
+        }
         tmpBuilder.setField(fieldDescriptor, field);
         return builder;
     }
