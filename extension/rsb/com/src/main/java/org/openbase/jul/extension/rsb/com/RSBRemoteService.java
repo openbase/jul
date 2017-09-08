@@ -408,8 +408,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             // was never initialized!
             return;
         }
-        setConnectionState(DISCONNECTED);
-        skipSyncTasks();
+        if (connectionState != ConnectionState.RECONNECTING) {
+            skipSyncTasks();
+            setConnectionState(DISCONNECTED);
+        }
         if (listenerWatchDog != null) {
             listenerWatchDog.deactivate();
         }
@@ -473,6 +475,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 try {
                     maintainer = null;
 
+                    // only set to reconnecting when already active, this way reinit can be used when not active
+                    // to update the config and when active the sync task still does not get cancelled
+                    if (isActive()) {
+                        setConnectionState(ConnectionState.RECONNECTING);
+                    }
                     // reinit remote
                     internalInit(scope, RSBSharedConnectionConfig.getParticipantConfig());
                 } catch (final CouldNotPerformException ex) {

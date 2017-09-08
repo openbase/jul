@@ -40,7 +40,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, DataProv
     // TODO mpohling: Should be moved to rst and reimplement for rsb 15.
     public enum ConnectionState {
 
-        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED
+        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING
     };
 
     /**
