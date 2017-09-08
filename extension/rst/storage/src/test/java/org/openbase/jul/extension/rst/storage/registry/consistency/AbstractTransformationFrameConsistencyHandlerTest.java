@@ -215,7 +215,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 public boolean isEmpty() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
-                
+
                 @Override
                 public boolean isReady() {
                     throw new UnsupportedOperationException("Not supported yet.");
@@ -334,6 +334,16 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 @Override
                 public Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntryMap() {
                     throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                @Override
+                public void addDependencyObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public void removeDependencyObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });
         }

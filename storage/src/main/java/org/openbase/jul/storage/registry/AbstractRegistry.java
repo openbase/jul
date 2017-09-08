@@ -92,17 +92,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
+    private final ObservableImpl<Map<KEY, ENTRY>> dependingRegistryObservable;
 
     private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
 
-    private boolean notificationSkiped;
+    private boolean notificationSkipped;
 
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         this(entryMap, new RegistryPluginPool<>());
     }
 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
-
         try {
 
             // validate arguments
@@ -116,7 +116,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
             this.randomJitter = new Random(System.currentTimeMillis());
             this.consistent = true;
-            this.notificationSkiped = false;
+            this.notificationSkipped = false;
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
             this.pluginPool.init(this);
@@ -124,6 +124,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.dependingRegistryMap = new HashMap<>();
             this.sandbox = new MockRegistrySandbox<>(this);
             this.shutdownDeamon = Shutdownable.registerShutdownHook(this);
+            this.dependingRegistryObservable = new ObservableImpl<>();
 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
@@ -222,7 +223,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 pluginPool.beforeRegister(entry);
                 entryMap.put(entry.getId(), entry);
                 pluginPool.afterRegister(entry);
-
             } finally {
                 unlock();
             }
@@ -656,8 +656,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
             if (registryLock.isWriteLockedByCurrentThread()) {
-                logger.debug("Notification of registry change skipped because of running write operations!");
-                notificationSkiped = true;
+                logger.warn("Notification of registry[" + this + "] change skipped because of running write operations!");
+                notificationSkipped = true;
                 return;
             }
 
@@ -670,7 +670,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new MultiException("PluginPool could not execute afterRegistryChange", exceptionStack);
                 }
             }
-            notificationSkiped = false;
+            notificationSkipped = false;
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all registry observer!", ex), logger, LogLevel.ERROR);
         }
@@ -891,6 +891,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected void finishTransaction() throws CouldNotPerformException {
         try {
             checkConsistency();
+            dependingRegistryObservable.notifyObservers(entryMap);
         } catch (CouldNotPerformException ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException("Registry consistency check failed but sandbox check was successful!", this, ex), logger, LogLevel.ERROR);
         }
@@ -1176,6 +1177,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    @Override
+    public void addDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
+        dependingRegistryObservable.addObserver(observer);
+    }
+
+    @Override
+    public void removeDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
+        dependingRegistryObservable.removeObserver(observer);
+    }
+
     private synchronized void unlockDependingRegistries() {
         new ArrayList<>(dependingRegistryMap.keySet()).stream().forEach((registry) -> {
             registry.unlockRegistry();
@@ -1188,7 +1199,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         public DependencyConsistencyCheckTrigger(final Registry dependency) {
             this.dependency = dependency;
-            dependency.addObserver(this);
+            dependency.addDependencyObserver(this);
         }
 
         /**
@@ -1203,8 +1214,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             //TODO: update on sandbox level should be handled first
             try {
                 if (dependency.isConsistent()) {
-                    if (checkConsistency() > 0 || notificationSkiped) {
-                        notifyObservers();
+                    if (checkConsistency() > 0 || notificationSkipped) {
+                        dependingRegistryObservable.notifyObservers(entryMap);
                     }
                 }
             } catch (CouldNotPerformException ex) {
