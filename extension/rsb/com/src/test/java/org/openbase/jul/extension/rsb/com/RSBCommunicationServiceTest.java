@@ -97,7 +97,7 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 6000)
+    @Test//(timeout = 6000)
     public void testInitialSync() throws Exception {
         System.out.println("testInitialSync");
 
@@ -155,6 +155,9 @@ public class RSBCommunicationServiceTest {
 
         communicationService.deactivate();
 
+        remoteService.addConnectionStateObserver(((source, data) -> {
+            System.out.println("ConnectionState [" + data + "]");
+        }));
         try {
             remoteService.ping().get();
             assertTrue("Pinging was not canceled after timeout.", false);
@@ -167,7 +170,7 @@ public class RSBCommunicationServiceTest {
         remoteService.waitForConnectionState(ConnectionState.CONNECTED);
         remoteService.shutdown();
         communicationService.shutdown();
-        assertEquals("Remote is not disconnected after shutdown!", ControllerAvailabilityState.OFFLINE, communicationService.getControllerAvailabilityState());
+        assertEquals("Communication Service is not offline after shutdown!", ControllerAvailabilityState.OFFLINE, communicationService.getControllerAvailabilityState());
         assertEquals("Remote is not disconnected after shutdown!", ConnectionState.DISCONNECTED, remoteService.getConnectionState());
     }
 
@@ -357,7 +360,7 @@ public class RSBCommunicationServiceTest {
         static {
             DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
         }
-        
+
         public RSBCommunicationServiceImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
