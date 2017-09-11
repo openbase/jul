@@ -24,9 +24,11 @@ package org.openbase.jul.storage.registry;
 import java.util.List;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Writable;
+import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.pattern.Observable;
 
 /**
@@ -35,16 +37,20 @@ import org.openbase.jul.pattern.Observable;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>> {
+public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>>, NameProvider {
 
     /**
      * Method returns the name of this registry.
+     *
      * @return the name as string.
+     * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
      */
-    public String getName();
+    @Override
+    public String getName() throws NotAvailableException;
 
     /**
      * Method registers the given entry.
+     *
      * @param entry the new entry to register which is not yet included in the registry
      * @return the registered entry updated by all consistency checks this registry provides.
      * @throws CouldNotPerformException is thrown if the given entry is not valid, already registered or something else went wrong during the registration.
@@ -65,16 +71,16 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
 
     /**
      * Copies all entries into a list.
-     * 
+     *
      * @return a list with all values of the entry map
      * @throws CouldNotPerformException if something fails
      */
     public List<ENTRY> getEntries() throws CouldNotPerformException;
-    
+
     /**
      * An unmodifiable map of the current entry map.
-     * 
-     * @return the current entry map of the registry but unmodifiable 
+     *
+     * @return the current entry map of the registry but unmodifiable
      */
     public Map<KEY, ENTRY> getEntryMap();
 
@@ -86,6 +92,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
 
     /**
      * Method returns the amount of registry entries.
+     *
      * @return the count of entries as integer.
      */
     public int size();

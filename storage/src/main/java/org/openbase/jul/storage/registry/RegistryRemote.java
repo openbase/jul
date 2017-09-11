@@ -22,6 +22,7 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Remote;
 
 /**
@@ -39,4 +40,7 @@ public interface RegistryRemote<M> extends Remote<M>, RegistryService {
      */
     public void init() throws InitializationException, InterruptedException;
 
+    default public String getName() throws NotAvailableException {
+        return getClass().getSimpleName().replace(Remote.class.getSimpleName(), "");
+    }
 }

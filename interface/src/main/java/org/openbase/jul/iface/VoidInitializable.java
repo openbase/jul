@@ -32,13 +32,14 @@ public interface VoidInitializable extends DefaultInitializableImpl<Void> {
 
     @Override
     public default void init(Void config) throws InitializationException, InterruptedException {
+        // todo any better solution here?
         init();
     }
 
     @Override
     public default void init() throws InitializationException, InterruptedException {
         LoggerFactory.getLogger(VoidInitializable.class).warn("This Method has to be overwritten. Else using it is useless!");
-        new FatalImplementationErrorException("Did not overwrite init!", this);
+        new FatalImplementationErrorException("Did not overwrite init()!", this);
     }
 
     @Override

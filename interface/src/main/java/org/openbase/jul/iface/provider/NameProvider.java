@@ -21,7 +21,6 @@ package org.openbase.jul.iface.provider;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.NotAvailableException;
 
 /**
@@ -32,5 +31,11 @@ public interface NameProvider {
 
     public final static String TYPE_FIELD_NAME = "name";
 
+    /**
+     * Method returns the name of this instance.
+     *
+     * @return the name as string.
+     * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
+     */
     public String getName() throws NotAvailableException;
 }
