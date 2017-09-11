@@ -34,5 +34,37 @@
             <artifactId>jul.exception</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!-- for openhab binding habmin zwave config gen -->
+        <dependency>
+            <groupId>com.io7m.xom</groupId>
+            <artifactId>xom</artifactId>
+            <version>${dependency.io7m.xom.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>${dependency.fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${dependency.fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${dependency.fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${dependency.fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency> <!-- xml parser lib needed for fasterxml-->
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>woodstox-core-asl</artifactId>
+            <version>${dependency.woodstox.version}</version>
+        </dependency>
     </dependencies>
 </project>
