@@ -128,7 +128,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
                 public void relay() throws Exception {
-                    log(getLatestValue());
+                    log(getLastValue());
                 }
             };
             setHashGenerator(new HashGenerator<Map<KEY, ENTRY>>() {
@@ -759,7 +759,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     Object lastModifieredEntry = null;
                     final ArrayList<ENTRY> entryValueCopy = new ArrayList<>();
                     int maxConsistencyChecks;
-                    int iterationErrorCounter;
+                    int errorCounter;
                     String note;
 
                     while (true) {
@@ -779,15 +779,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                         // prepare for next iteraction
                         if (exceptionStack != null) {
-                            iterationErrorCounter = exceptionStack.size();
+                            errorCounter = exceptionStack.size();
                             exceptionStack.clear();
                         } else {
-                            iterationErrorCounter = 0;
+                            errorCounter = 0;
                         }
-                        if (!consistencyHandlerQueue.isEmpty() || iterationErrorCounter != 0) {
+                        if (!consistencyHandlerQueue.isEmpty() || errorCounter != 0) {
 
-                            if (iterationErrorCounter > 0) {
-                                note = " with " + iterationErrorCounter + " errors";
+                            if (errorCounter > 0) {
+                                note = " with " + errorCounter + " errors";
                             } else {
                                 note = "";
                             }
@@ -851,9 +851,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     }
                     consistent = true;
 
-                    if (modificationCounter > 0 || consistencyFeedbackEventFilter.isTriggered()) {
-                        consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.", true);
+                    if (modificationCounter > 0) {
+                        consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.");
                     }
+
                     return modificationCounter;
                 } catch (CouldNotPerformException ex) {
                     consistent = false;
@@ -868,7 +869,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new CouldNotPerformException("Consistency process of " + this + " aborted!", ex);
                 }
             } finally {
-                consistencyFeedbackEventFilter.reset();
                 afterConsistencyCheck();
                 consistencyCheckLock.writeLock().unlock();
             }
