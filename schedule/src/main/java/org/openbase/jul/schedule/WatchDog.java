@@ -124,13 +124,6 @@ public class WatchDog implements Activatable, Shutdownable {
                 minder.setFuture(GlobalScheduledExecutorService.scheduleAtFixedRate(minder, 0, getRate(), TimeUnit.MILLISECONDS));
             }
         }
-
-//        try {
-//            waitForServiceActivation();
-//        } catch (CouldNotPerformException | InterruptedException ex) {
-//            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not wait for service activation!", ex), logger, LogLevel.WARN);
-//            throw ex;
-//        }
     }
 
     @Override
@@ -319,7 +312,7 @@ public class WatchDog implements Activatable, Shutdownable {
         }
     }
 
-    private long getRate() throws InterruptedException {
+    private long getRate() {
         if (JPService.testMode()) {
             return 10;
         }
