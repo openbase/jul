@@ -37,10 +37,10 @@ import org.openbase.jul.pattern.provider.DataProvider;
  */
 public interface Remote<M> extends Shutdownable, Activatable, Lockable, DataProvider<M> {
 
-    // TODO mpohling: Should be moved to rst and reimplement for rsb 15.
+    // TODO release: Should be moved to rst.
     public enum ConnectionState {
 
-        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED
+        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING
     };
 
     /**

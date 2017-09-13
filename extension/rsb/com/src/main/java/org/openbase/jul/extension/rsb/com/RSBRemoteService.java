@@ -249,7 +249,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException, InterruptedException {
+    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
@@ -258,7 +258,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException, InterruptedException {
+    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
@@ -353,7 +353,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
         try {
             listener.addHandler(handler, wait);
-        } catch (InterruptedException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register Handler!", ex);
         }
     }
@@ -408,8 +408,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             // was never initialized!
             return;
         }
-        setConnectionState(DISCONNECTED);
-        skipSyncTasks();
+        if (connectionState != ConnectionState.RECONNECTING) {
+            skipSyncTasks();
+            setConnectionState(DISCONNECTED);
+        }
         if (listenerWatchDog != null) {
             listenerWatchDog.deactivate();
         }
@@ -473,6 +475,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 try {
                     maintainer = null;
 
+                    // only set to reconnecting when already active, this way reinit can be used when not active
+                    // to update the config and when active the sync task still does not get cancelled
+                    if (isActive()) {
+                        setConnectionState(ConnectionState.RECONNECTING);
+                    }
                     // reinit remote
                     internalInit(scope, RSBSharedConnectionConfig.getParticipantConfig());
                 } catch (final CouldNotPerformException ex) {

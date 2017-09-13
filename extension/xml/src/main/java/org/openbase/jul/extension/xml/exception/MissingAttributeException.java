@@ -1,8 +1,8 @@
-package org.openbase.jul.iface.provider;
+package org.openbase.jul.extension.xml.exception;
 
 /*
  * #%L
- * JUL Interface
+ * JUL Extension XML
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,21 +21,20 @@ package org.openbase.jul.iface.provider;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.NotAvailableException;
+
+import nu.xom.Element;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface NameProvider {
+public class MissingAttributeException extends XMLParsingException {
 
-    public final static String TYPE_FIELD_NAME = "name";
+	public MissingAttributeException(final String attributeName, final Element sourceElement, final Exception cause) {
+		super("Missing Attribute["+attributeName+"] for Element["+sourceElement.getQualifiedName()+"].", cause);
+	}
 
-    /**
-     * Method returns the name of this instance.
-     *
-     * @return the name as string.
-     * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
-     */
-    public String getName() throws NotAvailableException;
+	public MissingAttributeException(final String attributeName, final Element sourceElement) {
+		super("Missing Attribute["+attributeName+"] for Element["+sourceElement.getQualifiedName()+"].");
+	}
 }
