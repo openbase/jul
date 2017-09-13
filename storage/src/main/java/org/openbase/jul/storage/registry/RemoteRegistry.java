@@ -159,9 +159,17 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         throw new RejectedException("RemoteRegistry not lockable!");
     }
 
+    boolean internalTryLockRegistry() throws RejectedException {
+        return super.tryLockRegistry();
+    }
+
     @Override
     public void unlockRegistry() {
         // because remote registry does not support locks there is no need for any action here.
+    }
+    
+    void internalUnlockRegistry() {
+        super.unlockRegistry();
     }
 
     @Override
