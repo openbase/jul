@@ -37,7 +37,13 @@
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rst</artifactId>
+            <artifactId>jul.pattern</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.extension.rst.processing</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>
