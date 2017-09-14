@@ -21,7 +21,9 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -34,6 +36,7 @@ import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.TimeoutException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.rsb.com.RSBCommunicationServiceTest.RSBCommunicationServiceImpl;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Remote;
@@ -105,19 +108,16 @@ public class RSBRemoteServiceTest {
 
         // Test if shutdown is blocked by waitForConnection without timeout
         System.out.println("Test if waitForConnection is interrupted through shutdown!");
-        GlobalCachedExecutorService.submit(new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                try {
-                    System.out.println("Thread is running");
-                    assertTrue("Instance is not active while waiting", instance.isActive());
-                    System.out.println("Wait for ConnectionState");
-                    instance.waitForConnectionState(Remote.ConnectionState.CONNECTED);
-                } catch (CouldNotPerformException | InterruptedException ex) {
+        GlobalCachedExecutorService.submit(() -> {
+            try {
+                System.out.println("Thread is running");
+                assertTrue("Instance is not active while waiting", instance.isActive());
+                System.out.println("Wait for ConnectionState");
+                instance.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+            } catch (CouldNotPerformException | InterruptedException ex) {
 //                    ExceptionPrinter.printHistoryAndReturnThrowable(ex, logger);
-                }
-                return null;
             }
+            return null;
         });
 
         Thread.sleep(100);
@@ -126,7 +126,6 @@ public class RSBRemoteServiceTest {
     }
 
     @Test(timeout = 5000)
-//    @Test
     public void testDeactivation() throws InterruptedException, CouldNotPerformException {
         System.out.println("testDeactivation");
 
@@ -141,10 +140,45 @@ public class RSBRemoteServiceTest {
         instance.waitForConnectionState(ConnectionState.CONNECTED);
         instance.waitForData();
         System.out.println("shutdown...");
-        System.out.println("main thread name: "+Thread.currentThread().getName());
+        System.out.println("main thread name: " + Thread.currentThread().getName());
         communicationService.deactivate();
         instance.deactivate();
         communicationService.shutdown();
         instance.shutdown();
+    }
+
+    /**
+     * Test what happens when one thread calls an asynchronous method while another reinitializes
+     * the remote services and requests new data afterwards.
+     * This is a simple example for issue https://github.com/openbase/bco.registry/issues/59,
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 5000)
+    public void testReinit() throws Exception {
+        System.out.println("testReinit");
+
+        final RSBRemoteService remoteService = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
+        remoteService.init("/test/testReinit");
+        remoteService.activate();
+
+        GlobalCachedExecutorService.submit(() -> {
+            try {
+                remoteService.callMethodAsync("method").get();
+            } catch (CouldNotPerformException | InterruptedException | ExecutionException ex) {
+                // is expected since reinit should kill the method call
+            }
+        });
+
+        Thread.sleep(100);
+
+        remoteService.reinit();
+        try {
+            remoteService.requestData().get(100, TimeUnit.MILLISECONDS);
+        } catch (CancellationException ex) {
+            throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Requesting data has been cancelled", ex), logger);
+        } catch (java.util.concurrent.TimeoutException ex) {
+            // is expected here since no server is started
+        }
     }
 }

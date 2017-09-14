@@ -1,8 +1,8 @@
-package org.openbase.jul.iface.provider;
+package org.openbase.jul.extension.xml.exception;
 
 /*
  * #%L
- * JUL Interface
+ * JUL Extension XML
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,21 +21,21 @@ package org.openbase.jul.iface.provider;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.NotAvailableException;
+
+import nu.xom.Node;
+import nu.xom.Nodes;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface NameProvider {
+public class NotOneNodeException extends XMLParsingException {
+    
+	public NotOneNodeException(final String nodeName, final Nodes nodes, final Node parent, final Exception cause) {
+		super("Found "+nodes.size()+" instead of one Node["+nodeName+"] in Element["+parent.getBaseURI()+"].", parent.getBaseURI(), cause);
+	}
 
-    public final static String TYPE_FIELD_NAME = "name";
-
-    /**
-     * Method returns the name of this instance.
-     *
-     * @return the name as string.
-     * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
-     */
-    public String getName() throws NotAvailableException;
+	public NotOneNodeException(final String nodeName, final Nodes nodes, final Node parent) {
+		super("Found "+nodes.size()+" instead of one Node["+nodeName+"] in Element["+parent.getBaseURI()+"].");
+	}
 }
