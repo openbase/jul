@@ -418,6 +418,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                     try {
                         for (final Future future : futureCollection) {
                             try {
+                                // todo: implement timeout splitting
                                 future.get(timeout, timeUnit);
                                 oneSuccesfullyFinished = true;
                             } catch (ExecutionException | TimeoutException ex) {
