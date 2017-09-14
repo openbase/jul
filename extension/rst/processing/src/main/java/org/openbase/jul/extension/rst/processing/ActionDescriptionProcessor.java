@@ -40,7 +40,7 @@ import rst.timing.IntervalType.Interval;
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class ActionDescriptionProcessor {
-    
+
     public static final String TOKEN_SEPERATOR = "#";
 
     public static final String AUTHORITY_KEY = "$AUTHORITY";
@@ -173,17 +173,18 @@ public class ActionDescriptionProcessor {
     /**
      * Create an interval which start now and ends after the maximum of MIN_ALLCOCATION_TIME_MILLI
      * and the executionTimePeriod.
-     * TODO: method should also evaluate the executionValidity to maybe shorten the slot
-     * 
-     * @param executionTimePeriod the execution time period for the action
-     * @param executionValidity the date till when the action is valid
+     * Updates the executionTimePeriod of the given actionDescription.
+     *
+     * @param actionDescription actionDescription
      * @return an Interval generated as described above
      */
-    public static Interval getAllocationInterval(final long executionTimePeriod, final DateTime executionValidity) {
+    public static Interval getAllocationInterval(final ActionDescription.Builder actionDescription) {
         Interval.Builder interval = Interval.newBuilder();
 
+        actionDescription.setExecutionTimePeriod(Math.min(actionDescription.getExecutionTimePeriod(), actionDescription.getExecutionValidity().getMillisecondsSinceEpoch() - System.currentTimeMillis()));
+
         interval.setBegin(TimestampProcessor.getCurrentTimestamp());
-        interval.setEnd(TimestampJavaTimeTransform.transform(System.currentTimeMillis() + Math.max(MIN_ALLOCATION_TIME_MILLI, executionTimePeriod)));
+        interval.setEnd(TimestampJavaTimeTransform.transform(System.currentTimeMillis() + Math.max(MIN_ALLOCATION_TIME_MILLI, actionDescription.getExecutionTimePeriod())));
 
         return interval.build();
     }
@@ -192,19 +193,19 @@ public class ActionDescriptionProcessor {
      * Update the slot of the ResourceAllocation based on the current time and the
      * values of the ActionDescription.
      * To generate the slot the method {@link #getAllocationInterval(long , DateTime) getAllocationInterval} is used.
-     * 
+     *
      * @param actionDescription the ActionDescription inside which the ResourceAllocation is updated
      * @return the updated ActionDescription
      */
     public static ActionDescription.Builder updateResourceAllocationSlot(final ActionDescription.Builder actionDescription) {
         final ResourceAllocation.Builder resourceAllocationBuilder = actionDescription.getResourceAllocationBuilder();
-        resourceAllocationBuilder.setSlot(getAllocationInterval(actionDescription.getExecutionTimePeriod(), actionDescription.getExecutionValidity()));
+        resourceAllocationBuilder.setSlot(getAllocationInterval(actionDescription));
         return actionDescription;
     }
-    
+
     /**
      * Build an ActionReference from a given ActionDescription which can be added to an action chain.
-     * 
+     *
      * @param actionDescription the ActionDescription from which the ActionReference is generated
      * @return an ActionReference for the given ActionDescription
      */
@@ -215,13 +216,13 @@ public class ActionDescriptionProcessor {
         actionReference.setServiceStateDescription(actionDescription.getServiceStateDescription());
         return actionReference.build();
     }
-    
+
     /**
      * Updates the ActionChain which is a description of actions that lead to this action.
      * The action chain is updated in a way that the immediate parent is the first element of
      * the chain. So the index of the chain indicates how many actions are in between this
      * action and the causing action.
-     * 
+     *
      * @param actionDescription the ActionDescription which is updated
      * @param parentAction the ActionDescription of the action which is the cause for the new action
      * @return the updated ActionDescription
@@ -231,27 +232,27 @@ public class ActionDescriptionProcessor {
         actionDescription.addAllActionChain(parentAction.getActionChainList());
         return actionDescription;
     }
-    
+
     /**
      * Check if the ResourceAllocation inside the ActionDescription has a token in its id field.
-     * 
+     *
      * @param actionDescription the ActionDescription which is checked
      * @return true if the id field contains a # which it the token separator and else false
      */
     public static boolean hasResourceAllocationToken(final ActionDescriptionOrBuilder actionDescription) {
         return actionDescription.getResourceAllocation().getId().contains(TOKEN_SEPERATOR);
     }
-    
+
     /**
      * Add a token to the id field of the ResourceAllocation inside the ActionDescription.
      * This method does nothing if the id already contains a token.
-     * 
+     *
      * @param actionDescription the ActionDescription which is updated
      * @return the updated ActionDescription
      */
     public static ActionDescription.Builder generateToken(final ActionDescription.Builder actionDescription) {
         ResourceAllocation.Builder resourceAllocation = actionDescription.getResourceAllocationBuilder();
-        if(hasResourceAllocationToken(actionDescription)) {
+        if (hasResourceAllocationToken(actionDescription)) {
             return actionDescription;
         } else {
             String token = UUID.randomUUID().toString();
@@ -259,18 +260,18 @@ public class ActionDescriptionProcessor {
             return actionDescription;
         }
     }
-    
+
     /**
      * Get a new id value for the id field in the ResourceAllocation of an ActionDescription
      * while keeping the token if there si one.
-     * 
+     *
      * @param actionDescription the action description which is updated as described above
      * @return the action description which is updated as described above
      */
     public static ActionDescription.Builder updateResourceAllocationId(final ActionDescription.Builder actionDescription) {
         ResourceAllocation.Builder resourceAllocation = actionDescription.getResourceAllocationBuilder();
         String newId = UUID.randomUUID().toString();
-        if(!hasResourceAllocationToken(actionDescription)) {
+        if (!hasResourceAllocationToken(actionDescription)) {
             resourceAllocation.setId(newId);
         } else {
             String token = resourceAllocation.getId().split(TOKEN_SEPERATOR)[1];
