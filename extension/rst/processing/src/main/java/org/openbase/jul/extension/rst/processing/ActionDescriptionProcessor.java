@@ -192,7 +192,7 @@ public class ActionDescriptionProcessor {
     /**
      * Update the slot of the ResourceAllocation based on the current time and the
      * values of the ActionDescription.
-     * To generate the slot the method {@link #getAllocationInterval(long , DateTime) getAllocationInterval} is used.
+     * To generate the slot the method {@link #getAllocationInterval(ActionDescription.Builder) getAllocationInterval} is used.
      *
      * @param actionDescription the ActionDescription inside which the ResourceAllocation is updated
      * @return the updated ActionDescription
