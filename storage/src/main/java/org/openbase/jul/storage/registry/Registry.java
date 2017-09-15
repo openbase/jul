@@ -23,6 +23,7 @@ package org.openbase.jul.storage.registry;
  */
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
@@ -126,6 +127,8 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
     }
 
     public boolean tryLockRegistry() throws RejectedException;
+    
+    public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException;
 
     public void unlockRegistry();
 

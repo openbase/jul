@@ -23,6 +23,7 @@ package org.openbase.jul.storage.registry;
  */
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -220,5 +221,10 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     @Override
     public void removeDependencyObserver(Observer<Map<KEY, ENTRY>> observer) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public boolean recursiveTryLockRegistry(Set<Registry> lockedRegistries) throws RejectedException {
+        throw new RejectedException("MockRegistrySandbox not lockable!");
     }
 }

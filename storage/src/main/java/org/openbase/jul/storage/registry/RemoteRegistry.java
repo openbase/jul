@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -161,6 +162,15 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
     boolean internalTryLockRegistry() throws RejectedException {
         return super.tryLockRegistry();
+    }
+
+    @Override
+    public boolean recursiveTryLockRegistry(Set<Registry> lockedRegistries) throws RejectedException {
+        throw new RejectedException("RemoteRegistry not externally lockable!");
+    }
+    
+    boolean internalRecursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException {
+        return super.recursiveTryLockRegistry(lockedRegistries);
     }
 
     @Override

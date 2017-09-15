@@ -26,9 +26,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
@@ -1068,28 +1070,47 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return getName();
     }
 
+    private final Set<Registry> lockedRegistries = new HashSet<>();
+
     /**
      * Blocks until the registry write lock is acquired.
      *
      * @throws RejectedException is thrown in case the lock is not supported by this registry. E.g. this is the case for remote registries.
      */
     protected void lock() throws CouldNotPerformException {
+//        logger.info("Lock [" + this + "]");
+        boolean tryLock;
         try {
             while (true) {
-                if (registryLock.writeLock().tryLock()) {
-                    try {
-                        lockDependingRegistries();
-                        return;
-                    } catch (RejectedException ex) {
-                        registryLock.writeLock().unlock();
-                    } catch (CouldNotPerformException ex) {
-                        registryLock.writeLock().unlock();
-                        throw ex;
+//                if (registryLock.writeLock().tryLock()) {
+//                    try {
+//                        lockDependingRegistries();
+//                        return;
+//                    } catch (RejectedException ex) {
+//                        registryLock.writeLock().unlock();
+//                    } catch (CouldNotPerformException ex) {
+//                        registryLock.writeLock().unlock();
+//                        throw ex;
+//                    }
+//                }
+                if (this instanceof RemoteRegistry) {
+                    tryLock = ((RemoteRegistry) this).internalRecursiveTryLockRegistry(lockedRegistries);
+                } else {
+                    tryLock = recursiveTryLockRegistry(lockedRegistries);
+                }
+
+                if (tryLock) {
+                    logger.info("Registry[" + this + "] locked");
+                    return;
+                } else {
+                    // only unlock registries when they are held by the current thread
+                    if (registryLock.writeLock().isHeldByCurrentThread()) {
+                        unlockRegistries(lockedRegistries);
                     }
                 }
 
                 try {
-                    Thread.sleep(20 + randomJitter.nextInt(5));
+                    Thread.sleep(20 + randomJitter.nextInt(30));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     throw new CouldNotPerformException("Could not lock registry because thread was externally interrupted!", ex);
@@ -1098,6 +1119,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not lock registry!", ex);
         }
+    }
+
+    private void unlockRegistries(final Set<Registry> lockedRegistries) {
+        lockedRegistries.stream().forEach((registry) -> {
+            if (registry instanceof RemoteRegistry) {
+                ((RemoteRegistry) registry).internalUnlockRegistry();
+            } else {
+                registry.unlockRegistry();
+            }
+        });
+        lockedRegistries.clear();
     }
 
     public boolean isBusy() {
@@ -1109,9 +1141,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     protected void unlock() {
-        unlockDependingRegistries();
+        if (!registryLock.writeLock().isHeldByCurrentThread()) {
+            logger.warn("Cannot unlock[" + this + "] because it was never locked by this thrad");
+            String trace = "";
+            for (StackTraceElement elem : Thread.currentThread().getStackTrace()) {
+                trace += elem.toString() + "\n";
+            }
+            System.out.println(trace);
+        }
         assert registryLock.writeLock().isHeldByCurrentThread();
-        registryLock.writeLock().unlock();
+//        unlockDependingRegistries();
+//        registryLock.writeLock().unlock();
+        unlockRegistries(lockedRegistries);
+        logger.info("Registry[" + this + "] unlocked");
     }
 
     protected boolean isWriteLockedByCurrentThread() {
@@ -1127,6 +1169,34 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public boolean tryLockRegistry() throws RejectedException {
         return registryLock.writeLock().tryLock();
+    }
+
+    @Override
+    public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException {
+        if (lockedRegistries.contains(this)) {
+//            logger.info("Locked Registries clready contains [" + this + "]");
+            return true;
+        } else {
+            if (registryLock.writeLock().tryLock()) {
+                lockedRegistries.add(this);
+//                logger.info("Acquired lock for [" + this.toString() + "]");
+                for (Registry registry : dependingRegistryMap.keySet()) {
+//                    logger.info("Try Lock depending registry [" + registry.toString() + "]");
+                    if (registry instanceof RemoteRegistry) {
+                        if (!((RemoteRegistry) registry).internalRecursiveTryLockRegistry(lockedRegistries)) {
+                            return false;
+                        }
+                    } else {
+                        if (!registry.recursiveTryLockRegistry(lockedRegistries)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     /**
