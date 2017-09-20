@@ -122,8 +122,6 @@ public class RegistryLockingTest {
         testingThread.join();
         System.out.println("Testing thread finished!");
         
-        
-        
         registry1.unlock();
         
         testingThread = new Thread(() -> {
@@ -148,6 +146,11 @@ public class RegistryLockingTest {
         
         testingThread.start();
         testingThread.join();
+        
+        registry1.lock();
+        registry1.lock();
+        registry1.unlock();
+        registry1.unlock();
     }
 
     public class AbstractRegistryImpl extends AbstractRegistry {

@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rst.storage.registry.consistency;
  */
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -343,6 +344,11 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public void removeDependencyObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+
+                @Override
+                public boolean recursiveTryLockRegistry(Set<Registry> lockedRegistries) throws RejectedException {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });

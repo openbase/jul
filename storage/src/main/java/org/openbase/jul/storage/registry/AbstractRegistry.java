@@ -1071,6 +1071,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     private final Set<Registry> lockedRegistries = new HashSet<>();
+    private int lockCounter = 0;
 
     /**
      * Blocks until the registry write lock is acquired.
@@ -1100,7 +1101,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
 
                 if (tryLock) {
-                    logger.info("Registry[" + this + "] locked");
+//                    logger.info("Registry[" + this + "] locked");
+                    lockCounter++;
                     return;
                 } else {
                     // only unlock registries when they are held by the current thread
@@ -1141,19 +1143,24 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     protected void unlock() {
-        if (!registryLock.writeLock().isHeldByCurrentThread()) {
-            logger.warn("Cannot unlock[" + this + "] because it was never locked by this thrad");
-            String trace = "";
-            for (StackTraceElement elem : Thread.currentThread().getStackTrace()) {
-                trace += elem.toString() + "\n";
-            }
-            System.out.println(trace);
-        }
+//        if (!registryLock.writeLock().isHeldByCurrentThread()) {
+//            logger.error("Cannot unlock[" + this + "] because it was never locked by this thrad");
+//            String trace = "";
+//            for (StackTraceElement elem : Thread.currentThread().getStackTrace()) {
+//                trace += elem.toString() + "\n";
+//            }
+//            System.out.println(trace);
+//        }
         assert registryLock.writeLock().isHeldByCurrentThread();
 //        unlockDependingRegistries();
 //        registryLock.writeLock().unlock();
-        unlockRegistries(lockedRegistries);
-        logger.info("Registry[" + this + "] unlocked");
+        if(lockCounter > 1) {
+            lockCounter--;
+        } else {
+            unlockRegistries(lockedRegistries);
+            lockCounter--;
+        }
+//        logger.info("Registry[" + this + "] unlocked");
     }
 
     protected boolean isWriteLockedByCurrentThread() {
