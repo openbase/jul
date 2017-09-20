@@ -2,14 +2,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.openbase</groupId>
-    <artifactId>jul.extension</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>jul.pattern.trigger</artifactId>
+    <packaging>jar</packaging>
 
-    <name>JUL Extension</name>
+    <name>JUL Pattern Trigger</name>
     
     <parent>
         <groupId>org.openbase</groupId>
-        <artifactId>jul</artifactId>
+        <artifactId>jul.pattern.module</artifactId>
         <version>1.4-SNAPSHOT</version>
     </parent>    
     
@@ -28,21 +28,24 @@
         </plugins>
     </build>
 
-    <modules>
-        <module>openhab</module>
-        <module>protobuf</module>
-        <module>rsb</module>
-        <module>rst</module>
-        <module>rct</module>
-        <module>xml</module>
-        <!--module>tcp</module-->
-    </modules>
-    
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.exception</artifactId>
+            <artifactId>jul.interface</artifactId>
             <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.pattern</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.extension.rst.processing</artifactId>
+            <version>${project.version}</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
 </project>

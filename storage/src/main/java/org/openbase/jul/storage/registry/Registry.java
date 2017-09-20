@@ -25,9 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Writable;
+import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 
@@ -37,14 +39,16 @@ import org.openbase.jul.pattern.Observer;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>> {
+public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>>, NameProvider {
 
     /**
      * Method returns the name of this registry.
      *
      * @return the name as string.
+     * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
      */
-    public String getName();
+    @Override
+    public String getName() throws NotAvailableException;
 
     /**
      * Method registers the given entry.

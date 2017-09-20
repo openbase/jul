@@ -1,8 +1,9 @@
-package org.openbase.jul.storage.registry;
+
+package org.openbase.jul.pattern.trigger;
 
 /*-
  * #%L
- * JUL Storage
+ * JUL Pattern Trigger
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,26 +22,21 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.InitializationException;
+
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.iface.Activatable;
+import org.openbase.jul.pattern.Observer;
+import rst.domotic.state.ActivationStateType;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <M>
  */
-public interface RegistryRemote<M> extends Remote<M>, RegistryService {
+public interface Trigger extends Activatable {
 
-    /**
-     * Method initializes the remote with the default registry connection scope.
-     *
-     * @throws InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
-     */
-    public void init() throws InitializationException, InterruptedException;
+    void deregisterObserver(final Observer<ActivationStateType.ActivationState> observer);
 
-    default public String getName() throws NotAvailableException {
-        return getClass().getSimpleName().replace(Remote.class.getSimpleName(), "");
-    }
+    ActivationStateType.ActivationState getActivationState() throws NotAvailableException;
+
+    void registerObserver(final Observer<ActivationStateType.ActivationState> observer);
+
 }

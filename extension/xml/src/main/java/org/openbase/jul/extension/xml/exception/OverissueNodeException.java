@@ -1,8 +1,8 @@
-package org.openbase.jul.storage.registry;
+package org.openbase.jul.extension.xml.exception;
 
-/*-
+/*
  * #%L
- * JUL Storage
+ * JUL Extension XML
  * %%
  * Copyright (C) 2015 - 2017 openbase.org
  * %%
@@ -21,26 +21,20 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.InitializationException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.pattern.Remote;
+
+import nu.xom.Node;
+import nu.xom.Nodes;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <M>
  */
-public interface RegistryRemote<M> extends Remote<M>, RegistryService {
+public class OverissueNodeException extends XMLParsingException {
 
-    /**
-     * Method initializes the remote with the default registry connection scope.
-     *
-     * @throws InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
-     */
-    public void init() throws InitializationException, InterruptedException;
+	public OverissueNodeException(final String nodeName, final Nodes childNodes, final Node parent, final Exception cause) {
+		super("Expected one Node[" + nodeName + "] but found " + childNodes.size() + " childs of parent Element[" + parent.getBaseURI() + "].", parent.getBaseURI(), cause);
+	}
 
-    default public String getName() throws NotAvailableException {
-        return getClass().getSimpleName().replace(Remote.class.getSimpleName(), "");
-    }
+	public OverissueNodeException(final String nodeName, final Nodes childElements, final Node parent) {
+		super("Expected one Node[" + nodeName + "] but found " + childElements.size() + " childs of parent Element[" + parent.getBaseURI() + "].");
+	}
 }
