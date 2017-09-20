@@ -94,18 +94,16 @@ public class RegistryLockingTest {
         remoteRegistry1.lock();
         remoteRegistry1.unlock();
         
-        System.out.println("Lock registry1...");
         registry1.lock();
-        System.out.println("Locked registry1!");
 
         Thread testingThread = new Thread(() -> {
             try {
-                assertFalse(registry1.tryLockRegistry());
-                assertTrue(registry2.tryLockRegistry());
-                assertTrue(registry3.tryLockRegistry());
-                assertTrue(registry4.tryLockRegistry());
-                assertFalse(remoteRegistry1.internalTryLockRegistry());
-                assertTrue(remoteRegistry2.internalTryLockRegistry());
+                assertFalse("Registry1 still lockable", registry1.tryLockRegistry());
+                assertTrue("Registry2 still lockable", registry2.tryLockRegistry());
+                assertTrue("Registry3 still lockable", registry3.tryLockRegistry());
+                assertTrue("Registry4 still lockable", registry4.tryLockRegistry());
+                assertFalse("RemoteRegistry1 still lockable", remoteRegistry1.internalTryLockRegistry());
+                assertTrue("RemoteRegistry2 still lockable", remoteRegistry2.internalTryLockRegistry());
                 registry2.unlockRegistry();
                 registry3.unlockRegistry();
                 registry4.unlockRegistry();
@@ -116,11 +114,11 @@ public class RegistryLockingTest {
             }
         });
         
-        System.out.println("Start testing thread...");
+        registry2.lock();
+        registry2.unlock();
+        
         testingThread.start();
-        System.out.println("Join testing thread...");
         testingThread.join();
-        System.out.println("Testing thread finished!");
         
         registry1.unlock();
         
@@ -151,6 +149,8 @@ public class RegistryLockingTest {
         registry1.lock();
         registry1.unlock();
         registry1.unlock();
+        
+        
     }
 
     public class AbstractRegistryImpl extends AbstractRegistry {

@@ -93,6 +93,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private final ReentrantReadWriteLock consistencyCheckLock = new ReentrantReadWriteLock();
 
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
+    /**
+     * Map of registries this one depends on.
+     */
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
     private final ObservableImpl<Map<KEY, ENTRY>> dependingRegistryObservable;
 
@@ -606,6 +609,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * This method allows the removal of a registered registry dependency.
      *
      * @param registry the dependency to remove.
+     * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void removeDependency(final Registry registry) throws CouldNotPerformException {
         if (registry == null) {
@@ -1079,35 +1083,28 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @throws RejectedException is thrown in case the lock is not supported by this registry. E.g. this is the case for remote registries.
      */
     protected void lock() throws CouldNotPerformException {
-//        logger.info("Lock [" + this + "]");
         boolean tryLock;
         try {
             while (true) {
-//                if (registryLock.writeLock().tryLock()) {
-//                    try {
-//                        lockDependingRegistries();
-//                        return;
-//                    } catch (RejectedException ex) {
-//                        registryLock.writeLock().unlock();
-//                    } catch (CouldNotPerformException ex) {
-//                        registryLock.writeLock().unlock();
-//                        throw ex;
-//                    }
-//                }
-                if (this instanceof RemoteRegistry) {
-                    tryLock = ((RemoteRegistry) this).internalRecursiveTryLockRegistry(lockedRegistries);
-                } else {
-                    tryLock = recursiveTryLockRegistry(lockedRegistries);
-                }
+                if (registryLock.writeLock().tryLock()) {
+                    try {
+                        if (this instanceof RemoteRegistry) {
+                            tryLock = ((RemoteRegistry) this).internalRecursiveTryLockRegistry(lockedRegistries);
+                        } else {
+                            tryLock = recursiveTryLockRegistry(lockedRegistries);
+                        }
 
-                if (tryLock) {
-//                    logger.info("Registry[" + this + "] locked");
-                    lockCounter++;
-                    return;
-                } else {
-                    // only unlock registries when they are held by the current thread
-                    if (registryLock.writeLock().isHeldByCurrentThread()) {
-                        unlockRegistries(lockedRegistries);
+                        if (tryLock) {
+                            lockCounter++;
+                            return;
+                        } else {
+                            // only unlock registries when they are held by the current thread
+                            if (registryLock.writeLock().isHeldByCurrentThread()) {
+                                unlockRegistries(lockedRegistries);
+                            }
+                        }
+                    } finally {
+                        registryLock.writeLock().unlock();
                     }
                 }
 
@@ -1124,14 +1121,23 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     private void unlockRegistries(final Set<Registry> lockedRegistries) {
-        lockedRegistries.stream().forEach((registry) -> {
-            if (registry instanceof RemoteRegistry) {
-                ((RemoteRegistry) registry).internalUnlockRegistry();
-            } else {
-                registry.unlockRegistry();
-            }
-        });
-        lockedRegistries.clear();
+        assert registryLock.writeLock().isHeldByCurrentThread();
+
+        // additional write lock because this registry is also part of the locked registries
+        // this ensures that the lockedRegistry list can only be modified after this
+        registryLock.writeLock().lock();
+        try {
+            lockedRegistries.stream().forEach((registry) -> {
+                if (registry instanceof RemoteRegistry) {
+                    ((RemoteRegistry) registry).internalUnlockRegistry();
+                } else {
+                    registry.unlockRegistry();
+                }
+            });
+            lockedRegistries.clear();
+        } finally {
+            registryLock.writeLock().unlock();
+        }
     }
 
     public boolean isBusy() {
@@ -1143,24 +1149,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     protected void unlock() {
-//        if (!registryLock.writeLock().isHeldByCurrentThread()) {
-//            logger.error("Cannot unlock[" + this + "] because it was never locked by this thrad");
-//            String trace = "";
-//            for (StackTraceElement elem : Thread.currentThread().getStackTrace()) {
-//                trace += elem.toString() + "\n";
-//            }
-//            System.out.println(trace);
-//        }
         assert registryLock.writeLock().isHeldByCurrentThread();
-//        unlockDependingRegistries();
-//        registryLock.writeLock().unlock();
-        if(lockCounter > 1) {
+
+        if (lockCounter > 1) {
             lockCounter--;
         } else {
             unlockRegistries(lockedRegistries);
             lockCounter--;
         }
-//        logger.info("Registry[" + this + "] unlocked");
     }
 
     protected boolean isWriteLockedByCurrentThread() {
@@ -1181,14 +1177,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException {
         if (lockedRegistries.contains(this)) {
-//            logger.info("Locked Registries clready contains [" + this + "]");
             return true;
         } else {
             if (registryLock.writeLock().tryLock()) {
                 lockedRegistries.add(this);
-//                logger.info("Acquired lock for [" + this.toString() + "]");
                 for (Registry registry : dependingRegistryMap.keySet()) {
-//                    logger.info("Try Lock depending registry [" + registry.toString() + "]");
                     if (registry instanceof RemoteRegistry) {
                         if (!((RemoteRegistry) registry).internalRecursiveTryLockRegistry(lockedRegistries)) {
                             return false;
@@ -1215,57 +1208,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         registryLock.writeLock().unlock();
     }
 
-    private synchronized void lockDependingRegistries() throws RejectedException, FatalImplementationErrorException {
-        boolean success = true;
-        final List<Registry> lockedRegistries = new ArrayList<>();
-
-        try {
-            // lock all depending registries except remote registries which will reject the locking.
-            for (Registry registry : dependingRegistryMap.keySet()) {
-                try {
-                    if (registry instanceof RemoteRegistry) {
-                        if (((RemoteRegistry) registry).internalTryLockRegistry()) {
-                            lockedRegistries.add(registry);
-                        } else {
-                            success = false;
-                        }
-                    } else {
-                        if (registry.tryLockRegistry()) {
-                            lockedRegistries.add(registry);
-                        } else {
-                            success = false;
-                        }
-                    }
-                } catch (RejectedException ex) {
-                    // ignore if registry does not support the lock.
-                }
-            }
-        } catch (Exception ex) {
-            success = false;
-            throw new RejectedException("Could not lock all depending registries!", ex);
-        } finally {
-            try {
-                // if not successfull release all already acquire locks.
-                if (!success) {
-                    lockedRegistries.stream().forEach((registry) -> {
-                        if (registry instanceof RemoteRegistry) {
-                            ((RemoteRegistry) registry).internalUnlockRegistry();
-                        } else {
-                            registry.unlockRegistry();
-                        }
-                    });
-                }
-            } catch (Exception ex) {
-                assert false;
-                throw new FatalImplementationErrorException("Could not release depending locks!", this, ex);
-            }
-        }
-
-        if (!success) {
-            throw new RejectedException("Could not lock all depending registries!");
-        }
-    }
-
     @Override
     public void addDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
         dependingRegistryObservable.addObserver(observer);
@@ -1274,16 +1216,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public void removeDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
         dependingRegistryObservable.removeObserver(observer);
-    }
-
-    private synchronized void unlockDependingRegistries() {
-        new ArrayList<>(dependingRegistryMap.keySet()).stream().forEach((registry) -> {
-            if (registry instanceof RemoteRegistry) {
-                ((RemoteRegistry) registry).internalUnlockRegistry();
-            } else {
-                registry.unlockRegistry();
-            }
-        });
     }
 
     private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
@@ -1317,15 +1249,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     } finally {
                         unlock();
                     }
+
                     if (notificationNeeded) {
+                        logger.info(AbstractRegistry.this + " notify after dependency check");
                         notifyObservers();
                     }
-//                    if (checkConsistency() > 0 || notificationSkipped) {
-//                        // notify depending registries so they perform their consistency checks
-//                        dependingRegistryObservable.notifyObservers(entryMap);
-//                        // notify data observers because the consistency check did some changes
-//                        notifyObservers();
-//                    }
                 }
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory("Registry inconsistend after change of depending " + source + " change.", ex, logger);

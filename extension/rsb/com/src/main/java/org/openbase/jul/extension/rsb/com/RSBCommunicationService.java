@@ -524,8 +524,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public MB cloneDataBuilder() {
+        dataBuilderReadLock.lock();
         try {
-            dataBuilderReadLock.lock();
             return dataBuilder.clone();
         } finally {
             dataBuilderReadLock.unlock();

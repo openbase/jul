@@ -110,6 +110,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
     private boolean shutdownInitiated;
 
+    private long mostRecentEventTime = 0;
+
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
         this.mainHandler = new InternalUpdateHandler();
@@ -834,6 +836,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
             Future<Event> internalFuture = null;
             M dataUpdate = null;
+            Event event = null;
             try {
                 try {
                     logger.debug("call request");
@@ -849,7 +852,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         try {
                             remoteServerWatchDog.waitForServiceActivation();
                             internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
-                            dataUpdate = messageProcessor.process((GeneratedMessage) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData());
+                            event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
+                            dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
                             }
@@ -881,7 +885,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                     // skip if sync was already performed by global data update.
                     if (relatedFuture == null || !relatedFuture.isCancelled()) {
-                        applyDataUpdate(dataUpdate);
+                        // skip events which were send later than the last received update
+                        if (event != null && event.getMetaData().getSendTime() > mostRecentEventTime) {
+                            mostRecentEventTime = event.getMetaData().getSendTime();
+                            applyDataUpdate(dataUpdate);
+                        }
                     }
                     return dataUpdate;
                 } catch (InterruptedException ex) {
@@ -1151,7 +1159,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
-                applyDataUpdate(messageProcessor.process((GeneratedMessage) dataUpdate));
+                // skip events which were send later than the last received update
+                if (event.getMetaData().getSendTime() > mostRecentEventTime) {
+                    mostRecentEventTime = event.getMetaData().getSendTime();
+                    applyDataUpdate(messageProcessor.process((GeneratedMessage) dataUpdate));
+                }
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception ex) {
