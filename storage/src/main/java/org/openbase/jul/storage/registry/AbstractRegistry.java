@@ -92,6 +92,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private final ReentrantReadWriteLock registryLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock consistencyCheckLock = new ReentrantReadWriteLock();
 
+    private final Set<Registry> lockedRegistries = new HashSet<>();
+    private int lockCounter = 0;
+
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
     /**
      * Map of registries this one depends on.
@@ -1074,40 +1077,47 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return getName();
     }
 
-    private final Set<Registry> lockedRegistries = new HashSet<>();
-    private int lockCounter = 0;
-
     /**
-     * Blocks until the registry write lock is acquired.
+     * Blocks until this registries write lock and the write locks of all registries this one depends on are acquired.
      *
-     * @throws RejectedException is thrown in case the lock is not supported by this registry. E.g. this is the case for remote registries.
+     * @throws CouldNotPerformException Is thrown if the process gets interrupted. Additionally the interrupt flag is restored.
      */
     protected void lock() throws CouldNotPerformException {
-        boolean tryLock;
+        boolean successfullyLocked;
         try {
             while (true) {
+                /* Acquire the write lock first before recursively locking because the set used for it
+                 * is the same for different theads. Else while one thread is currently recursively locking
+                 * another can call the same method which will return true because the set already contains
+                 * this registry. */
                 if (registryLock.writeLock().tryLock()) {
                     try {
+                        /* The method recursiveTryLockRegistry is disabled for remote registries so that they cannot be locked
+                         * extenerally. So, call the internal method which does the process but is only visible in this
+                         * package. */
                         if (this instanceof RemoteRegistry) {
-                            tryLock = ((RemoteRegistry) this).internalRecursiveTryLockRegistry(lockedRegistries);
+                            successfullyLocked = ((RemoteRegistry) this).internalRecursiveTryLockRegistry(lockedRegistries);
                         } else {
-                            tryLock = recursiveTryLockRegistry(lockedRegistries);
+                            successfullyLocked = recursiveTryLockRegistry(lockedRegistries);
                         }
 
-                        if (tryLock) {
+                        if (successfullyLocked) {
+                            /*
+                             * If all registries could be locked return and increase the lock counter. The counter is necessary
+                             * because the recursive method will only lock every registry once to prevent infinite recursion for
+                             * dependecy loops. */
                             lockCounter++;
                             return;
                         } else {
-                            // only unlock registries when they are held by the current thread
-                            if (registryLock.writeLock().isHeldByCurrentThread()) {
-                                unlockRegistries(lockedRegistries);
-                            }
+                            // locking all has failed so unlock the ones that have been acquired
+                            unlockRegistries(lockedRegistries);
                         }
                     } finally {
                         registryLock.writeLock().unlock();
                     }
                 }
 
+                // sleep for a random time before trying to lock again
                 try {
                     Thread.sleep(20 + randomJitter.nextInt(30));
                 } catch (InterruptedException ex) {
@@ -1123,8 +1133,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private void unlockRegistries(final Set<Registry> lockedRegistries) {
         assert registryLock.writeLock().isHeldByCurrentThread();
 
-        // additional write lock because this registry is also part of the locked registries
-        // this ensures that the lockedRegistry list can only be modified after this
+        /* Additional write lock because this registry is also part of the lockedRegistries set.
+         * So, if this registry would be the first one in the set it would be unlocked first and another
+         * thread could already start locking while not everything is unlocked.
+         * But by locking this registry additionally the next thread can only try to lock if all registries
+         * this one depends on have been unlocked. */
         registryLock.writeLock().lock();
         try {
             lockedRegistries.stream().forEach((registry) -> {
@@ -1152,10 +1165,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         assert registryLock.writeLock().isHeldByCurrentThread();
 
         if (lockCounter > 1) {
+            // if the registry has been locked by the same thread multiple times only decrease the counter
             lockCounter--;
         } else {
-            unlockRegistries(lockedRegistries);
+            // if the counter is at 1 than unlock all registries and decrease the counter to 0
             lockCounter--;
+            unlockRegistries(lockedRegistries);
         }
     }
 
@@ -1174,14 +1189,30 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return registryLock.writeLock().tryLock();
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     * @throws RejectedException {@inheritDoc}
+     */
     @Override
     public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException {
         if (lockedRegistries.contains(this)) {
+            /* If this registry is in the set the lock is already acqiuired, so return true.
+             * This prevents infinite recursions for dependecy loops but is also the reason why
+             * this method should be called while already holding the write lock for the current registry.
+             * Because if two threads use the same set, which is the case for the lock method, than one
+             * can be in the process and has already acquired the lock for this registry but still needs
+             * it for dependencies, the other thread returns true here. */
             return true;
         } else {
+            // try to acquire the write lock for this registry
             if (registryLock.writeLock().tryLock()) {
+                // the lock has been acquired so add this to the set
                 lockedRegistries.add(this);
+                // iterate over all registries this one depends on and try to lock recursively
                 for (Registry registry : dependingRegistryMap.keySet()) {
+                    // if one recursive try lock returns false then return false as well
                     if (registry instanceof RemoteRegistry) {
                         if (!((RemoteRegistry) registry).internalRecursiveTryLockRegistry(lockedRegistries)) {
                             return false;
@@ -1192,8 +1223,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         }
                     }
                 }
+                // all registries this one depends on could be locked recursively as well, so return true
                 return true;
             } else {
+                // acquiring the write lock for this registry failed, so return false
                 return false;
             }
         }
@@ -1251,7 +1284,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     }
 
                     if (notificationNeeded) {
-                        logger.info(AbstractRegistry.this + " notify after dependency check");
                         notifyObservers();
                     }
                 }
