@@ -28,7 +28,7 @@ package org.openbase.jul.extension.tcp.execution.clientCommand;
 
 import org.openbase.jul.extension.tcp.NetworkResourceChangeEvent;
 import org.openbase.jul.extension.tcp.execution.AbstractCommand;
-import de.dc.bco.lib.resource.ResourceChangeEvent;
+import org.openbase.jul.extension.tcp.wiretype.ResourceChangeEvent;
 
 /**
  *

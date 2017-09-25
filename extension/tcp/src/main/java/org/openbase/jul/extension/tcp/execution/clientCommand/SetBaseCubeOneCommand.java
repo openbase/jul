@@ -23,7 +23,7 @@ package org.openbase.jul.extension.tcp.execution.clientCommand;
  */
 
 import org.openbase.jul.extension.tcp.execution.AbstractCommand;
-import de.dc.bco.lib.resource.AbstractResourceConfig;
+import org.openbase.jul.extension.tcp.wiretype.AbstractResourceConfig;
 
 public class SetBaseCubeOneCommand extends AbstractCommand {
 

@@ -22,6 +22,7 @@ package org.openbase.jul.extension.tcp.execution;
  * #L%
  */
 
+import org.openbase.jul.extension.tcp.exception.NetworkTaskFailedException;
 import org.openbase.jul.extension.tcp.TCPConnection;
 import java.lang.reflect.Constructor;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -47,7 +48,7 @@ public class NetworkExecuterFactory {
 			}
 			return executer;
 		} catch (Exception ex) {
-			throw new ExecutionFailedException("Could not create suitable executer[" + classURI + "]!", command, ex);
+			throw new NetworkTaskFailedException("Could not create suitable executer[" + classURI + "]!", command, ex);
 		}
 	}
 }
