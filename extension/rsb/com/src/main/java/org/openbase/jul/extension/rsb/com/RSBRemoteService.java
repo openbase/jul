@@ -737,7 +737,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                     ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                                 } catch (ExecutionException | java.util.concurrent.TimeoutException | CancellationException exx) {
                                     // cancel call if connection is broken
-                                    internalCallFuture.cancel(true);
+                                    if (internalCallFuture != null) {
+                                        internalCallFuture.cancel(true);
+                                    }
                                 }
                             }
 
