@@ -28,7 +28,7 @@ package org.openbase.jul.extension.tcp.execution.serverCommand;
  */
 
 import org.openbase.jul.extension.tcp.execution.AbstractCommand;
-import de.dc.bco.lib.resource.ResourceKey;
+import org.openbase.jul.extension.tcp.wiretype.ResourceKey;
 /**
  * @author divine
  */

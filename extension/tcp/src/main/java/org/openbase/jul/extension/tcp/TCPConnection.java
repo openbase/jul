@@ -106,7 +106,7 @@ public abstract class TCPConnection implements Runnable {
         this.mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         this.mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);  // paranoidly repeat ourselves
         this.mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-        new ResourceKeyMapperModule(mapper);
+//        new ResourceKeyMapperModule(mapper);
         new ClassKeyMapperModule(mapper);
 
         this.timeOut = new Timeout(CONNECTION_TIMEOUT) {

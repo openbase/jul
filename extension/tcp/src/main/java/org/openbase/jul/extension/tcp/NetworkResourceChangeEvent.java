@@ -23,6 +23,10 @@ package org.openbase.jul.extension.tcp;
  */
 import java.io.Serializable;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.tcp.wiretype.AbstractResourceData;
+import org.openbase.jul.extension.tcp.wiretype.ResourceChangeEvent;
+import org.openbase.jul.extension.tcp.wiretype.ResourceKey;
+import org.openbase.jul.extension.tcp.wiretype.ResourceManager;
 import org.slf4j.LoggerFactory;
 
 /**
