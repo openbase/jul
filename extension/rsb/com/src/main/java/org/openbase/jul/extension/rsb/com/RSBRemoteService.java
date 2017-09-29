@@ -107,7 +107,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private MessageProcessor<GeneratedMessage, M> messageProcessor;
 
     private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<M> internalPriorizedDataObservable = new ObservableImpl<>(this);
     private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
+
     private boolean shutdownInitiated;
 
     private long mostRecentEventTime = 0;
@@ -1225,6 +1227,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         // Notify data update
         try {
             notifyDataUpdate(data);
+            internalPriorizedDataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
@@ -1238,12 +1241,25 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     /**
      * Overwrite this method to get informed about data updates.
+     * This is now equivalent to adding an observer on the internalPriorizedDataObserver.
      *
      * @param data new arrived data messages.
      * @throws CouldNotPerformException
      */
+    @Deprecated
     protected void notifyDataUpdate(M data) throws CouldNotPerformException {
         // dummy method, please overwrite if needed.
+    }
+
+    /**
+     * This observable notifies sequentially and prior to the normal dataObserver.
+     * It should be used by remote services which need to do some things before
+     * external objects are notified.
+     *
+     * @return The internal priorized data observable.
+     */
+    protected Observable<M> getIntenalPriorizedDataObservable() {
+        return internalPriorizedDataObservable;
     }
 
     /**

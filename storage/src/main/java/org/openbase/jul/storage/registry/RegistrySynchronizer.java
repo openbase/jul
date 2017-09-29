@@ -22,14 +22,12 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import com.google.protobuf.GeneratedMessage;
-import java.util.Map;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
-import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessageMap;
 import org.openbase.jul.extension.protobuf.ProtobufListDiff;
 import org.openbase.jul.iface.Activatable;
@@ -56,19 +54,21 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final SynchronizableRegistry<KEY, ENTRY> localRegistry;
-    private final Observer<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> remoteRegistryChangeObserver;
+    private final Observer remoteRegistryChangeObserver;
     private final RecurrenceEventFilter recurrenceSyncFilter;
     private final ProtobufListDiff<KEY, CONFIG_M, CONFIG_MB> entryConfigDiff;
     private final Factory<ENTRY, CONFIG_M> factory;
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry;
+    protected final RegistryRemote registryRemote;
     private boolean active;
 
     private final SyncObject synchronizationLock = new SyncObject("SynchronizationLock");
 
-    public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
+    public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final RegistryRemote registryRemote, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.localRegistry = registry;
             this.remoteRegistry = remoteRegistry;
+            this.registryRemote = registryRemote;
             this.entryConfigDiff = new ProtobufListDiff<>();
             this.factory = factory;
             this.recurrenceSyncFilter = new RecurrenceEventFilter(15000) {
@@ -90,7 +90,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                 }
             };
 
-            this.remoteRegistryChangeObserver = (Observable<Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>>> source, Map<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>> data) -> {
+            this.remoteRegistryChangeObserver = (Observable source, Object data) -> {
                 logger.debug("Incomming updates...");
                 recurrenceSyncFilter.trigger();
             };
@@ -102,7 +102,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
-        remoteRegistry.addObserver(remoteRegistryChangeObserver);
+        registryRemote.addDataObserver(remoteRegistryChangeObserver);
 
         try {
             // trigger internal sync if data is available.
@@ -119,7 +119,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         logger.debug("deactivate " + this);
         active = false;
-        remoteRegistry.removeObserver(remoteRegistryChangeObserver);
+        registryRemote.removeDataObserver(remoteRegistryChangeObserver);
         recurrenceSyncFilter.cancel();
     }
 
