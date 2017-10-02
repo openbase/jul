@@ -27,52 +27,28 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  * Filter which decides for a list of objects which to keep and which to filter out.
- * 
+ *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.de">Tamino Huxohl</a>
  * @param <T> the type of object on which the filter works
  */
-public abstract class AbstractFilter<T> implements Filter<T> {
+public interface Filter<T> {
 
     /**
      * Filter object from the list for which the verification fails.
-     * 
+     *
      * @param list the list which is filtered
      * @return a filtered list
-     * @throws CouldNotPerformException if an error occurs while filtering 
+     * @throws CouldNotPerformException if an error occurs while filtering
      */
-    @Override
-    public List<T> filter(List<T> list) throws CouldNotPerformException {
-        beforeFilter();
-        for (int i = 0; i < list.size(); i++) {
-            if (!verify(list.get(i))) {
-                list.remove(i);
-                i--;
-            }
-        }
-        return list;
-    }
+    List<T> filter(List<T> list) throws CouldNotPerformException;
 
     /**
-     * This method is called once before the filtering is applied.
-     * 
-     * @throws CouldNotPerformException if an error occurs.
+     * Verifies an object of type t.
+     *
+     * @param type the object which is verified
+     * @return true if it should be kept and else false
+     * @throws CouldNotPerformException if the verification fails
      */
-    public abstract void beforeFilter() throws CouldNotPerformException;
-
+    boolean verify(T type) throws CouldNotPerformException;
     
-    /**
-     * A filter can depend on some other processes. To be notified
-     * when the filter will change an observer can be registered.
-     * 
-     * @param observer An observer which is notified when the filter changes. 
-     */
-    public abstract void addObserver(Observer observer);
-    
-    /**
-     * Remove an observer which is added by addObserver.
-     * 
-     * @param observer The observer to be removed.
-     */
-    public abstract void removeObserver(Observer observer);
-
 }
