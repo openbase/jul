@@ -841,6 +841,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             Future<Event> internalFuture = null;
             M dataUpdate = null;
             Event event = null;
+            boolean active = isActive();
             try {
                 try {
                     logger.debug("call request");
@@ -848,7 +849,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     long timeout = METHOD_CALL_START_TIMEOUT;
                     while (true) {
 
-                        if (!isActive()) {
+                        // needed for synchronization, it happend that beetween this check and checking
+                        // again when catching the exception the remote has activated
+                        active = isActive();
+                        if (!active) {
                             syncFuture.cancel(true);
                             throw new InvalidStateException("Remote service is not active!");
                         }
@@ -903,7 +907,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return null;
                 }
             } catch (CouldNotPerformException | CancellationException ex) {
-                if (shutdownInitiated || !isActive() || getConnectionState().equals(DISCONNECTED)) {
+                if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger);

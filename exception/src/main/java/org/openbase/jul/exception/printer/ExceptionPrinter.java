@@ -124,6 +124,10 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final T th, final Logger logger) {
         printHistory(th, logger, LogLevel.ERROR);
+        if (JPService.testMode()) {
+            assert false;
+            return;
+        }
         exit(255);
     }
 
@@ -152,6 +156,10 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final String message, T th, final Logger logger) {
         printHistory(new CouldNotPerformException(message, th), logger, LogLevel.ERROR);
+        if (JPService.testMode()) {
+            assert false;
+            return;
+        }
         exit(255);
     }
 
@@ -177,6 +185,10 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final T th, final PrintStream stream) {
         printHistory(th, new SystemPrinter(stream));
+        if (JPService.testMode()) {
+            assert false;
+            return;
+        }
         exit(255);
     }
 
@@ -205,6 +217,10 @@ public class ExceptionPrinter {
      */
     public static <T extends Throwable> void printHistoryAndExit(final String message, final T th, final PrintStream stream) {
         printHistory(new CouldNotPerformException(message, th), new SystemPrinter(stream));
+        if (JPService.testMode()) {
+            assert false;
+            return;
+        }
         exit(255);
     }
 
