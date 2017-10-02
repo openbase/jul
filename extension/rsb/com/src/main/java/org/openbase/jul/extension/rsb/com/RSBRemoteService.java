@@ -839,7 +839,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             Future<Event> internalFuture = null;
             M dataUpdate = null;
             Event event = null;
-            boolean active;
+            boolean active = isActive();
             try {
                 try {
                     logger.debug("call request");
