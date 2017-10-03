@@ -112,7 +112,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private boolean shutdownInitiated;
 
-    private long mostRecentEventTime = 0;
+    private long newestEventTime = 0;
+    private long newestEventTimeNano = 0;
 
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
@@ -893,10 +894,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                     // skip if sync was already performed by global data update.
                     if (relatedFuture == null || !relatedFuture.isCancelled()) {
-                        // skip events which were send later than the last received update
-                        if (event != null && event.getMetaData().getSendTime() > mostRecentEventTime) {
-                            mostRecentEventTime = event.getMetaData().getSendTime();
-                            applyDataUpdate(dataUpdate);
+                        if (event != null) {
+                            // skip events which were send later than the last received update
+                            if (event.getMetaData().getCreateTime() > newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) > newestEventTimeNano)) {
+                                newestEventTime = event.getMetaData().getCreateTime();
+                                newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                                applyDataUpdate(dataUpdate);
+                            } else {
+                                logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because creation time is lower than time of last event [" + event.getMetaData().getCreateTime() + ", " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + ", " + newestEventTimeNano + "]");
+                            }
                         }
                     }
                     return dataUpdate;
@@ -1168,9 +1174,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
 
                 // skip events which were send later than the last received update
-                if (event.getMetaData().getSendTime() > mostRecentEventTime) {
-                    mostRecentEventTime = event.getMetaData().getSendTime();
-                    applyDataUpdate(messageProcessor.process((GeneratedMessage) dataUpdate));
+                if (event.getMetaData().getCreateTime() > newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) > newestEventTimeNano)) {
+                    newestEventTime = event.getMetaData().getCreateTime();
+                    newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                    applyDataUpdate((M) dataUpdate);
+                } else {
+                    logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because creation time is lower than time of last event [" + event.getMetaData().getCreateTime() + ", " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + ", " + newestEventTimeNano + "]");
                 }
             } catch (RuntimeException ex) {
                 throw ex;

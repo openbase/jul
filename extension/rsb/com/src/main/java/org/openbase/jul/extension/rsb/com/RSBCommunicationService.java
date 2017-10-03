@@ -598,10 +598,11 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
 
         M newData = getData();
-
+        Event event = new Event(informer.getScope(), newData.getClass(), getData());
+        event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
         if (informer.isActive() && server.isActive()) {
             try {
-                informer.publish(newData);
+                informer.publish(event);
             } catch (CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
             }
