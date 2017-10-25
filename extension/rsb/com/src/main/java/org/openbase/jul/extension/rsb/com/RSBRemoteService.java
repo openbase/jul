@@ -107,8 +107,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private MessageProcessor<GeneratedMessage, M> messageProcessor;
 
     private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<M> internalPriorizedDataObservable = new ObservableImpl<>(this);
     private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
+
     private boolean shutdownInitiated;
+
+    private long newestEventTime = 0;
+    private long newestEventTimeNano = 0;
 
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
@@ -249,7 +254,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException, InterruptedException {
+    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
             this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
@@ -258,7 +263,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException, InterruptedException {
+    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
@@ -353,7 +358,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
         try {
             listener.addHandler(handler, wait);
-        } catch (InterruptedException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register Handler!", ex);
         }
     }
@@ -737,7 +742,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                     ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                                 } catch (ExecutionException | java.util.concurrent.TimeoutException | CancellationException exx) {
                                     // cancel call if connection is broken
-                                    internalCallFuture.cancel(true);
+                                    if (internalCallFuture != null) {
+                                        internalCallFuture.cancel(true);
+                                    }
                                 }
                             }
 
@@ -834,6 +841,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
             Future<Event> internalFuture = null;
             M dataUpdate = null;
+            Event event = null;
+            boolean active = isActive();
             try {
                 try {
                     logger.debug("call request");
@@ -841,7 +850,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     long timeout = METHOD_CALL_START_TIMEOUT;
                     while (true) {
 
-                        if (!isActive()) {
+                        // needed for synchronization, it happend that beetween this check and checking
+                        // again when catching the exception the remote has activated
+                        active = isActive();
+                        if (!active) {
                             syncFuture.cancel(true);
                             throw new InvalidStateException("Remote service is not active!");
                         }
@@ -849,7 +861,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         try {
                             remoteServerWatchDog.waitForServiceActivation();
                             internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
-                            dataUpdate = messageProcessor.process((GeneratedMessage) internalFuture.get(timeout, TimeUnit.MILLISECONDS).getData());
+                            event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
+                            dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
                             }
@@ -881,7 +894,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                     // skip if sync was already performed by global data update.
                     if (relatedFuture == null || !relatedFuture.isCancelled()) {
-                        applyDataUpdate(dataUpdate);
+                        if (event != null) {
+                            // skip events which were send later than the last received update
+                            if (event.getMetaData().getCreateTime() > newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) > newestEventTimeNano)) {
+                                newestEventTime = event.getMetaData().getCreateTime();
+                                newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                                applyDataUpdate(dataUpdate);
+                            } else {
+                                logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because creation time is lower than time of last event [" + event.getMetaData().getCreateTime() + ", " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + ", " + newestEventTimeNano + "]");
+                            }
+                        }
                     }
                     return dataUpdate;
                 } catch (InterruptedException ex) {
@@ -891,7 +913,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return null;
                 }
             } catch (CouldNotPerformException | CancellationException ex) {
-                if (shutdownInitiated || !isActive() || getConnectionState().equals(DISCONNECTED)) {
+                if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger);
@@ -1151,7 +1173,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
-                applyDataUpdate(messageProcessor.process((GeneratedMessage) dataUpdate));
+                // skip events which were send later than the last received update
+                if (event.getMetaData().getCreateTime() > newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) > newestEventTimeNano)) {
+                    newestEventTime = event.getMetaData().getCreateTime();
+                    newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                    applyDataUpdate((M) dataUpdate);
+                } else {
+                    logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because creation time is lower than time of last event [" + event.getMetaData().getCreateTime() + ", " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + ", " + newestEventTimeNano + "]");
+                }
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception ex) {
@@ -1211,6 +1240,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         // Notify data update
         try {
             notifyDataUpdate(data);
+            internalPriorizedDataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
@@ -1224,12 +1254,25 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     /**
      * Overwrite this method to get informed about data updates.
+     * This is now equivalent to adding an observer on the internalPriorizedDataObserver.
      *
      * @param data new arrived data messages.
      * @throws CouldNotPerformException
      */
+    @Deprecated
     protected void notifyDataUpdate(M data) throws CouldNotPerformException {
         // dummy method, please overwrite if needed.
+    }
+
+    /**
+     * This observable notifies sequentially and prior to the normal dataObserver.
+     * It should be used by remote services which need to do some things before
+     * external objects are notified.
+     *
+     * @return The internal priorized data observable.
+     */
+    protected Observable<M> getIntenalPriorizedDataObservable() {
+        return internalPriorizedDataObservable;
     }
 
     /**

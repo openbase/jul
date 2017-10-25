@@ -25,6 +25,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
@@ -33,43 +34,55 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
- * RecurrenceEventFilter helps to filter high frequency events. After a new incoming event is processed, all further incoming events are skipped except of the last event which is executed after the
- * defined timeout is reached.
+ * RecurrenceEventFilter helps to filter high frequency events.
+ * After a new incoming event is processed, all further incoming events are skipped except of the last event which is executed after the defined timeout is reached.
  * @param <VALUE>
  */
 public abstract class RecurrenceEventFilter<VALUE> {
 
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(RecurrenceEventFilter.class);
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RecurrenceEventFilter.class);
 
+    @Deprecated
     public static final long DEFAULT_TIMEOUT = 1000;
+
+    public static final long DEFAULT_MAX_FREQUENCY = 1000;
+
+    @Deprecated
     public static final long DEFAULT_TEST_TIMEOUT = 100;
+    public static final long TEST_MAX_FREQUENCY = 100;
 
     private Timeout timeout;
-    private VALUE lastValue;
+    private VALUE latestValue;
+    private boolean triggered;
 
     private boolean changeDetected;
 
+    /**
+     * Constructor creates a new {@code RecurrenceEventFilter} instance pre-configured with the given {@code DEFAULT_MAX_FREQUENCY}.
+     */
     public RecurrenceEventFilter() {
-        this(DEFAULT_TIMEOUT);
+        this(DEFAULT_MAX_FREQUENCY);
     }
 
     /**
-     * Timeout in milliseconds.
+     * Constructor creates a new {@code RecurrenceEventFilter} instance pre-configured with the given {@code maxFrequency}.
      *
-     * @param timeout
+     * @param maxFrequency this is the maximum frequency in milliseconds where triggered events are relayed.
      */
-    public RecurrenceEventFilter(long timeout) {
+    public RecurrenceEventFilter(long maxFrequency) {
         this.changeDetected = false;
+        this.triggered = false;
+        this.latestValue = null;
 
         try {
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                timeout = Math.min(timeout, DEFAULT_TEST_TIMEOUT);
+                maxFrequency = Math.min(maxFrequency, TEST_MAX_FREQUENCY);
             }
         } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), LOGGER);
         }
 
-        this.timeout = new Timeout(timeout) {
+        this.timeout = new Timeout(maxFrequency) {
 
             @Override
             public void expired() {
@@ -80,16 +93,60 @@ public abstract class RecurrenceEventFilter<VALUE> {
         };
     }
 
-    public synchronized void trigger(final VALUE value) throws CouldNotPerformException {
-        this.lastValue = value;
-        trigger();
+    /**
+     * This method triggers the relay if no trigger was relayed within the defined max frequency.
+     *
+     * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest event will relayed.
+     *
+     * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
+     */
+    public synchronized void trigger() throws CouldNotPerformException {
+        trigger(latestValue, false);
     }
 
-    public synchronized void trigger() throws CouldNotPerformException {
+    /**
+     * This method triggers the relay if no trigger was relayed within the defined max frequency.
+     *
+     * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest value will relayed.
+     *
+     * @param value the new value which should be published via the next relay.
+     * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
+     */
+    public synchronized void trigger(final VALUE value) throws CouldNotPerformException {
+        trigger(value, false);
+    }
+
+    /**
+     * This method triggers the relay if no trigger was relayed within the defined max frequency or the {@code immediately} flag was set.
+     *
+     * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest event will relayed.
+     *
+     * @param immediately this flag forces the trigger to relay immediately without respect to the defined max frequency.
+     * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
+     */
+    public synchronized void trigger(final boolean immediately) throws CouldNotPerformException {
+        trigger(latestValue, immediately);
+    }
+
+    /**
+     * This method triggers the relay if no trigger was relayed within the defined max frequency or the {@code immediately} flag was set.
+     *
+     * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest value will relayed.
+     *
+     * @param value the new value which should be published via the next relay.
+     * @param immediately this flag forces the trigger to relay immediately without respect to the defined max frequency.
+     * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
+     */
+    public synchronized void trigger(final VALUE value, final boolean immediately) throws CouldNotPerformException {
+        latestValue = value;
+        triggered = true;
         try {
             if (timeout.isActive()) {
-                changeDetected = true;
-                return;
+                if (!immediately) {
+                    changeDetected = true;
+                    return;
+                }
+                timeout.cancel();
             }
 
             changeDetected = false;
@@ -100,21 +157,84 @@ public abstract class RecurrenceEventFilter<VALUE> {
         }
     }
 
+    /**
+     * Method cancels depending triggers which were not relayed yet.
+     */
     public void cancel() {
         timeout.cancel();
     }
 
+    /**
+     * Method returns the latest triggered value.
+     *
+     * @return the last value or null if no last value is available
+     * @deprecated please use {@code getLatestValue()} instead.
+     */
+    @Deprecated
     public VALUE getLastValue() {
-        return lastValue;
+        try {
+            return getLatestValue();
+        } catch (NotAvailableException ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Method returns the latest triggered value.
+     *
+     * @return the latest value.
+     * @throws NotAvailableException is thrown if a value was never triggered.
+     */
+    public VALUE getLatestValue() throws NotAvailableException {
+        if (latestValue == null) {
+            throw new NotAvailableException("LatestValue");
+        }
+        return latestValue;
+    }
+
+    /**
+     * Method returns if this instance was ever triggered since startup or since the last reset.
+     *
+     * @return
+     */
+    public boolean isTriggered() {
+        return triggered;
+    }
+
+    /**
+     * Method cancels all depending triggers and resets the {@code triggered} flag as well as resets the {@code lastValue} to {@code null}.
+     */
+    public void reset() {
+        cancel();
+        latestValue = null;
+        triggered = false;
+        changeDetected = true;
     }
 
     private void callRelay() {
         try {
-            relay();
+            relay(latestValue);
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
+            ExceptionPrinter.printHistory(ex, LOGGER, LogLevel.ERROR);
         }
     }
 
+    /**
+     * Method can be overwritten to get frequently informed about trigger actions and the related new value.
+     *
+     * Note: Be informed that by overwriting this method the default {@code relay()} will not be called anymore.
+     *
+     * @param value the latest value is passed via this argument.
+     * @throws Exception can be thrown during the relay. The exception will just be printed on the error channel.
+     */
+    public void relay(final VALUE value) throws Exception {
+        relay();
+    }
+
+    /**
+     * Method should be overwritten to get frequently informed about trigger actions.
+     *
+     * @throws Exception can be thrown during the relay. The exception will just be printed on the error channel.
+     */
     public abstract void relay() throws Exception;
 }

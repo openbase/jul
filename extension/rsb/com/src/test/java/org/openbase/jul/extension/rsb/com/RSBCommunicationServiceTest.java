@@ -38,7 +38,9 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
@@ -49,6 +51,8 @@ import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rsb.Event;
+import rsb.Handler;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
@@ -97,7 +101,7 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-    @Test//(timeout = 6000)
+    @Test(timeout = 6000)
     public void testInitialSync() throws Exception {
         System.out.println("testInitialSync");
 
