@@ -50,6 +50,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.schedule.Timeout;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -58,7 +59,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class TCPConnection implements Runnable {
 
-    protected final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public enum ConnectionSourceType {
 
@@ -113,7 +114,7 @@ public abstract class TCPConnection implements Runnable {
             @Override
             public void expired() {
                 if (connected) {
-                    LOGGER.warn("Connection timeout expired!");
+                    logger.warn("Connection timeout expired!");
                     disconnect();
                 }
             }
@@ -123,7 +124,7 @@ public abstract class TCPConnection implements Runnable {
     @Override
     public void run() {
         while (!terminate) {
-            LOGGER.debug("Initialize TCP connection.");
+            logger.debug("Initialize TCP connection.");
             if (connect()) {
                 analyseInputThread = new Thread(
                         () -> {
@@ -140,13 +141,13 @@ public abstract class TCPConnection implements Runnable {
                 try {
                     analyseInputThread.join();
                 } catch (InterruptedException ex) {
-                    ExceptionPrinter.printHistory("Could not join analyseInputThread.", ex, LOGGER, LogLevel.WARN);
+                    ExceptionPrinter.printHistory("Could not join analyseInputThread.", ex, logger, LogLevel.WARN);
                     disconnect();
                 }
                 try {
                     handelOutputThread.join();
                 } catch (InterruptedException ex) {
-                    ExceptionPrinter.printHistory("Could not join handelOutputThread.", ex, LOGGER, LogLevel.WARN);
+                    ExceptionPrinter.printHistory("Could not join handelOutputThread.", ex, logger, LogLevel.WARN);
                     disconnect();
                 }
             }
@@ -156,10 +157,10 @@ public abstract class TCPConnection implements Runnable {
                     break;
                 }
                 try {
-                    LOGGER.info("Try to reconnect to in " + RECONNECTION_TIME / 1000 + " secunds.");
+                    logger.info("Try to reconnect to in " + RECONNECTION_TIME / 1000 + " secunds.");
                     Thread.sleep(RECONNECTION_TIME);
                 } catch (InterruptedException ex) {
-                    ExceptionPrinter.printHistory("Reconnect interrupted!", ex, LOGGER);
+                    ExceptionPrinter.printHistory("Reconnect interrupted!", ex, logger);
                     Thread.currentThread().interrupt();
                 }
             }
@@ -174,7 +175,7 @@ public abstract class TCPConnection implements Runnable {
             try {
                 sendCommand(byeCommand);
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory("Could not finish connection properly!", ex, LOGGER);
+                ExceptionPrinter.printHistory("Could not finish connection properly!", ex, logger);
                 close();
             }
         } else {
@@ -183,7 +184,7 @@ public abstract class TCPConnection implements Runnable {
         try {
             autoConnectionThread.join();
         } catch (InterruptedException ex) {
-            ExceptionPrinter.printHistory("Coudn't wait for connection finalisation.", ex, LOGGER);
+            ExceptionPrinter.printHistory("Coudn't wait for connection finalisation.", ex, logger);
         }
     }
 
@@ -193,7 +194,7 @@ public abstract class TCPConnection implements Runnable {
     }
 
     public void close() {
-        LOGGER.debug("Close connection...");
+        logger.debug("Close connection...");
         terminate = true;
         timeOut.cancel();
         synchronized (waitTillNextBeat) {
@@ -224,38 +225,38 @@ public abstract class TCPConnection implements Runnable {
             parser = jsonFactory.createParser(in);
             while (connected) {
                 try {
-                    LOGGER.debug("wait for next command...");
+                    logger.debug("wait for next command...");
                     newCommand = mapper.readValue(parser, AbstractCommand.class);
                     lastCommunication = System.currentTimeMillis();
                     timeOut.cancel();
-                    LOGGER.debug("New incomming command: " + newCommand);
+                    logger.debug("New incomming command: " + newCommand);
                 } catch (NullPointerException ex) {
-                    ExceptionPrinter.printHistory("Connection lost!", ex, LOGGER, LogLevel.WARN);
+                    ExceptionPrinter.printHistory("Connection lost!", ex, logger, LogLevel.WARN);
                     notifyConnectionError("Connection lost!");
                     disconnect();
                     continue;
                 } catch (JsonMappingException ex) {
-                    ExceptionPrinter.printHistory("Connection closed unexpected!", ex, LOGGER, LogLevel.WARN);
+                    ExceptionPrinter.printHistory("Connection closed unexpected!", ex, logger, LogLevel.WARN);
                     notifyConnectionError("Connection broken!");
                     disconnect();
                     continue;
                 } catch (JsonParseException ex) {
-                    ExceptionPrinter.printHistory("Connection closed unexpected!", ex, LOGGER, LogLevel.WARN);
+                    ExceptionPrinter.printHistory("Connection closed unexpected!", ex, logger, LogLevel.WARN);
                     notifyConnectionError("Programm version may out of date!");
                     disconnect();
                     continue;
                 } catch (JsonProcessingException ex) {
-                    ExceptionPrinter.printHistory("Connection closed unexpected!", ex, LOGGER, LogLevel.WARN);
+                    ExceptionPrinter.printHistory("Connection closed unexpected!", ex, logger, LogLevel.WARN);
                     notifyConnectionError("Connection broken!");
                     disconnect();
                     continue;
                 } catch (SocketException ex) {
-                    LOGGER.info("Connection closed.", ex);
+                    logger.info("Connection closed.", ex);
                     notifyConnectionError("Connection closed.");
                     disconnect();
                     continue;
                 } catch (IOException ex) {
-                    ExceptionPrinter.printHistory("Connection error!", ex, LOGGER);
+                    ExceptionPrinter.printHistory("Connection error!", ex, logger);
                     notifyConnectionError("Fatal connection error! Please contact developer!");
                     disconnect();
                     continue;
@@ -263,7 +264,7 @@ public abstract class TCPConnection implements Runnable {
 
                 notifyInputActivity();
                 if (newCommand == null) {
-                    ExceptionPrinter.printHistory("Bad Incomming Data!", new CouldNotPerformException("Command"), LOGGER);
+                    ExceptionPrinter.printHistory("Bad Incomming Data!", new CouldNotPerformException("Command"), logger);
                     continue;
                 }
 
@@ -280,7 +281,7 @@ public abstract class TCPConnection implements Runnable {
                 }.start();
             }
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory("Fatal connection error!", ex, LOGGER);
+            ExceptionPrinter.printHistory("Fatal connection error!", ex, logger);
             notifyConnectionError("Fatal connection error! Please contact developer!");
             disconnect();
         }
@@ -298,14 +299,14 @@ public abstract class TCPConnection implements Runnable {
                         nextCommand = outgoingCommands.remove(0); // get first command
                     }
                     try {
-                        LOGGER.debug("Send Command: " + nextCommand);
+                        logger.debug("Send Command: " + nextCommand);
                         try {
                             assert mapper != null;
                             assert out != null;
                             assert nextCommand != null;
                             mapper.writeValue(generator, nextCommand);
                         } catch (NullPointerException ex) {
-                            ExceptionPrinter.printHistory("Connection lost! ", ex, LOGGER);
+                            ExceptionPrinter.printHistory("Connection lost! ", ex, logger);
                             disconnect();
                             if (!nextCommand.deletByTransmitfailure()) {
                                 synchronized (outgoingCommandsLock) {
@@ -316,7 +317,7 @@ public abstract class TCPConnection implements Runnable {
                         }
                         nextCommand.setTransmitted();
                     } catch (Exception ex) {
-                        ExceptionPrinter.printHistory("Connection error! ", ex, LOGGER);
+                        ExceptionPrinter.printHistory("Connection error! ", ex, logger);
                         disconnect();
                         if (!nextCommand.deletByTransmitfailure()) {
                             synchronized (outgoingCommandsLock) {
@@ -333,7 +334,7 @@ public abstract class TCPConnection implements Runnable {
                     try {
                         out.flush();
                     } catch (IOException ex) {
-                        ExceptionPrinter.printHistory("Connection lost! ", ex, LOGGER);
+                        ExceptionPrinter.printHistory("Connection lost! ", ex, logger);
                         disconnect();
                         break;
                     }
@@ -350,9 +351,9 @@ public abstract class TCPConnection implements Runnable {
                     sendCommand(new PingCommand(this));
                 }
             }
-            LOGGER.info("Communication finished.");
+            logger.info("Communication finished.");
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory("Fatal connection error!", ex, LOGGER);
+            ExceptionPrinter.printHistory("Fatal connection error!", ex, logger);
             ex.printStackTrace(System.err);
             disconnect();
         }
@@ -361,7 +362,7 @@ public abstract class TCPConnection implements Runnable {
 
     public synchronized void analyseDelay(PingCommand command) {
         delay = System.currentTimeMillis() - command.getCreationTimeStemp();
-        LOGGER.debug("ConnectionDelay: " + delay);
+        logger.debug("ConnectionDelay: " + delay);
         notifyConnectionDelay(delay);
     }
 

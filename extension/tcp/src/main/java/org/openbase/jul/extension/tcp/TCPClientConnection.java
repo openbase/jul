@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.extension.tcp;
 
 /*-
@@ -28,8 +24,6 @@ package org.openbase.jul.extension.tcp;
 import java.io.IOException;
 import java.net.Socket;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-
-;
 
 /**
  *
@@ -59,7 +53,7 @@ public abstract class TCPClientConnection extends TCPConnection {
     @Override
     protected synchronized boolean connect() {
 
-        LOGGER.info("Connecting to Client " + clientName + " on " + socket.getInetAddress().getHostName());
+        logger.info("Connecting to Client " + clientName + " on " + socket.getInetAddress().getHostName());
         notifyConnecting();
 
         try {
@@ -68,7 +62,7 @@ public abstract class TCPClientConnection extends TCPConnection {
             out.write(clientID);
             out.flush();
         } catch (IOException ex) {
-            ExceptionPrinter.printHistory("Couldn't create outputStream.", ex, LOGGER);
+            ExceptionPrinter.printHistory("Couldn't create outputStream.", ex, logger);
             disconnect();
             return false;
         }
@@ -76,21 +70,21 @@ public abstract class TCPClientConnection extends TCPConnection {
         try {
             in = socket.getInputStream();
         } catch (IOException ex) {
-            ExceptionPrinter.printHistory("Couldn't create InputStream.", ex, LOGGER);
+            ExceptionPrinter.printHistory("Couldn't create InputStream.", ex, logger);
             disconnect();
             return false;
         }
 
         setConnected(true);
 
-        LOGGER.info("Established connection to Client " + clientName + ".");
+        logger.info("Established connection to Client " + clientName + ".");
         return true;
     }
 
     @Override
     public synchronized void disconnect() {
         if (connected) {
-            LOGGER.info("Close connection to Client " + clientName + " on " + socket.getInetAddress().getHostName());
+            logger.info("Close connection to Client " + clientName + " on " + socket.getInetAddress().getHostName());
             setConnected(false);
             terminate = true;
             notifyConnectionClosed();
@@ -100,7 +94,7 @@ public abstract class TCPClientConnection extends TCPConnection {
             try {
                 parser.close();
             } catch (IOException ex) {
-                LOGGER.debug("Could not close paser stream!", ex);
+                logger.debug("Could not close paser stream!", ex);
             }
             parser = null;
         }
@@ -109,7 +103,7 @@ public abstract class TCPClientConnection extends TCPConnection {
             try {
                 generator.close();
             } catch (IOException ex) {
-                LOGGER.debug("Could not close generator stream!", ex);
+                logger.debug("Could not close generator stream!", ex);
             }
             generator = null;
         }
@@ -118,7 +112,7 @@ public abstract class TCPClientConnection extends TCPConnection {
             try {
                 in.close();
             } catch (IOException ex) {
-                LOGGER.debug("Could not close input stream!", ex);
+                logger.debug("Could not close input stream!", ex);
             }
             in = null;
         }
@@ -127,7 +121,7 @@ public abstract class TCPClientConnection extends TCPConnection {
             try {
                 out.close();
             } catch (IOException ex) {
-                LOGGER.debug("Could not close output stream!", ex);
+                logger.debug("Could not close output stream!", ex);
             }
             out = null;
         }
@@ -135,7 +129,7 @@ public abstract class TCPClientConnection extends TCPConnection {
             try {
                 socket.close();
             } catch (IOException ex) {
-                LOGGER.debug("Could not close socket!", ex);
+                logger.debug("Could not close socket!", ex);
             }
         }
     }
