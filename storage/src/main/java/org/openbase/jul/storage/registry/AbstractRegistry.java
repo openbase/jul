@@ -26,9 +26,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
@@ -90,19 +92,25 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private final ReentrantReadWriteLock registryLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock consistencyCheckLock = new ReentrantReadWriteLock();
 
+    private final Set<Registry> lockedRegistries = new HashSet<>();
+    private int lockCounter = 0;
+
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
+    /**
+     * Map of registries this one depends on.
+     */
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
+    private final ObservableImpl<Map<KEY, ENTRY>> dependingRegistryObservable;
 
     private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
 
-    private boolean notificationSkiped;
+    private boolean notificationSkipped;
 
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         this(entryMap, new RegistryPluginPool<>());
     }
 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
-
         try {
 
             // validate arguments
@@ -116,7 +124,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
             this.randomJitter = new Random(System.currentTimeMillis());
             this.consistent = true;
-            this.notificationSkiped = false;
+            this.notificationSkipped = false;
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
             this.pluginPool.init(this);
@@ -124,6 +132,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.dependingRegistryMap = new HashMap<>();
             this.sandbox = new MockRegistrySandbox<>(this);
             this.shutdownDeamon = Shutdownable.registerShutdownHook(this);
+            this.dependingRegistryObservable = new ObservableImpl<>();
 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
@@ -222,7 +231,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 pluginPool.beforeRegister(entry);
                 entryMap.put(entry.getId(), entry);
                 pluginPool.afterRegister(entry);
-
             } finally {
                 unlock();
             }
@@ -604,6 +612,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * This method allows the removal of a registered registry dependency.
      *
      * @param registry the dependency to remove.
+     * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void removeDependency(final Registry registry) throws CouldNotPerformException {
         if (registry == null) {
@@ -656,8 +665,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
             if (registryLock.isWriteLockedByCurrentThread()) {
-                logger.debug("Notification of registry change skipped because of running write operations!");
-                notificationSkiped = true;
+                logger.debug("Notification of registry[" + this + "] change skipped because of running write operations!");
+                notificationSkipped = true;
                 return;
             }
 
@@ -670,7 +679,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new MultiException("PluginPool could not execute afterRegistryChange", exceptionStack);
                 }
             }
-            notificationSkiped = false;
+            notificationSkipped = false;
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all registry observer!", ex), logger, LogLevel.ERROR);
         }
@@ -891,6 +900,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     protected void finishTransaction() throws CouldNotPerformException {
         try {
             checkConsistency();
+            dependingRegistryObservable.notifyObservers(entryMap);
         } catch (CouldNotPerformException ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException("Registry consistency check failed but sandbox check was successful!", this, ex), logger, LogLevel.ERROR);
         }
@@ -1068,27 +1078,48 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     /**
-     * Blocks until the registry write lock is acquired.
+     * Blocks until this registries write lock and the write locks of all registries this one depends on are acquired.
      *
-     * @throws RejectedException is thrown in case the lock is not supported by this registry. E.g. this is the case for remote registries.
+     * @throws CouldNotPerformException Is thrown if the process gets interrupted. Additionally the interrupt flag is restored.
      */
     protected void lock() throws CouldNotPerformException {
+        boolean successfullyLocked;
         try {
             while (true) {
+                /* Acquire the write lock first before recursively locking because the set used for it
+                 * is the same for different theads. Else while one thread is currently recursively locking
+                 * another can call the same method which will return true because the set already contains
+                 * this registry. */
                 if (registryLock.writeLock().tryLock()) {
                     try {
-                        lockDependingRegistries();
-                        return;
-                    } catch (RejectedException ex) {
+                        /* The method recursiveTryLockRegistry is disabled for remote registries so that they cannot be locked
+                         * extenerally. So, call the internal method which does the process but is only visible in this
+                         * package. */
+                        if (this instanceof RemoteRegistry) {
+                            successfullyLocked = ((RemoteRegistry) this).internalRecursiveTryLockRegistry(lockedRegistries);
+                        } else {
+                            successfullyLocked = recursiveTryLockRegistry(lockedRegistries);
+                        }
+
+                        if (successfullyLocked) {
+                            /*
+                             * If all registries could be locked return and increase the lock counter. The counter is necessary
+                             * because the recursive method will only lock every registry once to prevent infinite recursion for
+                             * dependecy loops. */
+                            lockCounter++;
+                            return;
+                        } else {
+                            // locking all has failed so unlock the ones that have been acquired
+                            unlockRegistries(lockedRegistries);
+                        }
+                    } finally {
                         registryLock.writeLock().unlock();
-                    } catch (CouldNotPerformException ex) {
-                        registryLock.writeLock().unlock();
-                        throw ex;
                     }
                 }
 
+                // sleep for a random time before trying to lock again
                 try {
-                    Thread.sleep(20 + randomJitter.nextInt(5));
+                    Thread.sleep(20 + randomJitter.nextInt(30));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     throw new CouldNotPerformException("Could not lock registry because thread was externally interrupted!", ex);
@@ -1096,6 +1127,29 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not lock registry!", ex);
+        }
+    }
+
+    private void unlockRegistries(final Set<Registry> lockedRegistries) {
+        assert registryLock.writeLock().isHeldByCurrentThread();
+
+        /* Additional write lock because this registry is also part of the lockedRegistries set.
+         * So, if this registry would be the first one in the set it would be unlocked first and another
+         * thread could already start locking while not everything is unlocked.
+         * But by locking this registry additionally the next thread can only try to lock if all registries
+         * this one depends on have been unlocked. */
+        registryLock.writeLock().lock();
+        try {
+            lockedRegistries.stream().forEach((registry) -> {
+                if (registry instanceof RemoteRegistry) {
+                    ((RemoteRegistry) registry).internalUnlockRegistry();
+                } else {
+                    registry.unlockRegistry();
+                }
+            });
+            lockedRegistries.clear();
+        } finally {
+            registryLock.writeLock().unlock();
         }
     }
 
@@ -1108,9 +1162,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     protected void unlock() {
-        unlockDependingRegistries();
         assert registryLock.writeLock().isHeldByCurrentThread();
-        registryLock.writeLock().unlock();
+
+        if (lockCounter > 1) {
+            // if the registry has been locked by the same thread multiple times only decrease the counter
+            lockCounter--;
+        } else {
+            // if the counter is at 1 than unlock all registries and decrease the counter to 0
+            lockCounter--;
+            unlockRegistries(lockedRegistries);
+        }
     }
 
     protected boolean isWriteLockedByCurrentThread() {
@@ -1130,6 +1191,49 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     * @throws RejectedException {@inheritDoc}
+     */
+    @Override
+    public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException {
+        if (lockedRegistries.contains(this)) {
+            /* If this registry is in the set the lock is already acqiuired, so return true.
+             * This prevents infinite recursions for dependecy loops but is also the reason why
+             * this method should be called while already holding the write lock for the current registry.
+             * Because if two threads use the same set, which is the case for the lock method, than one
+             * can be in the process and has already acquired the lock for this registry but still needs
+             * it for dependencies, the other thread returns true here. */
+            return true;
+        } else {
+            // try to acquire the write lock for this registry
+            if (registryLock.writeLock().tryLock()) {
+                // the lock has been acquired so add this to the set
+                lockedRegistries.add(this);
+                // iterate over all registries this one depends on and try to lock recursively
+                for (Registry registry : dependingRegistryMap.keySet()) {
+                    // if one recursive try lock returns false then return false as well
+                    if (registry instanceof RemoteRegistry) {
+                        if (!((RemoteRegistry) registry).internalRecursiveTryLockRegistry(lockedRegistries)) {
+                            return false;
+                        }
+                    } else {
+                        if (!registry.recursiveTryLockRegistry(lockedRegistries)) {
+                            return false;
+                        }
+                    }
+                }
+                // all registries this one depends on could be locked recursively as well, so return true
+                return true;
+            } else {
+                // acquiring the write lock for this registry failed, so return false
+                return false;
+            }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void unlockRegistry() {
@@ -1137,49 +1241,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         registryLock.writeLock().unlock();
     }
 
-    private synchronized void lockDependingRegistries() throws RejectedException, FatalImplementationErrorException {
-        boolean success = true;
-        final List<Registry> lockedRegistries = new ArrayList<>();
-
-        try {
-            // lock all depending registries except remote registries which will reject the locking.
-            for (Registry registry : dependingRegistryMap.keySet()) {
-                try {
-                    if (registry.tryLockRegistry()) {
-                        lockedRegistries.add(registry);
-                    } else {
-                        success = false;
-                    }
-                } catch (RejectedException ex) {
-                    // ignore if registry does not support the lock.
-                }
-            }
-        } catch (Exception ex) {
-            success = false;
-            throw new RejectedException("Could not lock all depending registries!", ex);
-        } finally {
-            try {
-                // if not successfull release all already acquire locks.
-                if (!success) {
-                    lockedRegistries.stream().forEach((registry) -> {
-                        registry.unlockRegistry();
-                    });
-                }
-            } catch (Exception ex) {
-                assert false;
-                throw new FatalImplementationErrorException("Could not release depending locks!", this, ex);
-            }
-        }
-
-        if (!success) {
-            throw new RejectedException("Could not lock all depending registries!");
-        }
+    @Override
+    public void addDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
+        dependingRegistryObservable.addObserver(observer);
     }
 
-    private synchronized void unlockDependingRegistries() {
-        new ArrayList<>(dependingRegistryMap.keySet()).stream().forEach((registry) -> {
-            registry.unlockRegistry();
-        });
+    @Override
+    public void removeDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
+        dependingRegistryObservable.removeObserver(observer);
     }
 
     private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
@@ -1188,7 +1257,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         public DependencyConsistencyCheckTrigger(final Registry dependency) {
             this.dependency = dependency;
-            dependency.addObserver(this);
+            dependency.addDependencyObserver(this);
         }
 
         /**
@@ -1203,7 +1272,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             //TODO: update on sandbox level should be handled first
             try {
                 if (dependency.isConsistent()) {
-                    if (checkConsistency() > 0 || notificationSkiped) {
+                    boolean notificationNeeded = false;
+                    lock();
+                    try {
+                        notificationNeeded = checkConsistency() > 0 || notificationSkipped;
+                        if (notificationNeeded) {
+                            dependingRegistryObservable.notifyObservers(entryMap);
+                        }
+                    } finally {
+                        unlock();
+                    }
+
+                    if (notificationNeeded) {
                         notifyObservers();
                     }
                 }
