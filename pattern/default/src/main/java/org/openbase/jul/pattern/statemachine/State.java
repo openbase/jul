@@ -21,13 +21,12 @@ package org.openbase.jul.pattern.statemachine;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import java.io.IOException;
 import java.util.concurrent.Callable;
+import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  * Represents and executes a state of a task.
- * 
+ *
  * @author malinke
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
@@ -37,22 +36,23 @@ public interface State extends Callable<Class<? extends State>> {
      * Executes the task in this state.
      *
      * Example:
-     * <code>
-     *  WaitTenSeconds implements State {
-     *      public Class&lt;State&gt; call() {
-     *          try {
-     *              Thread.sleep(10000);
-     *          } catch (InterruptedException ex) {
-     *              // try again
-     *              return getClass();
+     * {@code
+     *      WaitTenSeconds implements State {
+     *          public Class&lt;State&gt; call() {
+     *              try {
+     *                  Thread.sleep(10000);
+     *              } catch (InterruptedException ex) {
+     *                  // handle interruption as shutdown
+     *                  return FinalState.class;
+     *              }
+     *              return NextStateToProcessClass.class;
      *          }
-     *          return DoSomething.class;
      *      }
-     *  }
-     * </code>
+     * }
+     *
      * @return the next state to execute
-     * @throws IOException if sensor or actuator communication fails
+     * @throws CouldNotPerformException is thrown if the state execution has failed.
      */
-	@Override
-    Class<? extends State> call() throws IOException;
+    @Override
+    Class<? extends State> call() throws CouldNotPerformException;
 }
