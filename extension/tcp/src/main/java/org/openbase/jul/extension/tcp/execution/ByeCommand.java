@@ -1,6 +1,3 @@
-/**
- *
- */
 package org.openbase.jul.extension.tcp.execution;
 
 /*-
@@ -24,18 +21,13 @@ package org.openbase.jul.extension.tcp.execution;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 /**
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
  */
 public class ByeCommand extends AbstractCommand {
-	
 
-	/**
-	 * @param arg0
-	 */
-	public ByeCommand() {
-		super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
-	}
+    public ByeCommand() {
+        super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
+    }
 }

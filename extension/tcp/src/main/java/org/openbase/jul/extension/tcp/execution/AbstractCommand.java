@@ -31,8 +31,7 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author divine
- *
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class AbstractCommand implements Serializable {

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.extension.tcp;
 
 /*-
@@ -25,34 +21,32 @@ package org.openbase.jul.extension.tcp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
 /**
- *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class SocketConfig {
-	
-	private final String host;
-	private final int port;
 
-	public SocketConfig(String host, int port) {
-		this.host = host;
-		this.port = port;
-	}
-	
-	public Socket getSocket() throws UnknownHostException, IOException {
-		return new Socket(host, port);
-	}
+    private final String host;
+    private final int port;
 
-	public String getHost() {
-		return host;
-	}
+    public SocketConfig(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
 
-	public int getPort() {
-		return port;
-	}
+    public Socket getSocket() throws UnknownHostException, IOException {
+        return new Socket(host, port);
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
+    }
 }

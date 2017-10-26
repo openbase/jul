@@ -1,6 +1,3 @@
-/**
- *
- */
 package org.openbase.jul.extension.tcp.execution;
 
 /*-
@@ -28,7 +25,7 @@ package org.openbase.jul.extension.tcp.execution;
 import org.openbase.jul.extension.tcp.TCPConnection;
 
 /**
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
  */
 public class PingCommand extends AbstractCommand {

@@ -27,7 +27,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 
 /**
  *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class TCPClientConnection extends TCPConnection {
 

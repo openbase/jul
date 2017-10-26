@@ -1,6 +1,3 @@
-/**
- * 
- */
 package org.openbase.jul.extension.tcp.execution;
 
 /*-
@@ -31,8 +28,9 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * @author divine
- *
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @param <T>
+ * @param <C>
  */
 public abstract class AbstractCommandExecuter<T extends AbstractCommand, C extends TCPConnection> { 
 	

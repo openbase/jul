@@ -1,6 +1,3 @@
-/**
- * 
- */
 package org.openbase.jul.extension.tcp.execution.serverCommand;
 
 /*-
@@ -29,12 +26,10 @@ import org.openbase.jul.extension.tcp.Message;
 import org.openbase.jul.extension.tcp.execution.AbstractCommand;
 
 /**
- * @author divine
- *
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class UserMessageCommand extends AbstractCommand {
 	
-
 	private final Message message;
 
 	/**
@@ -44,13 +39,9 @@ public class UserMessageCommand extends AbstractCommand {
 		message = new Message();
 	}	
 	
-	/**
-	 * 
-	 */
 	public UserMessageCommand(Message message) {
 		super(AbstractCommand.SEND_AGAIN_BY_TRANSMIT_FAIL);
 		this.message = message;
-		
 	}
 	
 	public Message getMessage() {

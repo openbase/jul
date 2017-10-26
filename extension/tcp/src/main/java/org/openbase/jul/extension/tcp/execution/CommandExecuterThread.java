@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.extension.tcp.execution;
 
 /*-
@@ -25,71 +21,69 @@ package org.openbase.jul.extension.tcp.execution;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.extension.tcp.TCPConnection;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
-;
 
 /**
  *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class CommandExecuterThread {
 
     protected final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(CommandExecuterThread.class);
-    
-	private final Object lock;
-	private Thread executer;
-	private final AbstractCommand command;
-	private final TCPConnection connection;
 
-	public CommandExecuterThread(AbstractCommand command, TCPConnection connection) {
-		this.command = command;
-		this.connection = connection;
-		this.lock = new Object();
-	}
+    private final Object lock;
+    private Thread executer;
+    private final AbstractCommand command;
+    private final TCPConnection connection;
 
-	public void start() {
-		synchronized (lock) {
-			if(executer != null && !executer.isInterrupted()) {
-				return;
-			}
-			
-			this.executer = new Thread(command.getClass().getSimpleName()+"Executer") {
+    public CommandExecuterThread(AbstractCommand command, TCPConnection connection) {
+        this.command = command;
+        this.connection = connection;
+        this.lock = new Object();
+    }
 
-				@Override
-				public void run() {
-					try {
-							execute(command);
-					} catch(InvalidStateException ex) {
-						ExceptionPrinter.printHistory("Version error during execution! Please check server and client version!", ex, LOGGER);
-						connection.connectionError("Client version out of date!");
-					} catch(ClassNotFoundException ex) {
-						ExceptionPrinter.printHistory("Version error during execution! Please check server and client version!", ex, LOGGER);
-						connection.connectionError("Client version out of date!");
-					} catch(Exception ex) {
-						ExceptionPrinter.printHistory("Error during execution!", ex, LOGGER);
-					}
-				}
-			};
-			executer.start();
-		}
-	}
+    public void start() {
+        synchronized (lock) {
+            if (executer != null && !executer.isInterrupted()) {
+                return;
+            }
 
-	public void cancel() {
-		synchronized (lock) {
-			if(executer != null) {
-				executer.interrupt();
-			}
-		}
-	}
-	
-	public abstract void execute(AbstractCommand command) throws ClassNotFoundException, InvalidStateException, Exception;
+            this.executer = new Thread(command.getClass().getSimpleName() + "Executer") {
 
-	@Override
-	public String toString() {
-		return getClass().getSimpleName() + "[execute:" + command + "]";
-	}
+                @Override
+                public void run() {
+                    try {
+                        execute(command);
+                    } catch (InvalidStateException ex) {
+                        ExceptionPrinter.printHistory("Version error during execution! Please check server and client version!", ex, LOGGER);
+                        connection.connectionError("Client version out of date!");
+                    } catch (ClassNotFoundException ex) {
+                        ExceptionPrinter.printHistory("Version error during execution! Please check server and client version!", ex, LOGGER);
+                        connection.connectionError("Client version out of date!");
+                    } catch (Exception ex) {
+                        ExceptionPrinter.printHistory("Error during execution!", ex, LOGGER);
+                    }
+                }
+            };
+            executer.start();
+        }
+    }
+
+    public void cancel() {
+        synchronized (lock) {
+            if (executer != null) {
+                executer.interrupt();
+            }
+        }
+    }
+
+    public abstract void execute(AbstractCommand command) throws ClassNotFoundException, InvalidStateException, Exception;
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[execute:" + command + "]";
+    }
 }

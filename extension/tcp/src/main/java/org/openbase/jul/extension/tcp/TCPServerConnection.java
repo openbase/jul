@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.extension.tcp;
 
 /*-
@@ -34,11 +30,8 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
 
-;
-
 /**
- *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class TCPServerConnection extends TCPConnection {
 
@@ -102,9 +95,6 @@ public abstract class TCPServerConnection extends TCPConnection {
             in = serverSocket.getInputStream();
             serverID = in.read();
             sourceID = in.read();
-//			parser = jsonFactory.createParser(in);
-//			serverID = Integer.parseInt(in.readLine());
-//			sourceID = Integer.parseInt(in.readLine());
             LOGGER.debug("Client got id " + sourceID);
         } catch (IOException ex) {
             ExceptionPrinter.printHistory("Could'n create InputBuffer.", ex, LOGGER);
@@ -114,8 +104,6 @@ public abstract class TCPServerConnection extends TCPConnection {
 
         try {
             out = serverSocket.getOutputStream();
-//			generator = jsonFactory.createGenerator(out);
-//			out.flush();
         } catch (IOException ex) {
             ExceptionPrinter.printHistory("Could'n create OutputBuffer.", ex, LOGGER);
             disconnect();

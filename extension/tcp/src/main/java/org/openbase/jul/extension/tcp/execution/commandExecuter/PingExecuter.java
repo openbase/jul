@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.extension.tcp.execution.commandExecuter;
 
 /*-
@@ -25,7 +21,6 @@ package org.openbase.jul.extension.tcp.execution.commandExecuter;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.extension.tcp.TCPConnection;
 import org.openbase.jul.extension.tcp.execution.AbstractCommandExecuter;
 import org.openbase.jul.extension.tcp.execution.PingCommand;
@@ -35,36 +30,34 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 
 /**
- *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class PingExecuter extends AbstractCommandExecuter<PingCommand, TCPConnection> {
 
-	public PingExecuter(PingCommand command, TCPConnection connection) {
-		super(command, connection);
-	}
+    public PingExecuter(PingCommand command, TCPConnection connection) {
+        super(command, connection);
+    }
 
-	@Override
-	public void execute() {
-		if (command.getSourceID() == connection.getSourceID()) {
-			connection.analyseDelay(command);
-		} else {
-			try {
-				// send ping reply
-				sleepBecauseOfPingBug(); // TODO Remove after bugfix.
-				connection.sendCommand(command);
-			} catch (CouldNotPerformException ex) {
-				ExceptionPrinter.printHistory("Could not send pink reply!", ex, LOGGER, LogLevel.WARN);
-			}
-		}
-	}
+    @Override
+    public void execute() {
+        if (command.getSourceID() == connection.getSourceID()) {
+            connection.analyseDelay(command);
+        } else {
+            try {
+                // send ping reply
+                sleepBecauseOfPingBug(); // TODO Remove after bugfix.
+                connection.sendCommand(command);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not send pink reply!", ex, LOGGER, LogLevel.WARN);
+            }
+        }
+    }
 
-
-	public void sleepBecauseOfPingBug() {
-		try {
-			Thread.sleep(100);
-		} catch (InterruptedException ex) {
-			java.util.logging.Logger.getLogger(PingExecuter.class.getName()).log(Level.SEVERE, null, ex);
-		}
-	}
+    public void sleepBecauseOfPingBug() {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(PingExecuter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
