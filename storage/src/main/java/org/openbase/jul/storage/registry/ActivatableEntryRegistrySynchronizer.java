@@ -39,8 +39,8 @@ import org.openbase.jul.pattern.Factory;
  */
 public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Activatable & Shutdownable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
 
-    public ActivatableEntryRegistrySynchronizer(SynchronizableRegistry<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
-        super(registry, remoteRegistry, factory);
+    public ActivatableEntryRegistrySynchronizer(SynchronizableRegistry<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final RegistryRemote registryRemote, Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
+        super(registry, remoteRegistry, registryRemote, factory);
     }
 
     @Override

@@ -40,6 +40,7 @@ import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.processing.FileProcessor;
 import org.openbase.jul.processing.StringProcessor;
@@ -244,6 +245,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             }
         } catch (JPNotAvailableException ex) {
             // do nothing if property could not be detected.
+            ExceptionPrinter.printHistory("Could not load " + JPShareDirectory.class.getSimpleName(), ex, logger, LogLevel.WARN);
         }
 
         for (final File file : listFiles) {
