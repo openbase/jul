@@ -21,7 +21,6 @@ package org.openbase.jul.pattern.statemachine;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.IOException;
@@ -32,16 +31,17 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  *
+ * A simple state machine implementation which can execute states implementing the {@code State} interface.
  * Executes states.
  *
- * @author mpohling, malinke
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author malinke
  */
 public class StateRunner implements Runnable, Initializable<Class<? extends State>> {
 
@@ -81,11 +81,7 @@ public class StateRunner implements Runnable, Initializable<Class<? extends Stat
                 nextStateClass = currentState.call();
             } catch (IOException ex) {
                 ExceptionPrinter.printHistory("Somthing went wrong during state execution!", ex, LOGGER);
-                try {
-                    // todo: why is this needed?
-                    Thread.sleep(1000);
-                } catch (InterruptedException intEx) {
-                    ExceptionPrinter.printHistory("Interruped during sleep!", intEx, LOGGER, LogLevel.WARN);
+                if (Thread.currentThread().isInterrupted()) {
                     return;
                 }
                 continue;

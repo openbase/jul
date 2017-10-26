@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.extension.tcp;
 
 /*-
@@ -33,7 +29,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.openbase.jul.extension.tcp.ConnectionInfo;
 import org.openbase.jul.extension.tcp.execution.AbstractCommand;
 import org.openbase.jul.extension.tcp.execution.ByeCommand;
 import org.openbase.jul.extension.tcp.execution.CommandExecuterThread;
@@ -54,8 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author divine
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class TCPConnection implements Runnable {
 
@@ -107,7 +101,6 @@ public abstract class TCPConnection implements Runnable {
         this.mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
         this.mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);  // paranoidly repeat ourselves
         this.mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-//        new ResourceKeyMapperModule(mapper);
         new ClassKeyMapperModule(mapper);
 
         this.timeOut = new Timeout(CONNECTION_TIMEOUT) {

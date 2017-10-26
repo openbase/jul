@@ -27,7 +27,9 @@ import java.util.concurrent.Callable;
 
 /**
  * Represents and executes a state of a task.
+ * 
  * @author malinke
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface State extends Callable<Class<? extends State>> {
 

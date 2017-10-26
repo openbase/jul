@@ -1,6 +1,3 @@
-/**
- *
- */
 package org.openbase.jul.extension.tcp;
 
 /*-
@@ -37,8 +34,7 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 
 /**
- * @author divine
- *
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class Message implements Serializable {
 

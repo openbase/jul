@@ -1,6 +1,3 @@
-/**
- * 
- */
 package org.openbase.jul.extension.tcp.execution.clientCommand;
 
 /*-
@@ -24,21 +21,14 @@ package org.openbase.jul.extension.tcp.execution.clientCommand;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.extension.tcp.execution.AbstractCommand;
 
 /**
- * @author divine
- *
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ClientWelcomeCommand extends AbstractCommand {
-	
 
-	/**
-	 * @param arg0
-	 */
-	public ClientWelcomeCommand() {
-		super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
-	}
-
+    public ClientWelcomeCommand() {
+        super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
+    }
 }

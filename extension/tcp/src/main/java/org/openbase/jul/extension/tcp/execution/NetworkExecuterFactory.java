@@ -21,7 +21,6 @@ package org.openbase.jul.extension.tcp.execution;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import org.openbase.jul.extension.tcp.exception.NetworkTaskFailedException;
 import org.openbase.jul.extension.tcp.TCPConnection;
 import java.lang.reflect.Constructor;
@@ -29,26 +28,26 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 public class NetworkExecuterFactory {
 
-	public static AbstractCommandExecuter getExecuter(AbstractCommand command, String packageString, TCPConnection connection) throws CouldNotPerformException {
-		assert command != null;
-		assert packageString != null;
-		assert connection != null;
+    public static AbstractCommandExecuter getExecuter(AbstractCommand command, String packageString, TCPConnection connection) throws CouldNotPerformException {
+        assert command != null;
+        assert packageString != null;
+        assert connection != null;
 
-		Class<? extends AbstractCommandExecuter> executerClass;
-		AbstractCommandExecuter executer;
-		String classURI = "?";
+        Class<? extends AbstractCommandExecuter> executerClass;
+        AbstractCommandExecuter executer;
+        String classURI = "?";
 
-		try {
-			classURI = packageString + "." + (command.getClass().getSimpleName().replace("Command", "Executer"));
-			executerClass = (Class<? extends AbstractCommandExecuter>) Class.forName(classURI);
-			Constructor<? extends AbstractCommandExecuter> constructor = executerClass.getConstructor(command.getClass(), connection.getClass());
-			executer = constructor.newInstance(command, connection);
-			if (executer == null) {
-				throw new NullPointerException("Executer is null!");
-			}
-			return executer;
-		} catch (Exception ex) {
-			throw new NetworkTaskFailedException("Could not create suitable executer[" + classURI + "]!", command, ex);
-		}
-	}
+        try {
+            classURI = packageString + "." + (command.getClass().getSimpleName().replace("Command", "Executer"));
+            executerClass = (Class<? extends AbstractCommandExecuter>) Class.forName(classURI);
+            Constructor<? extends AbstractCommandExecuter> constructor = executerClass.getConstructor(command.getClass(), connection.getClass());
+            executer = constructor.newInstance(command, connection);
+            if (executer == null) {
+                throw new NullPointerException("Executer is null!");
+            }
+            return executer;
+        } catch (Exception ex) {
+            throw new NetworkTaskFailedException("Could not create suitable executer[" + classURI + "]!", command, ex);
+        }
+    }
 }
