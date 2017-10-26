@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp.execution;
+package org.openbase.jul.extension.tcp.execution.command;
 
 /*-
  * #%L
@@ -22,46 +22,48 @@ package org.openbase.jul.extension.tcp.execution;
  * #L%
  */
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openbase.jul.extension.tcp.TCPConnection;
-import org.slf4j.LoggerFactory;
-
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <T>
- * @param <C>
+ *
  */
-public abstract class AbstractCommandExecuter<T extends AbstractCommand, C extends TCPConnection> { 
-	
-    protected final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(getClass());
-    
-	protected T command;
+public class PingCommand extends AbstractCommand {
 
-	@JsonIgnore
-	protected C connection;
 	
-	public AbstractCommandExecuter(T command, C connection) {
-		this.command = command;
-		this.connection = connection;
-	}
-	
-	public abstract void execute() throws Exception;
-	
-	public void setCommand(T command) {
-		this.command = command;
+	private final long creationTimeStemp;
+	private final long sourceID;
+
+	/**
+	 * JSON Constructor
+	 */
+	private PingCommand() {
+		sourceID = -1;
+		creationTimeStemp = -1;
 	}
 
-	public T getCommand() {
-		return command;
+	/**
+	 * JSON Constructor
+	 */
+	public PingCommand(TCPConnection sourceConnection) {
+		super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
+		this.creationTimeStemp = System.currentTimeMillis();
+		this.sourceID = sourceConnection.getSourceID();
 	}
 
-	public C getConnection() {
-		return connection;
+	public long getCreationTimeStemp() {
+		return creationTimeStemp;
+	}
+
+	public long getSourceID() {
+		return sourceID;
 	}
 
 	@Override
 	public String toString() {
-		return "executer[Class: +"+this.getClass().getSimpleName()+"+  | Command:"+command+"]";
+		if (getConnectionInfo() == null) {
+			return getClass().getSimpleName() + ": unknown connectionInfo";
+		}
+		return getClass().getSimpleName()+ "[PingSource:" + getSourceID() + " | " + getConnectionInfo() + "]";
 	}
 }

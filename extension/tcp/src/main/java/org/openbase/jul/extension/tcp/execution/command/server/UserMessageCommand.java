@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp.execution.serverCommand;
+package org.openbase.jul.extension.tcp.execution.command.server;
 
 /*-
  * #%L
@@ -21,32 +21,30 @@ package org.openbase.jul.extension.tcp.execution.serverCommand;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.extension.tcp.execution.AbstractCommand;
+
+import org.openbase.jul.extension.tcp.datatype.Message;
+import org.openbase.jul.extension.tcp.execution.command.AbstractCommand;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class LoginCommand extends AbstractCommand {
+public class UserMessageCommand extends AbstractCommand {
+	
+	private final Message message;
 
-    private String username, password;
-
-    public LoginCommand() {
-        super(DELETE_BY_TRANSMIT_FAIL);
-        this.username = null;
-        this.password = null;
-    }
-
-    public LoginCommand(String username, String password) {
-        super(DELETE_BY_TRANSMIT_FAIL);
-        this.username = username;
-        this.password = password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
+	/**
+	 * JSON Constructor
+	 */
+	private UserMessageCommand() {
+		message = new Message();
+	}	
+	
+	public UserMessageCommand(Message message) {
+		super(AbstractCommand.SEND_AGAIN_BY_TRANSMIT_FAIL);
+		this.message = message;
+	}
+	
+	public Message getMessage() {
+		return message;
+	}
 }

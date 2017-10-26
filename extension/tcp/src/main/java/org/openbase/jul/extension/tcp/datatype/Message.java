@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp;
+package org.openbase.jul.extension.tcp.datatype;
 
 /*-
  * #%L

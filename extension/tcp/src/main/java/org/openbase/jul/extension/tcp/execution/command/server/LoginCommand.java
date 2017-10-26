@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp.execution;
+package org.openbase.jul.extension.tcp.execution.command.server;
 
 /*-
  * #%L
@@ -21,13 +21,32 @@ package org.openbase.jul.extension.tcp.execution;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.extension.tcp.execution.command.AbstractCommand;
+
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- *
  */
-public class ByeCommand extends AbstractCommand {
+public class LoginCommand extends AbstractCommand {
 
-    public ByeCommand() {
-        super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
+    private String username, password;
+
+    public LoginCommand() {
+        super(DELETE_BY_TRANSMIT_FAIL);
+        this.username = null;
+        this.password = null;
+    }
+
+    public LoginCommand(String username, String password) {
+        super(DELETE_BY_TRANSMIT_FAIL);
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

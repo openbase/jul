@@ -21,6 +21,8 @@ package org.openbase.jul.extension.tcp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.extension.tcp.datatype.ConnectionInfo;
+import org.openbase.jul.extension.tcp.databind.ClassKeyMapperModule;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -29,11 +31,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.openbase.jul.extension.tcp.execution.AbstractCommand;
-import org.openbase.jul.extension.tcp.execution.ByeCommand;
-import org.openbase.jul.extension.tcp.execution.CommandExecuterThread;
-import org.openbase.jul.extension.tcp.execution.PingCommand;
-import org.openbase.jul.extension.tcp.execution.commandExecuter.PingExecuter;
+import org.openbase.jul.extension.tcp.execution.command.AbstractCommand;
+import org.openbase.jul.extension.tcp.execution.command.ByeCommand;
+import org.openbase.jul.extension.tcp.execution.command.CommandExecuterThread;
+import org.openbase.jul.extension.tcp.execution.command.PingCommand;
+import org.openbase.jul.extension.tcp.execution.command.PingExecuter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

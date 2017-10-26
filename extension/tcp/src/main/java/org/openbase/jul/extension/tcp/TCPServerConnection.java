@@ -38,24 +38,24 @@ public abstract class TCPServerConnection extends TCPConnection {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(TCPServerConnection.class);
 
     private Socket serverSocket;
-    private final List<SocketConfig> socketList;
+    private final List<TCPSocketConfig> socketList;
     private int serverID;
 
-    public TCPServerConnection(List<SocketConfig> sockedList) {
+    public TCPServerConnection(List<TCPSocketConfig> sockedList) {
         super(ConnectionSourceType.Client);
         this.socketList = sockedList;
     }
 
-    public TCPServerConnection(SocketConfig socked) {
+    public TCPServerConnection(TCPSocketConfig socked) {
         super(ConnectionSourceType.Client);
-        this.socketList = new ArrayList<SocketConfig>();
+        this.socketList = new ArrayList<TCPSocketConfig>();
         this.socketList.add(socked);
     }
 
     public TCPServerConnection(String hostName, int port) {
         super(ConnectionSourceType.Client);
-        this.socketList = new ArrayList<SocketConfig>();
-        this.socketList.add(new SocketConfig(hostName, port));
+        this.socketList = new ArrayList<TCPSocketConfig>();
+        this.socketList.add(new TCPSocketConfig(hostName, port));
     }
 
     public synchronized void autoConnect() {
@@ -65,8 +65,8 @@ public abstract class TCPServerConnection extends TCPConnection {
         }
     }
 
-    private Socket connectToBestSocket(final List<SocketConfig> socketList) throws CouldNotPerformException {
-        for (SocketConfig config : socketList) {
+    private Socket connectToBestSocket(final List<TCPSocketConfig> socketList) throws CouldNotPerformException {
+        for (TCPSocketConfig config : socketList) {
             LOGGER.info("Try to connect to " + config.getHost() + "...");
             notifyConnecting();
 

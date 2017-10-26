@@ -21,12 +21,32 @@ package org.openbase.jul.extension.tcp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.CouldNotPerformException;
+import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface DialogMessageProvider {
+public class TCPSocketConfig {
 
-    public void sendDialogMessage(String message) throws CouldNotPerformException;
+    private final String host;
+    private final int port;
+
+    public TCPSocketConfig(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public Socket getSocket() throws UnknownHostException, IOException {
+        return new Socket(host, port);
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
+    }
 }

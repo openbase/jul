@@ -22,7 +22,7 @@ package org.openbase.jul.extension.tcp.exception;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.tcp.execution.AbstractCommand;
+import org.openbase.jul.extension.tcp.execution.command.AbstractCommand;
 
 /**
  *

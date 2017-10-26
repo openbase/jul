@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp.execution;
+package org.openbase.jul.extension.tcp.execution.command;
 
 /*-
  * #%L
