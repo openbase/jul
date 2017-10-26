@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp.execution.commandExecuter;
+package org.openbase.jul.extension.tcp.execution.command;
 
 /*-
  * #%L
@@ -22,8 +22,8 @@ package org.openbase.jul.extension.tcp.execution.commandExecuter;
  * #L%
  */
 import org.openbase.jul.extension.tcp.TCPConnection;
-import org.openbase.jul.extension.tcp.execution.AbstractCommandExecuter;
-import org.openbase.jul.extension.tcp.execution.PingCommand;
+import org.openbase.jul.extension.tcp.execution.command.AbstractCommandExecuter;
+import org.openbase.jul.extension.tcp.execution.command.PingCommand;
 import java.util.logging.Level;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;

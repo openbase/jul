@@ -21,8 +21,8 @@ package org.openbase.jul.extension.tcp.execution.clientCommand;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.extension.tcp.Message;
-import org.openbase.jul.extension.tcp.execution.AbstractCommand;
+import org.openbase.jul.extension.tcp.datatype.Message;
+import org.openbase.jul.extension.tcp.execution.command.AbstractCommand;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

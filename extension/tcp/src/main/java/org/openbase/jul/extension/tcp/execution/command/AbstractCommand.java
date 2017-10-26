@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp.execution;
+package org.openbase.jul.extension.tcp.execution.command;
 
 /*-
  * #%L
@@ -24,7 +24,7 @@ package org.openbase.jul.extension.tcp.execution;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.openbase.jul.extension.tcp.ConnectionInfo;
+import org.openbase.jul.extension.tcp.datatype.ConnectionInfo;
 import java.io.Serializable;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;

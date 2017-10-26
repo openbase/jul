@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp;
+package org.openbase.jul.extension.tcp.execution.command;
 
 /*-
  * #%L
@@ -21,32 +21,13 @@ package org.openbase.jul.extension.tcp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ *
  */
-public class SocketConfig {
+public class ByeCommand extends AbstractCommand {
 
-    private final String host;
-    private final int port;
-
-    public SocketConfig(String host, int port) {
-        this.host = host;
-        this.port = port;
-    }
-
-    public Socket getSocket() throws UnknownHostException, IOException {
-        return new Socket(host, port);
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public int getPort() {
-        return port;
+    public ByeCommand() {
+        super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
     }
 }

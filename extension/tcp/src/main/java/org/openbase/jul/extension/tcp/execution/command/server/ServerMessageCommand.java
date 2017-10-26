@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.tcp.execution.serverCommand;
+package org.openbase.jul.extension.tcp.execution.command.server;
 
 /*-
  * #%L
@@ -21,14 +21,30 @@ package org.openbase.jul.extension.tcp.execution.serverCommand;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.extension.tcp.execution.AbstractCommand;
+import org.openbase.jul.extension.tcp.datatype.Message;
+import org.openbase.jul.extension.tcp.execution.command.AbstractCommand;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ *
  */
-public class ServerWelcomeCommand extends AbstractCommand {
+public class ServerMessageCommand extends AbstractCommand {
 
-    public ServerWelcomeCommand() {
-        super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
+    private final Message message;
+
+    /**
+     * JSON Constructor
+     */
+    public ServerMessageCommand() {
+        message = new Message();
+    }
+
+    public ServerMessageCommand(Message message) {
+        super(AbstractCommand.SEND_AGAIN_BY_TRANSMIT_FAIL);
+        this.message = message;
+    }
+
+    public Message getMessage() {
+        return message;
     }
 }
