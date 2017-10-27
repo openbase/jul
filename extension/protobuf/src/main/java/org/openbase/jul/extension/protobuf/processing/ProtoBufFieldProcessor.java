@@ -26,6 +26,7 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import com.google.protobuf.MessageOrBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -41,16 +42,8 @@ import org.openbase.jul.iface.provider.LabelProvider;
 public class ProtoBufFieldProcessor {
 
     //TODO: write java doc for all methods
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final Message builder, final int fieldNumber) {
+    public static Descriptors.FieldDescriptor getFieldDescriptor(final MessageOrBuilder builder, final int fieldNumber) {
         return builder.getDescriptorForType().findFieldByNumber(fieldNumber);
-    }
-
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final Builder builder, final int fieldNumber) {
-        return builder.getDescriptorForType().findFieldByNumber(fieldNumber);
-    }
-
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final GeneratedMessage message, final int fieldNumber) {
-        return message.getDescriptorForType().findFieldByNumber(fieldNumber);
     }
 
     public static FieldDescriptor[] getFieldDescriptors(final Class<? extends GeneratedMessage> messageClass, final int... fieldNumbers) throws CouldNotPerformException {
@@ -74,8 +67,8 @@ public class ProtoBufFieldProcessor {
         }
     }
 
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final Builder builder, final String fieldName) {
-        return builder.getDescriptorForType().findFieldByName(fieldName);
+    public static Descriptors.FieldDescriptor getFieldDescriptor(final MessageOrBuilder msg, final String fieldName) {
+        return msg.getDescriptorForType().findFieldByName(fieldName);
     }
 
     public static String getId(final Message msg) throws CouldNotPerformException {
@@ -139,7 +132,7 @@ public class ProtoBufFieldProcessor {
         fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 1]);
         Object field = tmpBuilder.getField(fieldDescriptor);
         //Todo: remove with protobuf 3
-        if(fieldDescriptor.getName().equals("qw")) {
+        if (fieldDescriptor.getName().equals("qw")) {
             field = 1.0;
         }
         tmpBuilder.setField(fieldDescriptor, field);

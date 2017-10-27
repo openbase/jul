@@ -23,6 +23,7 @@ package org.openbase.jul.storage.registry;
  */
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
@@ -30,6 +31,7 @@ import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Writable;
 import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.pattern.Observable;
+import org.openbase.jul.pattern.Observer;
 
 /**
  *
@@ -128,7 +130,40 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
         return isEmpty();
     }
 
+    /**
+     * Try to acquire the write lock for this registry.
+     * If this method returns true then this thread now holds the write
+     * lock for this registry. If it returns false then the lock could
+     * not currently be acquired.
+     *
+     * @return If the lock could be acquired.
+     * @throws RejectedException If the registry does not support to be locked externally which is for example the case for remote registries.
+     */
     public boolean tryLockRegistry() throws RejectedException;
 
+    /**
+     * Try to acquire the write lock for this registry and the registries it depends
+     * on recursively. This method returns true if all locks could be acquired and
+     * false if at least one lock could not be acquired. In any case the set lockedRegistries
+     * contains any locked registry afterwards. So if the method returns false any registry
+     * inside this set should be unlocked before trying it again to prevent dead locks.
+     * Additionally this method should only be performed while already holding the write lock
+     * for the registry. Else it can happen that a thread that tries to recursively lock the
+     * same registry by using the same set as another thread thinks that he acquired it even though the other
+     * thread is currently in the process of acquiring it. 
+     * 
+     * @param lockedRegistries Set of already locked registries. Should be given empty to this method and will contain all locked registries afterwards.
+     * @return If all registries could be locked.
+     * @throws RejectedException If the registry does not support to be locked externally which is for example the case for remote registries.
+     */
+    public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException;
+
+    /**
+     * Unlock the write lock of the registry.
+     */
     public void unlockRegistry();
+
+    public void addDependencyObserver(final Observer<Map<KEY, ENTRY>> observer);
+
+    public void removeDependencyObserver(final Observer<Map<KEY, ENTRY>> observer);
 }

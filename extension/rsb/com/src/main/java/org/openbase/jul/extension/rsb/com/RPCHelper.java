@@ -45,6 +45,7 @@ import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
  */
 public class RPCHelper {
 
+    public static final String USER_TIME_KEY = "BCO_NANO_TIME";
 //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
     private static final String INTERNAL_CALL_REMOTE_METHOD_NAME = "internalCallRemoteMethod";
 
@@ -88,7 +89,9 @@ public class RPCHelper {
                         } else {
                             payloadType = result.getClass();
                         }
-                        return new Event(payloadType, result);
+                        Event returnEvent = new Event(payloadType, result);
+                        returnEvent.getMetaData().setUserTime(USER_TIME_KEY, System.nanoTime());
+                        return returnEvent;
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
                     } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException | CancellationException ex) {
