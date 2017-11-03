@@ -320,8 +320,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     throw new InvalidStateException("Entry not registered!");
                 }
                 // perform removal
-                sandbox.remove(entry);
                 pluginPool.beforeRemove(entry);
+                sandbox.remove(entry);
                 try {
                     oldEntry = entryMap.remove(entry.getId());
                 } finally {
