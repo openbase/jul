@@ -41,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * //
  *
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -50,29 +49,12 @@ public class WatchDog implements Activatable, Shutdownable {
 
     protected static final Logger logger = LoggerFactory.getLogger(WatchDog.class);
 
+    /**
+     * Was used to register a shutdown hook that shutdown all watchdogs.
+     */
+    @Deprecated
     public static final List<WatchDog> globalWatchDogList = Collections.synchronizedList(new ArrayList<WatchDog>());
 
-//    static {
-//        try {
-//            Runtime.getRuntime().addShutdownHook(new Thread("WatchDogShutdownHook") {
-//                @Override
-//                public void run() {
-//                    assert globalWatchDogList != null;
-//                    globalWatchDogList.forEach((watchDog) -> {
-//                        try {
-//                            if (watchDog.getShutdown()) {
-//                                watchDog.shutdown();
-//                            }
-//                        } catch (Exception ex) {
-//                            ExceptionPrinter.printHistory("Could not shutdown watchdog!", ex, logger);
-//                        }
-//                    });
-//                }
-//            });
-//        } catch (Exception ex) {
-//            ExceptionPrinter.printHistory("Could not register shutdown watchdog hook!", ex, logger);
-//        }
-//    }
     private final Object EXECUTION_LOCK;
     private final SyncObject STATE_LOCK;
 
