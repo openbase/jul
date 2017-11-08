@@ -78,8 +78,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ShutdownDeamon shutdownDeamon;
-
     private String name;
 
     private final MAP entryMap;
@@ -131,7 +129,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.consistencyHandlerList = new ArrayList<>();
             this.dependingRegistryMap = new HashMap<>();
             this.sandbox = new MockRegistrySandbox<>(this);
-            this.shutdownDeamon = Shutdownable.registerShutdownHook(this);
             this.dependingRegistryObservable = new ObservableImpl<>();
 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
@@ -942,10 +939,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public void shutdown() {
         try {
             registryLock.writeLock().lock();
-
-            if (shutdownDeamon != null) {
-                shutdownDeamon.cancel();
-            }
 
             try {
                 super.shutdown();
