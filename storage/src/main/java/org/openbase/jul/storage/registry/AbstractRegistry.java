@@ -37,7 +37,6 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
-import org.openbase.jps.preset.JPReadOnly;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -544,21 +543,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public void checkWriteAccess() throws RejectedException {
         logger.debug("checkWriteAccess of " + this);
-        try {
-            if (JPService.getProperty(JPForce.class).getValue()) {
-                return;
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-        }
-
-        try {
-            if (JPService.getProperty(JPReadOnly.class).getValue()) {
-                throw new RejectedException("ReadOnlyMode is detected!");
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-        }
 
         if (!isDependingOnConsistentRegistries()) {
             throw new RejectedException("At least one depending registry is inconsistent!");
