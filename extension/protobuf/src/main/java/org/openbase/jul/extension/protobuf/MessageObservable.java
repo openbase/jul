@@ -40,6 +40,9 @@ import org.openbase.jul.pattern.provider.DataProvider;
  * @param <M> the type which is notified by this observable
  */
 public class MessageObservable<M extends Message> extends AbstractObservable<M> {
+    
+    public static final String TIMESTAMP_MESSAGE_NAME = "Timestamp";
+    public static final String RESOURCE_ALLOCATION_FIELD = "resource_allocation";
 
     private final DataProvider<M> dataProvider;
 
@@ -75,7 +78,15 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
         for (Descriptors.FieldDescriptor field : descriptorForType.getFields()) {
             // if the field is not repeated, a message and a timestamp it is cleared
             if (!field.isRepeated() && field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
-                if (field.getMessageType().getName().equals("Timestamp")) {
+                //===============================================================
+                //TODO: This is just a hack since states in units now contain action descriptions,
+                //      This line preventes resource allocations to be checked because they contain required fields
+                //      and thus if they are checked calling build on the builder afterwards fails.
+                if(field.getName().equals(RESOURCE_ALLOCATION_FIELD)) {
+                    continue;
+                }
+                //===============================================================
+                if (field.getMessageType().getName().equals(TIMESTAMP_MESSAGE_NAME)) {
                     builder.clearField(field);
                 } else {
                     removeTimestamps(builder.getFieldBuilder(field));

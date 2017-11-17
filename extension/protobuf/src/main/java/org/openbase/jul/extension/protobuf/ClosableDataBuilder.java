@@ -31,7 +31,6 @@ import org.openbase.jul.exception.CouldNotPerformException;
 public class ClosableDataBuilder<MB extends Builder<MB>> implements java.lang.AutoCloseable {
 
     private final BuilderSyncSetup<MB> builderSetup;
-    private final Object consumer;
     private final boolean notifyChange;
 
     public ClosableDataBuilder(final BuilderSyncSetup<MB> builderSetup, final Object consumer) {
@@ -40,7 +39,6 @@ public class ClosableDataBuilder<MB extends Builder<MB>> implements java.lang.Au
 
     public ClosableDataBuilder(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final boolean notifyChange) {
         this.builderSetup = builderSetup;
-        this.consumer = consumer;
         builderSetup.lockWrite(consumer);
         this.notifyChange = notifyChange;
     }
