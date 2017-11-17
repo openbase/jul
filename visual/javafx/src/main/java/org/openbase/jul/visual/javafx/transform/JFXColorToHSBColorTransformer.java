@@ -31,7 +31,11 @@ import rst.vision.HSBColorType.HSBColor;
 public class JFXColorToHSBColorTransformer {
 
     public static Color transform(final HSBColor hsbColor) throws CouldNotTransformException {
-        return Color.hsb(hsbColor.getHue(), hsbColor.getSaturation() / 100, hsbColor.getBrightness() / 100);
+        try {
+            return Color.hsb(hsbColor.getHue(), hsbColor.getSaturation() / 100, hsbColor.getBrightness() / 100);
+        } catch (final IllegalArgumentException ex) {
+            throw new CouldNotTransformException(hsbColor, Color.class, ex);
+        }
     }
 
     public static HSBColor transform(final Color color) throws CouldNotTransformException {
