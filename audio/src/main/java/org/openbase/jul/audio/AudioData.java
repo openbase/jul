@@ -21,7 +21,6 @@ package org.openbase.jul.audio;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import javax.sound.sampled.AudioFormat;
 
 /**
@@ -29,7 +28,10 @@ import javax.sound.sampled.AudioFormat;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface AudioData extends AudioSource {
-	public byte[] getData();
-	public AudioFormat getFormat();
-	public long getDataLenght();
+
+    public byte[] getData();
+
+    public AudioFormat getFormat();
+
+    public long getDataLenght();
 }
