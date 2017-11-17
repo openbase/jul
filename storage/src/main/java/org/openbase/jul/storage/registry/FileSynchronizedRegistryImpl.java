@@ -31,6 +31,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
+import org.openbase.jps.preset.JPReadOnly;
 import org.openbase.jps.preset.JPShareDirectory;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -366,6 +367,14 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         try {
             if (JPService.getProperty(JPForce.class).getValue()) {
                 return;
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+        }
+
+        try {
+            if (JPService.getProperty(JPReadOnly.class).getValue()) {
+                throw new RejectedException("ReadOnlyMode is detected!");
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);

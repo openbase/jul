@@ -41,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * //
  *
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -50,27 +49,11 @@ public class WatchDog implements Activatable, Shutdownable {
 
     protected static final Logger logger = LoggerFactory.getLogger(WatchDog.class);
 
+    /**
+     * Was used to register a shutdown hook that shutdown all watchdogs.
+     */
+    @Deprecated
     public static final List<WatchDog> globalWatchDogList = Collections.synchronizedList(new ArrayList<WatchDog>());
-
-    static {
-        try {
-            Runtime.getRuntime().addShutdownHook(new Thread("WatchDogShutdownHook") {
-                @Override
-                public void run() {
-                    assert globalWatchDogList != null;
-                    globalWatchDogList.forEach((watchDog) -> {
-                        try {
-                            watchDog.shutdown();
-                        } catch (Exception ex) {
-                            ExceptionPrinter.printHistory("Could not shutdown watchdog!", ex, logger);
-                        }
-                    });
-                }
-            });
-        } catch (Exception ex) {
-            ExceptionPrinter.printHistory("Could not register shutdown watchdog hook!", ex, logger);
-        }
-    }
 
     private final Object EXECUTION_LOCK;
     private final SyncObject STATE_LOCK;
@@ -151,7 +134,10 @@ public class WatchDog implements Activatable, Shutdownable {
 
     @Override
     public boolean isActive() {
-        return minder != null;
+        if (minder == null) {
+            return false;
+        }
+        return minder.isActive();
     }
 
     public boolean isServiceDone() {
@@ -241,6 +227,13 @@ public class WatchDog implements Activatable, Shutdownable {
             }
         }
 
+        public boolean isActive() {
+            if (future == null) {
+                return false;
+            }
+            return !future.isDone();
+        }
+
         @Override
         public void run() {
 
@@ -274,9 +267,10 @@ public class WatchDog implements Activatable, Shutdownable {
                          * An interrupted exception was caught triggered by the deactivate() or cancel() method of the watchdog.
                          * The minder shutdown will be initiated now.
                          *
-                         * !!! Do not recover the interrupted state to grantee a proper shutdown !!!
+                         * !!! Do not recover the interrupted state to guarantee a proper shutdown !!!
                          */
                         logger.debug("Minder shutdown initiated of Service[" + serviceName + "]...");
+                        future.cancel(false);
                     }
                 } catch (Throwable tr) {
                     ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, tr), logger);
