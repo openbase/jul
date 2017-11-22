@@ -551,7 +551,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                     // make sure to start a new ping to detect the correct connection quality
                     synchronized (pingLock) {
-                        if (!pingTask.isDone()) {
+                        if (pingTask != null && !pingTask.isDone()) {
                             try {
                                 pingTask.get();
                             } catch (ExecutionException | CancellationException ex) {
