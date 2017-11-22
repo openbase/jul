@@ -38,21 +38,18 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
 import org.openbase.jul.pattern.Remote.ConnectionState;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Event;
-import rsb.Handler;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
@@ -63,34 +60,34 @@ import rst.domotic.unit.UnitConfigType.UnitConfig;
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class RSBCommunicationServiceTest {
-
+    
     static {
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitConfig.getDefaultInstance()));
     }
-
+    
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+    
     public RSBCommunicationServiceTest() {
     }
-
+    
     @BeforeClass
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
-
+    
     @AfterClass
     public static void tearDownClass() {
     }
-
+    
     @Before
     public void setUp() {
     }
-
+    
     @After
     public void tearDown() {
     }
-
+    
     private boolean firstSync = false;
     private boolean secondSync = false;
     private RSBCommunicationService communicationService;
@@ -104,7 +101,7 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 6000)
     public void testInitialSync() throws Exception {
         System.out.println("testInitialSync");
-
+        
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         UnitConfig unit1 = UnitConfig.newBuilder().setId("Location1").build();
@@ -112,11 +109,11 @@ public class RSBCommunicationServiceTest {
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
-
+        
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
         remoteService.addDataObserver(new Observer<UnitRegistryData>() {
-
+            
             @Override
             public void update(final Observable<UnitRegistryData> source, UnitRegistryData data) throws Exception {
                 if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
@@ -133,7 +130,7 @@ public class RSBCommunicationServiceTest {
                 }
             }
         });
-
+        
         synchronized (waitForDataSync) {
             if (firstSync == false) {
                 logger.info("Wait for data sync");
@@ -142,13 +139,13 @@ public class RSBCommunicationServiceTest {
             }
         }
         assertTrue("Synchronization after the start of the remote service has not been done", firstSync);
-
+        
         communicationService.deactivate();
         UnitConfig location2 = UnitConfig.newBuilder().setId("Location2").build();
         testData.addLocationUnitConfig(location2);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
-
+        
         synchronized (waitForDataSync) {
             if (secondSync == false) {
                 communicationService.activate();
@@ -156,9 +153,9 @@ public class RSBCommunicationServiceTest {
             }
         }
         assertTrue("Synchronization after the restart of the communication service has not been done", secondSync);
-
+        
         communicationService.deactivate();
-
+        
         remoteService.addConnectionStateObserver(((source, data) -> {
             System.out.println("ConnectionState [" + data + "]");
         }));
@@ -184,39 +181,78 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 20000)
+    @Test//(timeout = 20000)
     public void testReconnection() throws Exception {
         // todo: this test takes to much time! Even more after increasing the deactivation timeout in the RSBSynchronizedParticipant class. There seems to be an issue that rsb takes to many time during deactivation.
         System.out.println("testReconnection");
-
+        
+        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        remoteService.addConnectionStateObserver((Observable source, Object data) -> {
+            logger.info("New connection state [" + data + "]");
+        });
+        
+        Stopwatch stopWatch = new Stopwatch();
+        stopWatch.start();
+        
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
+        
+        logger.info(stopWatch.stop() + "ms to activate communication service");
+        stopWatch.restart();
 
-        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+//        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
         remoteService.activate();
-        System.out.println("wait for inital connection...");
+        logger.info(stopWatch.getTime() + "ms to activate remote service");
+        stopWatch.restart();
+        
+        logger.info("wait for inital connection...");
         remoteService.waitForConnectionState(Remote.ConnectionState.CONNECTED);
-
+        
+        logger.info(stopWatch.getTime() + "ms till remote service connected");
+        stopWatch.restart();
+        
         communicationService.deactivate();
-        System.out.println("wait for connection lost after controller shutdown...");
+        
+        logger.info(stopWatch.getTime() + "ms till communication service deactivated");
+        stopWatch.restart();
+        
+        logger.info("wait for connection loss after controller shutdown...");
         remoteService.waitForConnectionState(Remote.ConnectionState.CONNECTING);
-
+        
+        logger.info(stopWatch.getTime() + "ms till remote service switched to connecting");
+        stopWatch.restart();
+        
         communicationService.activate();
-
-        System.out.println("wait for reconnection lost after controller start...");
+        
+        logger.info(stopWatch.getTime() + "ms till communication service reactivated");
+        stopWatch.restart();
+        
+        logger.info("wait for reconnection lost after controller start...");
         remoteService.waitForConnectionState(Remote.ConnectionState.CONNECTED);
-
+        
+        logger.info(stopWatch.getTime() + "ms till remote service reconnected");
+        stopWatch.restart();
+        
         remoteService.shutdown();
-
-        System.out.println("wait for remote shutdown...");
+        
+        logger.info(stopWatch.getTime() + "ms till remote service shutdown");
+        stopWatch.restart();
+        
+        logger.info("wait for remote shutdown...");
         remoteService.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
-
+        
+        logger.info(stopWatch.getTime() + "ms till remote service switched to disconnected");
+        stopWatch.restart();
+        
         communicationService.shutdown();
+        
+        logger.info(stopWatch.getTime() + "ms till communication service shutdown");
+        stopWatch.restart();
     }
 
     /**
@@ -227,24 +263,24 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 5000)
     public void testWaitForData() throws Exception {
         System.out.println("testWaitForData");
-
+        
         String scope = "/test/waitfordata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
-
+        
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
-
+        
         remoteService.activate();
-
+        
         CompletableFuture dataFuture = remoteService.getDataFuture();
-
+        
         communicationService.activate();
-
+        
         assertEquals("DataFuture did not return data from communicationService!", communicationService.getData(), dataFuture.get());
-
+        
         communicationService.shutdown();
         remoteService.shutdown();
     }
@@ -257,23 +293,23 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 5000)
     public void testRequestData() throws Exception {
         System.out.println("testRequestData");
-
+        
         String scope = "/test/requestdata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
-
+        
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
-
+        
         remoteService.activate();
         communicationService.activate();
-
+        
         remoteService.requestData().get();
-
+        
         assertEquals("CommunicationService data and remoteService data do not match after requestData!", communicationService.getData(), remoteService.getData());
-
+        
         communicationService.shutdown();
         remoteService.shutdown();
     }
@@ -287,11 +323,11 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 10000)
     public void testRemoteInterference() throws Exception {
         System.out.println("testRemoteInterference");
-
+        
         String scope = "/test/interference";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
-
+        
         RSBRemoteService remoteService1 = new RSBRemoteServiceImpl();
         RSBRemoteService remoteService2 = new RSBRemoteServiceImpl();
         remoteService1.init(scope);
@@ -299,32 +335,32 @@ public class RSBCommunicationServiceTest {
         communicationService = new RSBCommunicationServiceImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
-
+        
         remoteService1.activate();
         remoteService2.activate();
-
+        
         System.out.println("remoteService1.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
         remoteService1.waitForConnectionState(Remote.ConnectionState.CONNECTED);
         System.out.println("remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
         remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED);
-
+        
         remoteService1.shutdown();
         System.out.println("remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED)");
         remoteService1.waitForConnectionState(Remote.ConnectionState.DISCONNECTED);
-
+        
         assertEquals("Remote connected to the same service got shutdown too", Remote.ConnectionState.CONNECTED, remoteService2.getConnectionState());
         remoteService2.requestData().get();
-
+        
         communicationService.deactivate();
-
+        
         System.out.println("remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTING)");
         remoteService2.waitForConnectionState(ConnectionState.CONNECTING);
-
+        
         communicationService.activate();
         System.out.println("remoteService2.waitForConnectionState(Remote.ConnectionState.CONNECTED)");
         remoteService2.waitForConnectionState(ConnectionState.CONNECTED);
         assertEquals("Remote reconnected even though it already shutdown", Remote.ConnectionState.DISCONNECTED, remoteService1.getConnectionState());
-
+        
         remoteService2.shutdown();
         communicationService.shutdown();
     }
@@ -336,60 +372,60 @@ public class RSBCommunicationServiceTest {
     @Test(timeout = 10000)
     public void testNotification() throws Exception {
         System.out.println("testNotification");
-
+        
         String scope = "/test/notification";
         UnitConfig location = UnitConfig.newBuilder().setId("id").build();
         communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
         communicationService.init(scope);
-
+        
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
         remoteService.activate();
-
+        
         GlobalCachedExecutorService.submit(new NotificationCallable(communicationService));
-
+        
         remoteService.waitForData();
         try {
             remoteService.ping().get(500, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
             Assert.fail("Even though wait for data returned the pinging immediatly afterwards failed");
         }
-
+        
         communicationService.deactivate();
         remoteService.deactivate();
     }
-
+    
     public static class RSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> {
-
+        
         static {
             DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
         }
-
+        
         public RSBCommunicationServiceImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
-
+        
         @Override
         public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
         }
     }
-
+    
     public static class RSBRemoteServiceImpl extends RSBRemoteService<UnitRegistryData> {
-
+        
         static {
             DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
         }
-
+        
         public RSBRemoteServiceImpl() {
             super(UnitRegistryData.class);
         }
     }
-
+    
     public class NotificationCallable implements Callable<Void> {
-
+        
         private final RSBCommunicationService communicationService;
         private final Object watchDogUpdateLock = new Object();
-
+        
         public NotificationCallable(RSBCommunicationService communicationService) {
             this.communicationService = communicationService;
             this.communicationService.informerWatchDog.addObserver((Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
@@ -407,7 +443,7 @@ public class RSBCommunicationServiceTest {
                 }
             });
         }
-
+        
         @Override
         public Void call() throws Exception {
             communicationService.activate();
@@ -417,7 +453,7 @@ public class RSBCommunicationServiceTest {
             }
             return null;
         }
-
+        
         private boolean stateReached() throws InterruptedException, CouldNotPerformException {
             synchronized (watchDogUpdateLock) {
                 while (true) {
