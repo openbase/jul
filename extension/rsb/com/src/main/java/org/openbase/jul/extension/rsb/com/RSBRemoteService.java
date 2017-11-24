@@ -70,9 +70,9 @@ import rst.rsb.ScopeType.Scope;
  * @param <M>
  */
 public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M> {
-    
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    
+
     public static final long REQUEST_TIMEOUT = 15000;
     /**
      * Timeout in seconds since this goes to a synchronous call where it is given in seconds :/.
@@ -84,9 +84,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public static final long METHOD_CALL_START_TIMEOUT = 500;
     public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
     public static final long METHOD_CALL_MAX_TIMEOUT = 30000;
-    
+
     private static final Random JITTER_RANDOM = new Random();
-    
+
     private RSBListener listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private RSBRemoteServer remoteServer;
@@ -94,34 +94,34 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private long connectionPing;
     private long lastPingReceived;
     private final Handler mainHandler;
-    
+
     private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
     private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
     private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
     private final SyncObject pingLock = new SyncObject("PingLock");
     protected Object maintainer;
-    
+
     private CompletableFuture<M> syncFuture;
     private Future<M> syncTask;
-    
+
     protected Scope scope;
     private M data;
     private boolean initialized;
     private final Class<M> dataClass;
     private MessageProcessor<GeneratedMessage, M> messageProcessor;
-    
+
     private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
     private final ObservableImpl<M> internalPriorizedDataObservable = new ObservableImpl<>(this);
     private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
-    
+
     private boolean shutdownInitiated;
-    
+
     private long newestEventTime = 0;
     private long newestEventTimeNano = 0;
-    
+
     private boolean connectionFailure = false;
     private Future<Long> pingTask = null;
-    
+
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
         this.mainHandler = new InternalUpdateHandler();
@@ -134,7 +134,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.lastPingReceived = -1;
         this.messageProcessor = new SimpleMessageProcessor<>(dataClass);
     }
-    
+
     public void setMessageProcessor(MessageProcessor<GeneratedMessage, M> messageProcessor) {
         this.messageProcessor = messageProcessor;
     }
@@ -219,15 +219,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         internalInit(scope, participantConfig);
     }
-    
+
     private void internalInit(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
         synchronized (maintainerLock) {
             try {
                 verifyMaintainability();
-                
+
                 final boolean alreadyActivated = isActive();
                 ParticipantConfig internalParticipantConfig = participantConfig;
-                
+
                 if (scope == null) {
                     throw new NotAvailableException("scope");
                 }
@@ -237,17 +237,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     deactivate();
                     reset();
                 }
-                
+
                 this.scope = scope;
-                
+
                 rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
                 logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
-                
+
                 initListener(internalScope, internalParticipantConfig);
                 initRemoteServer(internalScope, internalParticipantConfig);
-                
+
                 addHandler(mainHandler, true);
-                
+
                 postInit();
                 initialized = true;
 
@@ -260,7 +260,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
         }
     }
-    
+
     private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
@@ -269,7 +269,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new CouldNotPerformException("Could not create Listener on scope [" + scope + "]!", ex);
         }
     }
-    
+
     private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
@@ -378,14 +378,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
-        try {
-            verifyMaintainability();
-            validateInitialization();
-            setConnectionState(CONNECTING);
-            remoteServerWatchDog.activate();
-            listenerWatchDog.activate();
-        } catch (CouldNotPerformException ex) {
-            throw new InvalidStateException("Could not activate remote service!", ex);
+        synchronized (maintainerLock) {
+            try {
+                verifyMaintainability();
+                validateInitialization();
+                setConnectionState(CONNECTING);
+                remoteServerWatchDog.activate();
+                listenerWatchDog.activate();
+            } catch (CouldNotPerformException ex) {
+                throw new InvalidStateException("Could not activate remote service!", ex);
+            }
         }
     }
 
@@ -398,7 +400,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public void activate(boolean waitForData) throws InterruptedException, CouldNotPerformException {
         activate();
-        
+
         if (waitForData) {
             // make sure the remote is fully synchronized with main controller before continue.
             waitForData();
@@ -413,32 +415,34 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
-        try {
-            verifyMaintainability();
-            validateInitialization();
-        } catch (InvalidStateException ex) {
-            // was never initialized!
-            return;
-        }
-        if (connectionState != ConnectionState.RECONNECTING) {
-            skipSyncTasks();
-            setConnectionState(DISCONNECTED);
-            if (pingTask != null && !pingTask.isDone()) {
-                pingTask.cancel(true);
+        synchronized (maintainerLock) {
+            try {
+                verifyMaintainability();
+                validateInitialization();
+            } catch (InvalidStateException ex) {
+                // was never initialized!
+                return;
             }
-        }
-        if (listenerWatchDog != null) {
-            listenerWatchDog.deactivate();
-        }
-        
-        if (remoteServerWatchDog != null) {
-            remoteServerWatchDog.deactivate();
+            if (connectionState != ConnectionState.RECONNECTING) {
+                skipSyncTasks();
+                setConnectionState(DISCONNECTED);
+                if (pingTask != null && !pingTask.isDone()) {
+                    pingTask.cancel(true);
+                }
+            }
+            if (listenerWatchDog != null) {
+                listenerWatchDog.deactivate();
+            }
+
+            if (remoteServerWatchDog != null) {
+                remoteServerWatchDog.deactivate();
+            }
         }
         synchronized (connectionMonitor) {
             connectionMonitor.notifyAll();
         }
     }
-    
+
     public void reset() throws CouldNotPerformException {
         try {
             verifyMaintainability();
@@ -516,7 +520,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public boolean isConnected() {
         return connectionState == CONNECTED;
     }
-    
+
     private void setConnectionState(final ConnectionState connectionState) {
         synchronized (connectionMonitor) {
 
@@ -575,7 +579,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     });
                     break;
             }
-            
+
             this.connectionMonitor.notifyAll();
             try {
                 this.connectionStateObservable.notifyObservers(connectionState);
@@ -656,38 +660,38 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
-        
+
         final String shortArgument = RPCHelper.argumentToString(argument);
         validateActivation();
         long retryTimeout = METHOD_CALL_START_TIMEOUT;
         long validTimeout = timeout;
-        
+
         try {
             logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
             if (!isConnected()) {
                 waitForConnectionState(CONNECTED);
             }
-            
+
             if (timeout > -1) {
                 retryTimeout = Math.min(METHOD_CALL_START_TIMEOUT, validTimeout);
             }
-            
+
             while (true) {
-                
+
                 if (!isActive()) {
                     throw new InvalidStateException("Remote service is not active!");
                 }
-                
+
                 try {
                     logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
                     remoteServerWatchDog.waitForServiceActivation(timeout, TimeUnit.MILLISECONDS);
                     final R returnValue = remoteServer.call(methodName, argument, retryTimeout);
-                    
+
                     if (retryTimeout != METHOD_CALL_START_TIMEOUT && retryTimeout > 15000) {
                         logger.info("Method[" + methodName + "(" + shortArgument + ")] returned! Continue processing...");
                     }
                     return returnValue;
-                    
+
                 } catch (TimeoutException ex) {
 
                     // check if timeout is set and handle
@@ -710,7 +714,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
                         logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     }
-                    
+
                     Thread.yield();
                 }
             }
@@ -733,21 +737,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     @Override
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
-        
+
         validateActivation();
         return GlobalCachedExecutorService.submit(new Callable<R>() {
-            
+
             private Future<R> internalCallFuture;
-            
+
             @Override
             public R call() throws Exception {
-                
+
                 final String shortArgument = RPCHelper.argumentToString(argument);
-                
+
                 try {
                     try {
                         logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
-                        
+
                         if (!isConnected()) {
                             waitForConnectionState(CONNECTED);
                         }
@@ -837,7 +841,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         validateInitialization();
         try {
             SyncTaskCallable syncCallable = new SyncTaskCallable();
-            
+
             final Future<M> currentSyncTask = GlobalCachedExecutorService.submit(syncCallable);
             syncCallable.setRelatedFuture(currentSyncTask);
             return currentSyncTask;
@@ -845,22 +849,22 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new CouldNotPerformException("Could not request the current status.", ex);
         }
     }
-    
+
     private class SyncTaskCallable implements Callable<M> {
-        
+
         private Future<M> relatedFuture;
-        
+
         public void setRelatedFuture(Future<M> relatedFuture) {
             this.relatedFuture = relatedFuture;
         }
-        
+
         private boolean isRelatedFutureCancelled() {
             return relatedFuture != null && relatedFuture.isCancelled();
         }
-        
+
         @Override
         public M call() throws CouldNotPerformException, InterruptedException {
-            
+
             Future<Event> internalFuture = null;
             M dataUpdate = null;
             Event event = null;
@@ -879,7 +883,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             syncFuture.cancel(true);
                             throw new InvalidStateException("Remote service is not active!");
                         }
-                        
+
                         try {
                             remoteServerWatchDog.waitForServiceActivation();
                             internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
@@ -894,7 +898,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             if (isRelatedFutureCancelled()) {
                                 return data;
                             }
-                            
+
                             timeout = generateTimeout(timeout);
 
                             // only print warning if timeout is too long.
@@ -907,7 +911,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             }
                         }
                     }
-                    
+
                     if (dataUpdate == null) {
                         ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
                         setConnectionState(CONNECTING);
@@ -954,7 +958,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (VerificationFailedException ex) {
             throw new RuntimeException("Can not shutdown " + this + "!", ex);
         }
-        
+
         this.shutdownInitiated = true;
         try {
             dataObservable.shutdown();
@@ -1036,7 +1040,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new NotAvailableException("Data is not yet available!", ex);
         }
     }
-    
+
     protected final Object getDataField(String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
@@ -1048,7 +1052,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
         }
     }
-    
+
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
@@ -1060,19 +1064,19 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             return false;
         }
     }
-    
+
     public void validateInitialization() throws InvalidStateException {
         if (!initialized) {
             throw new InvalidStateException(this + " not initialized!");
         }
     }
-    
+
     public void validateActivation() throws InvalidStateException {
         if (!isActive()) {
             throw new InvalidStateException(this + " not activated!");
         }
     }
-    
+
     public void validateData() throws InvalidStateException {
         if (!isDataAvailable()) {
             throw new InvalidStateException(this + " not synchronized yet!", new NotAvailableException("data"));
@@ -1105,7 +1109,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
                     return;
                 }
-                
+
                 switch (connectionState) {
                     case CONNECTED:
                     case CONNECTING:
@@ -1140,7 +1144,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
         }
     }
-    
+
     private String getScopeStringRep() {
         try {
             return ScopeGenerator.generateStringRep(scope);
@@ -1179,15 +1183,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
         return scope;
     }
-    
+
     private class InternalUpdateHandler implements Handler {
-        
+
         @Override
         public void internalNotify(Event event) {
             try {
                 logger.debug("Internal notification: " + event.toString());
                 Object dataUpdate = event.getData();
-                
+
                 if (dataUpdate == null) {
                     ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
                     setConnectionState(CONNECTING);
@@ -1221,7 +1225,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (NullPointerException ex) {
             remoteCommunicationServiceIsActive = false;
         }
-        
+
         if (remoteCommunicationServiceIsActive) {
             throw new InvalidStateException("Because of synchronization reasons data updates can not be applied on active remote services.");
         }
@@ -1247,15 +1251,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 syncTask = null;
             }
         }
-        
+
         if (currentSyncFuture != null) {
             currentSyncFuture.complete(data);
         }
-        
+
         if (currentSyncTask != null && !currentSyncTask.isDone()) {
             currentSyncTask.cancel(false);
         }
-        
+
         setConnectionState(CONNECTED);
 
         // Notify data update
@@ -1265,7 +1269,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
-        
+
         try {
             dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
@@ -1402,7 +1406,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public long getPing() {
         return connectionPing;
     }
-    
+
     private void skipSyncTasks() {
         CompletableFuture<M> currentSyncFuture = null;
         Future<M> currentSyncTask = null;
@@ -1447,7 +1451,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             return getClass().getSimpleName() + "[scope:?]";
         }
     }
-    
+
     private static long generateTimeout(long currentTimeout) {
         return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (JITTER_RANDOM.nextDouble() * 1000)));
     }
