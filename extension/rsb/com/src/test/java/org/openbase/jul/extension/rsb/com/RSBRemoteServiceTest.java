@@ -180,5 +180,7 @@ public class RSBRemoteServiceTest {
         } catch (java.util.concurrent.TimeoutException ex) {
             // is expected here since no server is started
         }
+        
+        remoteService.shutdown();
     }
 }
