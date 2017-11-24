@@ -565,10 +565,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                 try {
                                     pingTask.get();
                                 } catch (ExecutionException | CancellationException ex) {
-                                    //TODO
-                                    // ExecutionException should be okay becuase the ping task itself will perform
-                                    // necessary steps like setting connection state to connecting or reinit
-                                    // What if it got cancelled?
+                                    // exception handling is already done by the ping task itself.
+                                    return; 
                                 } catch (InterruptedException ex) {
                                     Thread.currentThread().interrupt();
                                     return;
