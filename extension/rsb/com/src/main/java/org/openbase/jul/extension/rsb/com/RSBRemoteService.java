@@ -391,6 +391,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    
     /**
      * {@inheritDoc}
      *
@@ -404,6 +405,46 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (waitForData) {
             // make sure the remote is fully synchronized with main controller before continue.
             waitForData();
+        }
+    }
+    
+    /**
+     * Atomic activate which makes sure that the maintainer stays the same.
+     *
+     * @param maintainer the current maintainer of this remote
+     * @throws InterruptedException if activation is interrupted
+     * @throws CouldNotPerformException if activation fails
+     * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
+     */
+    public void activate(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
+        if (this.maintainer.equals(maintainer)) {
+            synchronized (maintainerLock) {
+                unlock(maintainer);
+                activate();
+                lock(maintainer);
+            }
+        } else {
+            throw new VerificationFailedException("[" + maintainer + "] is not the current maintainer of this remote");
+        }
+    }
+
+    /**
+     * Atomic deactivate which makes sure that the maintainer stays the same.
+     *
+     * @param maintainer the current maintainer of this remote
+     * @throws InterruptedException if deactivation is interrupted
+     * @throws CouldNotPerformException if deactivation fails
+     * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
+     */
+    public void deactivate(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
+        if (this.maintainer.equals(maintainer)) {
+            synchronized (maintainerLock) {
+                unlock(maintainer);
+                deactivate();
+                lock(maintainer);
+            }
+        } else {
+            throw new VerificationFailedException("[" + maintainer + "] is not the current maintainer of this remote");
         }
     }
 
@@ -470,6 +511,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
      * This method can be used in case of a broken connection or if the participant config has been changed.
      *
+     * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
+     * it is necessary to call {@code requestData.get()}.
+     *
      * @throws InterruptedException is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException is throws if the reinit has been failed.
      */
@@ -480,6 +524,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
      * This method can be used in case of a broken connection or if the participant config has been changed.
+     *
+     * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
+     * it is necessary to call {@code requestData.get()}.
      *
      * @param scope the new scope to configure.
      * @throws InterruptedException is thrown if the current thread was externally interrupted.
@@ -510,6 +557,44 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not reinitialize " + this + "!", ex);
+        }
+    }
+
+    /**
+     * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
+     * This method can be used in case of a broken connection or if the participant config has been changed.
+     *
+     * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
+     * it is necessary to call {@code requestData.get()}.
+     *
+     * @param maintainer the current maintainer of this remote
+     * @throws InterruptedException is thrown if the current thread was externally interrupted.
+     * @throws CouldNotPerformException is throws if the reinit has been failed.
+     * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
+     */
+    public void reinit(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
+        reinit(scope, maintainer);
+    }
+
+    /**
+     * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
+     * This method can be used in case of a broken connection or if the participant config has been changed.
+     *
+     * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
+     * it is necessary to call {@code requestData.get()}.
+     *
+     * @param scope the new scope to configure.
+     * @param maintainer the current maintainer of this remote
+     * @throws InterruptedException is thrown if the current thread was externally interrupted.
+     * @throws CouldNotPerformException is throws if the reinit has been failed.
+     * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
+     */
+    public void reinit(final Scope scope, final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
+        if (this.maintainer.equals(maintainer)) {
+            this.verifyMaintainability();
+            reinit(scope);
+        } else {
+            throw new VerificationFailedException("Manipulation of " + this + "is not valid using lock[" + maintainerLock + "]");
         }
     }
 
@@ -566,7 +651,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                     pingTask.get();
                                 } catch (ExecutionException | CancellationException ex) {
                                     // exception handling is already done by the ping task itself.
-                                    return; 
+                                    return;
                                 } catch (InterruptedException ex) {
                                     Thread.currentThread().interrupt();
                                     return;
