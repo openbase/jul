@@ -549,7 +549,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @return {@inheritDoc}
      */
     @Override
-    public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
+    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
         return new ClosableDataBuilder<>(getBuilderSetup(), consumer);
     }
 
@@ -560,7 +560,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @return {@inheritDoc}
      */
     @Override
-    public synchronized ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange) {
+    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange) {
         return new ClosableDataBuilder<>(getBuilderSetup(), consumer, notifyChange);
     }
 
