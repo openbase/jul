@@ -391,7 +391,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    
     /**
      * {@inheritDoc}
      *
@@ -407,7 +406,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             waitForData();
         }
     }
-    
+
     /**
      * Atomic activate which makes sure that the maintainer stays the same.
      *
@@ -591,7 +590,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      */
     public void reinit(final Scope scope, final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
         if (this.maintainer.equals(maintainer)) {
-            this.verifyMaintainability();
             reinit(scope);
         } else {
             throw new VerificationFailedException("Manipulation of " + this + "is not valid using lock[" + maintainerLock + "]");
@@ -608,6 +606,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private void setConnectionState(final ConnectionState connectionState) {
         synchronized (connectionMonitor) {
+
+            if (this.connectionState == ConnectionState.RECONNECTING && connectionState == CONNECTED) {
+                // while reconnecting and not yet deactivated a data update can cause switching to connected which causes
+                // a seoncd reinit because the resulting ping fails, skip setting to connected to prevent the ping while
+                // still applying the data update
+                // reinit will switch to connecting anyway when activating again
+                return;
+            }
 
             // filter unchanged events
             if (this.connectionState.equals(connectionState)) {
@@ -836,7 +842,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
 
                         if (!isConnected()) {
-                            waitForConnectionState(CONNECTED);
+                            throw new CouldNotPerformException("Cannot not call async method[" + methodName + "(" + shortArgument + ")] on [" + this + "] in connectionState[" + connectionState + "]");
                         }
                         remoteServerWatchDog.waitForServiceActivation();
                         internalCallFuture = remoteServer.callAsync(methodName, argument);
@@ -846,7 +852,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             } catch (java.util.concurrent.TimeoutException ex) {
                                 // validate connection
                                 try {
-                                    ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                                    // if reconnecting do not start a ping but just wait for connecting again
+                                    if (getConnectionState() != ConnectionState.RECONNECTING) {
+                                        ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                                    } else {
+                                        waitForConnectionState(CONNECTING);
+                                    }
                                 } catch (ExecutionException | java.util.concurrent.TimeoutException | CancellationException exx) {
                                     // cancel call if connection is broken
                                     if (internalCallFuture != null) {
@@ -996,6 +1007,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
 
                     if (dataUpdate == null) {
+                        // do not set to connecting while reconnecting because when timed wrong this can cause
+                        // reinit to cancel sync tasks and reinit while switch to connecting anyway when finished
+                        if (getConnectionState() == ConnectionState.RECONNECTING) {
+                            return data;
+                        }
                         ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
                         setConnectionState(CONNECTING);
                         return data;
@@ -1276,6 +1292,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 Object dataUpdate = event.getData();
 
                 if (dataUpdate == null) {
+                    // do not set to connecting while reconnecting because when timed wrong this can cause
+                    // reinit to cancel sync tasks and reinit while switch to connecting anyway when finished
+                    if (getConnectionState() == ConnectionState.RECONNECTING) {
+                        return;
+                    }
+
                     ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
                     setConnectionState(CONNECTING);
                     return;
