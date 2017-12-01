@@ -178,6 +178,8 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * done by computing its hash value. Therefore if the observable is a collection and it is changed
      * while notifying a concurrent modification exception can occur. To avoid this compute the
      * observable hash yourself by setting a hash generator.
+     * If this method is interrupted a rollback is done by reseting the latestHashValue. Thus the observable
+     * has not changed and false is returned.
      *
      * @param observable the value which is notified
      * @return true if the observable has changed
@@ -196,6 +198,8 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * done by computing its hash value. Therefore if the observable is a collection and it is changed
      * while notifying a concurrent modification exception can occur. To avoid this compute the
      * observable hash yourself by setting a hash generator.
+     * If this method is interrupted a rollback is done by reseting the latestHashValue. Thus the observable
+     * has not changed and false is returned.
      *
      * Note: In case the given observable is null this notification will be ignored.
      *
@@ -226,25 +230,29 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                 }
 
                 applyValueUpdate(observable);
+                final int lastHashValue = latestValueHash;
                 latestValueHash = observableHash;
 
                 synchronized (OBSERVER_LOCK) {
                     tempObserverList = new ArrayList<>(observers);
                 }
+
                 for (final Observer<T> observer : tempObserverList) {
 
                     if (executorService == null) {
 
                         if (Thread.currentThread().isInterrupted()) {
-                            break;
+                            latestValueHash = lastHashValue;
+                            return false;
                         }
 
                         // synchronous notification
                         try {
                             observer.update(source, observable);
                         } catch (InterruptedException ex) {
+                            latestValueHash = lastHashValue;
                             Thread.currentThread().interrupt();
-                            return true;
+                            return false;
                         } catch (Exception ex) {
                             exceptionStack = MultiException.push(observer, ex, exceptionStack);
                         }
@@ -268,7 +276,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             }
 
             // handle exeception printing for async variant
-            if (executorService == null) {
+            if (executorService != null) {
                 for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
                     try {
                         notificationFuture.getValue().get();
@@ -313,7 +321,8 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     /**
      * Method checks if a notification is currently in progess.
-     * @return notificationInProgess  returns true if a notification is currently in progess. 
+     *
+     * @return notificationInProgess returns true if a notification is currently in progess.
      */
     public boolean isNotificationInProgess() {
         return notificationInProgess;
