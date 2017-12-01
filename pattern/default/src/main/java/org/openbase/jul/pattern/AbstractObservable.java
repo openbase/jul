@@ -275,8 +275,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                 }
             }
 
+            //TODO: this check is wrong -> != but when implemented correctly leads bco not starting
             // handle exeception printing for async variant
-            if (executorService != null) {
+            if (executorService == null) {
                 for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
                     try {
                         notificationFuture.getValue().get();

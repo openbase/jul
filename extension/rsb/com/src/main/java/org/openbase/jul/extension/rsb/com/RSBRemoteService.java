@@ -842,7 +842,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
 
                         if (!isConnected()) {
-                            waitForConnectionState(CONNECTED);
+                            throw new CouldNotPerformException("Cannot not call async method[" + methodName + "(" + shortArgument + ")] on [" + this + "] in connectionState[" + connectionState + "]");
                         }
                         remoteServerWatchDog.waitForServiceActivation();
                         internalCallFuture = remoteServer.callAsync(methodName, argument);
