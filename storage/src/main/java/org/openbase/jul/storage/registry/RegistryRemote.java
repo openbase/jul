@@ -21,8 +21,10 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.pattern.Remote;
 
 /**
@@ -39,6 +41,17 @@ public interface RegistryRemote<M> extends Remote<M>, RegistryService {
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
     public void init() throws InitializationException, InterruptedException;
+    
+    /**
+     * Reinitialize the remote with the default registry connection scope.
+     * This is only possible for the maintainer of this remote.
+     * 
+     * @param maintainer the current maintainer of the remote
+     * @throws InterruptedException thrown if the process is interrupted
+     * @throws CouldNotPerformException thrown if the process could not be performed
+     * @throws VerificationFailedException thrown if the given maintainer is incorrect
+     */
+    public void reinit(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException;
 
     default public String getName() throws NotAvailableException {
         return getClass().getSimpleName().replace(Remote.class.getSimpleName(), "");
