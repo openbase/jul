@@ -25,6 +25,7 @@ import com.google.protobuf.MessageOrBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.Logger;
@@ -89,18 +90,27 @@ public class TimestampProcessor {
         long milliseconds = TimeUnit.MILLISECONDS.convert(time, timeUnit);
 
         try {
-            // handle builder
-            if (messageOrBuilder.getClass().getSimpleName().equals("Builder")) {
-                messageOrBuilder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(messageOrBuilder, TimestampJavaTimeTransform.transform(milliseconds));
-                return messageOrBuilder;
+
+            if (messageOrBuilder == null) {
+                throw new NotAvailableException("messageOrBuilder");
             }
 
-            //handle message
-            final Object builder = messageOrBuilder.getClass().getMethod("toBuilder").invoke(messageOrBuilder);
-            builder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
-            return (M) builder.getClass().getMethod("build").invoke(builder);
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
-            throw new CouldNotPerformException("Could not update timestemp! ", new NotSupportedException("Field[Timestamp]", messageOrBuilder.getClass().getName(), ex));
+            try {
+                // handle builder
+                if (messageOrBuilder.getClass().getSimpleName().equals("Builder")) {
+                    messageOrBuilder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(messageOrBuilder, TimestampJavaTimeTransform.transform(milliseconds));
+                    return messageOrBuilder;
+                }
+
+                //handle message
+                final Object builder = messageOrBuilder.getClass().getMethod("toBuilder").invoke(messageOrBuilder);
+                builder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
+                return (M) builder.getClass().getMethod("build").invoke(builder);
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
+                throw new NotSupportedException("Field[Timestamp]", messageOrBuilder.getClass().getName(), ex);
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not update timestemp! ", ex);
         }
     }
 
