@@ -373,11 +373,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     private void reset() {
-//        synchronized (managableLock) {
+        // disabled related to #44
+        // synchronized (managableLock) {
             // clear init flag
             initialized = false;
 
-            // clear existing instances.
+            // clear existing instances.        
             if (informerWatchDog != null) {
                 informerWatchDog.shutdown();
                 informerWatchDog = null;
@@ -388,7 +389,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 serverWatchDog = null;
                 server = new NotInitializedRSBLocalServer();
             }
-//        }
+        //}
     }
 
     /**
