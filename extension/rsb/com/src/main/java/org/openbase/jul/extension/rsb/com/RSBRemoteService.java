@@ -78,7 +78,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Timeout in seconds since this goes to a synchronous call where it is given in seconds :/.
      */
     public static final long PING_TIMEOUT = 5;
-    public static final long CONNECTION_TIMEOUT = 60000;
+    public static final long CONNECTION_TIMEOUT = 30000;
     public static final long DATA_WAIT_TIMEOUT = 1000;
     public static final long LOGGING_TIMEOUT = 15000;
     public static final long METHOD_CALL_START_TIMEOUT = 500;
@@ -842,7 +842,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
 
                         if (!isConnected()) {
-                            throw new CouldNotPerformException("Cannot not call async method[" + methodName + "(" + shortArgument + ")] on [" + this + "] in connectionState[" + connectionState + "]");
+                            try {
+                                waitForConnectionState(CONNECTED, CONNECTION_TIMEOUT);
+                            } catch (TimeoutException ex) {
+                                throw new CouldNotPerformException("Cannot not call async method[" + methodName + "(" + shortArgument + ")] on [" + this + "] in connectionState[" + connectionState + "]", ex);
+
+                            }
                         }
                         remoteServerWatchDog.waitForServiceActivation();
                         internalCallFuture = remoteServer.callAsync(methodName, argument);

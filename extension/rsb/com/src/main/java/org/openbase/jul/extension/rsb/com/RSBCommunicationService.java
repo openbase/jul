@@ -373,20 +373,21 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     private void reset() {
+        synchronized (managableLock) {
+            // clear init flag
+            initialized = false;
 
-        // clear init flag
-        initialized = false;
-
-        // clear existing instances.
-        if (informerWatchDog != null) {
-            informerWatchDog.shutdown();
-            informerWatchDog = null;
-            informer = new NotInitializedRSBInformer<>();
-        }
-        if (serverWatchDog != null) {
-            serverWatchDog.shutdown();
-            serverWatchDog = null;
-            server = new NotInitializedRSBLocalServer();
+            // clear existing instances.
+            if (informerWatchDog != null) {
+                informerWatchDog.shutdown();
+                informerWatchDog = null;
+                informer = new NotInitializedRSBInformer<>();
+            }
+            if (serverWatchDog != null) {
+                serverWatchDog.shutdown();
+                serverWatchDog = null;
+                server = new NotInitializedRSBLocalServer();
+            }
         }
     }
 
@@ -587,24 +588,28 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public void notifyChange() throws CouldNotPerformException, InterruptedException {
         logger.debug("Notify data change of " + this);
-        try {
-            validateInitialization();
-        } catch (final NotInitializedException ex) {
-            // only forward if instance was not destroyed before otherwise skip notification.
-            if (destroyed) {
-                return;
-            }
-            throw ex;
-        }
-
-        M newData = getData();
-        Event event = new Event(informer.getScope(), newData.getClass(), getData());
-        event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
-        if (informer.isActive() && server.isActive()) {
+        // synchronized by managable lock to prevent reinit between validateInitialization and publish
+        M newData;
+        synchronized (managableLock) {
             try {
-                informer.publish(event);
-            } catch (CouldNotPerformException ex) {
-                throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+                validateInitialization();
+            } catch (final NotInitializedException ex) {
+                // only forward if instance was not destroyed before otherwise skip notification.
+                if (destroyed) {
+                    return;
+                }
+                throw ex;
+            }
+
+            newData = getData();
+            Event event = new Event(informer.getScope(), newData.getClass(), getData());
+            event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
+            if (informer.isActive() && server.isActive()) {
+                try {
+                    informer.publish(event);
+                } catch (CouldNotPerformException ex) {
+                    throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+                }
             }
         }
 
