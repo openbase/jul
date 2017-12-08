@@ -374,7 +374,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private void reset() {
         // disabled related to #44
-        // synchronized (managableLock) {
+         synchronized (managableLock) {
             // clear init flag
             initialized = false;
 
@@ -389,7 +389,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 serverWatchDog = null;
                 server = new NotInitializedRSBLocalServer();
             }
-        //}
+        }
     }
 
     /**
