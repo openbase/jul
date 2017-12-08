@@ -103,6 +103,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private boolean notificationSkipped;
 
+    private boolean shutdownInitiated = false;
+
     public AbstractRegistry(final MAP entryMap) throws InstantiationException {
         this(entryMap, new RegistryPluginPool<>());
     }
@@ -921,6 +923,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     @Override
     public void shutdown() {
+        shutdownInitiated = true;
         try {
             registryLock.writeLock().lock();
 
@@ -1099,7 +1102,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     Thread.sleep(20 + randomJitter.nextInt(30));
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
-                    throw new CouldNotPerformException("Could not lock registry because thread was externally interrupted!", ex);
+                    if (!shutdownInitiated) {
+                        throw new CouldNotPerformException("Could not lock registry because thread was externally interrupted!", ex);
+                    }
                 }
             }
         } catch (CouldNotPerformException ex) {
