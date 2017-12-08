@@ -1519,20 +1519,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
     
     private void skipSyncTasks() {
-        if (JPService.testMode()) {
-            boolean skippedFromShutdown = false;
-            String trace = "";
-            StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-            for (int i = 0; i < stackTrace.length; i++) {
-                trace += stackTrace[i] + "\n";
-                if (!skippedFromShutdown) {
-                    skippedFromShutdown = stackTrace[i].getMethodName().equals("shutdown");
-                }
-            }
-            if (!skippedFromShutdown) {
-                logger.info("Skip sync tasks from:\n" + trace);
-            }
-        }
         CompletableFuture<M> currentSyncFuture = null;
         Future<M> currentSyncTask = null;
 

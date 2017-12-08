@@ -34,8 +34,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
-import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import org.openbase.jul.schedule.SyncObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The synchronization future is used to guarantee that the change done by the internal
@@ -45,6 +45,8 @@ import org.openbase.jul.schedule.SyncObject;
  * @param <T> The return type of the internal future.
  */
 public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSynchronizationFuture.class);
 
     private final SyncObject CHECK_LOCK = new SyncObject("WaitForUpdateLock");
     private final SyncObject SYNCHRONISTION_LOCK = new SyncObject("SynchronisationLock");
@@ -70,7 +72,6 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
                 waitForSynchronization(result);
                 synchronized (SYNCHRONISTION_LOCK) {
                     synchronisationComplete = true;
-                    SYNCHRONISTION_LOCK.notifyAll();
                 }
             } catch (InterruptedException ex) {
                 // restore interrput
@@ -116,10 +117,10 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
             if (!synchronisationComplete && !synchronisationFuture.isDone()) {
                 SYNCHRONISTION_LOCK.wait();
                 if (!synchronisationComplete) {
-                    // synchronisation future was canceled or failed but the internal future not...
+                    LOGGER.debug("SynchronisationFuture was canceled or failed");
                 }
             } else {
-                // synchronisation future was canceled or failed but the internal future not...
+                LOGGER.debug("SynchronisationFuture was canceled or failed");
             }
         }
 
@@ -136,10 +137,10 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
                 if (!synchronisationComplete && !synchronisationFuture.isDone()) {
                     throw new TimeoutException();
                 } else if (!synchronisationComplete) {
-                    // synchronisation future was canceled or failed but the internal future not...
+                    LOGGER.debug("SynchronisationFuture was canceled or failed");
                 }
             } else {
-                // synchronisation future was canceled or failed but the internal future not...
+                LOGGER.debug("SynchronisationFuture was canceled or failed");
             }
         }
 
