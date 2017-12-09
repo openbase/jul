@@ -32,7 +32,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -542,12 +541,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         final StackTraceElement[] stackTraceElement = Thread.currentThread().getStackTrace();
         try {
             // todo remove me later:
-            StackTracePrinter.printStackTrace("Reinit called by:", logger, LogLevel.INFO);
+//            StackTracePrinter.printStackTrace("Reinit called by:", logger, LogLevel.INFO);
             reinitStackTraces.add(stackTraceElement);
 
             if (reinitStackTraces.size() > 1) {
                 for (final StackTraceElement[] trace : reinitStackTraces) {
-                    StackTracePrinter.printStackTrace(trace, logger, LogLevel.WARN);
+                    StackTracePrinter.printStackTrace("Dublicated reinit call by:", trace, logger, LogLevel.WARN);
                 }
                 throw new FatalImplementationErrorException("dublicated reinit detected!", this);
             }
