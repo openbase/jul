@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rsb.com;
  */
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.After;
@@ -157,12 +158,14 @@ public class RSBCommunicationServiceTest {
         remoteService.addConnectionStateObserver(((source, data) -> {
             logger.info("ConnectionState [" + data + "]");
         }));
-//        try {
-//            remoteService.ping().get();
-//            assertTrue("Pinging was not canceled after timeout.", false);
-//        } catch (ExecutionException ex) {
-//            // ping canceled
-//        }
+
+        try {
+            remoteService.ping().get();
+            assertTrue("Pinging was not canceled after timeout.", false);
+        } catch (ExecutionException ex) {
+            // ping canceled
+        }
+
         assertEquals("Remote is still connected after remote service shutdown!", ConnectionState.CONNECTING, remoteService.getConnectionState());
         communicationService.activate();
         communicationService.waitForAvailabilityState(ControllerAvailabilityState.ONLINE);
@@ -202,7 +205,6 @@ public class RSBCommunicationServiceTest {
         logger.info(stopWatch.stop() + "ms to activate communication service");
         stopWatch.restart();
 
-//        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
         remoteService.activate();
         logger.info(stopWatch.getTime() + "ms to activate remote service");
@@ -392,6 +394,60 @@ public class RSBCommunicationServiceTest {
         communicationService.deactivate();
         remoteService.deactivate();
     }
+
+//    /**
+//     *
+//     * @throws Exception
+//     */
+//    @Test(timeout = 10000)
+//    public void testReinit() throws Exception {
+//        System.out.println("testReinit");
+//
+//        final int TEST_PARALLEL_REINIT_TASKS = 5;
+//
+//        String scope = "/test/notification";
+//        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
+//        communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
+//        communicationService.init(scope);
+//        communicationService.activate();
+//
+//        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+//        remoteService.init(scope);
+//        remoteService.activate();
+//
+//        final Runnable reinitTask = () -> {
+//            try {
+//                remoteService.reinit();
+//                remoteService.requestData().get();
+//            } catch (Exception ex) {
+//                ExceptionPrinter.printHistory("reinit failed!", ex, logger);
+//            }
+//        };
+//
+//        
+//        // execute reinits 
+//        final ArrayList<Future> taskFutures = new ArrayList<Future>();
+//        for (int i = 0; i < TEST_PARALLEL_REINIT_TASKS; i++) {
+//            taskFutures.add(GlobalCachedExecutorService.submit(reinitTask));
+//        }
+//        for (Future future : taskFutures) {
+//            future.get();
+//        }
+//        
+//        remoteService.requestData().get();
+//        try {
+//            remoteService.ping().get(500, TimeUnit.MILLISECONDS);
+//        } catch (TimeoutException ex) {
+//            Assert.fail("Even though wait for data returned the pinging immediatly afterwards failed");
+//        }
+//        communicationService.deactivate();
+//        remoteService.deactivate();
+//        remoteService.reinit();
+//        
+//        communicationService.shutdown();
+//        remoteService.shutdown();
+//        remoteService.reinit();
+//    }
 
     public static class RSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> {
 
