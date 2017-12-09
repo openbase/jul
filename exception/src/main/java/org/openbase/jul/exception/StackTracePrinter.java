@@ -22,6 +22,8 @@ package org.openbase.jul.exception;
  * #L%
  */
 import java.util.Arrays;
+import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.exception.printer.Printer;
 import org.slf4j.Logger;
 
 /**
@@ -33,10 +35,10 @@ public class StackTracePrinter {
      * Method prints the stack trace of the calling thread in a human readable way.
      *
      * @param logger the logger used for printing.
+     * @param logLevel the log level used for logging the stack trace.
      */
-    public static void printStackTrace(final Logger logger) {
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        printStackTrace(Arrays.copyOfRange(stackTrace, 2, stackTrace.length), logger);
+    public static void printStackTrace(final Logger logger, final LogLevel logLevel) {
+        printStackTrace((String) null, logger, logLevel);
     }
 
     /**
@@ -44,12 +46,38 @@ public class StackTracePrinter {
      *
      * @param stackTraces the stack trace to print.
      * @param logger the logger used for printing.
+     * @param logLevel the log level used for logging the stack trace.
      */
-    public static void printStackTrace(final StackTraceElement[] stackTraces, final Logger logger) {
+    public static void printStackTrace(final StackTraceElement[] stackTraces, final Logger logger, final LogLevel logLevel) {
+        printStackTrace(null, stackTraces, logger, logLevel);
+    }
+    
+    /**
+     * Method prints the stack trace of the calling thread in a human readable way.
+     *
+     * @param message the reason for printing the stack trace.
+     * @param logger the logger used for printing.
+     * @param logLevel the log level used for logging the stack trace.
+     */
+    public static void printStackTrace(final String message, final Logger logger, final LogLevel logLevel) {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        printStackTrace(message, Arrays.copyOfRange(stackTrace, 2, stackTrace.length), logger, logLevel);
+    }
+
+    /**
+     * Method prints the given stack trace in a human readable way.
+     *
+     * @param message the reason for printing the stack trace.
+     * @param stackTraces the stack trace to print.
+     * @param logger the logger used for printing.
+     * @param logLevel the log level used for logging the stack trace.
+     */
+    public static void printStackTrace(final String message, final StackTraceElement[] stackTraces, final Logger logger, final LogLevel logLevel) {
         String stackTraceString = "";
         for (final StackTraceElement stackTrace : stackTraces) {
             stackTraceString += stackTrace.toString() + "\n";
         }
-        logger.info("\n=== Stacktrace ===\n" + stackTraceString + "==================");
+        
+        Printer.print((message == null ? "" : message) + "\n=== Stacktrace ===\n" + stackTraceString + "==================", logLevel, logger);
     }
 }
