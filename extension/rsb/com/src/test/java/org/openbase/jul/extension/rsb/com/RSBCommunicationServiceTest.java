@@ -98,7 +98,7 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 10000)
+    @Test(timeout = 20000)
     public void testInitialSync() throws Exception {
         System.out.println("testInitialSync");
 
@@ -139,7 +139,7 @@ public class RSBCommunicationServiceTest {
         }
         assertTrue("Synchronization after the start of the remote service has not been done", firstSync);
 
-        communicationService.deactivate();
+        communicationService.shutdown();
         UnitConfig location2 = UnitConfig.newBuilder().setId("Location2").build();
         testData.addLocationUnitConfig(location2);
         communicationService = new RSBCommunicationServiceImpl(testData);

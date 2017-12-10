@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -82,6 +83,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Timeout in seconds since this goes to a synchronous call where it is given in seconds :/.
      */
     public static final long PING_TIMEOUT = 5;
+    public static final long PING_TEST_TIMEOUT = 1;
     public static final long CONNECTION_TIMEOUT = 30000;
     public static final long DATA_WAIT_TIMEOUT = 1000;
     public static final long LOGGING_TIMEOUT = 15000;
@@ -1498,7 +1500,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 pingTask = GlobalCachedExecutorService.submit(() -> {
                     try {
                         validateActivation();
-                        Long requestTime = remoteServer.call("ping", System.currentTimeMillis(), PING_TIMEOUT);
+                        Long requestTime = remoteServer.call("ping", System.currentTimeMillis(), JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT);
                         lastPingReceived = System.currentTimeMillis();
                         connectionPing = lastPingReceived - requestTime;
                         return connectionPing;
