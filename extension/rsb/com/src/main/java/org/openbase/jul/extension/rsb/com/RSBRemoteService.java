@@ -544,16 +544,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             // todo remove me later:
 //            StackTracePrinter.printStackTrace("Reinit called by:", logger, LogLevel.INFO);
-            reinitStackTraces.add(stackTraceElement);
-
-            if (reinitStackTraces.size() > 1) {
-                for (final StackTraceElement[] trace : reinitStackTraces) {
-                    StackTracePrinter.printStackTrace("Dublicated reinit call by:", trace, logger, LogLevel.WARN);
-                }
-                throw new FatalImplementationErrorException("dublicated reinit detected!", this);
-            }
             synchronized (maintainerLock) {
+                reinitStackTraces.add(stackTraceElement);
 
+                if (reinitStackTraces.size() > 1) {
+                    for (final StackTraceElement[] trace : reinitStackTraces) {
+                        StackTracePrinter.printStackTrace("Dublicated reinit call by:", trace, logger, LogLevel.WARN);
+                    }
+                    throw new FatalImplementationErrorException("dublicated reinit detected!", this);
+                }
                 logger.debug("Reinit " + this);
                 // temporally unlock this remove but save maintainer
                 final Object currentMaintainer = maintainer;
@@ -574,7 +573,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     maintainer = currentMaintainer;
                 }
             }
-
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not reinitialize " + this + "!", ex);
         } finally {
