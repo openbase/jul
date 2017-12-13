@@ -9,7 +9,7 @@
     <parent>
         <groupId>org.openbase</groupId>
         <artifactId>jul.extension.rst</artifactId>
-        <version>1.4.9-SNAPSHOT</version>
+        <version>1.4.9</version>
     </parent>    
     
     <url>https://github.com/openbase/jul/wiki</url>
