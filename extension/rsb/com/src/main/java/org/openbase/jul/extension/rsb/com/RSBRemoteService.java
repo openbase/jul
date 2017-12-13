@@ -906,10 +906,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         throw ex;
                     } catch (final InvalidStateException ex) {
                         // reinit remote service because middleware connection lost!
-                        try {
-                            reinit();
-                        } catch (final CouldNotPerformException exx) {
-                            ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
+                        // only if the connection has not been lost because of reconnecting
+                        if (connectionState != ConnectionState.RECONNECTING) {
+                            try {
+                                reinit();
+                            } catch (final CouldNotPerformException exx) {
+                                ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
+                            }
                         }
                         throw ex;
                     }
@@ -1514,10 +1517,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         throw ex;
                     } catch (final InvalidStateException ex) {
                         // reinit remote service because middleware connection lost!
-                        try {
-                            reinit();
-                        } catch (final CouldNotPerformException exx) {
-                            ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
+                        // only if the connection has not been lost because of reconnecting
+                        if (connectionState != ConnectionState.RECONNECTING) {
+                            try {
+                                reinit();
+                            } catch (final CouldNotPerformException exx) {
+                                ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
+                            }
                         }
                         throw ex;
                     } catch (CouldNotPerformException ex) {
