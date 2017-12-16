@@ -74,6 +74,36 @@ public class ExceptionPrinter {
         printHistory(th, new LogPrinter(logger, level));
         return th;
     }
+    
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history.
+     *
+     * @param <T> Exception type
+     * @param message the reason why this exception occurs.
+     * @param th exception stack to print.
+     * @param logger the logger used as message printer.
+     * @return the related Throwable returned for further exception handling.
+     */
+    public static <T extends Throwable> T printHistoryAndReturnThrowable(final String message, final T th, final Logger logger) {
+        return printHistoryAndReturnThrowable(th, logger, LogLevel.ERROR);
+    }
+
+    /**
+     * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
+     * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
+     *
+     * @param <T> Exception type
+     * @param message the reason why this exception occurs.
+     * @param th exception stack to print.
+     * @param logger the logger used as message printer.
+     * @param level the logging level used for the print.
+     * @return the related Throwable returned for further exception handling.
+     */
+    public static <T extends Throwable> T printHistoryAndReturnThrowable(final String message, final T th, final Logger logger, final LogLevel level) {
+        printHistory(th, new LogPrinter(logger, level));
+        return th;
+    }
 
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
