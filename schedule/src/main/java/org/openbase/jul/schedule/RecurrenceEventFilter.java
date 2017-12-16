@@ -49,7 +49,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     @Deprecated
     public static final long DEFAULT_TEST_TIMEOUT = 100;
-    public static final long TEST_MAX_FREQUENCY = 100;
+    public static final long TEST_MAX_FREQUENCY = 10;
 
     private Timeout timeout;
     private VALUE latestValue;
