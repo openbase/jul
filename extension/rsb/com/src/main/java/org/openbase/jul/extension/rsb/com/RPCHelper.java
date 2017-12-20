@@ -45,7 +45,8 @@ import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
  */
 public class RPCHelper {
 
-    public static final String USER_TIME_KEY = "BCO_NANO_TIME";
+    public static final String USER_TIME_KEY = "USER_NANO_TIME";
+    public static final long USER_TIME_VALUE_INVALID = -1;
 //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
     private static final String INTERNAL_CALL_REMOTE_METHOD_NAME = "internalCallRemoteMethod";
 

@@ -1334,13 +1334,24 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
 
                 // skip events which were send later than the last received update
-                if (event.getMetaData().getCreateTime() > newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) > newestEventTimeNano)) {
-                    newestEventTime = event.getMetaData().getCreateTime();
-                    newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
-                    applyDataUpdate((M) dataUpdate);
-                } else {
-                    logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because creation time is lower than time of last event [" + event.getMetaData().getCreateTime() + ", " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + ", " + newestEventTimeNano + "]");
+                long userTime = RPCHelper.USER_TIME_VALUE_INVALID;
+                try {
+                    userTime = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                } catch (IllegalArgumentException ex) {
+                    logger.warn("Data message does not contain user time key on scope " + ScopeGenerator.generateStringRep(event.getScope()), ex);
                 }
+
+                // filter outdated events
+                if (event.getMetaData().getCreateTime() < newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && userTime < newestEventTimeNano)) {
+                    logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because event seems to be outdated! Received event time < latest event time [" + event.getMetaData().getCreateTime() + "<= " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + " < " + newestEventTimeNano + "]");
+                    return;
+                }
+
+                if (userTime != RPCHelper.USER_TIME_VALUE_INVALID) {
+                    newestEventTimeNano = userTime;
+                }
+                newestEventTime = event.getMetaData().getCreateTime();
+                applyDataUpdate((M) dataUpdate);
             } catch (RuntimeException ex) {
                 throw ex;
             } catch (Exception ex) {
