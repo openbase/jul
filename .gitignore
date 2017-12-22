@@ -29,3 +29,4 @@ build
 /extension/rst/processing/nbproject/
 /visual/javafx/nbproject/
 /exception/nbproject/
+*.iml
