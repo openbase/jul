@@ -1,5 +1,6 @@
 package org.openbase.jul.extension.rst.processing;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import rst.calendar.DateTimeType.DateTime;
@@ -278,5 +279,21 @@ public class ActionDescriptionProcessor {
             resourceAllocation.setId(newId + TOKEN_SEPERATOR + token);
         }
         return actionDescription;
+    }
+    
+    /**
+     * Method generates a description for the given action pipeline.
+     * @param actionDescriptionCollection a collection of depending action descriptions.
+     * @return a human readable description of the action pipeline.
+     */
+    public String getDescription(final Collection<ActionDescription> actionDescriptionCollection) {
+        String description = "";
+        for(ActionDescription actionDescription : actionDescriptionCollection) {
+            if(!description.isEmpty()) {
+                description += " > ";
+            }
+            description += actionDescription.getDescription();
+        }
+        return description;
     }
 }
