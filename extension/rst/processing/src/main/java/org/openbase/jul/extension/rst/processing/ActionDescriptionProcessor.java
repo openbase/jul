@@ -19,7 +19,7 @@ import rst.timing.IntervalType.Interval;
  * #%L
  * JUL Extension RST Processing
  * %%
- * Copyright (C) 2015 - 2017 openbase.org
+ * Copyright (C) 2015 - 2018 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -286,7 +286,7 @@ public class ActionDescriptionProcessor {
      * @param actionDescriptionCollection a collection of depending action descriptions.
      * @return a human readable description of the action pipeline.
      */
-    public String getDescription(final Collection<ActionDescription> actionDescriptionCollection) {
+    public static String getDescription(final Collection<ActionDescription> actionDescriptionCollection) {
         String description = "";
         for(ActionDescription actionDescription : actionDescriptionCollection) {
             if(!description.isEmpty()) {
