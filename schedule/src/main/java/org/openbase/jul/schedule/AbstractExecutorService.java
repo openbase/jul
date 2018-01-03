@@ -4,7 +4,7 @@ package org.openbase.jul.schedule;
  * #%L
  * JUL Schedule
  * %%
- * Copyright (C) 2015 - 2017 openbase.org
+ * Copyright (C) 2015 - 2018 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -37,9 +38,12 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.Shutdownable;
 import static org.openbase.jul.schedule.GlobalScheduledExecutorService.getInstance;
@@ -103,14 +107,20 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                 if (executorService.getActiveCount() == executorService.getMaximumPoolSize()) {
                     overload = true;
                     logger.warn("Further tasks will be rejected because executor service overload is detected!");
+                    if (JPService.verboseMode()) {
+                        StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
+                    }
                 } else if (executorService.getActiveCount() >= ((double) executorService.getMaximumPoolSize() * DEFAULT_WARNING_RATIO)) {
                     overload = true;
                     logger.warn("High Executor service load detected! This can cause system instability issues!");
+                    if (JPService.verboseMode()) {
+                        StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
+                    }
                 } else {
                     overload = false;
                 }
 
-                if (overload || JPService.getProperty(JPDebugMode.class).getValue()) {
+                if (JPService.debugMode() || overload || JPService.getProperty(JPDebugMode.class).getValue()) {
                     logger.info("Executor load " + getExecutorLoad() + "% [" + executorService.getActiveCount() + " of " + executorService.getMaximumPoolSize() + " threads processing " + (executorService.getTaskCount() - executorService.getCompletedTaskCount()) + " tasks] in total " + executorService.getCompletedTaskCount() + " are completed.");
                 }
             } catch (JPNotAvailableException ex) {
@@ -362,7 +372,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                         for (final Future future : futureCollection) {
                             try {
                                 future.get();
-                            } catch (ExecutionException ex) {
+                            } catch (ExecutionException | CancellationException ex) {
                                 exceptionStack = MultiException.push(this, ex, exceptionStack);
                             }
                         }
@@ -381,7 +391,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                 } catch (CouldNotPerformException | InterruptedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException("Task execution failed!", AbstractExecutorService.class, ex), LoggerFactory.getLogger(AbstractExecutorService.class));
                 }
             }
         });

@@ -11,7 +11,7 @@ import org.openbase.jul.iface.Shutdownable;
  * #%L
  * JUL Pattern Default
  * %%
- * Copyright (C) 2015 - 2017 openbase.org
+ * Copyright (C) 2015 - 2018 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as

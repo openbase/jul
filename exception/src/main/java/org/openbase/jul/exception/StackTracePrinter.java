@@ -4,7 +4,7 @@ package org.openbase.jul.exception;
  * #%L
  * JUL Exception
  * %%
- * Copyright (C) 2015 - 2017 openbase.org
+ * Copyright (C) 2015 - 2018 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,6 +22,7 @@ package org.openbase.jul.exception;
  * #L%
  */
 import java.util.Arrays;
+import java.util.Map;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.exception.printer.Printer;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class StackTracePrinter {
     public static void printStackTrace(final StackTraceElement[] stackTraces, final Logger logger, final LogLevel logLevel) {
         printStackTrace(null, stackTraces, logger, logLevel);
     }
-    
+
     /**
      * Method prints the stack trace of the calling thread in a human readable way.
      *
@@ -77,7 +78,32 @@ public class StackTracePrinter {
         for (final StackTraceElement stackTrace : stackTraces) {
             stackTraceString += stackTrace.toString() + "\n";
         }
-        
+
         Printer.print((message == null ? "" : message) + "\n=== Stacktrace ===\n" + stackTraceString + "==================", logLevel, logger);
+    }
+
+    /**
+     * Method prints the stack traces of all running java threads via the given logger.
+     *
+     * @param logger the logger used for printing.
+     * @param logLevel the level to print.
+     */
+    public static void printAllStackTrackes(final Logger logger, final LogLevel logLevel) {
+        printAllStackTrackes(null, logger, logLevel);
+    }
+
+    /**
+     * Method prints the stack traces of all running java threads via the given logger.
+     *
+     * @param filter only thread where the name of the thread contains this given {@code filter} key are printed. If the filter is null, no filtering will be performed.
+     * @param logger the logger used for printing.
+     * @param logLevel the level to print.
+     */
+    public static void printAllStackTrackes(final String filter, final Logger logger, final LogLevel logLevel) {
+        for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
+            if (filter == null || entry.getKey().getName().contains(filter)) {
+                StackTracePrinter.printStackTrace(entry.getValue(), logger, logLevel);
+            }
+        }
     }
 }
