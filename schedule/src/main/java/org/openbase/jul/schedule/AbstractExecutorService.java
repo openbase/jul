@@ -21,34 +21,26 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPDebugMode;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.StackTracePrinter;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.Shutdownable;
-import static org.openbase.jul.schedule.GlobalScheduledExecutorService.getInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.*;
+import java.util.concurrent.TimeoutException;
+
+import static org.openbase.jul.schedule.GlobalScheduledExecutorService.getInstance;
 
 /**
  *
@@ -312,25 +304,9 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
             @Override
             public R call() throws Exception {
                 try {
-                    MultiException.ExceptionStack exceptionStack = null;
                     Collection<Future<O>> futureCollection = buildFutureCollection(inputList, taskProcessor);
 
-                    try {
-                        for (final Future<O> future : futureCollection) {
-                            try {
-                                future.get();
-                            } catch (ExecutionException ex) {
-                                exceptionStack = MultiException.push(this, ex, exceptionStack);
-                            }
-                        }
-                    } catch (InterruptedException ex) {
-                        // cancel all pending actions.
-                        futureCollection.stream().forEach((future) -> {
-                            future.cancel(true);
-                        });
-                        throw ex;
-                    }
-                    MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                    internalAllOf(futureCollection, this);
                     return resultProcessor.process(futureCollection);
                 } catch (InterruptedException ex) {
                     throw ex;
@@ -367,23 +343,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
             @Override
             public R call() throws Exception {
                 try {
-                    MultiException.ExceptionStack exceptionStack = null;
-                    try {
-                        for (final Future future : futureCollection) {
-                            try {
-                                future.get();
-                            } catch (ExecutionException | CancellationException ex) {
-                                exceptionStack = MultiException.push(this, ex, exceptionStack);
-                            }
-                        }
-                    } catch (InterruptedException ex) {
-                        // cancel all pending actions.
-                        futureCollection.stream().forEach((future) -> {
-                            future.cancel(true);
-                        });
-                        throw ex;
-                    }
-                    MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                    internalAllOf(futureCollection, this);
                     if (resultCallable == null) {
                         throw new NotAvailableException("resultCallable");
                     }
@@ -397,66 +357,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         });
     }
 
-    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
-        return atLeastOne(() -> returnValue, futureCollection, timeout, timeUnit);
-    }
 
-    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
-        return atLeastOne(getInstance().getExecutorService(), resultCallable, futureCollection, timeout, timeUnit);
-    }
-
-    /**
-     * Method generates a new futures which represents all futures provided by the futureCollection.
-     * If at least one future successfully finishes the outer future will be completed with the result provided by the resultCallable.
-     *
-     * @param <R> The result type of the outer future.
-     * @param executorService the execution service which is used for the outer future execution.
-     * @param resultCallable the callable which provides the result of the outer future.
-     * @param futureCollection the inner future collect
-     * @param timeout
-     * @param timeUnit
-     * @return the outer future.
-     */
-    public static <R> Future<R> atLeastOne(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
-        return executorService.submit(new Callable<R>() {
-            @Override
-            public R call() throws Exception {
-                try {
-                    MultiException.ExceptionStack exceptionStack = null;
-                    boolean oneSuccesfullyFinished = false;
-
-                    try {
-                        for (final Future future : futureCollection) {
-                            try {
-                                // todo: implement timeout splitting
-                                future.get(timeout, timeUnit);
-                                oneSuccesfullyFinished = true;
-                            } catch (ExecutionException | TimeoutException ex) {
-                                exceptionStack = MultiException.push(this, ex, exceptionStack);
-                            }
-                        }
-                    } catch (InterruptedException ex) {
-                        // cancel all pending actions.
-                        futureCollection.stream().forEach((future) -> {
-                            future.cancel(true);
-                        });
-                        throw ex;
-                    }
-                    if (!oneSuccesfullyFinished) {
-                        MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
-                    }
-                    if (resultCallable == null) {
-                        throw new NotAvailableException("resultCallable");
-                    }
-                    return resultCallable.call();
-                } catch (CouldNotPerformException | InterruptedException ex) {
-                    throw ex;
-                } catch (Exception ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
-                }
-            }
-        });
-    }
 
     /**
      * Method generates a new futures which represents all futures provided by the futureCollection.If all futures are successfully finished the outer future will be completed with the result provided by the resultProcessor.
@@ -490,24 +391,93 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
             @Override
             public R call() throws Exception {
                 try {
+                    internalAllOf(futureCollection, this);
+                    return resultProcessor.process(futureCollection);
+                } catch (CouldNotPerformException | InterruptedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
+                }
+            }
+        });
+    }
+
+    private static void internalAllOf(final Collection<? extends Future> futureCollection, final Object source) throws CouldNotPerformException, InterruptedException {
+        MultiException.ExceptionStack exceptionStack = null;
+        try {
+            for (final Future future : futureCollection) {
+                try {
+                    future.get();
+                } catch (ExecutionException ex) {
+                    exceptionStack = MultiException.push(source, ex, exceptionStack);
+                }
+            }
+        } catch (InterruptedException ex) {
+            // cancel all pending actions.
+            futureCollection.stream().forEach((future) -> {
+                if(!future.isDone()) {
+                    future.cancel(true);
+                }
+            });
+            throw ex;
+        }
+        MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+    }
+
+    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+        return atLeastOne(() -> returnValue, futureCollection, timeout, timeUnit);
+    }
+
+    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+        return atLeastOne(getInstance().getExecutorService(), resultCallable, futureCollection, timeout, timeUnit);
+    }
+
+    /**
+     * Method generates a new futures which represents all futures provided by the futureCollection.
+     * If at least one future successfully finishes the outer future will be completed with the result provided by the resultCallable.
+     *
+     * @param <R> The result type of the outer future.
+     * @param executorService the execution service which is used for the outer future execution.
+     * @param resultCallable the callable which provides the result of the outer future.
+     * @param futureCollection the inner future collect
+     * @param timeout
+     * @param timeUnit
+     * @return the outer future.
+     */
+    public static <R> Future<R> atLeastOne(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+        return executorService.submit(new Callable<R>() {
+            @Override
+            public R call() throws Exception {
+                try {
                     MultiException.ExceptionStack exceptionStack = null;
+                    boolean oneSuccessfullyFinished = false;
+
                     try {
-                        for (final Future<O> future : futureCollection) {
+                        for (final Future future : futureCollection) {
                             try {
-                                future.get();
-                            } catch (ExecutionException ex) {
+                                // todo: implement timeout splitting
+                                future.get(timeout, timeUnit);
+                                oneSuccessfullyFinished = true;
+                            } catch (ExecutionException | TimeoutException ex) {
                                 exceptionStack = MultiException.push(this, ex, exceptionStack);
                             }
                         }
                     } catch (InterruptedException ex) {
                         // cancel all pending actions.
                         futureCollection.stream().forEach((future) -> {
-                            future.cancel(true);
+                            if(!future.isDone()) {
+                                future.cancel(true);
+                            }
                         });
                         throw ex;
                     }
-                    MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
-                    return resultProcessor.process(futureCollection);
+                    if (!oneSuccessfullyFinished) {
+                        MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                    }
+                    if (resultCallable == null) {
+                        throw new NotAvailableException("resultCallable");
+                    }
+                    return resultCallable.call();
                 } catch (CouldNotPerformException | InterruptedException ex) {
                     throw ex;
                 } catch (Exception ex) {
