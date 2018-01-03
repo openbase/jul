@@ -49,6 +49,7 @@ gradle-app.setting
 
 ### Netbeans ###
 **/*/nbactions.xml
+**/*/nbproject
 
 ### Eclipse ###
 *.pydevproject
