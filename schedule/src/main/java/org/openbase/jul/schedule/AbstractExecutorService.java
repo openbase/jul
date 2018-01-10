@@ -43,9 +43,8 @@ import java.util.concurrent.TimeoutException;
 import static org.openbase.jul.schedule.GlobalScheduledExecutorService.getInstance;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <ES> The internal execution service.
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> implements Shutdownable {
 
@@ -94,29 +93,25 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     private Runnable initReportService() {
         final Runnable reportService = () -> {
-            try {
-                final boolean overload;
-                if (executorService.getActiveCount() == executorService.getMaximumPoolSize()) {
-                    overload = true;
-                    logger.warn("Further tasks will be rejected because executor service overload is detected!");
-                    if (JPService.verboseMode()) {
-                        StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
-                    }
-                } else if (executorService.getActiveCount() >= ((double) executorService.getMaximumPoolSize() * DEFAULT_WARNING_RATIO)) {
-                    overload = true;
-                    logger.warn("High Executor service load detected! This can cause system instability issues!");
-                    if (JPService.verboseMode()) {
-                        StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
-                    }
-                } else {
-                    overload = false;
+            final boolean overload;
+            if (executorService.getActiveCount() == executorService.getMaximumPoolSize()) {
+                overload = true;
+                logger.warn("Further tasks will be rejected because executor service overload is detected!");
+                if (JPService.verboseMode()) {
+                    StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
                 }
+            } else if (executorService.getActiveCount() >= ((double) executorService.getMaximumPoolSize() * DEFAULT_WARNING_RATIO)) {
+                overload = true;
+                logger.warn("High Executor service load detected! This can cause system instability issues!");
+                if (JPService.verboseMode()) {
+                    StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
+                }
+            } else {
+                overload = false;
+            }
 
-                if (JPService.debugMode() || overload || JPService.getProperty(JPDebugMode.class).getValue()) {
-                    logger.info("Executor load " + getExecutorLoad() + "% [" + executorService.getActiveCount() + " of " + executorService.getMaximumPoolSize() + " threads processing " + (executorService.getTaskCount() - executorService.getCompletedTaskCount()) + " tasks] in total " + executorService.getCompletedTaskCount() + " are completed.");
-                }
-            } catch (JPNotAvailableException ex) {
-                logger.warn("Could not detect debug mode!", ex);
+            if (JPService.debugMode() || overload) {
+                logger.info("Executor load " + getExecutorLoad() + "% [" + executorService.getActiveCount() + " of " + executorService.getMaximumPoolSize() + " threads processing " + (executorService.getTaskCount() - executorService.getCompletedTaskCount()) + " tasks] in total " + executorService.getCompletedTaskCount() + " are completed.");
             }
         };
         final ScheduledExecutorService scheduledExecutorService;
@@ -223,10 +218,10 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
      * In case the given timeout is expired or the future processing fails the error processor is processed with the occurred exception as argument.
      * The receive a future should be submitted to any execution service or handled externally.
      *
-     * @param future the future on which is the error processor is registered.
-     * @param timeout the timeout.
-     * @param errorProcessor the processable which handles thrown exceptions
-     * @param timeUnit the unit of the timeout.
+     * @param future          the future on which is the error processor is registered.
+     * @param timeout         the timeout.
+     * @param errorProcessor  the processable which handles thrown exceptions
+     * @param timeUnit        the unit of the timeout.
      * @param executorService the execution service to apply the handler.
      * @return the future of the error handler.
      * @throws CouldNotPerformException thrown by the errorProcessor
@@ -247,10 +242,10 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
      * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
      * The receive a future should be submitted to any execution service or handled externally.
      *
-     * @param future the future on which is the error processor is registered.
-     * @param timeout the timeout.
+     * @param future         the future on which is the error processor is registered.
+     * @param timeout        the timeout.
      * @param errorProcessor the processable which handles thrown exceptions
-     * @param timeUnit the unit of the timeout.
+     * @param timeUnit       the unit of the timeout.
      * @return the future of the error handler.
      * @throws CouldNotPerformException thrown by the errorProcessor
      */
@@ -320,8 +315,8 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     /**
      * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultCallable.
      *
-     * @param <R> The result type of the outer future.
-     * @param resultCallable the callable which provides the result of the outer future.
+     * @param <R>              The result type of the outer future.
+     * @param resultCallable   the callable which provides the result of the outer future.
      * @param futureCollection the inner future collection.
      * @return the outer future.
      */
@@ -332,9 +327,9 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     /**
      * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultCallable.
      *
-     * @param <R> The result type of the outer future.
-     * @param executorService the execution service which is used for the outer future execution.
-     * @param resultCallable the callable which provides the result of the outer future.
+     * @param <R>              The result type of the outer future.
+     * @param executorService  the execution service which is used for the outer future execution.
+     * @param resultCallable   the callable which provides the result of the outer future.
      * @param futureCollection the inner future collection.
      * @return the outer future.
      */
@@ -358,15 +353,14 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
 
-
     /**
      * Method generates a new futures which represents all futures provided by the futureCollection.If all futures are successfully finished the outer future will be completed with the result provided by the resultProcessor.
-     *
+     * <p>
      * Node: For this method it's important that all futures provided by the future collection provide the same result type.
      *
-     * @param <O> The output or result type of the futures provided by the future collection.
-     * @param <R> The result type of the outer future.
-     * @param resultProcessor the processor which provides the outer future result.
+     * @param <O>              The output or result type of the futures provided by the future collection.
+     * @param <R>              The result type of the outer future.
+     * @param resultProcessor  the processor which provides the outer future result.
      * @param futureCollection the inner future collection.
      * @return the outer future.
      */
@@ -376,13 +370,13 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
     /**
      * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultProcessor.
-     *
+     * <p>
      * Node: For this method it's important that all futures provided by the future collection provide the same result type.
      *
-     * @param <O> The output or result type of the futures provided by the future collection.
-     * @param <R> The result type of the outer future.
-     * @param executorService the execution service which is used for the outer future execution.
-     * @param resultProcessor the processor which provides the outer future result.
+     * @param <O>              The output or result type of the futures provided by the future collection.
+     * @param <R>              The result type of the outer future.
+     * @param executorService  the execution service which is used for the outer future execution.
+     * @param resultProcessor  the processor which provides the outer future result.
      * @param futureCollection the inner future collection.
      * @return the outer future.
      */
@@ -415,7 +409,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         } catch (InterruptedException ex) {
             // cancel all pending actions.
             futureCollection.stream().forEach((future) -> {
-                if(!future.isDone()) {
+                if (!future.isDone()) {
                     future.cancel(true);
                 }
             });
@@ -436,9 +430,9 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
      * Method generates a new futures which represents all futures provided by the futureCollection.
      * If at least one future successfully finishes the outer future will be completed with the result provided by the resultCallable.
      *
-     * @param <R> The result type of the outer future.
-     * @param executorService the execution service which is used for the outer future execution.
-     * @param resultCallable the callable which provides the result of the outer future.
+     * @param <R>              The result type of the outer future.
+     * @param executorService  the execution service which is used for the outer future execution.
+     * @param resultCallable   the callable which provides the result of the outer future.
      * @param futureCollection the inner future collect
      * @param timeout
      * @param timeUnit
@@ -465,7 +459,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                     } catch (InterruptedException ex) {
                         // cancel all pending actions.
                         futureCollection.stream().forEach((future) -> {
-                            if(!future.isDone()) {
+                            if (!future.isDone()) {
                                 future.cancel(true);
                             }
                         });
@@ -490,13 +484,13 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     /**
      * Method builds a future collection with the given task processor. The input list is passed to the future build process so the input is available during the build.
      *
-     * @param <I> The type of the input value used for the future build.
-     * @param <O> The type of the output value which the futures provide.
-     * @param inputList the input list which is needed for the build process.
+     * @param <I>           The type of the input value used for the future build.
+     * @param <O>           The type of the output value which the futures provide.
+     * @param inputList     the input list which is needed for the build process.
      * @param taskProcessor the task processor to build the futures.
      * @return the collection of all builded future instances.
      * @throws CouldNotPerformException is thrown if the future collection could not be generated.
-     * @throws InterruptedException is thrown if the thread was externally interrupted.
+     * @throws InterruptedException     is thrown if the thread was externally interrupted.
      */
     public static <I, O> Collection<Future<O>> buildFutureCollection(final Collection<I> inputList, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException, InterruptedException {
         try {

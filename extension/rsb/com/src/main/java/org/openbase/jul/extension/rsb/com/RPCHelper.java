@@ -21,33 +21,39 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import org.openbase.jul.iface.annotations.RPCMethod;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.Map;
+import java.util.concurrent.*;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.patterns.Callback;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
+import rsb.patterns.Callback.UserCodeException;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RPCHelper {
 
+    public static final long RPC_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+
     public static final String USER_TIME_KEY = "USER_NANO_TIME";
     public static final long USER_TIME_VALUE_INVALID = -1;
-//    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
+    //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
     private static final String INTERNAL_CALL_REMOTE_METHOD_NAME = "internalCallRemoteMethod";
 
     public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
@@ -62,44 +68,58 @@ public class RPCHelper {
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
         logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
         try {
-            server.addMethod(method.getName(), new Callback() {
-
-                @Override
-                public Event internalInvoke(final Event event) throws Callback.UserCodeException {
-                    try {
-                        if (event == null) {
-                            throw new NotAvailableException("event");
-                        }
-
-                        Object result;
-                        Class<?> payloadType;
-
-                        if (event.getData() == null) {
-                            result = method.invoke(instance);
-                        } else {
-                            result = method.invoke(instance, event.getData());
-                        }
-
-                        // Implementation of Future support by resolving result to reache inner future object.
-                        if (result instanceof Future) {
-                            result = ((Future) result).get();
-                        }
-
-                        if (result == null) {
-                            payloadType = Void.class;
-                        } else {
-                            payloadType = result.getClass();
-                        }
-                        Event returnEvent = new Event(payloadType, result);
-                        returnEvent.getMetaData().setUserTime(USER_TIME_KEY, System.nanoTime());
-                        return returnEvent;
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                    } catch (CouldNotPerformException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | ExecutionException | CancellationException ex) {
-                        throw ExceptionPrinter.printHistoryAndReturnThrowable(new Callback.UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")]!", ex)), logger);
+            server.addMethod(method.getName(), event -> {
+                try {
+                    if (event == null) {
+                        throw new NotAvailableException("event");
                     }
-                    return new Event(Void.class);
+
+                    Object result;
+                    Class<?> payloadType;
+                    Future<Object> resultFuture = null;
+
+                    try {
+                        // Encapsulate invocation to detect method invocation stall via timeout
+                        //TODO: please check via benchmark if this causes into a performance issue compared to the direct invocation. Related to openbase/jul#46 Validate performance of method invocation encapsulation
+                        resultFuture = GlobalCachedExecutorService.submit(() -> {
+                            if (event.getData() == null) {
+                                return method.invoke(instance);
+                            } else {
+                                return method.invoke(instance, event.getData());
+                            }
+                        });
+                        result = resultFuture.get(RPC_TIMEOUT, TimeUnit.MILLISECONDS);
+
+                        // Implementation of Future support by resolving result to reach inner future object.
+                        if (result instanceof Future) {
+                            try {
+                                result = ((Future) result).get(RPC_TIMEOUT, TimeUnit.MILLISECONDS);
+                            } catch (final TimeoutException ex) {
+                                ((Future) result).cancel(true);
+                                throw ex;
+                            }
+                        }
+                    } catch (final TimeoutException ex) {
+                        if (resultFuture != null && !resultFuture.isDone()) {
+                            resultFuture.cancel(true);
+                        }
+                        throw new CouldNotPerformException("Remote task was canceled!", ex);
+                    }
+
+                    if (result == null) {
+                        payloadType = Void.class;
+                    } else {
+                        payloadType = result.getClass();
+                    }
+                    Event returnEvent = new Event(payloadType, result);
+                    returnEvent.getMetaData().setUserTime(USER_TIME_KEY, System.nanoTime());
+                    return returnEvent;
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                } catch (CouldNotPerformException | IllegalArgumentException | ExecutionException | CancellationException ex) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")]!", ex)), logger);
                 }
+                return new Event(Void.class);
             });
         } catch (CouldNotPerformException ex) {
             if (ex.getCause() instanceof InvalidStateException) {
