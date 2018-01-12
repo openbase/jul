@@ -23,8 +23,6 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPNotAvailableException;
-import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -33,10 +31,7 @@ import org.openbase.jul.iface.Shutdownable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.TimeoutException;
 
@@ -398,11 +393,43 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     private static void internalAllOf(final Collection<? extends Future> futureCollection, final Object source) throws CouldNotPerformException, InterruptedException {
         MultiException.ExceptionStack exceptionStack = null;
         try {
-            for (final Future future : futureCollection) {
-                try {
-                    future.get();
-                } catch (ExecutionException ex) {
-                    exceptionStack = MultiException.push(source, ex, exceptionStack);
+            if (JPService.debugMode()) {
+                int iteration = 0;
+                Set<Future> runningFutures = new HashSet<>(futureCollection);
+                Set<Future> finishedFutures = new HashSet<>();
+                Set<Future> failedFutures = new HashSet<>();
+                while (runningFutures.size() != 0 && !Thread.currentThread().isInterrupted()) {
+                    for (final Future future : new HashSet<>(runningFutures)) {
+                        try {
+                            future.get(1, TimeUnit.SECONDS);
+                            finishedFutures.add(future);
+                            runningFutures.remove(future);
+                        } catch (ExecutionException ex) {
+                            failedFutures.add(future);
+                            runningFutures.remove(future);
+                            exceptionStack = MultiException.push(source, ex, exceptionStack);
+                        } catch (TimeoutException ex) {
+                            exceptionStack = MultiException.push(source, ex, exceptionStack);
+                        }
+                    }
+                    try {
+                        MultiException.checkAndThrow("AllOf Status on iteration: " + iteration + "\n" +
+                                finishedFutures.size() + " finished\n" +
+                                runningFutures.size() + " still running\n" +
+                                failedFutures + " failed\n", exceptionStack);
+                    } catch (CouldNotPerformException ex) {
+                        ExceptionPrinter.printHistory(ex, LoggerFactory.getLogger(source.getClass()));
+                    }
+                    exceptionStack = null;
+                    iteration++;
+                }
+            } else {
+                for (final Future future : futureCollection) {
+                    try {
+                        future.get();
+                    } catch (ExecutionException ex) {
+                        exceptionStack = MultiException.push(source, ex, exceptionStack);
+                    }
                 }
             }
         } catch (InterruptedException ex) {

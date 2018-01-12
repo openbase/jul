@@ -26,36 +26,32 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * The synchronization future is used to guarantee that the change done by the internal
  * future has at one time been synchronized.
  *
- * @author pleminoq
  * @param <T> The return type of the internal future.
+ * @author pleminoq
  */
 public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSynchronizationFuture.class);
-
     private final SyncObject CHECK_LOCK = new SyncObject("WaitForUpdateLock");
-    private final SyncObject SYNCHRONISTION_LOCK = new SyncObject("SynchronisationLock");
     private final Observer notifyChangeObserver = (Observer) (Observable source, Object data) -> {
         synchronized (CHECK_LOCK) {
             CHECK_LOCK.notifyAll();
         }
     };
-    private boolean synchronisationComplete = false;
 
     private final Future<T> internalFuture;
     private final Future synchronisationFuture;
@@ -70,25 +66,8 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
             try {
                 T result = internalFuture.get();
                 waitForSynchronization(result);
-                synchronized (SYNCHRONISTION_LOCK) {
-                    synchronisationComplete = true;
-                }
-            } catch (InterruptedException ex) {
-                // restore interrput
-                Thread.currentThread().interrupt();
-            } catch (ExecutionException ex) {
-                // can only happen if the internal future failed so do nothing
-                // because errors on the internal future are received by calling
-                // get on this future anyways
-            } catch (CouldNotPerformException ex) {
-                // can only happen if waitForSynchronization failed
-                // so throw the excepion so that it is clear that this task failed
-                throw ex;
             } finally {
                 dataProvider.removeDataObserver(notifyChangeObserver);
-                synchronized (SYNCHRONISTION_LOCK) {
-                    SYNCHRONISTION_LOCK.notifyAll();
-                }
             }
             return null;
         });
@@ -96,55 +75,38 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return internalFuture.cancel(mayInterruptIfRunning) && synchronisationFuture.cancel(mayInterruptIfRunning);
+        return  synchronisationFuture.cancel(mayInterruptIfRunning) && internalFuture.cancel(mayInterruptIfRunning);
     }
 
     @Override
     public boolean isCancelled() {
-        return internalFuture.isCancelled() && synchronisationFuture.isCancelled();
+        return synchronisationFuture.isCancelled() && internalFuture.isCancelled();
     }
 
     @Override
     public boolean isDone() {
-        return internalFuture.isDone() && synchronisationFuture.isDone();
+        return synchronisationFuture.isDone() && internalFuture.isDone();
     }
 
     @Override
     public T get() throws InterruptedException, ExecutionException {
-        T result = internalFuture.get();
+        // when get returns without an exception the synchronisation is complete
+        // and else the exception will be thrown
+        synchronisationFuture.get();
 
-        synchronized (SYNCHRONISTION_LOCK) {
-            if (!synchronisationComplete && !synchronisationFuture.isDone()) {
-                SYNCHRONISTION_LOCK.wait();
-                if (!synchronisationComplete) {
-                    LOGGER.debug("SynchronisationFuture was canceled or failed");
-                }
-            } else {
-                LOGGER.debug("SynchronisationFuture was canceled or failed");
-            }
-        }
-
-        return result;
+        return internalFuture.get();
     }
 
     @Override
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        T result = internalFuture.get(timeout, unit);
+        // when get returns without an exception the synchronisation is complete
+        // and else the exception will be thrown
+        synchronisationFuture.get(timeout, unit);
 
-        synchronized (SYNCHRONISTION_LOCK) {
-            if (!synchronisationComplete && !synchronisationFuture.isDone()) {
-                SYNCHRONISTION_LOCK.wait(TimeUnit.MILLISECONDS.convert(timeout, unit));
-                if (!synchronisationComplete && !synchronisationFuture.isDone()) {
-                    throw new TimeoutException();
-                } else if (!synchronisationComplete) {
-                    LOGGER.debug("SynchronisationFuture was canceled or failed");
-                }
-            } else {
-                LOGGER.debug("SynchronisationFuture was canceled or failed");
-            }
-        }
-
-        return result;
+        // the synchronisation future calls get on the internal future
+        // thus if it is done the internal future is also done and does not have
+        // to be called with a timeout
+        return internalFuture.get();
     }
 
     public Future<T> getInternalFuture() {
@@ -172,6 +134,7 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
      *
      * @param observer In this case always the notify change observer that is added.
      */
+    @Deprecated
     protected abstract void addObserver(Observer observer);
 
     /**
@@ -180,6 +143,7 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
      *
      * @param observer In this case always the notify change observer that is added.
      */
+    @Deprecated
     protected abstract void removeObserver(Observer observer);
 
     /**
@@ -196,7 +160,7 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
      *
      * @param message the return value of the internal future
      * @return true if the synchronization is complete and else false
-     * @throws CouldNotPerformException it something goes wrong in the check
+     * @throws CouldNotPerformException if something goes wrong in the check
      */
     protected abstract boolean check(final T message) throws CouldNotPerformException;
 }
