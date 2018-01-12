@@ -117,16 +117,16 @@ public class RPCHelper {
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 } catch (CouldNotPerformException | IllegalArgumentException | ExecutionException | CancellationException ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")]!", ex)), logger);
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")] of "+instance+"!", ex)), logger);
                 }
                 return new Event(Void.class);
             });
         } catch (CouldNotPerformException ex) {
             if (ex.getCause() instanceof InvalidStateException) {
                 // method was already register
-                ExceptionPrinter.printHistory("Skip Method[" + method.getName() + "] registration on Scope[" + server.getScope() + "] because message was already registered!", ex, logger, LogLevel.DEBUG);
+                ExceptionPrinter.printHistory("Skip Method[" + method.getName() + "] registration on Scope[" + server.getScope() + "] of "+instance+" because message was already registered!", ex, logger, LogLevel.DEBUG);
             } else {
-                throw new CouldNotPerformException("Could not register Method[" + method.getName() + "] on Scope[" + server.getScope() + "]!", ex);
+                throw new CouldNotPerformException("Could not register Method[" + method.getName() + "] on Scope[" + server.getScope() + "] of "+instance+"!", ex);
             }
         }
     }

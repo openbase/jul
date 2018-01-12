@@ -22,12 +22,15 @@ package org.openbase.jul.pattern;
  * #L%
  */
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Lockable;
+import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Shutdownable;
+import org.openbase.jul.iface.provider.PingProvider;
 import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
@@ -35,7 +38,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> the data type of the remote
  */
-public interface Remote<M> extends Shutdownable, Activatable, Lockable, DataProvider<M> {
+public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProvider, DataProvider<M> {
 
     // TODO release: Should be moved to rst.
     public enum ConnectionState {
@@ -163,4 +166,24 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, DataProv
      * an CouldNotPerformException will be thrown.
      */
     public CompletableFuture<M> requestData() throws CouldNotPerformException;
+
+    /**
+     * Method triggers a ping between this remote and its main controller and
+     * returns the calculated connection delay. This method is triggered
+     * automatically in background to check if the main controller is still
+     * available.
+     *
+     * @return the connection delay in milliseconds.
+     */
+    @Override
+    public Future<Long> ping();
+
+    /**
+     * Method returns the result of the latest connection ping between this
+     * remote and its main controller.
+     *
+     * @return the latest connection delay in milliseconds.
+     */
+    @Override
+    public Long getPing();
 }

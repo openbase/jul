@@ -300,7 +300,6 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
             public R call() throws Exception {
                 try {
                     Collection<Future<O>> futureCollection = buildFutureCollection(inputList, taskProcessor);
-
                     internalAllOf(futureCollection, this);
                     return resultProcessor.process(futureCollection);
                 } catch (InterruptedException ex) {
@@ -495,7 +494,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     public static <I, O> Collection<Future<O>> buildFutureCollection(final Collection<I> inputList, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException, InterruptedException {
         try {
             MultiException.ExceptionStack exceptionStack = null;
-            List<Future<O>> futureList = new ArrayList<>();
+            final List<Future<O>> futureList = new ArrayList<>();
             for (final I input : inputList) {
                 try {
                     futureList.add(taskProcessor.process(input));

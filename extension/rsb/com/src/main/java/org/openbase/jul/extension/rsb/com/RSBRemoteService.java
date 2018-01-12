@@ -1499,13 +1499,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Method triggers a ping between this remote and its main controller and
-     * returns the calculated connection delay. This method is triggered
-     * automatically in background to check if the main controller is still
-     * available.
-     *
-     * @return the connection delay in milliseconds.
+     * {@inheritDoc}
+     * @return {@inheritDoc}
      */
+    @Override
     public Future<Long> ping() {
         synchronized (pingLock) {
             if (pingTask == null || pingTask.isDone()) {
@@ -1552,7 +1549,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @return the latest connection delay in milliseconds.
      */
-    public long getPing() {
+    @Override
+    public Long getPing() {
         return connectionPing;
     }
 

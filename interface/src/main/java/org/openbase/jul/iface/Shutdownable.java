@@ -71,6 +71,7 @@ public interface Shutdownable {
         return new ShutdownDeamon(shutdownable, shutdownDelay);
     }
 
+    //TODO fix typo in next release
     class ShutdownDeamon extends Thread {
 
         private final static Logger LOGGER = LoggerFactory.getLogger(ShutdownDeamon.class);

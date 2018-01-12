@@ -1,6 +1,6 @@
-package org.openbase.jul.iface;
+package org.openbase.jul.iface.provider;
 
-/*
+/*-
  * #%L
  * JUL Interface
  * %%
@@ -21,24 +21,23 @@ package org.openbase.jul.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.iface.annotations.RPCMethod;
 
-/**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- */
-public interface Pingable {
+import java.util.concurrent.Future;
+
+public interface PingProvider {
+    /**
+     * Method triggers a ping between this client instance and its server instance and
+     * returns the calculated connection delay.
+     *
+     * @return the connection delay in milliseconds.
+     */
+    public Future<Long> ping();
 
     /**
-     * Method can be used to calculate connection ping.
-     * The given timestamp argument is just returned from the local server to calculate the delay on client side.
+     * Method returns the result of the latest connection ping between this
+     * client and its server instance.
      *
-     * @param timestemp
-     * @return
-     * @throws org.openbase.jul.exception.CouldNotPerformException
+     * @return the latest connection delay in milliseconds.
      */
-    @RPCMethod
-    public Future<Long> ping(final Long timestemp) throws CouldNotPerformException;
+    public Long getPing();
 }

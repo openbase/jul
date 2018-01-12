@@ -50,11 +50,12 @@ import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Requestable;
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
-import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
+
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import org.openbase.jul.schedule.GlobalScheduledExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -88,7 +89,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final MB dataBuilder;
     private final Class<M> messageClass;
 
-    public final SyncObject managableLock = new SyncObject(getClass());
+    public final SyncObject manageableLock = new SyncObject(getClass());
 
     private final ReentrantReadWriteLock dataLock;
     private final ReadLock dataBuilderReadLock;
@@ -209,7 +210,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws InterruptedException
      */
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        synchronized (managableLock) {
+        synchronized (manageableLock) {
             try {
                 final boolean alreadyActivated = isActive();
                 ParticipantConfig internalParticipantConfig = participantConfig;
@@ -324,7 +325,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
-        synchronized (managableLock) {
+        synchronized (manageableLock) {
             validateInitialization();
             logger.debug("Activate RSBCommunicationService for: " + this);
             setControllerAvailabilityState(ControllerAvailabilityState.ACTIVATING);
@@ -343,7 +344,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public synchronized void deactivate() throws InterruptedException, CouldNotPerformException {
-        synchronized (managableLock) {
+        synchronized (manageableLock) {
             try {
                 validateInitialization();
             } catch (InvalidStateException ex) {
@@ -374,7 +375,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private void reset() {
         // disabled related to #44
-        synchronized (managableLock) {
+        synchronized (manageableLock) {
             // clear init flag
             initialized = false;
 
@@ -591,7 +592,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         logger.debug("Notify data change of " + this);
         // synchronized by managable lock to prevent reinit between validateInitialization and publish
         M newData;
-        synchronized (managableLock) {
+        synchronized (manageableLock) {
             try {
                 validateInitialization();
             } catch (final NotInitializedException ex) {
@@ -758,7 +759,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @throws NotInitializedException
      */
     public void validateInitialization() throws NotInitializedException {
-        synchronized (managableLock) {
+        synchronized (manageableLock) {
             if (!initialized) {
                 throw new NotInitializedException("communication service");
             }
