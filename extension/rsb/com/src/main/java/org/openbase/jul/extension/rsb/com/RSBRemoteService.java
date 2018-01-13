@@ -1365,15 +1365,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * TODO: redesign needed.
      */
     protected void applyExternalDataUpdate(final M data) throws CouldNotPerformException {
-        boolean remoteCommunicationServiceIsActive;
         try {
-            remoteCommunicationServiceIsActive = listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
+            if (listenerWatchDog.isActive() && remoteServerWatchDog.isActive()) {
+                throw new InvalidStateException("Because of synchronization reasons data updates can not be applied on active remote services.");
+            }
         } catch (NullPointerException ex) {
-            remoteCommunicationServiceIsActive = false;
-        }
-
-        if (remoteCommunicationServiceIsActive) {
-            throw new InvalidStateException("Because of synchronization reasons data updates can not be applied on active remote services.");
+            // does not care because remote should not be activated anyway.
         }
         applyDataUpdate(data);
     }
