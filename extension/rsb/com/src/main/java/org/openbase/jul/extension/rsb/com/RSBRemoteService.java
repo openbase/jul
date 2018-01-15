@@ -10,19 +10,21 @@ package org.openbase.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -32,6 +34,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
@@ -47,7 +50,9 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
+
 import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
+
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -56,9 +61,11 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
+
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTED;
 import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTING;
 import static org.openbase.jul.pattern.Remote.ConnectionState.DISCONNECTED;
+
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -70,9 +77,8 @@ import rsb.config.ParticipantConfig;
 import rst.rsb.ScopeType.Scope;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M> {
 
@@ -151,7 +157,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param scope {@inheritDoc}
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
     @Override
     public void init(final Scope scope) throws InitializationException, InterruptedException {
@@ -163,7 +169,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param scope {@inheritDoc}
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
     @Override
     public void init(final rsb.Scope scope) throws InitializationException, InterruptedException {
@@ -175,7 +181,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param scope the scope where the remote communicates
      * @throws InitializationException if the initialization fails
-     * @throws InterruptedException if the initialization is interrupted
+     * @throws InterruptedException    if the initialization is interrupted
      */
     @Override
     public void init(final String scope) throws InitializationException, InterruptedException {
@@ -189,10 +195,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @param scope {@inheritDoc}
+     * @param scope             {@inheritDoc}
      * @param participantConfig {@inheritDoc}
      * @throws InitializationException {@inheritDoc}
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException    {@inheritDoc}
      */
     @Override
     public void init(final rsb.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
@@ -217,10 +223,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @param scope {@inheritDoc}
+     * @param scope             {@inheritDoc}
      * @param participantConfig {@inheritDoc}
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
     @Override
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
@@ -339,7 +345,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param maintainer the instance which currently holds the lock.
      * @throws CouldNotPerformException is thrown if the instance could not be
-     * unlocked.
+     *                                  unlocked.
      */
     @Override
     public void unlock(final Object maintainer) throws CouldNotPerformException {
@@ -380,7 +386,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -401,7 +407,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -418,8 +424,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Atomic activate which makes sure that the maintainer stays the same.
      *
      * @param maintainer the current maintainer of this remote
-     * @throws InterruptedException if activation is interrupted
-     * @throws CouldNotPerformException if activation fails
+     * @throws InterruptedException        if activation is interrupted
+     * @throws CouldNotPerformException    if activation fails
      * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
      */
     public void activate(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
@@ -438,8 +444,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Atomic deactivate which makes sure that the maintainer stays the same.
      *
      * @param maintainer the current maintainer of this remote
-     * @throws InterruptedException if deactivation is interrupted
-     * @throws CouldNotPerformException if deactivation fails
+     * @throws InterruptedException        if deactivation is interrupted
+     * @throws CouldNotPerformException    if deactivation fails
      * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
      */
     public void deactivate(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
@@ -457,7 +463,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -516,11 +522,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
      * This method can be used in case of a broken connection or if the participant config has been changed.
-     *
+     * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
      *
-     * @throws InterruptedException is thrown if the current thread was externally interrupted.
+     * @throws InterruptedException     is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException is throws if the reinit has been failed.
      */
     protected void reinit() throws InterruptedException, CouldNotPerformException {
@@ -530,20 +536,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
      * This method can be used in case of a broken connection or if the participant config has been changed.
-     *
+     * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
      *
      * @param scope the new scope to configure.
-     * @throws InterruptedException is thrown if the current thread was externally interrupted.
+     * @throws InterruptedException     is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException is throws if the reinit has been failed.
      */
     protected void reinit(final Scope scope) throws InterruptedException, CouldNotPerformException {
 
+        // to not reinit if shutdown is in progress!
+        if (shutdownInitiated) {
+            return;
+        }
+
         final StackTraceElement[] stackTraceElement = Thread.currentThread().getStackTrace();
         try {
-            // todo remove me later:
-//            StackTracePrinter.printStackTrace("Reinit called by:", logger, LogLevel.INFO);
             synchronized (maintainerLock) {
                 reinitStackTraces.add(stackTraceElement);
 
@@ -583,13 +592,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
      * This method can be used in case of a broken connection or if the participant config has been changed.
-     *
+     * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
      *
      * @param maintainer the current maintainer of this remote
-     * @throws InterruptedException is thrown if the current thread was externally interrupted.
-     * @throws CouldNotPerformException is throws if the reinit has been failed.
+     * @throws InterruptedException        is thrown if the current thread was externally interrupted.
+     * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
      */
     public void reinit(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
@@ -599,14 +608,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
      * This method can be used in case of a broken connection or if the participant config has been changed.
-     *
+     * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
      *
-     * @param scope the new scope to configure.
+     * @param scope      the new scope to configure.
      * @param maintainer the current maintainer of this remote
-     * @throws InterruptedException is thrown if the current thread was externally interrupted.
-     * @throws CouldNotPerformException is throws if the reinit has been failed.
+     * @throws InterruptedException        is thrown if the current thread was externally interrupted.
+     * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
      */
     public void reinit(final Scope scope, final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
@@ -733,7 +742,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
     public <R> R callMethod(final String methodName) throws CouldNotPerformException, InterruptedException {
@@ -744,7 +753,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
     public <R, T extends Object> R callMethod(final String methodName, final T argument) throws CouldNotPerformException, InterruptedException {
@@ -755,7 +764,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
     public <R> R callMethod(String methodName, long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
@@ -766,13 +775,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
-     * @throws java.lang.InterruptedException {@inheritDoc}
+     * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
     public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
 
         final String shortArgument = RPCHelper.argumentToString(argument);
-        validateActivation();
+        validateMiddleware();
         long retryTimeout = METHOD_CALL_START_TIMEOUT;
         long validTimeout = timeout;
 
@@ -838,17 +847,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @param <R> {@inheritDoc}
-     * @param <T> {@inheritDoc}
+     * @param <R>        {@inheritDoc}
+     * @param <T>        {@inheritDoc}
      * @param methodName {@inheritDoc}
-     * @param argument {@inheritDoc}
+     * @param argument   {@inheritDoc}
      * @return {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
 
-        validateActivation();
+        validateMiddleware();
         return GlobalCachedExecutorService.submit(new Callable<R>() {
 
             private Future<R> internalCallFuture;
@@ -906,13 +915,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         throw ex;
                     } catch (final InvalidStateException ex) {
                         // reinit remote service because middleware connection lost!
-                        // only if the connection has not been lost because of reconnecting
-                        if (connectionState != ConnectionState.RECONNECTING) {
-                            try {
-                                reinit();
-                            } catch (final CouldNotPerformException exx) {
-                                ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
-                            }
+                        switch (connectionState) {
+                            // only if the connection was established before and no reconnect is ongoing.
+                            case CONNECTING:
+                            case CONNECTED:
+                                try {
+                                    reinit();
+                                } catch (final CouldNotPerformException exx) {
+                                    ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
+                                }
                         }
                         throw ex;
                     }
@@ -1053,7 +1064,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             // skip events which were send later than the last received update
                             if (event.getMetaData().getCreateTime() > newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) > newestEventTimeNano)) {
                                 newestEventTime = event.getMetaData().getCreateTime();
-                                newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                                if (event.getMetaData().hasUserTime(RPCHelper.USER_TIME_KEY)) {
+                                    newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                                }
                                 applyDataUpdate(dataUpdate);
                             } else {
                                 logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because creation time is lower than time of last event [" + event.getMetaData().getCreateTime() + ", " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + ", " + newestEventTimeNano + "]");
@@ -1073,6 +1086,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 } else {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger);
                 }
+            } catch (Exception ex) {
+                throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
             }
         }
     }
@@ -1128,7 +1143,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @throws CouldNotPerformException {@inheritDoc}
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      */
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
@@ -1147,9 +1162,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     /**
      * {@inheritDoc}
      *
-     * @param timeout {@inheritDoc}
+     * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}
-     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws CouldNotPerformException       {@inheritDoc}
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
     @Override
@@ -1201,8 +1216,20 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     public void validateActivation() throws InvalidStateException {
+        validateInitialization();
         if (!isActive()) {
             throw new InvalidStateException(this + " not activated!");
+        }
+    }
+
+    public void validateMiddleware() throws InvalidStateException {
+        validateActivation();
+        if (listener == null || !listener.isActive() || !listenerWatchDog.isServiceRunning()) {
+            throw new InvalidStateException("Listener of " + this + " not connected to middleware!");
+        }
+
+        if (remoteServer == null || !remoteServer.isActive() || !remoteServerWatchDog.isServiceRunning()) {
+            throw new InvalidStateException("RemoteServer of " + this + " not connected to middleware!");
         }
     }
 
@@ -1217,14 +1244,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * case the timeout is expired an TimeoutException will be thrown.
      *
      * @param connectionState the desired connection state
-     * @param timeout the timeout in milliseconds until the method throw a
-     * TimeoutException in case the connection state was not reached.
-     * @throws InterruptedException is thrown in case the thread is externally
-     * interrupted.
-     * @throws org.openbase.jul.exception.TimeoutException is thrown in case the
-     * timeout is expired without reaching the connection state.
+     * @param timeout         the timeout in milliseconds until the method throw a
+     *                        TimeoutException in case the connection state was not reached.
+     * @throws InterruptedException                                is thrown in case the thread is externally
+     *                                                             interrupted.
+     * @throws org.openbase.jul.exception.TimeoutException         is thrown in case the
+     *                                                             timeout is expired without reaching the connection state.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
-     * the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
+     *                                                             the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
      */
     public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException {
         synchronized (connectionMonitor) {
@@ -1286,10 +1313,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Method blocks until the remote reaches the desired connection state.
      *
      * @param connectionState the desired connection state
-     * @throws InterruptedException is thrown in case the thread is externally
-     * interrupted.
+     * @throws InterruptedException                                is thrown in case the thread is externally
+     *                                                             interrupted.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
-     * the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
+     *                                                             the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
      */
     public void waitForConnectionState(final ConnectionState connectionState) throws InterruptedException, CouldNotPerformException {
         try {
@@ -1444,7 +1471,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     *
      * @param observer
      * @deprecated use addDataObserver(observer); instead!
      */
@@ -1454,7 +1480,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     *
      * @param observer
      * @deprecated use removeDataObserver(observer); instead
      */
@@ -1497,6 +1522,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -1505,7 +1531,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             if (pingTask == null || pingTask.isDone()) {
                 pingTask = GlobalCachedExecutorService.submit(() -> {
                     try {
-                        validateActivation();
+                        validateMiddleware();
                         Long requestTime = remoteServer.call("ping", System.currentTimeMillis(), JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT);
                         lastPingReceived = System.currentTimeMillis();
                         connectionPing = lastPingReceived - requestTime;
@@ -1522,13 +1548,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         throw ex;
                     } catch (final InvalidStateException ex) {
                         // reinit remote service because middleware connection lost!
-                        // only if the connection has not been lost because of reconnecting
-                        if (connectionState != ConnectionState.RECONNECTING) {
-                            try {
-                                reinit();
-                            } catch (final CouldNotPerformException exx) {
-                                ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
-                            }
+                        switch (connectionState) {
+                            // only if the connection was established before and no reconnect is ongoing.
+                            case CONNECTING:
+                            case CONNECTED:
+                                try {
+                                    reinit();
+                                } catch (final CouldNotPerformException exx) {
+                                    ExceptionPrinter.printHistory("Recovering middleware connection failed!", exx, logger);
+                                }
                         }
                         throw ex;
                     } catch (CouldNotPerformException ex) {
@@ -1565,7 +1593,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
         }
 
-        // Notify sync cancelation
+        // Notify sync cancellation
         try {
             if (currentSyncFuture != null) {
                 currentSyncFuture.cancel(true);

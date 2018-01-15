@@ -33,11 +33,7 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Factory;
-import rsb.InitializeException;
-import rsb.Participant;
-import rsb.ParticipantId;
-import rsb.Scope;
+import rsb.*;
 import rsb.config.ParticipantConfig;
 import org.openbase.jul.extension.rsb.iface.RSBParticipant;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
@@ -157,7 +153,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                     participant = init();
                 }
                 logger.debug("Participant[" + this + "] will be activated.");
-                if (participant.isActive()) {
+                if (getParticipant().isActive()) {
                     logger.warn("Skip activation because Participant[" + this + "] is already active!");
                     return;
                 }
@@ -194,8 +190,12 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 // deactivate
                 logger.debug("Participant[" + this + "] will be deactivated.");
                 final Future<Void> deactivationFuture = GlobalCachedExecutorService.submit(() -> {
-                    if (participant.isActive()) {
-                        participant.deactivate();
+                    try {
+                        if (getParticipant().isActive()) {
+                            getParticipant().deactivate();
+                        }
+                    } catch (final NotAvailableException | RSBException ex){
+                        // no need for deactivating non existing participant.
                     }
                     return null;
                 });
@@ -204,6 +204,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 try {
                     deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
                     participant = null;
+                    logger.debug("Participant[" + this + "] deactivated.");
                 } catch (TimeoutException ex) {
                     logger.warn("Deactivation stall detected! " + this + " did not response in time!");
                 } catch (ExecutionException ex) {
@@ -215,7 +216,6 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                     deactivationFuture.cancel(true);
                     throw ex;
                 }
-                logger.debug("Participant[" + this + "] deactivated.");
             }
         } catch (InterruptedException ex) {
             throw ex;

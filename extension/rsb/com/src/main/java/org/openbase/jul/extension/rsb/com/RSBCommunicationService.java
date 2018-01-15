@@ -21,15 +21,18 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import org.openbase.jul.extension.protobuf.MessageObservable;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.InitializationException;
@@ -49,6 +52,7 @@ import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Requestable;
+
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 
 import org.openbase.jul.pattern.Observable;
@@ -65,10 +69,9 @@ import rsb.config.ParticipantConfig;
 import rst.rsb.ScopeType.Scope;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <M> the message type of the communication service
+ * @param <M>  the message type of the communication service
  * @param <MB> the builder for message M
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M> {
 
@@ -138,7 +141,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param scope
      * @throws InitializationException
      * @throws InterruptedException
@@ -148,7 +150,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param scope
      * @throws InitializationException
      * @throws InterruptedException
@@ -158,7 +159,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param scope
      * @throws InitializationException
      * @throws InterruptedException
@@ -172,7 +172,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param label
      * @param type
      * @param location
@@ -188,7 +187,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param scope
      * @param participantConfig
      * @throws InitializationException
@@ -203,7 +201,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param scope
      * @param participantConfig
      * @throws InitializationException
@@ -320,7 +317,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * {@inheritDoc}
      *
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -339,7 +336,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * {@inheritDoc}
      *
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -459,7 +456,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param controllerAvailability
      * @throws InterruptedException
      */
@@ -606,13 +602,16 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             newData = getData();
             Event event = new Event(informer.getScope(), newData.getClass(), getData());
             event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
-            if (informer.isActive() && server.isActive()) {
+
+            if(isActive()) {
                 try {
+                    validateMiddleware();
                     informer.publish(event);
                 } catch (CouldNotPerformException ex) {
                     throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
                 }
             }
+
         }
 
         // Notify data update
@@ -636,7 +635,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param fieldNumber
      * @param value
      * @throws CouldNotPerformException
@@ -659,7 +657,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param fieldName
      * @param value
      * @throws CouldNotPerformException
@@ -683,7 +680,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param name
      * @return
      * @throws NotAvailableException
@@ -702,7 +698,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param name
      * @return
      * @throws CouldNotPerformException
@@ -721,7 +716,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param name
      * @return
      * @throws CouldNotPerformException
@@ -736,7 +730,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param fieldId
      * @return
      */
@@ -755,7 +748,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @throws NotInitializedException
      */
     public void validateInitialization() throws NotInitializedException {
@@ -766,8 +758,24 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    public void validateActivation() throws InvalidStateException {
+        if (!isActive()) {
+            throw new InvalidStateException(this + " not activated!");
+        }
+    }
+
+    public void validateMiddleware() throws InvalidStateException {
+        validateActivation();
+        if (informer == null || !informer.isActive() || !informerWatchDog.isServiceRunning()) {
+            throw new InvalidStateException("Informer of " + this + " not connected to middleware!");
+        }
+
+        if (server == null || !server.isActive() || !serverWatchDog.isServiceRunning()) {
+            throw new InvalidStateException("Server of " + this + " not connected to middleware!");
+        }
+    }
+
     /**
-     *
      * {@inheritDoc }
      *
      * @param timestamp {@inheritDoc }
@@ -797,7 +805,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     *
      * @param server
      * @throws CouldNotPerformException
      */

@@ -26,6 +26,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import com.sun.org.apache.bcel.internal.generic.RETURN;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -73,16 +75,16 @@ public class WatchDog implements Activatable, Shutdownable {
 
     private final ObservableImpl<ServiceState> serviceStateObserable;
 
-    public WatchDog(final Activatable task, final String serviceName) throws InstantiationException {
+    public WatchDog(final Activatable service, final String serviceName) throws InstantiationException {
         try {
-            this.service = task;
+            this.service = service;
             this.serviceName = serviceName;
             this.serviceStateObserable = new ObservableImpl<>();
             this.EXECUTION_LOCK = new SyncObject(serviceName + " EXECUTION_LOCK");
             this.STATE_LOCK = new SyncObject(serviceName + " STATE_LOCK");
 
-            if (task == null) {
-                throw new NotAvailableException("task");
+            if (service == null) {
+                throw new NotAvailableException("service");
             }
 
             setServiceState(ServiceState.CONSTRUCTED);
@@ -141,7 +143,11 @@ public class WatchDog implements Activatable, Shutdownable {
     }
 
     public boolean isServiceDone() {
-        return minder == null || minder.getFuture().isDone();
+        return minder == null || minder.getFuture() == null || minder.getFuture().isDone();
+    }
+
+    public boolean isServiceRunning() {
+        return isActive() && (getServiceState() == ServiceState.RUNNING);
     }
 
     public String getServiceName() {
