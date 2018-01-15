@@ -185,7 +185,7 @@ public class WatchDog implements Activatable, Shutdownable {
                     if ((System.currentTimeMillis() - requestTimestamp) > timeUnit.toMillis(timeout)) {
                         throw new TimeoutException();
                     }
-                    wait(timeUnit.toMillis(timeout));
+                    STATE_LOCK.wait(timeUnit.toMillis(timeout));
                 }
             }
         }
