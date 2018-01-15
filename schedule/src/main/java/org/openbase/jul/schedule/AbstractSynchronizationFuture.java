@@ -55,9 +55,11 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
 
     private final Future<T> internalFuture;
     private final Future synchronisationFuture;
+    protected final DataProvider dataProvider;
 
     public AbstractSynchronizationFuture(final Future<T> internalFuture, final DataProvider dataProvider) {
         this.internalFuture = internalFuture;
+        this.dataProvider = dataProvider;
 
         // create a synchronisation task which makes sure that the change requested by
         // the internal future has at one time been synchronized to the remote
