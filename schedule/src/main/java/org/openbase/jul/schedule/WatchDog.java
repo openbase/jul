@@ -21,6 +21,7 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,10 +30,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.sun.org.apache.bcel.internal.generic.RETURN;
 import org.openbase.jps.core.JPService;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Activatable;
@@ -43,30 +42,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class WatchDog implements Activatable, Shutdownable {
 
     protected static final Logger logger = LoggerFactory.getLogger(WatchDog.class);
 
-    /**
-     * Was used to register a shutdown hook that shutdown all watchdogs.
-     */
-    @Deprecated
-    public static final List<WatchDog> globalWatchDogList = Collections.synchronizedList(new ArrayList<WatchDog>());
-
     private final Object EXECUTION_LOCK;
     private final SyncObject STATE_LOCK;
 
     private static final long RUNNING_DELAY = 60000;
     private static final long DEFAULT_DELAY = 10000;
+    private static final long TEST_DELAY = 10;
 
     public enum ServiceState {
 
         UNKNWON, CONSTRUCTED, INITIALIZING, RUNNING, TERMINATING, FINISHED, FAILED, INTERRUPTED
-    };
+    }
 
     private final Activatable service;
     private final String serviceName;
@@ -88,7 +80,6 @@ public class WatchDog implements Activatable, Shutdownable {
             }
 
             setServiceState(ServiceState.CONSTRUCTED);
-            globalWatchDogList.add(this);
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -167,6 +158,7 @@ public class WatchDog implements Activatable, Shutdownable {
     }
 
     public void waitForServiceState(final ServiceState serviceState, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
+        long requestTimestamp = System.currentTimeMillis();
         synchronized (STATE_LOCK) {
             while (true) {
                 if (Thread.interrupted()) {
@@ -190,7 +182,10 @@ public class WatchDog implements Activatable, Shutdownable {
                 if (timeout <= 0) {
                     STATE_LOCK.wait();
                 } else {
-                    STATE_LOCK.wait(timeUnit.toMillis(timeout));
+                    if ((System.currentTimeMillis() - requestTimestamp) > timeUnit.toMillis(timeout)) {
+                        throw new TimeoutException();
+                    }
+                    wait(timeUnit.toMillis(timeout));
                 }
             }
         }
@@ -259,11 +254,17 @@ public class WatchDog implements Activatable, Shutdownable {
                                 try {
                                     logger.debug("Service activate: " + service.hashCode() + " : " + serviceName);
                                     service.activate();
-                                    setServiceState(ServiceState.RUNNING);
+                                    if (service.isActive()) {
+                                        setServiceState(ServiceState.RUNNING);
+                                    }
                                 } catch (CouldNotPerformException | NullPointerException ex) {
                                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex), logger);
                                     setServiceState(ServiceState.FAILED);
                                     logger.info("Try again in " + (getRate() / 1000) + " seconds...");
+                                }
+                            } else {
+                                if (getServiceState() != ServiceState.RUNNING) {
+                                    setServiceState(ServiceState.RUNNING);
                                 }
                             }
                             return; // check finished because service is still running.
@@ -314,7 +315,7 @@ public class WatchDog implements Activatable, Shutdownable {
 
     private long getRate() {
         if (JPService.testMode()) {
-            return 10;
+            return TEST_DELAY;
         }
         if (serviceState == ServiceState.RUNNING) {
             return RUNNING_DELAY;
