@@ -78,6 +78,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
     public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
 
+    private static final long NOTIFICATILONG_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
+
     public final static String RPC_REQUEST_STATUS = "requestStatus";
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -243,8 +245,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 this.informerWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
                     if (data == WatchDog.ServiceState.RUNNING) {
 
-                        setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
-
                         // Sync data after service start.
                         initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
                             try {
@@ -255,6 +255,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
                                 informerWatchDog.waitForServiceActivation();
                                 serverWatchDog.waitForServiceActivation();
+
+                                // mark controller as online.
+                                setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
+
                                 logger.debug("trigger initial sync");
                                 notifyChange();
                             } catch (InterruptedException ex) {
@@ -605,10 +609,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             if(isActive()) {
                 try {
-                    validateMiddleware();
+                    waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
                     informer.publish(event);
                 } catch (CouldNotPerformException ex) {
-                    throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform about data change of " + this + "!", ex), logger);
                 }
             }
 
@@ -773,6 +777,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         if (server == null || !server.isActive() || !serverWatchDog.isServiceRunning()) {
             throw new InvalidStateException("Server of " + this + " not connected to middleware!");
         }
+    }
+
+    public void waitForMiddleware(final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
+        validateActivation();
+        informerWatchDog.waitForServiceActivation(timeout, timeUnit);
+        serverWatchDog.waitForServiceActivation(timeout, timeUnit);
     }
 
     /**
