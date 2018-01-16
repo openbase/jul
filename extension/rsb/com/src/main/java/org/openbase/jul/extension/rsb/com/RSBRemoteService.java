@@ -1362,10 +1362,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 // skip events which were send later than the last received update
                 long userTime = RPCHelper.USER_TIME_VALUE_INVALID;
-                try {
+                if (event.getMetaData().hasUserTime(RPCHelper.USER_TIME_KEY)) {
                     userTime = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
-                } catch (IllegalArgumentException ex) {
-                    logger.warn("Data message does not contain user time key on scope " + ScopeGenerator.generateStringRep(event.getScope()), ex);
+                } else {
+                    logger.debug("Data message does not contain user time key on scope " + ScopeGenerator.generateStringRep(event.getScope()));
                 }
 
                 // filter outdated events
