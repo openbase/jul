@@ -171,12 +171,12 @@ public class WatchDog implements Activatable, Shutdownable {
 
                 // skip if watchdog is not active
                 if (!isActive()) {
-                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog is not active!");
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service["+serviceName+"] is not active!");
                 }
 
                 // skip if state is already passed.
                 if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
-                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because service is already done!");
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because Service["+serviceName+"] is already done!");
                 }
 
                 if (timeout <= 0) {
@@ -300,7 +300,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 try {
                     try {
                         logger.debug("Minder deactivation initiated of Service[" + serviceName + "]...");
-                        service.deactivate();
+                        service.deactivate();     
                     } catch (IllegalStateException | CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Could not deactivate Service[" + serviceName + "]!", ex), logger);
                     }
@@ -363,7 +363,7 @@ public class WatchDog implements Activatable, Shutdownable {
             }
             deactivate();
         } catch (InterruptedException ex) {
-            ExceptionPrinter.printHistory(this + "was interruped during shutdown!", ex, logger);
+            ExceptionPrinter.printHistory(this + "was interrupted during shutdown!", ex, logger);
             Thread.currentThread().interrupt();
         } catch (Exception ex) {
             ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
