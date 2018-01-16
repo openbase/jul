@@ -10,23 +10,26 @@ package org.openbase.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -37,10 +40,11 @@ import rsb.*;
 import rsb.config.ParticipantConfig;
 import org.openbase.jul.extension.rsb.iface.RSBParticipant;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import rst.domotic.unit.location.LocationConfigType.LocationConfig.LocationType;
 
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ *
  * @param <P>
  */
 public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipant {
@@ -194,7 +198,8 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                         if (getParticipant().isActive()) {
                             getParticipant().deactivate();
                         }
-                    } catch (final NotAvailableException | RSBException ex){
+                    } catch (final NotAvailableException | RSBException | IllegalStateException ex) {
+                        ExceptionPrinter.printHistory("RSB Participant["+getParticipant().toString()+"] deactivation bug detected!", ex, logger);
                         // no need for deactivating non existing participant.
                     }
                     return null;
@@ -236,6 +241,6 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
 
     @Override
     public String toString() {
-        return RSBParticipant.class.getSimpleName()+"["+scope+"]";
+        return RSBParticipant.class.getSimpleName() + "[" + scope + "]";
     }
 }
