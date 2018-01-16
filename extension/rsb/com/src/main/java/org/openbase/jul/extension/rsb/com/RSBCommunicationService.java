@@ -615,7 +615,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform about data change of " + this + "!", ex), logger);
                 }
             }
-
         }
 
         // Notify data update
