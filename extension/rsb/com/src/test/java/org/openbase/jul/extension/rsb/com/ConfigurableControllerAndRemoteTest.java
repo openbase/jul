@@ -65,7 +65,7 @@ public class ConfigurableControllerAndRemoteTest {
     public void tearDown() {
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 30000)
     public void initTest() throws Exception {
         System.out.println("initTest");
 
@@ -101,7 +101,7 @@ public class ConfigurableControllerAndRemoteTest {
         remote.shutdown();
     }
 
-    @Test(timeout = 10000)
+    @Test(timeout = 30000)
     public void applyConfigUpdateTest() throws Exception {
         System.out.println("applyConfigUpdateTest");
 
