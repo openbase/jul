@@ -31,6 +31,7 @@ import org.openbase.jul.iface.Shutdownable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.TimeoutException;
@@ -79,6 +80,18 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     protected final ES executorService;
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+
+    /**
+     * Register gloabl UncaughtExceptionHandler
+     */
+    static {
+        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable ex) {
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("UncaughtException found!", t, ex), LoggerFactory.getLogger(getClass()));
+            }
+        });
+    }
 
     public AbstractExecutorService(final ES executorService) throws CouldNotPerformException {
         this.executorService = executorService;
