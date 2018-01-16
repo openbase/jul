@@ -21,6 +21,16 @@ org.openbase.jul.extension.rst.iface
 org.openbase.jul.extension.rst.processing
 org.openbase.jul.extension.rst.storage.registry.consistency
 org.openbase.jul.extension.rst.transform
+org.openbase.jul.extension.tcp
+org.openbase.jul.extension.tcp.databind
+org.openbase.jul.extension.tcp.datatype
+org.openbase.jul.extension.tcp.exception
+org.openbase.jul.extension.tcp.execution
+org.openbase.jul.extension.tcp.execution.clientCommand
+org.openbase.jul.extension.tcp.execution.command
+org.openbase.jul.extension.tcp.execution.command.server
+org.openbase.jul.extension.xml.exception
+org.openbase.jul.extension.xml.processing
 org.openbase.jul.iface
 org.openbase.jul.iface.annotations
 org.openbase.jul.iface.provider
@@ -28,6 +38,8 @@ org.openbase.jul.pattern
 org.openbase.jul.pattern.launch
 org.openbase.jul.pattern.launch.jp
 org.openbase.jul.pattern.provider
+org.openbase.jul.pattern.statemachine
+org.openbase.jul.pattern.trigger
 org.openbase.jul.processing
 org.openbase.jul.schedule
 org.openbase.jul.storage.collection
@@ -38,6 +50,8 @@ org.openbase.jul.storage.registry.clone
 org.openbase.jul.storage.registry.jp
 org.openbase.jul.storage.registry.plugin
 org.openbase.jul.storage.registry.version
+org.openbase.jul.visual.javafx.execution
+org.openbase.jul.visual.javafx.geometry
 org.openbase.jul.visual.javafx.iface
 org.openbase.jul.visual.javafx.transform
 org.openbase.jul.visual.swing.animation
