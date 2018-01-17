@@ -199,7 +199,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                             getParticipant().deactivate();
                         }
                     } catch (final NotAvailableException | RSBException | IllegalStateException ex) {
-                        ExceptionPrinter.printHistory("RSB Participant["+getParticipant().toString()+"] deactivation bug detected!", ex, logger);
+                        ExceptionPrinter.printHistory(new InvalidStateException("RSB Participant["+getParticipant().toString()+"] deactivation bug detected!", ex), logger, LogLevel.WARN);
                         // no need for deactivating non existing participant.
                     }
                     return null;
