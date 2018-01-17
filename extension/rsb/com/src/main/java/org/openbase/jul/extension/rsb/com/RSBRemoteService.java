@@ -10,12 +10,12 @@ package org.openbase.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -1283,13 +1283,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
-                failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] on shutdown");
+                failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] in connectionState[" + this.connectionState.name() + "] on shutdown");
 
                 // detect delay for long term wait
                 if (timeout == 0) {
                     connectionMonitor.wait(15000);
                     if (!this.connectionState.equals(connectionState)) {
-                        failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] on shutdown");
+                        failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] in connectionState[" + this.connectionState.name() + "] on shutdown");
                         delayDetected = true;
                         logger.info("Wait for " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] to be " + connectionState.name().toLowerCase() + "...");
                         connectionMonitor.wait();
