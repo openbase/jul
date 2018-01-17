@@ -626,12 +626,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private void setConnectionState(final ConnectionState connectionState) {
         synchronized (connectionMonitor) {
-
             if (this.connectionState == ConnectionState.RECONNECTING && connectionState == CONNECTED) {
                 // while reconnecting and not yet deactivated a data update can cause switching to connected which causes
-                // a seoncd reinit because the resulting ping fails, skip setting to connected to prevent the ping while
+                // a second re-init because the resulting ping fails, skip setting to connected to prevent the ping while
                 // still applying the data update
-                // reinit will switch to connecting anyway when activating again
+                // re-init will switch to connecting anyway when activating again
                 return;
             }
 
@@ -939,6 +938,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 // Check if sync is in process.
                 if (syncFuture != null && !syncFuture.isCancelled()) {
+
+                    // Recover sync task
+                    if(syncTask == null || syncTask.isDone()) {
+                        syncTask = sync();
+                        throw new FatalImplementationErrorException("Sync task was finished without canceling the sync future!", this);
+                    }
+
                     return syncFuture;
                 }
 
@@ -1277,25 +1283,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
-                switch (connectionState) {
-                    case CONNECTED:
-                    case CONNECTING:
-                        if (!isActive()) {
-                            throw new InvalidStateException("Remote service is not active!");
-                        }
-                }
-
                 // detect delay for long term wait
                 if (timeout == 0) {
                     connectionMonitor.wait(15000);
                     if (!this.connectionState.equals(connectionState)) {
-                        switch (connectionState) {
-                            case CONNECTED:
-                            case CONNECTING:
-                                if (!isActive()) {
-                                    throw new InvalidStateException("Remote service is not active!");
-                                }
-                        }
                         delayDetected = true;
                         logger.info("Wait for " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] to be " + connectionState.name().toLowerCase() + "...");
                         connectionMonitor.wait();
