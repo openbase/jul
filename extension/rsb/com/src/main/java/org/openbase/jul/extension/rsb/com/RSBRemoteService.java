@@ -220,6 +220,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             try {
                 verifyMaintainability();
 
+                // only set to reconnecting when already active, this way init can be used when not active
+                // to update the config and when active the sync task still does not get cancelled
+                if (isActive()) {
+                    setConnectionState(ConnectionState.RECONNECTING);
+                } else {
+                    setConnectionState(ConnectionState.REINITIALIZING);
+                }
+
                 ParticipantConfig internalParticipantConfig = participantConfig;
 
                 if (scope == null) {
@@ -555,13 +563,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 try {
                     maintainer = null;
 
-                    // only set to reconnecting when already active, this way reinit can be used when not active
-                    // to update the config and when active the sync task still does not get cancelled
-                    if (isActive()) {
-                        setConnectionState(ConnectionState.RECONNECTING);
-                    } else {
-                        setConnectionState(ConnectionState.REINITIALIZING);
-                    }
                     // reinit remote
                     internalInit(scope, RSBSharedConnectionConfig.getParticipantConfig());
                 } catch (final CouldNotPerformException ex) {
