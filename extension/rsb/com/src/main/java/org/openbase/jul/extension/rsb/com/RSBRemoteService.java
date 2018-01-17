@@ -940,7 +940,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 if (syncFuture != null && !syncFuture.isCancelled()) {
 
                     // Recover sync task
-                    if(syncTask == null || syncTask.isDone()) {
+                    if (syncTask == null || syncTask.isDone()) {
                         syncTask = sync();
                         throw new FatalImplementationErrorException("Sync task was finished without canceling the sync future!", this);
                     }
@@ -1267,8 +1267,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.TimeoutException         is thrown in case the
      *                                                             timeout is expired without reaching the connection state.
-     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
-     *                                                             the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the connection state does not match and the shutdown of this remote
+     *                                                             has been initialized
      */
     public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException {
         synchronized (connectionMonitor) {
@@ -1283,10 +1283,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
+                failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] on shutdown");
+
                 // detect delay for long term wait
                 if (timeout == 0) {
                     connectionMonitor.wait(15000);
                     if (!this.connectionState.equals(connectionState)) {
+                        failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] on shutdown");
                         delayDetected = true;
                         logger.info("Wait for " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] to be " + connectionState.name().toLowerCase() + "...");
                         connectionMonitor.wait();
@@ -1300,6 +1303,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     throw new TimeoutException("Timeout expired!");
                 }
             }
+        }
+    }
+
+    private void failOnShutdown(String message) throws InvalidStateException {
+        if (this.shutdownInitiated) {
+            throw new InvalidStateException(message);
         }
     }
 

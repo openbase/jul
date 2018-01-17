@@ -176,9 +176,10 @@ public class WatchDog implements Activatable, Shutdownable {
 //                }
 
                 // skip if state is already passed.
-                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
-                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because Service["+serviceName+"] is already done!");
-                }
+                //TODO: validate that this new strategy with allowing the one who waits to guarantee that he does not wait indefinitely works
+//                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
+//                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because Service["+serviceName+"] is already done!");
+//                }
 
                 if (timeout <= 0) {
                     STATE_LOCK.wait();
