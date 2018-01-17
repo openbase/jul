@@ -1001,6 +1001,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     while (true) {
                         // if reconnecting wait until activated again
                         if (getConnectionState() == ConnectionState.RECONNECTING) {
+                            waitForConnectionState(ConnectionState.CONNECTING);
                             waitForMiddleware();
                         }
 
@@ -1083,10 +1084,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 } else {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger);
                 }
-            } catch (
-                    Exception ex)
-
-            {
+            } catch (Exception ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
             }
         }
@@ -1240,7 +1238,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     public void waitForMiddleware() throws CouldNotPerformException, InterruptedException {
-        validateMiddleware();
+        if (listenerWatchDog == null) {
+            throw new NotAvailableException("listenerWatchDog");
+        }
+
+        if (remoteServerWatchDog == null) {
+            throw new NotAvailableException("remoteServiceWatchDog");
+        }
 
         listenerWatchDog.waitForServiceActivation();
         remoteServerWatchDog.waitForServiceActivation();
