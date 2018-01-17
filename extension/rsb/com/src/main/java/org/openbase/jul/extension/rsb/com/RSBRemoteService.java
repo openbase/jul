@@ -999,18 +999,22 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                     long timeout = METHOD_CALL_START_TIMEOUT;
                     while (true) {
+                        // if reconnecting wait until activated again
+                        if (getConnectionState() == ConnectionState.RECONNECTING) {
+                            waitForMiddleware();
+                        }
 
                         // update activation state
                         active = isActive();
 
                         // needed for synchronization, it happened that between this check and checking
                         // again when catching the exception the remote has activated
-                        if (getConnectionState() != ConnectionState.RECONNECTING && !active) {
+                        if (!active) {
                             // if not active the sync is not possible and will be canceled. After next remote activation a new sync is triggered anyway.
                             syncFuture.cancel(true);
-                            throw new InvalidStateException("Remote service is not active!");
+                            throw new InvalidStateException("Remote service is not active and in connection state[" + getConnectionState().name() + "]!");
                         }
-                    
+
 
                         try {
                             remoteServerWatchDog.waitForServiceActivation();
@@ -1073,10 +1077,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     }
                     return null;
                 }
-            } catch (CouldNotPerformException |
-                    CancellationException ex)
-
-            {
+            } catch (CouldNotPerformException | CancellationException ex) {
                 if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {
@@ -1236,6 +1237,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         if (!isDataAvailable()) {
             throw new InvalidStateException(this + " not synchronized yet!", new NotAvailableException("data"));
         }
+    }
+
+    public void waitForMiddleware() throws CouldNotPerformException, InterruptedException {
+        validateMiddleware();
+
+        listenerWatchDog.waitForServiceActivation();
+        remoteServerWatchDog.waitForServiceActivation();
     }
 
     /**
