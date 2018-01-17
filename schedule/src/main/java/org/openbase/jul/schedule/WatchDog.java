@@ -170,14 +170,16 @@ public class WatchDog implements Activatable, Shutdownable {
                 }
 
                 // skip if watchdog is not active
-                if (!isActive()) {
-                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service["+serviceName+"] is not active!");
-                }
+                //TODO: makes no sense to allow waitForServiceActivation if this quits when not activated
+//                if (!isActive()) {
+//                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service["+serviceName+"] is not active!");
+//                }
 
                 // skip if state is already passed.
-                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
-                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because Service["+serviceName+"] is already done!");
-                }
+                //TODO: validate that this new strategy with allowing the one who waits to guarantee that he does not wait indefinitely works
+//                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
+//                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because Service["+serviceName+"] is already done!");
+//                }
 
                 if (timeout <= 0) {
                     STATE_LOCK.wait();

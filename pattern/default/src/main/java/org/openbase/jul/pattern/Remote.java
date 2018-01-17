@@ -43,7 +43,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
     // TODO release: Should be moved to rst.
     public enum ConnectionState {
 
-        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING
+        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING, REINITIALIZING
     };
 
     /**

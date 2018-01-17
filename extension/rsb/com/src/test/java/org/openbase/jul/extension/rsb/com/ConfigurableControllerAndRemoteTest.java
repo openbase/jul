@@ -84,7 +84,7 @@ public class ConfigurableControllerAndRemoteTest {
 
         remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
         controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
-        System.out.println("Succesfully connected controller and remote!");
+        System.out.println("Successfully connected controller and remote!");
 
         scope = scope.toBuilder().clearComponent().addComponent("test").addComponent("configurables").build();
         unitConfig = unitConfig.toBuilder().setScope(scope).build();

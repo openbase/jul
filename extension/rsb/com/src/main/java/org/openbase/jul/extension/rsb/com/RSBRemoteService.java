@@ -24,35 +24,14 @@ package org.openbase.jul.extension.rsb.com;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
 import org.openbase.jps.core.JPService;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.CouldNotTransformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.TimeoutException;
-import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
-
-import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
-
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -61,11 +40,6 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
-
-import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTED;
-import static org.openbase.jul.pattern.Remote.ConnectionState.CONNECTING;
-import static org.openbase.jul.pattern.Remote.ConnectionState.DISCONNECTED;
-
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -75,6 +49,14 @@ import rsb.Event;
 import rsb.Handler;
 import rsb.config.ParticipantConfig;
 import rst.rsb.ScopeType.Scope;
+
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.*;
+
+import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
+import static org.openbase.jul.pattern.Remote.ConnectionState.*;
 
 /**
  * @param <M>
@@ -238,7 +220,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             try {
                 verifyMaintainability();
 
-                final boolean alreadyActivated = isActive();
+                // only set to reconnecting when already active, this way init can be used when not active
+                // to update the config and when active the sync task still does not get cancelled
+                if (isActive()) {
+                    setConnectionState(ConnectionState.RECONNECTING);
+                } else {
+                    setConnectionState(ConnectionState.REINITIALIZING);
+                }
+
                 ParticipantConfig internalParticipantConfig = participantConfig;
 
                 if (scope == null) {
@@ -264,9 +253,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 postInit();
                 initialized = true;
 
+
                 // check if remote service was already activated before and recover state.
-                if (alreadyActivated) {
-                    activate();
+                switch (getConnectionState()) {
+                    case RECONNECTING:
+                        activate();
+                        break;
+                    case REINITIALIZING:
+                        setConnectionState(ConnectionState.DISCONNECTED);
+                        break;
                 }
             } catch (CouldNotPerformException ex) {
                 throw new InitializationException(this, ex);
@@ -568,11 +563,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 try {
                     maintainer = null;
 
-                    // only set to reconnecting when already active, this way reinit can be used when not active
-                    // to update the config and when active the sync task still does not get cancelled
-                    if (isActive()) {
-                        setConnectionState(ConnectionState.RECONNECTING);
-                    }
                     // reinit remote
                     internalInit(scope, RSBSharedConnectionConfig.getParticipantConfig());
                 } catch (final CouldNotPerformException ex) {
@@ -636,12 +626,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private void setConnectionState(final ConnectionState connectionState) {
         synchronized (connectionMonitor) {
-
             if (this.connectionState == ConnectionState.RECONNECTING && connectionState == CONNECTED) {
                 // while reconnecting and not yet deactivated a data update can cause switching to connected which causes
-                // a seoncd reinit because the resulting ping fails, skip setting to connected to prevent the ping while
+                // a second re-init because the resulting ping fails, skip setting to connected to prevent the ping while
                 // still applying the data update
-                // reinit will switch to connecting anyway when activating again
+                // re-init will switch to connecting anyway when activating again
                 return;
             }
 
@@ -949,6 +938,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 // Check if sync is in process.
                 if (syncFuture != null && !syncFuture.isCancelled()) {
+
+                    // Recover sync task
+                    if (syncTask == null || syncTask.isDone()) {
+                        syncTask = sync();
+                        throw new FatalImplementationErrorException("Sync task was finished without canceling the sync future!", this);
+                    }
+
                     return syncFuture;
                 }
 
@@ -1009,15 +1005,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                     long timeout = METHOD_CALL_START_TIMEOUT;
                     while (true) {
+                        // if reconnecting wait until activated again
+                        if (getConnectionState() == ConnectionState.RECONNECTING) {
+                            waitForConnectionState(ConnectionState.CONNECTING);
+                            waitForMiddleware();
+                        }
 
-                        // needed for synchronization, it happend that beetween this check and checking
-                        // again when catching the exception the remote has activated
+                        // update activation state
                         active = isActive();
+
+                        // needed for synchronization, it happened that between this check and checking
+                        // again when catching the exception the remote has activated
                         if (!active) {
                             // if not active the sync is not possible and will be canceled. After next remote activation a new sync is triggered anyway.
                             syncFuture.cancel(true);
-                            throw new InvalidStateException("Remote service is not active!");
+                            throw new InvalidStateException("Remote service is not active and in connection state[" + getConnectionState().name() + "]!");
                         }
+
 
                         try {
                             remoteServerWatchDog.waitForServiceActivation();
@@ -1239,6 +1243,19 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    public void waitForMiddleware() throws CouldNotPerformException, InterruptedException {
+        if (listenerWatchDog == null) {
+            throw new NotAvailableException("listenerWatchDog");
+        }
+
+        if (remoteServerWatchDog == null) {
+            throw new NotAvailableException("remoteServiceWatchDog");
+        }
+
+        listenerWatchDog.waitForServiceActivation();
+        remoteServerWatchDog.waitForServiceActivation();
+    }
+
     /**
      * Method blocks until the remote reaches the desired connection state. In
      * case the timeout is expired an TimeoutException will be thrown.
@@ -1250,8 +1267,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.TimeoutException         is thrown in case the
      *                                                             timeout is expired without reaching the connection state.
-     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
-     *                                                             the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the connection state does not match and the shutdown of this remote
+     *                                                             has been initialized
      */
     public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException {
         synchronized (connectionMonitor) {
@@ -1266,25 +1283,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     return;
                 }
 
-                switch (connectionState) {
-                    case CONNECTED:
-                    case CONNECTING:
-                        if (!isActive()) {
-                            throw new InvalidStateException("Remote service is not active!");
-                        }
-                }
+                failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] in connectionState[" + this.connectionState.name() + "] on shutdown");
 
                 // detect delay for long term wait
                 if (timeout == 0) {
                     connectionMonitor.wait(15000);
                     if (!this.connectionState.equals(connectionState)) {
-                        switch (connectionState) {
-                            case CONNECTED:
-                            case CONNECTING:
-                                if (!isActive()) {
-                                    throw new InvalidStateException("Remote service is not active!");
-                                }
-                        }
+                        failOnShutdown("Waiting for connectionState[" + connectionState.name() + "] in connectionState[" + this.connectionState.name() + "] on shutdown");
                         delayDetected = true;
                         logger.info("Wait for " + this.connectionState.name().toLowerCase() + " " + getClass().getSimpleName().replace("Remote", "") + "[" + getScopeStringRep() + "] to be " + connectionState.name().toLowerCase() + "...");
                         connectionMonitor.wait();
@@ -1298,6 +1303,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     throw new TimeoutException("Timeout expired!");
                 }
             }
+        }
+    }
+
+    private void failOnShutdown(String message) throws InvalidStateException {
+        if (this.shutdownInitiated) {
+            throw new InvalidStateException(message);
         }
     }
 
@@ -1385,6 +1396,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
             }
         }
+
     }
 
     /**
