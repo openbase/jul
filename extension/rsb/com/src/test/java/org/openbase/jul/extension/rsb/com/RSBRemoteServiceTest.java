@@ -87,13 +87,13 @@ public class RSBRemoteServiceTest {
         instance.init("/test/waitForConnectionState");
 
         // Test not active handling
-        try {
-            instance.waitForConnectionState(Remote.ConnectionState.CONNECTING, 10);
-            Assert.fail("No exception thrown.");
-        } catch (InvalidStateException ex) {
-            // should be thrown...
-            Assert.assertTrue(true);
-        }
+//        try {
+//            instance.waitForConnectionState(Remote.ConnectionState.CONNECTING, 10);
+//            Assert.fail("No exception thrown.");
+//        } catch (InvalidStateException ex) {
+//            // should be thrown...
+//            Assert.assertTrue(true);
+//        }
 
         // Test Timeout
         instance.activate();
