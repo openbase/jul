@@ -942,9 +942,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     // Recover sync task
                     if (syncTask == null || syncTask.isDone()) {
                         syncTask = sync();
-                        throw new FatalImplementationErrorException("Sync task was finished without canceling the sync future!", this);
+                        ExceptionPrinter.printHistory(new FatalImplementationErrorException("Sync task was finished without canceling the sync future!", this), logger);
                     }
-
                     return syncFuture;
                 }
 
