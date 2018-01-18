@@ -1032,6 +1032,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             }
                             break;
                         } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
+
+                            // cancel internal future because it will be recreated within the next iteration anyway.
+                            if (internalFuture != null) {
+                                internalFuture.cancel(true);
+                            }
+
                             // if sync was already performed by global data update skip sync
                             if (isRelatedFutureCancelled()) {
                                 return data;
