@@ -128,6 +128,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.connectionPing = -1;
         this.lastPingReceived = -1;
         this.messageProcessor = new SimpleMessageProcessor<>(dataClass);
+        this.connectionStateObservable.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
     }
 
     public void setMessageProcessor(MessageProcessor<GeneratedMessage, M> messageProcessor) {
@@ -387,6 +388,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
         synchronized (maintainerLock) {
+
+            // Duplicated activation filter.
+            if(isActive()) {
+                return;
+            }
+
             try {
                 verifyMaintainability();
                 validateInitialization();
@@ -416,15 +423,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     }
 
     /**
-     * Atomic activate which makes sure that the maintainer stays the same.
+     * {@inheritDoc}
      *
-     * @param maintainer the current maintainer of this remote
-     * @throws InterruptedException        if activation is interrupted
-     * @throws CouldNotPerformException    if activation fails
-     * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
+     * @throws InterruptedException     {@inheritDoc}
+     * @throws CouldNotPerformException {@inheritDoc}
      */
-    public void activate(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException {
-        if (this.maintainer.equals(maintainer)) {
+    @Override
+    public void activate(final Object maintainer) throws InterruptedException, CouldNotPerformException {
+        if (!isLocked() || this.maintainer.equals(maintainer)) {
             synchronized (maintainerLock) {
                 unlock(maintainer);
                 activate();
