@@ -21,8 +21,10 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
@@ -30,13 +32,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <T> the data type on whose changes is notified
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ObservableImpl<T> extends AbstractObservable<T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObservableImpl.class);
+
+    protected final Object VALUE_LOCK = new Object() {
+        @Override
+        public String toString() {
+            return "ObservableValueLock";
+        }
+    };
 
     private T value;
     private CompletableFuture<T> valueFuture;
@@ -50,7 +58,6 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
     }
 
     /**
-     *
      * {@inheritDoc}
      *
      * @param source {@inheritDoc}
@@ -61,7 +68,6 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
     }
 
     /**
-     *
      * {@inheritDoc}
      *
      * @param unchangedValueFilter {@inheritDoc}
@@ -72,11 +78,10 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
     }
 
     /**
-     *
      * {@inheritDoc}
      *
      * @param unchangedValueFilter {@inheritDoc}
-     * @param source {@inheritDoc}
+     * @param source               {@inheritDoc}
      */
     public ObservableImpl(final boolean unchangedValueFilter, final Object source) {
         super(unchangedValueFilter, source);
@@ -84,30 +89,31 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
     }
 
     /**
-     *
      * {@inheritDoc}
      *
-     * @param timeout {@inheritDoc}
+     * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public void waitForValue(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
-        synchronized (NOTIFICATION_LOCK) {
+        synchronized (VALUE_LOCK) {
             if (value != null) {
                 return;
             }
             // if 0 wait forever like the default java wait() implementation.
             if (timeUnit.toMillis(timeout) == 0) {
-                NOTIFICATION_LOCK.wait();
+                VALUE_LOCK.wait();
             } else {
-                timeUnit.timedWait(NOTIFICATION_LOCK, timeout);
+                timeUnit.timedWait(VALUE_LOCK, timeout);
             }
             if (value == null) {
                 throw new NotAvailableException("Observable was not available in time.", new TimeoutException());
             }
         }
+
+        //waitUntilNotificationIsFinished();
     }
 
     /**
@@ -150,8 +156,16 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
      * @param value {@inheritDoc}
      */
     @Override
-    protected void applyValueUpdate(final T value) {
-        this.value = value;
-        this.valueFuture.complete(value);
+    protected void applyValueUpdate(final T value) throws NotAvailableException {
+
+        if(value == null) {
+            throw new NotAvailableException("Value");
+        }
+
+        synchronized (VALUE_LOCK) {
+            this.value = value;
+            this.valueFuture.complete(value);
+            VALUE_LOCK.notifyAll();
+        }
     }
 }

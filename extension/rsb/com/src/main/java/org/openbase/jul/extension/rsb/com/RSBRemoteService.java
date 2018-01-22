@@ -390,7 +390,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         synchronized (maintainerLock) {
 
             // Duplicated activation filter.
-            if(isActive()) {
+            if (isActive()) {
                 return;
             }
 
@@ -1239,12 +1239,29 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     public void validateMiddleware() throws InvalidStateException {
         validateActivation();
-        if (listener == null || !listener.isActive() || !listenerWatchDog.isServiceRunning()) {
-            throw new InvalidStateException("Listener of " + this + " not connected to middleware!");
+
+        try {
+            if (listener == null) {
+                throw new InvalidStateException("Listener not initialized!");
+            } else if (!listener.isActive()) {
+                throw new InvalidStateException("Listener not active!");
+            } else if (!listenerWatchDog.isServiceRunning()) {
+                throw new InvalidStateException("Listener service not running!");
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new InvalidStateException("Listener of " + this + " not connected to middleware!", ex);
         }
 
-        if (remoteServer == null || !remoteServer.isActive() || !remoteServerWatchDog.isServiceRunning()) {
-            throw new InvalidStateException("RemoteServer of " + this + " not connected to middleware!");
+        try {
+            if (remoteServer == null) {
+                throw new InvalidStateException("RemoteServer not initialized!");
+            } else if (!remoteServer.isActive()) {
+                throw new InvalidStateException("RemoteServer not active!");
+            } else if (!remoteServerWatchDog.isServiceRunning()) {
+                throw new InvalidStateException("RemoteServer service not running!");
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new InvalidStateException("RemoteServer of " + this + " not connected to middleware!", ex);
         }
     }
 
