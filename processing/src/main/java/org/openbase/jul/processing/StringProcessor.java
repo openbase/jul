@@ -21,6 +21,9 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import java.io.File;
+
 /**
  *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -135,5 +138,14 @@ public class StringProcessor {
         input = input.replaceAll("ß", "ss");
         input = input.replaceAll("[^0-9a-zA-Z-_]+", "_");
         return input;
+    }
+
+    /**
+     * Method normalizes a string into a simple file name by removing duplicated path limiters.
+     * @param filename the file name origin
+     * @return the normalized file name.
+     */
+    public static String transformToNormalizedFileName(final String filename) {
+        return new File(filename).getPath();
     }
 }

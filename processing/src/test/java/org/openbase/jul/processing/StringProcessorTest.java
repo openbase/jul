@@ -133,4 +133,12 @@ public class StringProcessorTest {
         assertEquals("nospaces", StringProcessor.fillWithSpaces("nospaces", 0));
         assertEquals("   ", StringProcessor.fillWithSpaces("", 3));
     }
+
+    @Test
+    public void transformToNormalizedFileName() {
+        assertEquals("/hi/this/is/a/normal/path", StringProcessor.transformToNormalizedFileName("///hi/this//is/a/normal/path/"));
+        assertEquals("filename", StringProcessor.transformToNormalizedFileName("filename"));
+        assertEquals("/ho", StringProcessor.transformToNormalizedFileName("/ho"));
+        assertEquals("this/is", StringProcessor.transformToNormalizedFileName("this///is"));
+    }
 }
