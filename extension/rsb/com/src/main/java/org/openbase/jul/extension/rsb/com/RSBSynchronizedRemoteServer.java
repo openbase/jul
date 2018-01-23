@@ -21,13 +21,17 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -40,7 +44,6 @@ import rsb.patterns.RemoteServer;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteServer> implements RSBRemoteServer {
@@ -107,9 +110,12 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name, event);
             }
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (CouldNotPerformException | RSBException ex) {
+            if (Thread.currentThread().isInterrupted()) {
+                return FutureProcessor.canceledFuture(Event.class, ex);
+            }
+            return FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         }
     }
@@ -123,15 +129,18 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name);
             }
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (CouldNotPerformException | RSBException ex) {
+            if (Thread.currentThread().isInterrupted()) {
+                return FutureProcessor.canceledFuture(Event.class, ex);
+            }
+            return FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         }
     }
 
     @Override
-    public <ReplyType, RequestType> Future<ReplyType> callAsync(final String name, final RequestType data) throws CouldNotPerformException {
+    public Future<Object> callAsync(final String name, final Object data) throws CouldNotPerformException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
@@ -139,9 +148,12 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             synchronized (participantLock) {
                 return getParticipant().callAsync(name, data);
             }
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (CouldNotPerformException | RSBException ex) {
+            if (Thread.currentThread().isInterrupted()) {
+                return FutureProcessor.canceledFuture(Object.class, ex);
+            }
+            return FutureProcessor.canceledFuture(Object.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         }
     }

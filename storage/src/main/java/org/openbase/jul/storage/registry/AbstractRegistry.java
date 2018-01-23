@@ -504,6 +504,10 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         replaceInternalMap(map, true);
     }
 
+    public Class getEntryMapClass() {
+        return entryMap.getClass();
+    }
+
     /**
      * Replaces the internal registry map by the given one.
      *

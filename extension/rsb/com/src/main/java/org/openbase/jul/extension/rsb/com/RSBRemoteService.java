@@ -783,7 +783,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
             if (!isConnected()) {
-                waitForConnectionState(CONNECTED);
+                waitForConnectionState(CONNECTED, timeout);
             }
 
             if (timeout > -1) {
@@ -1029,31 +1029,50 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             // again when catching the exception the remote has activated
                             if (!active) {
                                 // if not active the sync is not possible and will be canceled to avoid executor service overload. After next remote activation a new sync is triggered anyway.
-                                if (shutdownInitiated) {
+                                if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
                                     syncFuture.cancel(true);
                                 }
                                 throw new InvalidStateException("Remote service is not active within ConnectionState[\" + getConnectionState().name() + \"] and sync will be triggered after reactivation, so current sync is skipped.!");
                             }
                         }
 
+                        waitForMiddleware();
+
+                        // handle shutdown
+                        if (shutdownInitiated) {
+                            if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
+                                syncFuture.cancel(true);
+                            }
+                            return null;
+                        }
 
                         try {
-                            remoteServerWatchDog.waitForServiceActivation();
-
                             try {
                                 internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                             } catch (CouldNotPerformException ex) {
-                                // if
                                 logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
                                 continue;
                             }
-                            event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
+                            try {
+                                event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
+                            } catch (final java.util.concurrent.ExecutionException ex) {
+                                // still apply the timeout to avoid fast error loops.
+                                Thread.sleep(timeout);
+                                throw ex;
+                            }
+
                             dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
                             }
                             break;
-                        } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
+
+                        } catch (java.util.concurrent.TimeoutException ex) {
+
+                            // handle interruption.
+                            if (ex.getCause() instanceof InterruptedException) {
+                                throw ex;
+                            }
 
                             // cancel internal future because it will be recreated within the next iteration anyway.
                             if (internalFuture != null) {
@@ -1644,7 +1663,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             if (syncFuture != null) {
 
                 // only skip sync future if the shutdown was initiated!
-                if(shutdownInitiated) {
+                if (shutdownInitiated) {
                     currentSyncFuture = syncFuture;
                     syncFuture = null;
                 }

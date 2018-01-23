@@ -53,12 +53,12 @@ public class LogPrinter implements Printer {
 
     @Override
     public boolean isDebugEnabled() {
-        try {
-            return logger.isDebugEnabled() || (JPService.getProperty(JPVerbose.class).getValue() && logLevel == LogLevel.ERROR);
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+//        try {
+//            return logger.isDebugEnabled() || (JPService.getProperty(JPVerbose.class).getValue() && logLevel == LogLevel.ERROR);
+//        } catch (JPServiceException ex) {
+//            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             return true;
-        }
+//        }
     }
 
     public LogLevel getLogLevel() {

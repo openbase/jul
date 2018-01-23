@@ -28,14 +28,14 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * The synchronization future is used to guarantee that the change done by the internal
@@ -44,9 +44,12 @@ import java.util.concurrent.TimeoutException;
  * @param <T> The return type of the internal future.
  * @author pleminoq
  */
-public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
+public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T> {
+
+    protected final Logger logger;
 
     private final SyncObject CHECK_LOCK = new SyncObject("WaitForUpdateLock");
+
     private final Observer notifyChangeObserver = (Observer) (Observable source, Object data) -> {
         synchronized (CHECK_LOCK) {
             CHECK_LOCK.notifyAll();
@@ -55,19 +58,28 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
 
     private final Future<T> internalFuture;
     private final Future synchronisationFuture;
-    protected final DataProvider dataProvider;
 
-    public AbstractSynchronizationFuture(final Future<T> internalFuture, final DataProvider dataProvider) {
+    protected final DATA_PROVIDER dataProvider;
+
+    /**
+     * @param internalFuture
+     * @param dataProvider
+     */
+    public AbstractSynchronizationFuture(final Future<T> internalFuture, final DATA_PROVIDER dataProvider) {
         this.internalFuture = internalFuture;
         this.dataProvider = dataProvider;
+        this.logger = LoggerFactory.getLogger(dataProvider.getClass());
 
         // create a synchronisation task which makes sure that the change requested by
         // the internal future has at one time been synchronized to the remote
         synchronisationFuture = GlobalCachedExecutorService.submit(() -> {
             dataProvider.addDataObserver(notifyChangeObserver);
             try {
+                dataProvider.waitForData();
                 T result = internalFuture.get();
                 waitForSynchronization(result);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
             } finally {
                 dataProvider.removeDataObserver(notifyChangeObserver);
             }
@@ -77,7 +89,7 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return  synchronisationFuture.cancel(mayInterruptIfRunning) && internalFuture.cancel(mayInterruptIfRunning);
+        return synchronisationFuture.cancel(mayInterruptIfRunning) && internalFuture.cancel(mayInterruptIfRunning);
     }
 
     @Override
@@ -115,16 +127,24 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
         return internalFuture;
     }
 
-    private void waitForSynchronization(T message) throws CouldNotPerformException {
-        beforeWaitForSynchronization();
-        synchronized (CHECK_LOCK) {
+    private void waitForSynchronization(T message) throws CouldNotPerformException, InterruptedException {
+        try {
             try {
+                beforeWaitForSynchronization();
+            } catch (final Exception ex) {
+                if (ex instanceof InterruptedException) {
+                    throw (InterruptedException) ex;
+                }
+                throw new CouldNotPerformException("Pre execution task failed!", ex);
+            }
+
+            synchronized (CHECK_LOCK) {
                 while (!check(message)) {
                     CHECK_LOCK.wait();
                 }
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
             }
+        } catch (final CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not wait for synchronization!", ex);
         }
     }
 
@@ -137,7 +157,9 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
      * @param observer In this case always the notify change observer that is added.
      */
     @Deprecated
-    protected abstract void addObserver(Observer observer);
+    protected void addObserver(Observer observer) {
+        // are never called because of deprecation!
+    }
 
     /**
      * Remove the notify change observer from the component whose synchronization is
@@ -146,16 +168,22 @@ public abstract class AbstractSynchronizationFuture<T> implements Future<T> {
      * @param observer In this case always the notify change observer that is added.
      */
     @Deprecated
-    protected abstract void removeObserver(Observer observer);
+    protected void removeObserver(Observer observer) {
+        // are never called because of deprecation!
+    }
 
     /**
      * Called before the synchronization task enters its loop. Can for example
      * be used to wait for initial data so that the check that is done afterwards
      * in the loop does not fail immediately.
+     * <p>
+     * Note: Method can be overwritten for custom pre synchronization actions.
      *
      * @throws CouldNotPerformException if something goes wrong
      */
-    protected abstract void beforeWaitForSynchronization() throws CouldNotPerformException;
+    protected void beforeWaitForSynchronization() throws CouldNotPerformException {
+        // Method can be overwritten for custom pre synchronization actions.
+    }
 
     /**
      * Called inside of the synchronization loop to check if the synchronization is complete.
