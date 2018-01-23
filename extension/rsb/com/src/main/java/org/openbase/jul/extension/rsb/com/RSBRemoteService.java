@@ -943,14 +943,19 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             synchronized (syncMonitor) {
 
                 // Check if sync is in process.
-                if (syncFuture != null && !syncFuture.isCancelled()) {
+                if (syncFuture != null && !syncFuture.isDone()) {
 
-                    // Recover sync task
+                    // Recover sync task if those was canceled for instance during remote reinitialization.
                     if (syncTask == null || syncTask.isDone()) {
                         syncTask = sync();
-                        ExceptionPrinter.printHistory(new FatalImplementationErrorException("Sync task was finished without canceling the sync future!", this), logger);
                     }
                     return syncFuture;
+                } else {
+                    // cleanup old sync task
+                    if (syncTask != null && !syncTask.isDone()) {
+                        syncTask.cancel(true);
+                        ExceptionPrinter.printHistory(new FatalImplementationErrorException("Old sync task was still running without known sync future!", this), logger);
+                    }
                 }
 
                 // Create new sync process
@@ -998,7 +1003,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
 
         @Override
-        public M call() throws CouldNotPerformException, InterruptedException {
+        public M call() throws CouldNotPerformException {
 
             Future<Event> internalFuture = null;
             M dataUpdate = null;
@@ -1016,21 +1021,32 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             waitForMiddleware();
                         }
 
-                        // update activation state
-                        active = isActive();
+                        synchronized (maintainerLock) {
+                            // update activation state
+                            active = isActive();
 
-                        // needed for synchronization, it happened that between this check and checking
-                        // again when catching the exception the remote has activated
-                        if (!active) {
-                            // if not active the sync is not possible and will be canceled. After next remote activation a new sync is triggered anyway.
-                            syncFuture.cancel(true);
-                            throw new InvalidStateException("Remote service is not active and in connection state[" + getConnectionState().name() + "]!");
+                            // needed for synchronization, it happened that between this check and checking
+                            // again when catching the exception the remote has activated
+                            if (!active) {
+                                // if not active the sync is not possible and will be canceled to avoid executor service overload. After next remote activation a new sync is triggered anyway.
+                                if (shutdownInitiated) {
+                                    syncFuture.cancel(true);
+                                }
+                                throw new InvalidStateException("Remote service is not active within ConnectionState[\" + getConnectionState().name() + \"] and sync will be triggered after reactivation, so current sync is skipped.!");
+                            }
                         }
 
 
                         try {
                             remoteServerWatchDog.waitForServiceActivation();
-                            internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
+
+                            try {
+                                internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
+                            } catch (CouldNotPerformException ex) {
+                                // if
+                                logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
+                                continue;
+                            }
                             event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
                             dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
@@ -1626,27 +1642,33 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         // Check if sync is in process.
         synchronized (syncMonitor) {
             if (syncFuture != null) {
-                currentSyncFuture = syncFuture;
+
+                // only skip sync future if the shutdown was initiated!
+                if(shutdownInitiated) {
+                    currentSyncFuture = syncFuture;
+                    syncFuture = null;
+                }
+
                 currentSyncTask = syncTask;
-                syncFuture = null;
                 syncTask = null;
             }
         }
 
         // Notify sync cancellation
         try {
+            // skip if shutdown is in progress otherwise the sync future will be null
             if (currentSyncFuture != null) {
                 currentSyncFuture.cancel(true);
             }
         } catch (CancellationException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not cancel synchronization because the cancelation was canceled!", ex), logger, LogLevel.WARN);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not cancel synchronization because the cancellation was canceled!", ex), logger, LogLevel.WARN);
         }
         try {
             if (currentSyncTask != null) {
                 currentSyncTask.cancel(true);
             }
         } catch (CancellationException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not cancel synchronization because the cancelation was canceled!", ex), logger, LogLevel.WARN);
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not cancel synchronization because the cancellation was canceled!", ex), logger, LogLevel.WARN);
         }
     }
 

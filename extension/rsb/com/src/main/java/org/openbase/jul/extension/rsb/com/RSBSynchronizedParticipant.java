@@ -73,10 +73,12 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     abstract P init() throws InitializeException, InterruptedException;
 
     protected P getParticipant() throws NotAvailableException {
-        if (participant == null) {
-            throw new NotAvailableException("participant");
+        synchronized (participantLock) {
+            if (participant == null) {
+                throw new NotAvailableException("participant");
+            }
+            return participant;
         }
-        return participant;
     }
 
     @Override
@@ -117,7 +119,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 getParticipant().setObserverManager(observerManager);
             }
         } catch (IllegalStateException | NullPointerException ex) {
-            throw new CouldNotPerformException("Could not regitser observer manager " + observerManager + "!", ex);
+            throw new CouldNotPerformException("Could not register observer manager " + observerManager + "!", ex);
         }
     }
 
@@ -184,6 +186,9 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     @Override
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         try {
+
+            final Future<Void> deactivationFuture;
+
             synchronized (participantLock) {
 
                 // ignore request if participant is already or still inactive.
@@ -193,34 +198,38 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
 
                 // deactivate
                 logger.debug("Participant[" + this + "] will be deactivated.");
-                final Future<Void> deactivationFuture = GlobalCachedExecutorService.submit(() -> {
+                final P tmpParticipant = getParticipant();
+                deactivationFuture = GlobalCachedExecutorService.submit(() -> {
                     try {
-                        if (getParticipant().isActive()) {
-                            getParticipant().deactivate();
+                        if (tmpParticipant.isActive()) {
+                            tmpParticipant.deactivate();
                         }
-                    } catch (final NotAvailableException | RSBException | IllegalStateException ex) {
-                        ExceptionPrinter.printHistory(new InvalidStateException("RSB Participant["+getParticipant().toString()+"] deactivation bug detected!", ex), logger, LogLevel.WARN);
+                    } catch (final RSBException | IllegalStateException ex) {
+                        ExceptionPrinter.printHistory(new InvalidStateException("RSB Participant[" + tmpParticipant.toString() + "] deactivation bug detected!", ex), logger, LogLevel.WARN);
                         // no need for deactivating non existing participant.
                     }
                     return null;
                 });
 
-                // wait for deactivation and handle error case
-                try {
-                    deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
-                    participant = null;
-                    logger.debug("Participant[" + this + "] deactivated.");
-                } catch (TimeoutException ex) {
-                    logger.warn("Deactivation stall detected! " + this + " did not response in time!");
-                } catch (ExecutionException ex) {
-                    if (ex.getCause() == null) {
-                        throw ex;
-                    }
-                    throw ex.getCause();
-                } catch (InterruptedException ex) {
-                    deactivationFuture.cancel(true);
+                // clear global instance to avoid any further interaction and free the participantLock.
+                this.participant = null;
+            }
+
+            // wait for deactivation and handle error case
+            try {
+                deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
+
+                logger.debug("Participant[" + this + "] deactivated.");
+            } catch (TimeoutException ex) {
+                logger.warn("Deactivation stall detected! " + this + " did not response in time!");
+            } catch (ExecutionException ex) {
+                if (ex.getCause() == null) {
                     throw ex;
                 }
+                throw ex.getCause();
+            } catch (InterruptedException ex) {
+                deactivationFuture.cancel(true);
+                throw ex;
             }
         } catch (InterruptedException ex) {
             throw ex;

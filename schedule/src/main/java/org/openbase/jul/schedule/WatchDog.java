@@ -153,8 +153,8 @@ public class WatchDog implements Activatable, Shutdownable {
         waitForServiceState(ServiceState.RUNNING, timeout, timeUnit);
     }
 
-    public void waitForServiceState(final ServiceState serviceSatet) throws InterruptedException, CouldNotPerformException {
-        waitForServiceState(serviceSatet, 0, TimeUnit.MILLISECONDS);
+    public void waitForServiceState(final ServiceState serviceState) throws InterruptedException, CouldNotPerformException {
+        waitForServiceState(serviceState, 0, TimeUnit.MILLISECONDS);
     }
 
     public void waitForServiceState(final ServiceState serviceState, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
@@ -167,6 +167,11 @@ public class WatchDog implements Activatable, Shutdownable {
 
                 if (this.serviceState.equals(serviceState)) {
                     return;
+                }
+
+                // check if watchdog has been terminated via shutdown and this wait would never return.
+                if(this.serviceState == ServiceState.FINISHED) {
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service["+serviceName+"] is not running anymore!");
                 }
 
                 // skip if watchdog is not active
