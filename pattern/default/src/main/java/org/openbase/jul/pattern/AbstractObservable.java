@@ -21,6 +21,7 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -30,17 +31,18 @@ import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
+import org.openbase.jul.exception.NotAvailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <T> the data type on whose changes is notified
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class AbstractObservable<T> implements Observable<T> {
 
@@ -50,14 +52,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
     private static final Object DEFAULT_SOURCE = null;
 
     protected final boolean unchangedValueFilter;
-    private boolean notificationInProgess;
-
-    protected final Object NOTIFICATION_LOCK = new Object() {
-        @Override
-        public String toString() {
-            return "ObservableNotificationLock";
-        }
-    };
+    private boolean notificationInProgress = false;
 
     private final Object OBSERVER_LOCK = new Object() {
         @Override
@@ -66,10 +61,16 @@ public abstract class AbstractObservable<T> implements Observable<T> {
         }
     };
 
-    private final Object NOTIFICATION_METHOD_LOCK = new Object() {
+    private final Object NOTIFICATION_MESSAGE_LOCK = new Object() {
         @Override
         public String toString() {
-            return "notifyObserverMethodLock";
+            return "NotificationMessageLock";
+        }
+    };
+    private final Object NOTIFICATION_PROGRESS_LOCK = new Object() {
+        @Override
+        public String toString() {
+            return "NotificationProgressLock";
         }
     };
 
@@ -99,7 +100,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * Construct new Observable
      *
      * @param unchangedValueFilter defines if the observer should be informed even if the value is
-     * the same than notified before.
+     *                             the same than notified before.
      */
     public AbstractObservable(final boolean unchangedValueFilter) {
         this(unchangedValueFilter, DEFAULT_SOURCE);
@@ -107,17 +108,16 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     /**
      * Construct new Observable.
-     *
+     * <p>
      * If the source is not defined the observable itself will be used as notification source.
      *
      * @param unchangedValueFilter defines if the observer should be informed even if the value is
-     * the same than notified before.
-     * @param source the responsible source of the value notifications.
+     *                             the same than notified before.
+     * @param source               the responsible source of the value notifications.
      */
     public AbstractObservable(final boolean unchangedValueFilter, final Object source) {
         this.observers = new ArrayList<>();
         this.unchangedValueFilter = unchangedValueFilter;
-        this.notificationInProgess = false;
         this.source = source == DEFAULT_SOURCE ? this : source; // use observer itself if source was not explicit defined.
         this.hashGenerator = new HashGenerator<T>() {
 
@@ -183,7 +183,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *
      * @param observable the value which is notified
      * @return true if the observable has changed
-     * @throws MultiException thrown if the notification to at least one observer fails
+     * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
     public boolean notifyObservers(final T observable) throws MultiException, CouldNotPerformException {
@@ -200,17 +200,17 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * observable hash yourself by setting a hash generator.
      * If this method is interrupted a rollback is done by reseting the latestHashValue. Thus the observable
      * has not changed and false is returned.
-     *
+     * <p>
      * Note: In case the given observable is null this notification will be ignored.
      *
-     * @param source the source of the notification
+     * @param source     the source of the notification
      * @param observable the value which is notified
      * @return true if the observable has changed
-     * @throws MultiException thrown if the notification to at least one observer fails
+     * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
     public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException, CouldNotPerformException {
-        synchronized (NOTIFICATION_METHOD_LOCK) {
+        synchronized (NOTIFICATION_MESSAGE_LOCK) {
             if (observable == null) {
                 LOGGER.debug("Skip notification because observable is null!");
                 return false;
@@ -222,7 +222,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             final ArrayList<Observer<T>> tempObserverList;
 
             try {
-                notificationInProgess = true;
+                synchronized (NOTIFICATION_PROGRESS_LOCK) {
+                    notificationInProgress = true;
+                }
                 final int observableHash = hashGenerator.computeHash(observable);
                 if (unchangedValueFilter && isValueAvailable() && observableHash == latestValueHash) {
                     LOGGER.debug("Skip notification because " + this + " has not been changed!");
@@ -269,9 +271,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                 }
             } finally {
                 assert observable != null;
-                notificationInProgess = false;
-                synchronized (NOTIFICATION_LOCK) {
-                    NOTIFICATION_LOCK.notifyAll();
+                synchronized (NOTIFICATION_PROGRESS_LOCK) {
+                    notificationInProgress = false;
+                    NOTIFICATION_PROGRESS_LOCK.notifyAll();
                 }
             }
 
@@ -299,10 +301,10 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * Method is called if a observer notification delivers a new value.
      *
      * @param value the new value
-     *
-     * Note: Overwrite this method for getting informed about value changes.
+     *              <p>
+     *              Note: Overwrite this method for getting informed about value changes.
      */
-    protected void applyValueUpdate(final T value) {
+    protected void applyValueUpdate(final T value) throws NotAvailableException {
         // overwrite for current state holding obervable implementations.
     }
 
@@ -326,7 +328,16 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @return notificationInProgess returns true if a notification is currently in progess.
      */
     public boolean isNotificationInProgess() {
-        return notificationInProgess;
+        return notificationInProgress;
+    }
+
+    public void waitUntilNotificationIsFinished() throws InterruptedException {
+        synchronized (NOTIFICATION_PROGRESS_LOCK) {
+            // wait for ongoing notification.
+            if (notificationInProgress) {
+                NOTIFICATION_PROGRESS_LOCK.wait();
+            }
+        }
     }
 
     @Override

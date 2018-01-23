@@ -60,6 +60,16 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
     public void activate(boolean waitForData) throws CouldNotPerformException, InterruptedException;
 
     /**
+     * Atomic activate which makes sure that the maintainer stays the same.
+     * This method just locks the remote with the given maintainer after activation if it was never locked before.
+     *
+     * @param maintainer the current maintainer of this remote
+     * @throws InterruptedException        if activation is interrupted
+     * @throws CouldNotPerformException    if activation fails
+     */
+    public void activate(final Object maintainer) throws InterruptedException, CouldNotPerformException;
+
+    /**
      * This method allows the registration of connection state observers to get informed about connection state changes.
      *
      * @param observer the observer added

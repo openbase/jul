@@ -414,7 +414,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                 while (runningFutures.size() != 0 && !Thread.currentThread().isInterrupted()) {
                     for (final Future future : new HashSet<>(runningFutures)) {
                         try {
-                            future.get(1, TimeUnit.SECONDS);
+                            future.get(30, TimeUnit.SECONDS);
                             finishedFutures.add(future);
                             runningFutures.remove(future);
                         } catch (ExecutionException ex) {
@@ -426,10 +426,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                         }
                     }
                     try {
-                        MultiException.checkAndThrow("AllOf Status on iteration: " + iteration + "\n" +
-                                finishedFutures.size() + " finished\n" +
-                                runningFutures.size() + " still running\n" +
-                                failedFutures + " failed\n", exceptionStack);
+                        MultiException.checkAndThrow("Multi task processing delayed! "+runningFutures.size()+" are still running while "+failedFutures.size()+" are failed and "+finishedFutures.size()+" are finished after "+iteration+" interrations.", exceptionStack);
                     } catch (CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(ex, LoggerFactory.getLogger(source.getClass()));
                     }

@@ -27,22 +27,21 @@ import org.slf4j.Logger;
 
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class CouldNotPerformException extends Exception {
 
-	public CouldNotPerformException(String message) {
-		super(message);
-	}
+    public CouldNotPerformException(String message) {
+        super(message);
+    }
 
-	public CouldNotPerformException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    public CouldNotPerformException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public CouldNotPerformException(Throwable cause) {
-		super(cause);
-	}
+    public CouldNotPerformException(Throwable cause) {
+        super(cause);
+    }
 
     public CouldNotPerformException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);

@@ -55,7 +55,7 @@ public interface Observable<T> extends Shutdownable {
      * @throws CouldNotPerformException is thrown if an error occurs before the thread was blocked.
      * @throws InterruptedException is thrown if the current thread was interrupted externally.
      */
-    default public void waitForValue() throws CouldNotPerformException, InterruptedException {
+    default void waitForValue() throws CouldNotPerformException, InterruptedException {
         try {
             waitForValue(0, TimeUnit.MILLISECONDS);
         } catch (NotAvailableException ex) {
