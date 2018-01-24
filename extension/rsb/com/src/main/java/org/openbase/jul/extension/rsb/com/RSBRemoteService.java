@@ -1067,7 +1067,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             }
                             break;
 
-                        } catch (java.util.concurrent.TimeoutException ex) {
+                        } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
 
                             // handle interruption.
                             if (ex.getCause() instanceof InterruptedException) {
