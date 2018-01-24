@@ -28,7 +28,10 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.iface.DefaultInitializable;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -44,7 +47,7 @@ import java.util.concurrent.*;
  * @param <T> The return type of the internal future.
  * @author pleminoq
  */
-public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T> {
+public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T>, DefaultInitializable {
 
     protected final Logger logger;
 
@@ -57,7 +60,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     };
 
     private final Future<T> internalFuture;
-    private final Future synchronisationFuture;
+    private Future synchronisationFuture;
 
     protected final DATA_PROVIDER dataProvider;
 
@@ -69,7 +72,10 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         this.internalFuture = internalFuture;
         this.dataProvider = dataProvider;
         this.logger = LoggerFactory.getLogger(dataProvider.getClass());
+    }
 
+    @Deprecated
+    public void init() {
         // create a synchronisation task which makes sure that the change requested by
         // the internal future has at one time been synchronized to the remote
         synchronisationFuture = GlobalCachedExecutorService.submit(() -> {
@@ -87,18 +93,43 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         });
     }
 
+    public void validateInitialization() throws InvalidStateException {
+        if (synchronisationFuture == null) {
+            throw new InvalidStateException(this + " not initialized!");
+        }
+    }
+
+    private boolean checkInitialization() {
+        try {
+            validateInitialization();
+        } catch (InvalidStateException ex) {
+            ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, ex), logger);
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
+        if (!checkInitialization()) {
+            return false;
+        }
         return synchronisationFuture.cancel(mayInterruptIfRunning) && internalFuture.cancel(mayInterruptIfRunning);
     }
 
     @Override
     public boolean isCancelled() {
+        if (!checkInitialization()) {
+            return true;
+        }
         return synchronisationFuture.isCancelled() && internalFuture.isCancelled();
     }
 
     @Override
     public boolean isDone() {
+        if (!checkInitialization()) {
+            return true;
+        }
         return synchronisationFuture.isDone() && internalFuture.isDone();
     }
 
@@ -106,7 +137,10 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     public T get() throws InterruptedException, ExecutionException {
         // when get returns without an exception the synchronisation is complete
         // and else the exception will be thrown
-        synchronisationFuture.get();
+
+        if (checkInitialization()) {
+            synchronisationFuture.get();
+        }
 
         return internalFuture.get();
     }
@@ -115,12 +149,11 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         // when get returns without an exception the synchronisation is complete
         // and else the exception will be thrown
-        synchronisationFuture.get(timeout, unit);
+        if (checkInitialization()) {
+            synchronisationFuture.get(timeout, unit);
+        }
 
-        // the synchronisation future calls get on the internal future
-        // thus if it is done the internal future is also done and does not have
-        // to be called with a timeout
-        return internalFuture.get();
+        return internalFuture.get(timeout, unit);
     }
 
     public Future<T> getInternalFuture() {
