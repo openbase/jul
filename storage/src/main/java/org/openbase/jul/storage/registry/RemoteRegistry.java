@@ -39,6 +39,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 
+import org.openbase.jul.extension.protobuf.IdentifiableMessageMap;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.FutureProcessor;
@@ -70,16 +71,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     }
 
     public synchronized void notifyRegistryUpdate(final Collection<M> values) throws CouldNotPerformException {
-        Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
-        for (M value : values) {
-            IdentifiableMessage<KEY, M, MB> data = new IdentifiableMessage<>(value);
-            newRegistryMap.put(data.getId(), data);
-        }
-        replaceInternalMap(newRegistryMap);
+        replaceInternalMap(new IdentifiableMessageMap<>(values));
     }
 
     public KEY getId(final M entry) throws CouldNotPerformException {
-        KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
+        final KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
         if (!contains(key)) {
             throw new CouldNotPerformException("Entry for given Key[" + key + "] is not available!");
         }

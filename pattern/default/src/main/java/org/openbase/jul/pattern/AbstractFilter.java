@@ -41,8 +41,9 @@ public abstract class AbstractFilter<T> implements Filter<T> {
      * @throws CouldNotPerformException if an error occurs while filtering 
      */
     @Override
-    public List<T> filter(List<T> list) throws CouldNotPerformException {
+    public List<T> filter(final List<T> list) throws CouldNotPerformException {
         beforeFilter();
+
         for (int i = 0; i < list.size(); i++) {
             if (!verify(list.get(i))) {
                 list.remove(i);
