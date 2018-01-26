@@ -32,7 +32,7 @@ import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
  * @param <KEY>
  * @param <ENTRY>
  */
-public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, RegistryImpl<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY>> {
+public class RegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends AbstractRegistry<KEY, ENTRY, HashMap<KEY, ENTRY>, RegistryImpl<KEY, ENTRY>, RegistryPlugin<KEY, ENTRY, RegistryImpl<KEY, ENTRY>>> {
 
     public RegistryImpl(HashMap<KEY, ENTRY> entryMap) throws InstantiationException {
         super(entryMap);

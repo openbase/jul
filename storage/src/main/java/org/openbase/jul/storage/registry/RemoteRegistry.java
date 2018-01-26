@@ -22,6 +22,8 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import com.google.protobuf.GeneratedMessage;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -52,7 +54,7 @@ import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
  * @param <M>
  * @param <MB>
  */
-public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB>, DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>> {
+public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB>, DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>> {
 
     /**
      * An optional configurable registryRemote where this remote is than bound to.
@@ -141,6 +143,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public Integer getDBVersion() throws NotAvailableException {
         //TODO mpohling: implement!
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public File getDatabaseDirectory() throws NotAvailableException {
+        throw new NotAvailableException("DatabaseDirectory", new NotSupportedException("A remote registry do not provide a database directory!", this));
     }
 
     @Override

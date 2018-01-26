@@ -21,25 +21,26 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.util.Map;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Identifiable;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  * @param <MAP>
- * @param <R>
+ * @param <REGISTRY>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>> extends Registry<KEY, ENTRY> {
+public interface RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>> extends Registry<KEY, ENTRY> {
 
     public void sync(final MAP map) throws CouldNotPerformException;
 
-    public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
+    public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler) throws CouldNotPerformException;
 
-    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException;
+    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler) throws CouldNotPerformException;
 
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException;
 

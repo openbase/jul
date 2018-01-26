@@ -21,9 +21,12 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
+
 import java.io.File;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -42,12 +45,11 @@ import org.openbase.jul.storage.registry.jp.JPGitRegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.GitRegistryPlugin;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
- * @param <M> Message
- * @param <MB> Message Builder
+ * @param <M>   Message
+ * @param <MB>  Message Builder
  * @param <SIB> Synchronized internal builder
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends FileSynchronizedRegistryImpl<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistry<KEY, M, MB> {
 
@@ -60,7 +62,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     }
 
     public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMapImpl<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
-        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new IdentifiableMessageTransformer<>(messageClass, idGenerator)), fileProvider);
+        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new IdentifiableMessageTransformer<KEY, M, MB>(messageClass, idGenerator)), fileProvider);
         try {
             this.idGenerator = idGenerator;
             this.messageClass = messageClass;
@@ -69,13 +71,13 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
             try {
                 if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
-                    registerPlugin(new GitRegistryPlugin<>(this));
+                    registerPlugin(new GitRegistryPlugin<KEY, M, MB>(this));
                 }
             } catch (JPServiceException ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             }
 
-            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<KEY, M, MB, SIB>(idGenerator, protobufMessageMap.getFieldDescriptor(), this));
+            setupSandbox(new ProtoBufFileSynchronizedRegistrySandbox<>(idGenerator, protobufMessageMap.getFieldDescriptor(), this));
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -95,26 +97,26 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
      * should contain only classes implementing the DBVersionConverter
      * interface. To fully support outdated db upgrade make sure that the
      * converter pipeline covers the whole version range!
-     *
+     * <p>
      * Activate version control before loading the registry. Please provide
      * within the converter package only converter with the naming structure
      * [$(EntryType)_$(VersionN)_To_$(VersionN+1)_DBConverter].
-     *
+     * <p>
      * Example:
-     *
+     * <p>
      * converter package myproject.db.converter containing the converter
      * pipeline
-     *
+     * <p>
      * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class
      * myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class
      * myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
-     *
+     * <p>
      * Would support the db upgrade from version 0 till the latest db version 3.
      *
      * @param converterPackage the package containing all converter which
-     * provides db entry updates from the first to the latest db version.
+     *                         provides db entry updates from the first to the latest db version.
      * @throws CouldNotPerformException in case of an invalid converter pipeline
-     * or initialization issues.
+     *                                  or initialization issues.
      */
     public void activateVersionControl(final Package converterPackage) throws CouldNotPerformException {
         try {

@@ -24,6 +24,8 @@ package org.openbase.jul.storage.registry.plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+
+import com.google.protobuf.GeneratedMessage;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -40,8 +42,10 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileSynchronizer;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistryImpl;
 import org.openbase.jul.storage.registry.Registry;
 import org.openbase.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
@@ -53,17 +57,16 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> //
  * @param <KEY>
- * @param <ENTRY>
  */
-public class GitRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends FileRegistryPluginAdapter<KEY, ENTRY> {
+public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M,MB> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final FileSynchronizedRegistryImpl registry;
+    private final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY,M,MB>> registry;
     private final Git git;
     private boolean detached;
 
-    public GitRegistryPlugin(FileSynchronizedRegistryImpl registry) throws org.openbase.jul.exception.InstantiationException {
+    public GitRegistryPlugin(final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY,M,MB>> registry) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.detached = false;
             this.registry = registry;
@@ -73,10 +76,6 @@ public class GitRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Fil
             shutdown();
             throw new org.openbase.jul.exception.InstantiationException(this, ex);
         }
-    }
-
-    @Override
-    public void init(Registry<KEY, ENTRY> config) throws InitializationException, InterruptedException {
     }
 
     private void initialSync() throws CouldNotPerformException {
@@ -138,17 +137,17 @@ public class GitRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Fil
     }
 
     @Override
-    public void afterRegister(Identifiable entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterRegister(IdentifiableMessage<KEY, M, MB> entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
         commitAllChanges();
     }
 
     @Override
-    public void afterUpdate(Identifiable entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterUpdate(IdentifiableMessage<KEY, M, MB> entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
         commitAllChanges();
     }
 
     @Override
-    public void afterRemove(Identifiable entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
+    public void afterRemove(IdentifiableMessage<KEY, M, MB> entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
         commitAllChanges();
     }
 

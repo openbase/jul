@@ -21,6 +21,7 @@ package org.openbase.jul.extension.rst.storage.registry.consistency;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -161,6 +162,11 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public Integer getDBVersion() throws NotAvailableException {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                @Override
+                public File getDatabaseDirectory() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 

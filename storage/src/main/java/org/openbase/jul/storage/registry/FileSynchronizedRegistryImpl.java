@@ -21,12 +21,14 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
@@ -53,14 +55,13 @@ import org.openbase.jul.storage.registry.plugin.FileRegistryPluginPool;
 import org.openbase.jul.storage.registry.version.DBVersionControl;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  * @param <MAP>
- * @param <R>
+ * @param <REGISTRY>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistry<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
+public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, REGISTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
 
     public enum DatabaseState {
 
@@ -72,8 +73,9 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<ENTRY>> fileSynchronizerMap;
     private final FileProcessor<ENTRY> fileProcessor;
+
     private final FileProvider<Identifiable<KEY>> fileProvider;
-    private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool;
+    private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY> filePluginPool;
     private final String databaseName;
     private boolean readOnlyFlag = false;
     private DBVersionControl versionControl;
@@ -83,7 +85,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
     }
 
-    public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY>> filePluginPool) throws InstantiationException, InterruptedException {
+    public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY> filePluginPool) throws InstantiationException, InterruptedException {
         super(entryMap, filePluginPool);
         try {
             this.databaseDirectory = databaseDirectory;
@@ -114,27 +116,27 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
      * should contain only classes implementing the DBVersionConverter
      * interface. To fully support outdated db upgrade make sure that the
      * converter pipeline covers the whole version range!
-     *
+     * <p>
      * Activate version control before loading the registry. Please provide
      * within the converter package only converter with the naming structure
      * [$(EntryType)_$(VersionN)_To_$(VersionN+1)_DBConverter].
-     *
+     * <p>
      * Example:
-     *
+     * <p>
      * converter package myproject.db.converter containing the converter
      * pipeline
-     *
+     * <p>
      * myproject.db.converter.DeviceConfig_0_To_1_DBConverter.class
      * myproject.db.converter.DeviceConfig_1_To_2_DBConverter.class
      * myproject.db.converter.DeviceConfig_2_To_3_DBConverter.class
-     *
+     * <p>
      * Would support the db upgrade from version 0 till the latest db version 3.
      *
      * @param entryType
      * @param converterPackage the package containing all converter which
-     * provides db entry updates from the first to the latest db version.
+     *                         provides db entry updates from the first to the latest db version.
      * @throws CouldNotPerformException in case of an invalid converter pipeline
-     * or initialization issues.
+     *                                  or initialization issues.
      */
     public void activateVersionControl(final String entryType, final Package converterPackage) throws CouldNotPerformException {
         if (!isEmpty()) {
@@ -238,10 +240,10 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         if (listFiles == null) {
             throw new NotAvailableException("Could not load registry because database directory[" + databaseDirectory.getAbsolutePath() + "] is empty!");
         }
-        
+
         try {
             // check if db is based on share folder and mark db ready only
-            if(databaseDirectory.getAbsolutePath().startsWith(JPService.getProperty(JPShareDirectory.class).getValue().getAbsolutePath())) {
+            if (databaseDirectory.getAbsolutePath().startsWith(JPService.getProperty(JPShareDirectory.class).getValue().getAbsolutePath())) {
                 readOnlyFlag = true;
             }
         } catch (JPNotAvailableException ex) {
@@ -402,7 +404,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         fileSynchronizerMap.clear();
         super.shutdown();
     }
-
+    @Override
     public File getDatabaseDirectory() {
         return databaseDirectory;
     }

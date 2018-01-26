@@ -23,6 +23,7 @@ package org.openbase.jul.storage.registry.plugin;
  */
 
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.storage.registry.Registry;
 
 /**
  *
@@ -30,6 +31,6 @@ import org.openbase.jul.iface.Identifiable;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface RemoteRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends RegistryPlugin<KEY,ENTRY> {
+public interface RemoteRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends Registry<KEY, ENTRY>> extends RegistryPlugin<KEY,ENTRY, REGISTRY> {
     
 }

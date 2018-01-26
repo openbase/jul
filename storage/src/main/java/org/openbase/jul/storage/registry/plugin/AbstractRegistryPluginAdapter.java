@@ -35,17 +35,17 @@ import org.openbase.jul.storage.registry.Registry;
  * @param <KEY>
  * @param <ENTRY>
  */
-public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>> implements RegistryPlugin<KEY, ENTRY> {
+public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends Registry<KEY, ENTRY>> implements RegistryPlugin<KEY, ENTRY, REGISTRY> {
 
-    private Registry<KEY, ENTRY> registry;
+    private REGISTRY registry;
     private final Set<ENTRY> changedEntryList = new HashSet<>();
 
     @Override
-    public void init(final Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException {
+    public void init(final REGISTRY registry) throws InitializationException, InterruptedException {
         this.registry = registry;
     }
 
-    public Registry<KEY, ENTRY> getRegistry() {
+    public REGISTRY getRegistry() {
         return registry;
     }
 
@@ -95,6 +95,10 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
 
     @Override
     public void afterRegistryChange() throws CouldNotPerformException {
+    }
+
+    @Override
+    public void beforeConsistencyCheck() throws RejectedException{
     }
 
     /**

@@ -39,16 +39,16 @@ import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
  * @param <R>
  * @param <P>
  */
-public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandbox<KEY, ENTRY, MAP, R> {
+public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY, R>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandbox<KEY, ENTRY, MAP, R> {
 
     private RegistryCloner<KEY, ENTRY, MAP> cloner;
     private Registry<KEY, ENTRY> originRegistry;
 
-    public RegistrySandboxImpl(final MAP entryMap, final Registry<KEY, ENTRY> originRegistry) throws CouldNotPerformException, InterruptedException {
+    public RegistrySandboxImpl(final MAP entryMap, final R originRegistry) throws CouldNotPerformException, InterruptedException {
         this(entryMap, new RITSCloner<>(), originRegistry);
     }
 
-    public RegistrySandboxImpl(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner, final Registry<KEY, ENTRY> originRegistry) throws CouldNotPerformException, InterruptedException {
+    public RegistrySandboxImpl(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner, final R originRegistry) throws CouldNotPerformException, InterruptedException {
         super(cloner.deepCloneRegistryMap(entryMap));
         this.cloner = cloner;
         this.originRegistry = originRegistry;

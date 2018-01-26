@@ -40,14 +40,14 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
- * @param <P>
+ * @param <PLUGIN>
  */
-public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends RegistryPlugin<KEY, ENTRY>> implements RegistryPlugin<KEY, ENTRY> {
+public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN extends RegistryPlugin<KEY, ENTRY,  REGISTRY>, REGISTRY extends Registry<KEY, ENTRY>> implements RegistryPlugin<KEY, ENTRY, REGISTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(RegistryPluginPool.class);
 
-    protected final List<P> pluginList;
-    protected Registry<KEY, ENTRY> registry;
+    protected final List<PLUGIN> pluginList;
+    protected REGISTRY registry;
     private final ReentrantReadWriteLock lock;
 
     public RegistryPluginPool() {
@@ -56,7 +56,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
     }
 
     @Override
-    public void init(final Registry<KEY, ENTRY> registry) throws InitializationException {
+    public void init(final REGISTRY registry) throws InitializationException {
         this.registry = registry;
     }
 
@@ -72,7 +72,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
         });
     }
 
-    public void addPlugin(final P plugin) throws InitializationException, InterruptedException {
+    public void addPlugin(final PLUGIN plugin) throws InitializationException, InterruptedException {
         try {
             plugin.init(registry);
             pluginList.add(plugin);
@@ -89,7 +89,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.beforeRegister(entry);
                 } catch (RejectedException ex) {
@@ -112,7 +112,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.afterRegister(entry);
                 } catch (Exception ex) {
@@ -133,7 +133,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.beforeUpdate(entry);
                 } catch (RejectedException ex) {
@@ -156,7 +156,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.afterUpdate(entry);
                 } catch (Exception ex) {
@@ -177,7 +177,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.afterConsistencyModification(entry);
                 } catch (Exception ex) {
@@ -198,7 +198,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.beforeRemove(entry);
                 } catch (RejectedException ex) {
@@ -221,7 +221,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.afterRemove(entry);
                 } catch (Exception ex) {
@@ -242,7 +242,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.beforeClear();
                 } catch (Exception ex) {
@@ -261,7 +261,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
-        for (P plugin : pluginList) {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.beforeGet(key);
             } catch (RejectedException ex) {
@@ -279,7 +279,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
-        for (P plugin : pluginList) {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.beforeGetEntries();
             } catch (Exception ex) {
@@ -295,7 +295,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
             return;
         }
 
-        for (P plugin : pluginList) {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.checkAccess();
             } catch (RejectedException ex) {
@@ -315,7 +315,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.afterRegistryChange();
                 } catch (RejectedException ex) {
@@ -323,7 +323,29 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
                 } catch (Exception ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about registry change!", ex), logger, LogLevel.ERROR);
                     assert !JPService.testMode(); // fail during unit tests. 
-//                    break;
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void beforeConsistencyCheck() throws CouldNotPerformException {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        lock.writeLock().lock();
+        try {
+            for (PLUGIN plugin : pluginList) {
+                try {
+                    plugin.beforeConsistencyCheck();
+                } catch (RejectedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about starting consistency check!", ex), logger, LogLevel.ERROR);
+                    assert !JPService.testMode(); // fail during unit tests.
                 }
             }
         } finally {
@@ -339,7 +361,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends 
 
         lock.writeLock().lock();
         try {
-            for (P plugin : pluginList) {
+            for (PLUGIN plugin : pluginList) {
                 try {
                     plugin.afterConsistencyCheck();
                 } catch (RejectedException ex) {

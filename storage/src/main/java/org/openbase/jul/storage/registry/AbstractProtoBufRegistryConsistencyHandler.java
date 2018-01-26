@@ -33,6 +33,6 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
  * @param <M>
  * @param <MB>
  */
-public abstract class AbstractProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistryConsistencyHandler<KEY, M, MB> {
+public abstract class AbstractProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistryConsistencyHandler<KEY, M, MB, ProtoBufRegistry<KEY, M, MB>> {
 
 }

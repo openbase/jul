@@ -21,6 +21,7 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.io.File;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -35,15 +36,15 @@ import org.openbase.jul.storage.registry.plugin.FileRegistryPlugin;
  * @param <KEY>
  * @param <ENTRY>
  * @param <MAP>
- * @param <R>
+ * @param <REGISTRY>
  */
-public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends FileSynchronizedRegistry<KEY, ENTRY>> extends RegistrySandboxImpl<KEY, ENTRY, MAP, R, FileRegistryPlugin<KEY, ENTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
+public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends RegistrySandboxImpl<KEY, ENTRY, MAP, REGISTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
 
-    public FileSynchronizedRegistrySandbox(MAP entryMap, RegistryCloner<KEY, ENTRY, MAP> cloner, final FileSynchronizedRegistry<KEY, ENTRY> originRegistry) throws CouldNotPerformException, InterruptedException {
+    public FileSynchronizedRegistrySandbox(MAP entryMap, RegistryCloner<KEY, ENTRY, MAP> cloner, final REGISTRY originRegistry) throws CouldNotPerformException, InterruptedException {
         super(entryMap, cloner, originRegistry);
     }
 
-    public FileSynchronizedRegistrySandbox(final MAP entryMap, final FileSynchronizedRegistry<KEY, ENTRY> originRegistry) throws CouldNotPerformException, InterruptedException {
+    public FileSynchronizedRegistrySandbox(final MAP entryMap, final REGISTRY originRegistry) throws CouldNotPerformException, InterruptedException {
         super(entryMap, originRegistry);
     }
 
@@ -58,5 +59,10 @@ public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY
     @Override
     public Integer getDBVersion() throws NotAvailableException {
         throw new NotAvailableException("dbversion", new NotSupportedException("getDBVersion", this));
+    }
+
+    @Override
+    public File getDatabaseDirectory() throws NotAvailableException{
+        throw new NotAvailableException("database directory", new NotSupportedException("getDatabaseDirectory", this));
     }
 }

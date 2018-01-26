@@ -28,19 +28,20 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileSynchronizer;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
- * @param <P>
+ * @param <PLUGIN>
  */
-public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P extends FileRegistryPlugin<KEY, ENTRY>> extends RegistryPluginPool<KEY, ENTRY, P> implements FileRegistryPlugin<KEY, ENTRY>{
+public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN extends FileRegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> implements FileRegistryPlugin<KEY, ENTRY, REGISTRY>{
 
     @Override
     public void beforeRegister(ENTRY entry, FileSynchronizer fileSynchronizer) throws RejectedException {
-        for (P plugin : pluginList) {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.beforeRegister(entry, fileSynchronizer);
             } catch (RejectedException ex) {
@@ -64,7 +65,7 @@ public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P exte
 
     @Override
     public void beforeRemove(ENTRY entry, FileSynchronizer fileSynchronizer) throws RejectedException {
-        for (P plugin : pluginList) {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.beforeRemove(entry, fileSynchronizer);
             } catch (RejectedException ex) {
@@ -88,7 +89,7 @@ public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P exte
 
     @Override
     public void beforeUpdate(ENTRY entry, FileSynchronizer fileSynchronizer) throws RejectedException {
-        for (P plugin : pluginList) {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.beforeUpdate(entry, fileSynchronizer);
             } catch (RejectedException ex) {
@@ -112,7 +113,7 @@ public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, P exte
 
     @Override
     public void beforeGet(KEY key, FileSynchronizer fileSynchronizer) throws RejectedException {
-        for (P plugin : pluginList) {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.beforeGet(key, fileSynchronizer);
             } catch (RejectedException ex) {

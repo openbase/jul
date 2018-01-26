@@ -21,6 +21,7 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +34,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
@@ -64,16 +66,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * @param <KEY>      EntryKey
+ * @param <ENTRY>    EntryType
+ * @param <MAP>      RegistryEntryMap
+ * @param <REGISTRY> Registry
+ * @param <PLUGIN>   RegistryPluginType
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- *
- * @param <KEY> EntryKey
- * @param <ENTRY> EntryType
- * @param <MAP> RegistryEntryMap
- * @param <R> Registry
- * @param <P> RegistryPluginType
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -82,8 +82,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private final MAP entryMap;
 
     private final Random randomJitter;
-    protected final RegistryPluginPool<KEY, ENTRY, P> pluginPool;
-    protected RegistrySandbox<KEY, ENTRY, MAP, R> sandbox;
+    protected final RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> pluginPool;
+    protected RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> sandbox;
 
     protected boolean consistent;
     private final ReentrantReadWriteLock registryLock = new ReentrantReadWriteLock();
@@ -92,7 +92,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     private final Set<Registry> lockedRegistries = new HashSet<>();
     private int lockCounter = 0;
 
-    private final List<ConsistencyHandler<KEY, ENTRY, MAP, R>> consistencyHandlerList;
+    private final List<ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY>> consistencyHandlerList;
     /**
      * Map of registries this one depends on.
      */
@@ -109,7 +109,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         this(entryMap, new RegistryPluginPool<>());
     }
 
-    public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, P> pluginPool) throws InstantiationException {
+    public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> pluginPool) throws InstantiationException {
         try {
 
             // validate arguments
@@ -126,7 +126,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.notificationSkipped = false;
             this.entryMap = entryMap;
             this.pluginPool = pluginPool;
-            this.pluginPool.init(this);
+            try {
+                this.pluginPool.init((REGISTRY) this);
+            } catch (ClassCastException ex) {
+                throw new InstantiationException(this, new InvalidStateException("Registry not compatible with registered plugin pool!"));
+            }
             this.consistencyHandlerList = new ArrayList<>();
             this.dependingRegistryMap = new HashMap<>();
             this.sandbox = new MockRegistrySandbox<>(this);
@@ -158,8 +162,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    protected <S extends AbstractRegistry<KEY, ENTRY, MAP, R, P> & RegistrySandbox<KEY, ENTRY, MAP, R>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
-        final RegistrySandbox<KEY, ENTRY, MAP, R> oldSandbox = sandbox;
+    protected <S extends AbstractRegistry<KEY, ENTRY, MAP, REGISTRY, PLUGIN> & RegistrySandbox<KEY, ENTRY, MAP, REGISTRY>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
+        final RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> oldSandbox = sandbox;
         try {
             if (sandbox == null) {
                 throw new NotAvailableException("sandbox");
@@ -168,7 +172,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.sandbox = sandbox;
             this.sandbox.sync(entryMap);
 
-            for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+            for (ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler : consistencyHandlerList) {
                 this.sandbox.registerConsistencyHandler(consistencyHandler);
             }
         } catch (CouldNotPerformException ex) {
@@ -494,7 +498,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * Replaces the internal registry map by the given one.
-     *
+     * <p>
      * Use with care!
      *
      * @param map
@@ -510,7 +514,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * Replaces the internal registry map by the given one.
-     *
+     * <p>
      * Use with care!
      *
      * @param map
@@ -694,7 +698,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return key;
     }
 
-    public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
+    public void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler) throws CouldNotPerformException {
         try {
             if (consistencyHandler == null) {
                 throw new NotAvailableException("consistencyHandler");
@@ -706,7 +710,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler) throws CouldNotPerformException {
+    public void removeConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler) throws CouldNotPerformException {
         try {
             if (consistencyHandler == null) {
                 throw new NotAvailableException("consistencyHandler");
@@ -797,13 +801,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                         // consistency check
                         try {
-                            for (ConsistencyHandler<KEY, ENTRY, MAP, R> consistencyHandler : consistencyHandlerList) {
+                            for (ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler : consistencyHandlerList) {
                                 consistencyHandler.reset();
                                 entryValueCopy.clear();
                                 entryValueCopy.addAll(new ArrayList<>(entryMap.values()));
                                 for (ENTRY entry : entryValueCopy) {
                                     try {
-                                        consistencyHandler.processData(entry.getId(), entry, entryMap, (R) this);
+                                        consistencyHandler.processData(entry.getId(), entry, entryMap, (REGISTRY) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
                                         logger.debug("Inconsisteny detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
                                         exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
@@ -875,7 +879,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     /**
      * Can be overwritten for further registry actions scheduled after consistency checks.
-     *
+     * <p>
      * Don't forgett to pass-througt the call to the super class. (super.afterConsistencyCheck())
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if any plugin afterConsistencyCheck fails.
@@ -953,11 +957,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @param plugin the plugin to register.
      * @throws CouldNotPerformException is thrown in case the plugin could not
-     * be registered.
-     * @throws InterruptedException is thrown if the thread is externally
-     * interrupted.
+     *                                  be registered.
+     * @throws InterruptedException     is thrown if the thread is externally
+     *                                  interrupted.
      */
-    public void registerPlugin(final P plugin) throws CouldNotPerformException, InterruptedException {
+    public void registerPlugin(final PLUGIN plugin) throws CouldNotPerformException, InterruptedException {
         try {
             if (plugin == null) {
                 throw new NotAvailableException("plugin");
@@ -1020,8 +1024,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * This method can be used to log registry log messages which are only printed for the origin registry.
      * Info messages of a sandbox instance are redirected to the debug channel.
      *
-     * @param message the info message to print as string.
-     * @param logLevel the log level to log the message.
+     * @param message   the info message to print as string.
+     * @param logLevel  the log level to log the message.
      * @param throwable the cause of the message.
      */
     protected void log(final String message, final LogLevel logLevel, final Throwable throwable) {
@@ -1032,7 +1036,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * This method can be used to log registry log messages which are only printed for the origin registry.
      * Info messages of a sandbox instance are redirected to the debug channel.
      *
-     * @param message the info message to print as string.
+     * @param message  the info message to print as string.
      * @param logLevel the log level to log the message.
      */
     protected void log(final String message, final LogLevel logLevel) {
@@ -1250,7 +1254,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          * {@inheritDoc}
          *
          * @param source {@inheritDoc}
-         * @param data {@inheritDoc}
+         * @param data   {@inheritDoc}
          * @throws Exception {@inheritDoc}
          */
         @Override

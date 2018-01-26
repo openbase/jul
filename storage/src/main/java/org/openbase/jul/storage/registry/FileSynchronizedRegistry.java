@@ -25,6 +25,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
 
+import java.io.File;
+
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -38,4 +40,6 @@ public interface FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> 
     public void saveRegistry() throws CouldNotPerformException;
 
     public Integer getDBVersion() throws NotAvailableException;
+
+    public File getDatabaseDirectory() throws NotAvailableException;
 }
