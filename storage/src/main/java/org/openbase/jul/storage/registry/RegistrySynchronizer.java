@@ -116,7 +116,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         
         try {
             // trigger internal sync if data is available.
-            if (remoteRegistry.isDataAvalable()) {
+            if (remoteRegistry.isDataAvailable()) {
                 internalSync();
             }
         } catch (CouldNotPerformException ex) {
