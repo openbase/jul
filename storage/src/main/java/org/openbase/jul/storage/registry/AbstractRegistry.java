@@ -749,6 +749,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
         lock();
         try {
+            pluginPool.beforeConsistencyCheck();
             consistencyCheckLock.writeLock().lock();
             try {
                 try {
