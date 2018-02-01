@@ -46,7 +46,7 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     @Override
     public void init(final REGISTRY registry) throws InitializationException, InterruptedException {
         try {
-            if (registry != null) {
+            if (this.registry != null) {
                 throw new InvalidStateException("Plugin already initialized!");
             }
             this.registry = registry;

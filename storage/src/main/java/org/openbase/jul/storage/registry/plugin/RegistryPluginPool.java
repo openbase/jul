@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -57,7 +58,14 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
 
     @Override
     public void init(final REGISTRY registry) throws InitializationException {
-        this.registry = registry;
+        try {
+            if (this.registry != null) {
+                throw new InvalidStateException("PluginPool already initialized!");
+            }
+            this.registry = registry;
+        } catch (final CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
+        }
     }
 
     @Override
