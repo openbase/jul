@@ -253,7 +253,7 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 5000)
+    @Test(timeout = 10000)
     public void testWaitForData() throws Exception {
         System.out.println("testWaitForData");
 
@@ -283,7 +283,7 @@ public class RSBCommunicationServiceTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 5000)
+    @Test(timeout = 10000)
     public void testRequestData() throws Exception {
         System.out.println("testRequestData");
 
