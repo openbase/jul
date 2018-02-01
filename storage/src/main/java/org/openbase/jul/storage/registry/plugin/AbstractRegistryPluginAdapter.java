@@ -23,8 +23,11 @@ package org.openbase.jul.storage.registry.plugin;
  */
 import java.util.HashSet;
 import java.util.Set;
+
+import jnr.ffi.annotations.In;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.registry.Registry;
@@ -42,7 +45,14 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
 
     @Override
     public void init(final REGISTRY registry) throws InitializationException, InterruptedException {
-        this.registry = registry;
+        try {
+            if (registry != null) {
+                throw new InvalidStateException("Plugin already initialized!");
+            }
+            this.registry = registry;
+        } catch (final CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
+        }
     }
 
     public REGISTRY getRegistry() {
