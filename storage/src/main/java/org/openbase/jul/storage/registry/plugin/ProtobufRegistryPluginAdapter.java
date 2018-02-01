@@ -1,4 +1,4 @@
-package org.openbase.jul.storage.registry;
+package org.openbase.jul.storage.registry.plugin;
 
 /*
  * #%L
@@ -23,18 +23,18 @@ package org.openbase.jul.storage.registry;
  */
 
 import com.google.protobuf.GeneratedMessage;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
+import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.storage.file.FileSynchronizer;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
+import org.openbase.jul.storage.registry.ProtoBufRegistry;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * ConsistencyHandler can be registered at any registry type and will be informed about data changes via the processData Method. 
- * The handler can be used to establish a registry data consistency. 
- * @param <KEY> the registry key type.
- * @param <M>
- * @param <MB>
+ * @param <KEY>
  */
-public interface ProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, REGISTRY extends ProtoBufRegistry<KEY, M, MB>> extends ConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, REGISTRY> {
-    
+public abstract class ProtobufRegistryPluginAdapter<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileRegistryPluginAdapter<KEY, IdentifiableMessage<KEY,M,MB>, ProtoBufRegistry<KEY, M, MB>> {
 }

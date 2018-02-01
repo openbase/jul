@@ -265,9 +265,8 @@ public class WatchDog implements Activatable, Shutdownable {
                                         setServiceState(ServiceState.RUNNING);
                                     }
                                 } catch (CouldNotPerformException | NullPointerException ex) {
-                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName + " " + service.hashCode() + "]!", ex), logger);
+                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName +  "] try again in " + (getRate() / 1000) + " seconds...", ex), logger, LogLevel.WARN);
                                     setServiceState(ServiceState.FAILED);
-                                    logger.info("Try again in " + (getRate() / 1000) + " seconds...");
                                 }
                             } else {
                                 if (getServiceState() != ServiceState.RUNNING) {

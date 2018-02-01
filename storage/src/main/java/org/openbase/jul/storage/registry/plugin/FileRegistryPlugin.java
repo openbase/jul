@@ -25,6 +25,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileSynchronizer;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
+import org.openbase.jul.storage.registry.Registry;
 
 /**
  *
@@ -32,7 +34,7 @@ import org.openbase.jul.storage.file.FileSynchronizer;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface FileRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends RegistryPlugin<KEY, ENTRY> {
+public interface FileRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends RegistryPlugin<KEY, ENTRY, REGISTRY> {
 
     public void beforeRegister(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
 

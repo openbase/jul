@@ -783,7 +783,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
             if (!isConnected()) {
-                waitForConnectionState(CONNECTED);
+                waitForConnectionState(CONNECTED, timeout);
             }
 
             if (timeout > -1) {
@@ -1006,8 +1006,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         public M call() throws CouldNotPerformException {
 
             Future<Event> internalFuture = null;
-            M dataUpdate = null;
-            Event event = null;
+            Event event;
             boolean active = isActive();
             try {
                 try {
@@ -1029,31 +1028,49 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             // again when catching the exception the remote has activated
                             if (!active) {
                                 // if not active the sync is not possible and will be canceled to avoid executor service overload. After next remote activation a new sync is triggered anyway.
-                                if (shutdownInitiated) {
+                                if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
                                     syncFuture.cancel(true);
                                 }
                                 throw new InvalidStateException("Remote service is not active within ConnectionState[\" + getConnectionState().name() + \"] and sync will be triggered after reactivation, so current sync is skipped.!");
                             }
                         }
 
+                        waitForMiddleware();
+
+                        // handle shutdown
+                        if (shutdownInitiated) {
+                            if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
+                                syncFuture.cancel(true);
+                            }
+                            return null;
+                        }
 
                         try {
-                            remoteServerWatchDog.waitForServiceActivation();
-
                             try {
                                 internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
                             } catch (CouldNotPerformException ex) {
-                                // if
                                 logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
                                 continue;
                             }
-                            event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
-                            dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
+                            try {
+                                event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
+                            } catch (final java.util.concurrent.ExecutionException ex) {
+                                // still apply the timeout to avoid fast error loops.
+                                Thread.sleep(timeout);
+                                throw ex;
+                            }
+
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
                             }
                             break;
-                        } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException ex) {
+
+                        } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
+
+                            // handle interruption.
+                            if (ex.getCause() instanceof InterruptedException) {
+                                throw ex;
+                            }
 
                             // cancel internal future because it will be recreated within the next iteration anyway.
                             if (internalFuture != null) {
@@ -1078,33 +1095,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         }
                     }
 
-                    if (dataUpdate == null) {
-                        // do not set to connecting while reconnecting because when timed wrong this can cause
-                        // reinit to cancel sync tasks and reinit while switch to connecting anyway when finished
-                        if (getConnectionState() == ConnectionState.RECONNECTING) {
-                            return data;
-                        }
-                        ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
-                        setConnectionState(CONNECTING);
-                        return data;
-                    }
-
-                    // skip if sync was already performed by global data update.
-                    if (relatedFuture == null || !relatedFuture.isCancelled()) {
-                        if (event != null) {
-                            // skip events which were send later than the last received update
-                            if (event.getMetaData().getCreateTime() > newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) > newestEventTimeNano)) {
-                                newestEventTime = event.getMetaData().getCreateTime();
-                                if (event.getMetaData().hasUserTime(RPCHelper.USER_TIME_KEY)) {
-                                    newestEventTimeNano = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
-                                }
-                                applyDataUpdate(dataUpdate);
-                            } else {
-                                logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because creation time is lower than time of last event [" + event.getMetaData().getCreateTime() + ", " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + ", " + newestEventTimeNano + "]");
-                            }
-                        }
-                    }
-                    return dataUpdate;
+                    return applyEventUpdate(event, relatedFuture);
                 } catch (InterruptedException ex) {
                     if (internalFuture != null) {
                         internalFuture.cancel(true);
@@ -1119,6 +1110,67 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 }
             } catch (Exception ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
+            }
+        }
+    }
+
+    private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
+
+    private M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
+        return applyEventUpdate(event, null);
+    }
+
+    private M applyEventUpdate(final Event event, final Future relatedFuture) throws CouldNotPerformException, InterruptedException {
+        synchronized (dataUpdateMonitor) {
+            if (event == null) {
+                throw new NotAvailableException("event");
+            }
+
+            // skip sync because data has already been updated by global update
+            if (relatedFuture != null && relatedFuture.isCancelled()) {
+                return data;
+            }
+
+            M dataUpdate = (M) event.getData();
+
+            if (dataUpdate == null) {
+                // received null data from controller which indicates a shutdown
+
+                // do not set to connecting while reconnecting because when timed wrong this can cause
+                // reinit to cancel sync tasks and reinit while switch to connecting anyway when finished
+                if (getConnectionState() == ConnectionState.RECONNECTING) {
+                    return dataUpdate;
+                }
+
+                // only print message if not already gone to connecting
+                ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
+                setConnectionState(CONNECTING);
+
+                return dataUpdate;
+            } else {
+                // received correct data
+                dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
+
+                // skip events which were send later than the last received update
+                long userTime = RPCHelper.USER_TIME_VALUE_INVALID;
+                if (event.getMetaData().hasUserTime(RPCHelper.USER_TIME_KEY)) {
+                    userTime = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
+                } else {
+                    logger.debug("Data message does not contain user time key on scope " + ScopeGenerator.generateStringRep(event.getScope()));
+                }
+
+                // filter outdated events
+                if (event.getMetaData().getCreateTime() < newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && userTime < newestEventTimeNano)) {
+                    logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because event seems to be outdated! Received event time < latest event time [" + event.getMetaData().getCreateTime() + "<= " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + " < " + newestEventTimeNano + "]");
+                    return data;
+                }
+
+                if (userTime != RPCHelper.USER_TIME_VALUE_INVALID) {
+                    newestEventTimeNano = userTime;
+                }
+                newestEventTime = event.getMetaData().getCreateTime();
+                applyDataUpdate(dataUpdate);
+                return dataUpdate;
             }
         }
     }
@@ -1401,41 +1453,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         public void internalNotify(Event event) {
             try {
                 logger.debug("Internal notification: " + event.toString());
-                Object dataUpdate = event.getData();
-
-                if (dataUpdate == null) {
-                    // do not set to connecting while reconnecting because when timed wrong this can cause
-                    // reinit to cancel sync tasks and reinit while switch to connecting anyway when finished
-                    if (getConnectionState() == ConnectionState.RECONNECTING) {
-                        return;
-                    }
-
-                    ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
-                    setConnectionState(CONNECTING);
-                    return;
-                }
-
-                // skip events which were send later than the last received update
-                long userTime = RPCHelper.USER_TIME_VALUE_INVALID;
-                if (event.getMetaData().hasUserTime(RPCHelper.USER_TIME_KEY)) {
-                    userTime = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
-                } else {
-                    logger.debug("Data message does not contain user time key on scope " + ScopeGenerator.generateStringRep(event.getScope()));
-                }
-
-                // filter outdated events
-                if (event.getMetaData().getCreateTime() < newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && userTime < newestEventTimeNano)) {
-                    logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because event seems to be outdated! Received event time < latest event time [" + event.getMetaData().getCreateTime() + "<= " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + " < " + newestEventTimeNano + "]");
-                    return;
-                }
-
-                if (userTime != RPCHelper.USER_TIME_VALUE_INVALID) {
-                    newestEventTimeNano = userTime;
-                }
-                newestEventTime = event.getMetaData().getCreateTime();
-                applyDataUpdate((M) dataUpdate);
-            } catch (RuntimeException ex) {
-                throw ex;
+                applyEventUpdate(event);
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
             }
@@ -1644,10 +1662,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             if (syncFuture != null) {
 
                 // only skip sync future if the shutdown was initiated!
-                if(shutdownInitiated) {
+                if (shutdownInitiated) {
                     currentSyncFuture = syncFuture;
                     syncFuture = null;
                 }
+//            currentSyncTask = syncTask;
 
                 currentSyncTask = syncTask;
                 syncTask = null;

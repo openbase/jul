@@ -28,6 +28,7 @@ import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Shutdownable;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.slf4j.LoggerFactory;
 
 /**

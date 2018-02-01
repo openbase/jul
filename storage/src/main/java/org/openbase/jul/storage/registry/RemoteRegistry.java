@@ -22,15 +22,16 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import com.google.protobuf.GeneratedMessage;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -39,6 +40,10 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
+
+import org.openbase.jul.extension.protobuf.IdentifiableMessageMap;
+import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
 
@@ -49,7 +54,7 @@ import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
  * @param <M>
  * @param <MB>
  */
-public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB> {
+public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB>, DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>> {
 
     /**
      * An optional configurable registryRemote where this remote is than bound to.
@@ -68,16 +73,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     }
 
     public synchronized void notifyRegistryUpdate(final Collection<M> values) throws CouldNotPerformException {
-        Map<KEY, IdentifiableMessage<KEY, M, MB>> newRegistryMap = new HashMap<>();
-        for (M value : values) {
-            IdentifiableMessage<KEY, M, MB> data = new IdentifiableMessage<>(value);
-            newRegistryMap.put(data.getId(), data);
-        }
-        replaceInternalMap(newRegistryMap);
+        replaceInternalMap(new IdentifiableMessageMap<>(values));
     }
 
     public KEY getId(final M entry) throws CouldNotPerformException {
-        KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
+        final KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
         if (!contains(key)) {
             throw new CouldNotPerformException("Entry for given Key[" + key + "] is not available!");
         }
@@ -143,6 +143,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public Integer getDBVersion() throws NotAvailableException {
         //TODO mpohling: implement!
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public File getDatabaseDirectory() throws NotAvailableException {
+        throw new NotAvailableException("DatabaseDirectory", new NotSupportedException("A remote registry do not provide a database directory!", this));
     }
 
     @Override
@@ -222,6 +227,30 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
             return FutureProcessor.canceledFuture(null, ex);
         }
     }
+    @Override
+    public Class<Map<KEY, IdentifiableMessage<KEY, M, MB>>> getDataClass() {
+        return getEntryMapClass();
+    }
+
+    @Override
+    public Map<KEY, IdentifiableMessage<KEY, M, MB>> getData() throws NotAvailableException {
+        return getValue();
+    }
+
+    @Override
+    public CompletableFuture<Map<KEY, IdentifiableMessage<KEY, M, MB>>> getDataFuture() {
+        return getValueFuture();
+    }
+
+    @Override
+    public void addDataObserver(final Observer<Map<KEY, IdentifiableMessage<KEY, M, MB>>> observer) {
+        addObserver(observer);
+    }
+
+    @Override
+    public void removeDataObserver(final Observer<Map<KEY, IdentifiableMessage<KEY, M, MB>>> observer) {
+        removeObserver(observer);
+    }
 
     /**
      * Method blocks until the remote registry is synchronized.
@@ -235,6 +264,19 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
                 return;
             }
             getRegistryRemote().waitForData();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory("Could not wait until remote registry is ready!", ex, logger);
+        }
+    }
+
+    @Override
+    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
+        try {
+            if (registryRemote == null) {
+                waitForValue(timeout, timeUnit);
+                return;
+            }
+            getRegistryRemote().waitForData(timeout, timeUnit);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not wait until remote registry is ready!", ex, logger);
         }
@@ -263,10 +305,21 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
      *
      * @return if data is available
      */
-    public boolean isDataAvalable() {
+    @Override
+    public boolean isDataAvailable() {
         if (registryRemote == null) {
             return isValueAvailable();
         }
         return registryRemote.isDataAvailable();
+    }
+
+    /**
+     *
+     * @return
+     * @deprecated please use isDataAvailable() instead
+     */
+    @Deprecated
+    public boolean isDataAvalable() {
+        return isDataAvailable();
     }
 }

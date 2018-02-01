@@ -35,7 +35,7 @@ import org.openbase.jul.storage.registry.Registry;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends Initializable<Registry<KEY, ENTRY>>, Shutdownable {
+public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends Registry<KEY, ENTRY>> extends Initializable<REGISTRY>, Shutdownable {
 
     public void beforeRegister(final ENTRY entry) throws RejectedException;
 
@@ -53,6 +53,8 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends In
     
     public void afterRegistryChange() throws CouldNotPerformException;
 
+    public void beforeConsistencyCheck() throws CouldNotPerformException;
+
     public void afterConsistencyCheck() throws CouldNotPerformException;
     
     public void beforeClear() throws CouldNotPerformException;
@@ -64,6 +66,6 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>> extends In
     public void checkAccess() throws RejectedException;
 
     @Override
-    public void init(Registry<KEY, ENTRY> registry) throws InitializationException, InterruptedException;
+    public void init(REGISTRY registry) throws InitializationException, InterruptedException;
     
 }

@@ -85,12 +85,12 @@ public class FutureProcessor {
 
             @Override
             public T get() throws InterruptedException, ExecutionException {
-                throw new ExecutionException("Future was canceled!", cause);
+                throw new ExecutionException(cause);
             }
 
             @Override
             public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-                throw new ExecutionException("Future was canceled!", cause);
+                throw new ExecutionException(cause);
             }
         };
     }

@@ -21,6 +21,7 @@ package org.openbase.jul.exception.printer;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPVerbose;
@@ -28,7 +29,6 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.slf4j.Logger;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class LogPrinter implements Printer {
