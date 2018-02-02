@@ -22,11 +22,12 @@ package org.openbase.jul.pattern.provider;
  * #L%
  */
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observer;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -39,14 +40,14 @@ public interface DataProvider<D> {
      *
      * @return if data is available
      */
-    public boolean isDataAvailable();
+    boolean isDataAvailable();
 
     /**
      * Method returns the class of the data object.
      *
      * @return the class of the data object
      */
-    public Class<D> getDataClass();
+    Class<D> getDataClass();
     
     /**
      * Method returns the data object of this instance.
@@ -56,7 +57,7 @@ public interface DataProvider<D> {
      * @return the data object.
      * @throws NotAvailableException is thrown in case the data is not available.
      */
-    public D getData() throws NotAvailableException;
+    D getData() throws NotAvailableException;
 
     
     /**
@@ -64,21 +65,21 @@ public interface DataProvider<D> {
      *
      * @return a future object delivering the data if available.
      */
-    public CompletableFuture<D> getDataFuture();
+    CompletableFuture<D> getDataFuture();
     
     /**
      * This method allows the registration of data observers to get informed about data updates.
      *
      * @param observer the observer added
      */
-    public void addDataObserver(final Observer<D> observer);
+    void addDataObserver(final Observer<D> observer);
 
     /**
      * This method removes already registered data observers.
      *
      * @param observer the observer removed
      */
-    public void removeDataObserver(final Observer<D> observer);
+    void removeDataObserver(final Observer<D> observer);
     
     /**
      * Method blocks until an initial data is available.
@@ -86,7 +87,7 @@ public interface DataProvider<D> {
      * @throws CouldNotPerformException is thrown if any error occurs.
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
-    public void waitForData() throws CouldNotPerformException, InterruptedException;
+    void waitForData() throws CouldNotPerformException, InterruptedException;
 
     /**
      * Method blocks until an initial data is available or the given timeout is reached.
@@ -96,5 +97,5 @@ public interface DataProvider<D> {
      * @throws NotAvailableException is thrown in case the any error occurs, or if the given timeout is reached. In this case a TimeoutException is thrown.
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
-    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
+    void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 }
