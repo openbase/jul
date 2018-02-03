@@ -202,7 +202,7 @@
         <dependency.woodstox.version>[4.1,4.2-alpha)</dependency.woodstox.version>
         
         <!--<dependency.jps.version>[3.1,3.2-alpha)</dependency.jps.version>-->
-        <dependency.jps.version>[3.2,3.3-alpha)</dependency.jps.version>
+        <dependency.jps.version>[3.2.16,3.3-alpha)</dependency.jps.version>
         
         <dependency.rsx.version>[0.17,0.18-alpha)</dependency.rsx.version>
         <dependency.rst.stable.artifact>rst</dependency.rst.stable.artifact>
