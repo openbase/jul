@@ -22,33 +22,15 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jps.preset.JPVerbose;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.RejectedException;
-import org.openbase.jul.exception.VerificationFailedException;
+import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.exception.printer.LogLevelFilter;
@@ -65,40 +47,38 @@ import org.openbase.jul.storage.registry.plugin.RegistryPluginPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 /**
  * @param <KEY>      EntryKey
  * @param <ENTRY>    EntryType
  * @param <MAP>      RegistryEntryMap
  * @param <REGISTRY> Registry
  * @param <PLUGIN>   RegistryPluginType
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    private String name;
-
+    protected final RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> pluginPool;
     private final MAP entryMap;
 
     private final Random randomJitter;
-    protected final RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> pluginPool;
-    protected RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> sandbox;
-
-    protected boolean consistent;
     private final ReentrantReadWriteLock registryLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock consistencyCheckLock = new ReentrantReadWriteLock();
-
     private final Set<Registry> lockedRegistries = new HashSet<>();
-    private int lockCounter = 0;
-
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY>> consistencyHandlerList;
     /**
      * Map of registries this one depends on.
      */
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
     private final ObservableImpl<Map<KEY, ENTRY>> dependingRegistryObservable;
-
+    protected RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> sandbox;
+    protected boolean consistent;
+    private String name;
+    private int lockCounter = 0;
     private RecurrenceEventFilter<String> consistencyFeedbackEventFilter;
 
     private boolean notificationSkipped;
@@ -185,7 +165,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -248,7 +230,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -287,7 +271,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -299,7 +285,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -346,7 +334,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -394,6 +384,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -451,7 +442,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -466,7 +459,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -502,6 +497,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Use with care!
      *
      * @param map
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
@@ -519,6 +515,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @param map
      * @param finishTransaction is true the registry transaction will be verified.
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
@@ -581,6 +578,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Consistency checks are skipped as well if at least one depending registry is not consistent.
      *
      * @param registry the dependency of these registry.
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void registerDependency(final Registry registry) throws CouldNotPerformException {
@@ -603,6 +601,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * This method allows the removal of a registered registry dependency.
      *
      * @param registry the dependency to remove.
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void removeDependency(final Registry registry) throws CouldNotPerformException {
@@ -754,7 +753,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 try {
                     int iterationCounter = 0;
-                    MultiException.ExceptionStack exceptionStack = null;
+                    MultiException.ExceptionStack exceptionStack = null, previousExceptionStack = null;
 
                     final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
                     Object lastModifieredEntry = null;
@@ -763,10 +762,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     int iterationErrorCounter;
                     String note;
 
-                    while (true) {
+                    mainLoop : while (true) {
 
                         // do not burn cpu
                         Thread.yield();
+
+                        if (isSandbox() && Thread.currentThread().isInterrupted()) {
+                            throw new InvalidStateException("Cancel check because " + getName() + " shutdown detected!");
+                        }
 
                         // init next interation
                         iterationCounter++;
@@ -781,6 +784,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         // prepare for next iteraction
                         if (exceptionStack != null) {
                             iterationErrorCounter = exceptionStack.size();
+                            previousExceptionStack = new ExceptionStack(exceptionStack);
                             exceptionStack.clear();
                         } else {
                             iterationErrorCounter = 0;
@@ -810,7 +814,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     try {
                                         consistencyHandler.processData(entry.getId(), entry, entryMap, (REGISTRY) this);
                                     } catch (CouldNotPerformException | NullPointerException ex) {
-                                        logger.debug("Inconsisteny detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
+                                        logger.debug("Inconsistency detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
                                         exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
                                     }
                                 }
@@ -843,7 +847,28 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             throw ExceptionPrinter.printHistoryAndReturnThrowable(new InvalidStateException("Fatal error occured during consistency check!", ex), logger);
                         }
 
+                        // has been an error occurred during current run?
                         if (exceptionStack != null && !exceptionStack.isEmpty()) {
+
+                            // has been the same errors occurred since the last run and so no entry fixes applied during this run?
+                            if (previousExceptionStack != null && !previousExceptionStack.isEmpty() && exceptionStack.size() == previousExceptionStack.size()) {
+
+                                for (int i = 0; i < exceptionStack.size(); i++) {
+
+                                    // Check if the error source is not the same.
+                                    if(!exceptionStack.get(i).getSource().equals(previousExceptionStack.get(i).getSource())) {
+                                        // continue with consistency check
+                                        continue mainLoop;
+                                    }
+
+                                    // check if the initial cause of the error is not the same.
+                                    if(!ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException()).equals(ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException()))) {
+                                        // continue with consistency check
+                                        continue mainLoop;
+                                    }
+                                }
+                                MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occoured during processing!", exceptionStack);
+                            }
                             continue;
                         }
 
@@ -957,6 +982,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * registry.
      *
      * @param plugin the plugin to register.
+     *
      * @throws CouldNotPerformException is thrown in case the plugin could not
      *                                  be registered.
      * @throws InterruptedException     is thrown if the thread is externally
@@ -974,15 +1000,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     /**
-     * Method defines the name of this registry.
-     *
-     * @param name
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
      * Method returns the name of this registry. In case the name was never set
      * for this registry the simple class name of the registry class is returned
      * instead.
@@ -995,6 +1012,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             return getClass().getSimpleName();
         }
         return name;
+    }
+
+    /**
+     * Method defines the name of this registry.
+     *
+     * @param name
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -1049,6 +1075,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Info messages of a sandbox instance are redirected to the debug channel.
      *
      * @param message the info message to print as string.
+     *
      * @deprecated please use method {@code log(String message)}.
      */
     @Deprecated
@@ -1173,6 +1200,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws RejectedException {@inheritDoc}
      */
     @Override
@@ -1184,6 +1212,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws RejectedException {@inheritDoc}
      */
     @Override
@@ -1256,6 +1285,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          *
          * @param source {@inheritDoc}
          * @param data   {@inheritDoc}
+         *
          * @throws Exception {@inheritDoc}
          */
         @Override

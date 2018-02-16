@@ -54,5 +54,25 @@
             <artifactId>jul.schedule</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>${dependency.org.controlsfx.version}</version>
+        </dependency>
+
+        <!-- Java FX Fontawesome Lib -->
+        <dependency>
+            <groupId>de.jensd</groupId>
+            <artifactId>fontawesomefx</artifactId>
+            <version>${dependency.de.jensd.fontawesomefx.version}</version>
+        </dependency>
+
+        <!-- Java FX Material Design Lib -->
+        <dependency>
+            <groupId>com.jfoenix</groupId>
+            <artifactId>jfoenix</artifactId>
+            <version>${dependency.com.jfoenix.version}</version>
+        </dependency>
     </dependencies>
 </project>

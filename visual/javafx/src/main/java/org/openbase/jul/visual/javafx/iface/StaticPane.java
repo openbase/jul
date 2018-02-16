@@ -50,6 +50,7 @@ import org.openbase.jul.schedule.SyncObject;
  */
 public interface StaticPane extends DefaultInitializable {
 
+    // todo release: this method could throw an CouldNotPerform exception!?
     /**
      * Init pane content.
      */

@@ -173,6 +173,10 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
 
             if (timeout <= 0) {
                 logger.warn("Smart shutdown timeout reached!");
+
+                if(JPService.testMode() || JPService.verboseMode()) {
+                    StackTracePrinter.printAllStackTraces("pool", logger, LogLevel.INFO, true);
+                }
                 break;
             }
 

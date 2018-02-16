@@ -22,6 +22,8 @@ package org.openbase.jul.exception;
  * #L%
  */
 import java.util.ArrayList;
+import java.util.Collection;
+
 import org.slf4j.LoggerFactory;
 
 /**
@@ -71,6 +73,17 @@ public class MultiException extends CouldNotPerformException {
     }
 
     public static class ExceptionStack extends ArrayList<SourceExceptionEntry> {
+
+        public ExceptionStack(final Collection<? extends SourceExceptionEntry> collection) {
+            super(collection);
+        }
+
+        public ExceptionStack(int initialCapacity) {
+            super(initialCapacity);
+        }
+
+        public ExceptionStack() {
+        }
 
         public void push(final Object source, final Exception exception) {
             super.add(new SourceExceptionEntry(source, exception));

@@ -874,12 +874,20 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                             }
                         }
+                        final long currentTime = System.nanoTime();
                         remoteServerWatchDog.waitForServiceActivation();
                         internalCallFuture = remoteServer.callAsync(methodName, argument);
                         while (true) {
+
+                            if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - currentTime) > RPCHelper.RPC_TIMEOUT) {
+                                throw new TimeoutException("RPCMethod call timeout");
+                            }
+
                             try {
                                 return internalCallFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                             } catch (java.util.concurrent.TimeoutException ex) {
+
+
                                 // validate connection
                                 try {
                                     // if reconnecting do not start a ping but just wait for connecting again
@@ -903,6 +911,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                 throw new InterruptedException();
                             }
                         }
+
+
                     } catch (final InterruptedException ex) {
                         if (internalCallFuture != null) {
                             internalCallFuture.cancel(true);
