@@ -137,6 +137,15 @@ public class StringProcessor {
         input = input.replaceAll("ü", "ue");
         input = input.replaceAll("ß", "ss");
         input = input.replaceAll("[^0-9a-zA-Z-_]+", "_");
+
+        // cleanup
+        input = input.replaceAll("[_]+", "_");
+        if (input.startsWith("_")) {
+            input = input.substring(1, input.length());
+        }
+        if (input.endsWith("_")) {
+            input = input.substring(0, input.length() - 1);
+        }
         return input;
     }
 
