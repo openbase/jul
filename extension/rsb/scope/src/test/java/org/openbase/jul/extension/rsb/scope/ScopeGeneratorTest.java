@@ -122,32 +122,12 @@ public class ScopeGeneratorTest {
         assertEquals("Scope not fully generated!", "/paradise/room/device/test/", result_2);
     }
 
-    /**
-     * Test of setupLocationScope method, of class ScopeGenerator.
-     */
-//    @Test
-    public void testSetupLocationScope() throws Exception {
-//        System.out.println("setupLocationScope");
-//        LocationConfigType.LocationConfig locationConfig = null;
-//        ProtoBufMessageMapInterface<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> entryMap = new ProtoBufMessageMap<>(DescriptorProtos.SourceCodeInfo.Location.newBuilder(),LocationConfigType.LocationConfig.newBuilder().getDescriptorForType().findFieldByNumber(LocationRegistryType.LocationRegistry.LOCATION_CONFIGS_FIELD_NUMBER));
-//        new IdentifiableMessage<String, LocationConfig, LocationConfig.Builder>(locationConfig.newBuilderForType());
-//
-//        entryMap.put(new LocationConfig.newBuilder());
-//        ScopeType.Scope expResult = null;
-//        ScopeType.Scope result = ScopeGenerator.setupLocationScope(locationConfig, registry);
-//        assertEquals(expResult, result);
-    }
+    @Test
+    public void testConvertIntoValidScopeComponent() {
+        assertEquals("Scope component invalid!", "qijijs", ScopeGenerator.convertIntoValidScopeComponent("qijijs"));
+        assertEquals("Scope component invalid!", "qi_jijs", ScopeGenerator.convertIntoValidScopeComponent("qi__jijs"));
+        assertEquals("Scope component invalid!", "qi_jijs", ScopeGenerator.convertIntoValidScopeComponent("qi_____jijs"));
+        assertEquals("Scope component invalid!", "mycomponent", ScopeGenerator.convertIntoValidScopeComponent("_myComponent__"));
 
-    /**
-     * Test of setupDeviceScope method, of class ScopeGenerator.
-     */
-//    @Test
-    public void testSetupDeviceScope() throws Exception {
-//        System.out.println("setupDeviceScope");
-//        DeviceConfigType.DeviceConfig deviceConfig = null;
-//        ProtoBufMessageMapInterface<String, LocationConfigType.LocationConfig, LocationConfigType.LocationConfig.Builder> registry = null;
-//        ScopeType.Scope expResult = null;
-//        ScopeType.Scope result = ScopeGenerator.setupDeviceScope(deviceConfig, registry);
-//        assertEquals(expResult, result);
     }
 }

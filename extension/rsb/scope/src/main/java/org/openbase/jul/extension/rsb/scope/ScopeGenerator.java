@@ -21,7 +21,7 @@ package org.openbase.jul.extension.rsb.scope;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.Collection;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
@@ -31,8 +31,9 @@ import rst.domotic.unit.agent.AgentClassType.AgentClass;
 import rst.domotic.unit.app.AppClassType.AppClass;
 import rst.rsb.ScopeType;
 
+import java.util.Collection;
+
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class ScopeGenerator {
@@ -462,12 +463,23 @@ public class ScopeGenerator {
     }
 
     public static String convertIntoValidScopeComponent(String scopeComponent) {
+        // eliminate special chars
         scopeComponent = scopeComponent.toLowerCase();
         scopeComponent = scopeComponent.replaceAll("ä", "ae");
         scopeComponent = scopeComponent.replaceAll("ö", "oe");
         scopeComponent = scopeComponent.replaceAll("ü", "ue");
         scopeComponent = scopeComponent.replaceAll("ß", "ss");
         scopeComponent = scopeComponent.replaceAll("[^0-9a-z-_]+", "_");
+
+        // cleanup
+        scopeComponent = scopeComponent.replaceAll("[_]+", "_");
+        if (scopeComponent.startsWith("_")) {
+            scopeComponent = scopeComponent.substring(1, scopeComponent.length());
+        }
+        if (scopeComponent.endsWith("_")) {
+            scopeComponent = scopeComponent.substring(0, scopeComponent.length() - 1);
+        }
+        //return
         return scopeComponent;
     }
 
