@@ -25,10 +25,15 @@ package org.openbase.jul.iface;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public interface Changeable {
 
-    public void notifyChange() throws CouldNotPerformException, InterruptedException;
+    /**
+     * Informs the {@code Changeable} about an state change.
+     *
+     * @throws CouldNotPerformException
+     * @throws InterruptedException
+     */
+    void notifyChange() throws CouldNotPerformException, InterruptedException;
 }
