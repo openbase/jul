@@ -112,21 +112,27 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         }
     }
 
+
     @Override
     public KEY getId() throws NotAvailableException {
+        return getId(internalMessage);
+    }
+
+
+    public static <KEY> KEY getId(GeneratedMessage message) throws NotAvailableException {
         try {
-            if (internalMessage == null) {
+            if (message == null) {
                 throw new NotAvailableException("messageOrBuilder");
             }
 
-            if (internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID) == null) {
+            if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_ID) == null) {
                 throw new VerificationFailedException("Given message has no id field!");
             }
 
-            if (!internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID))) {
+            if (!message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_ID))) {
                 throw new VerificationFailedException("Given message has no id field!");
             }
-            KEY id = (KEY) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
+            KEY id = (KEY) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
 
             if (id.toString().isEmpty()) {
                 throw new VerificationFailedException("Detected id is empty!");
@@ -228,14 +234,24 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
      * @return a short description of the message as string.
      */
     public String generateMessageDescription() {
-        if (internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
-            if (internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
-                return (String) internalMessage.getField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
+        return generateMessageDescription(internalMessage);
+    }
+
+    /**
+     * Method generates a short string description of the given message. This description is bases on internal message fields like label or id provided by the message itself.
+     * If non of this fields could be detected a ? char is returned.
+     *
+     * @return a short description of the message as string.
+     */
+    public static String generateMessageDescription(final GeneratedMessage message) {
+        if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
+            if (message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
+                return (String) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
             }
         }
 
         try {
-            return getId().toString();
+            return getId(message).toString();
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not detect id value of internal message!", ex), logger, LogLevel.WARN);
             return "?";
