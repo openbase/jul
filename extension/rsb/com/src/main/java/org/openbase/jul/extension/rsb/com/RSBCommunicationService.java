@@ -26,6 +26,7 @@ import org.openbase.jul.extension.protobuf.MessageObservable;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
 
+import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +52,7 @@ import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
+import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.iface.Requestable;
 
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
@@ -73,7 +75,7 @@ import rst.rsb.ScopeType.Scope;
  * @param <MB> the builder for message M
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M> {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable {
 
     public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
     public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
@@ -136,11 +138,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.initialized = false;
             this.destroyed = false;
             this.shutdownDeamon = registerShutdownHook(this);
-
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
     }
+
+
 
     /**
      * @param scope
@@ -590,7 +593,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public void notifyChange() throws CouldNotPerformException, InterruptedException {
         logger.debug("Notify data change of " + this);
-        // synchronized by managable lock to prevent reinit between validateInitialization and publish
+        // synchronized by manageable lock to prevent reinit between validateInitialization and publish
         M newData;
         synchronized (manageableLock) {
             try {
@@ -833,6 +836,22 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         try {
             return getData().isInitialized();
         } catch (NotAvailableException ex) {
+            return false;
+        }
+    }
+
+    /**
+     * Method returns true if this instance was initialized, activated and is successfully connected to the middleware.
+     * @return returns true if this instance is ready otherwise false.
+     */
+    @Override
+    public Boolean isReady() {
+        try {
+            validateInitialization();
+            validateActivation();
+            validateMiddleware();
+            return true;
+        } catch (InvalidStateException e) {
             return false;
         }
     }

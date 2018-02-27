@@ -27,6 +27,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
+
+import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.pattern.IdentifiableRemote;
 
 /**
@@ -55,6 +57,24 @@ public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> ext
             return id;
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("data.id", ex);
+        }
+    }
+
+    /**
+     * Method prints a class instance representation.
+     *
+     * @return the class string representation.
+     */
+    @Override
+    public String toString() {
+        try {
+            return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
+        } catch (CouldNotPerformException ex) {
+            try {
+                return getClass().getSimpleName() + "[id:" + getId() + "]";
+            } catch (CouldNotPerformException exx) {
+                return super.toString();
+            }
         }
     }
 }
