@@ -1,6 +1,6 @@
 package org.openbase.jul.iface;
 
-/*
+/*-
  * #%L
  * JUL Interface
  * %%
@@ -22,17 +22,12 @@ package org.openbase.jul.iface;
  * #L%
  */
 
-import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
+public interface Readyable {
 
-/**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <T> the type of the snapshot
- */
-public interface Snapshotable<T> {
-
-    Future<T> recordSnapshot() throws CouldNotPerformException, InterruptedException;
-
-    Future<Void> restoreSnapshot(final T snapshot) throws CouldNotPerformException, InterruptedException;
+    /**
+     * Method returns true if this instance is ready.
+     *
+     * @return true if ready.
+     */
+    Boolean isReady();
 }

@@ -231,7 +231,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
             }
             return tmpId;
         } catch (CouldNotPerformException ex) {
-            logger.warn("Config does not contain the remote id!");
+            logger.debug("Config does not contain the remote id!");
         }
         return super.getId();
     }

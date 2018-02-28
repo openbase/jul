@@ -25,10 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.openbase.jps.core.JPService;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.InitializationException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.RejectedException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
@@ -74,8 +71,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
             try {
                 plugin.shutdown();
             } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not shutdown RegistryPlugin[" + plugin + "]!", ex), logger, LogLevel.ERROR);
-                assert !JPService.testMode(); // fail during unit tests.
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not shutdown RegistryPlugin[" + plugin + "]!", plugin, ex), logger, LogLevel.ERROR);
             }
         });
     }
@@ -103,8 +99,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 } catch (RejectedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] registration!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -124,8 +119,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 try {
                     plugin.afterRegister(entry);
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] registration!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -147,8 +141,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 } catch (RejectedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] update!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -168,8 +161,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 try {
                     plugin.afterUpdate(entry);
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] update!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -189,8 +181,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 try {
                     plugin.afterConsistencyModification(entry);
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about Entry[" + entry + "] modification!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about Entry[" + entry + "] modification!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -212,8 +203,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 } catch (RejectedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + entry + "] removal!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -233,8 +223,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 try {
                     plugin.afterRemove(entry);
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] removal!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -254,8 +243,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 try {
                     plugin.beforeClear();
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned registry earsure!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned registry earsure!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -275,8 +263,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
             } catch (RejectedException ex) {
                 throw ex;
             } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + key + "] publishment!", ex), logger, LogLevel.ERROR);
-                assert !JPService.testMode(); // fail during unit tests.
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned Entry[" + key + "] publishment!", plugin, ex), logger, LogLevel.ERROR);
             }
         }
     }
@@ -291,8 +278,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
             try {
                 plugin.beforeGetEntries();
             } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about planned registry publishment!", ex), logger, LogLevel.ERROR);
-                assert !JPService.testMode(); // fail during unit tests.
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned registry publishment!", plugin, ex), logger, LogLevel.ERROR);
             }
         }
     }
@@ -309,8 +295,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
             } catch (RejectedException ex) {
                 throw ex;
             } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not check registry access with RegistryPlugin[" + plugin + "]!", ex), logger, LogLevel.ERROR);
-                assert !JPService.testMode(); // fail during unit tests.
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not check registry access with RegistryPlugin[" + plugin + "]!", plugin, ex), logger, LogLevel.ERROR);
             }
         }
     }
@@ -329,8 +314,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 } catch (RejectedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about registry change!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests. 
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about registry change!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -352,8 +336,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 } catch (RejectedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about starting consistency check!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about starting consistency check!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {
@@ -375,8 +358,7 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 } catch (RejectedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about finished consistency check!", ex), logger, LogLevel.ERROR);
-                    assert !JPService.testMode(); // fail during unit tests.
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about finished consistency check!", plugin, ex), logger, LogLevel.ERROR);
                 }
             }
         } finally {

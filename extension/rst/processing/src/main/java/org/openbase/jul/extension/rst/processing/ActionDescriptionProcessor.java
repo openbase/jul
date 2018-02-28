@@ -73,29 +73,29 @@ public class ActionDescriptionProcessor {
      * @return an ActionDescription that only misses unit and service information
      */
     public static ActionDescription.Builder getActionDescription(final ActionParameter actionParameter, final ActionAuthority actionAuthority, final ResourceAllocation.Initiator initiator) {
-        ActionDescription.Builder actionDecsription = ActionDescription.newBuilder();
-        ResourceAllocation.Builder resourceAllocation = actionDecsription.getResourceAllocationBuilder();
-        ServiceStateDescription.Builder serviceStateDescription = actionDecsription.getServiceStateDescriptionBuilder();
+        ActionDescription.Builder actionDescription = ActionDescription.newBuilder();
+        ResourceAllocation.Builder resourceAllocation = actionDescription.getResourceAllocationBuilder();
+        ServiceStateDescription.Builder serviceStateDescription = actionDescription.getServiceStateDescriptionBuilder();
 
         // initialize values which are true for every ActionDescription
-        actionDecsription.setId(UUID.randomUUID().toString());
-        actionDecsription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
-        actionDecsription.setLabel(GENERIC_ACTION_LABEL);
-        actionDecsription.setDescription(GENERIC_ACTION_DESCSRIPTION);
+        actionDescription.setId(UUID.randomUUID().toString());
+        actionDescription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
+        actionDescription.setLabel(GENERIC_ACTION_LABEL);
+        actionDescription.setDescription(GENERIC_ACTION_DESCSRIPTION);
 
-        // initalize other required fields from ResourceAllocation
-        resourceAllocation.setId(actionDecsription.getId());
+        // initialize other required fields from ResourceAllocation
+        resourceAllocation.setId(actionDescription.getId());
         resourceAllocation.setSlot(Interval.getDefaultInstance());
         resourceAllocation.setState(ResourceAllocation.State.REQUESTED);
 
         // add Authority and ResourceAllocation.Initiator
-        actionDecsription.setActionAuthority(actionAuthority);
+        actionDescription.setActionAuthority(actionAuthority);
         resourceAllocation.setInitiator(initiator);
 
         // add values from ActionParameter
-        actionDecsription.setExecutionTimePeriod(actionParameter.getExecutionTimePeriod());
-        actionDecsription.setExecutionValidity(actionParameter.getExecutionValidity());
-        if (actionDecsription.getExecutionTimePeriod() != 0 && actionParameter.getPolicy() != ResourceAllocation.Policy.PRESERVE) {
+        actionDescription.setExecutionTimePeriod(actionParameter.getExecutionTimePeriod());
+        actionDescription.setExecutionValidity(actionParameter.getExecutionValidity());
+        if (actionDescription.getExecutionTimePeriod() != 0 && actionParameter.getPolicy() != ResourceAllocation.Policy.PRESERVE) {
             resourceAllocation.setPolicy(ResourceAllocation.Policy.PRESERVE);
         } else {
             resourceAllocation.setPolicy(actionParameter.getPolicy());
@@ -110,10 +110,10 @@ public class ActionDescriptionProcessor {
             actionReference.setAuthority(actionParameter.getInitiator().getActionAuthority());
             actionReference.setServiceStateDescription(actionParameter.getInitiator().getServiceStateDescription());
             actionReferenceList.add(actionReference.build());
-            actionDecsription.addAllActionChain(actionReferenceList);
+            actionDescription.addAllActionChain(actionReferenceList);
         }
 
-        return actionDecsription;
+        return actionDescription;
     }
 
     /**
