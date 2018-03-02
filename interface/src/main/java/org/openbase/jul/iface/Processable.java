@@ -31,6 +31,6 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @param <O> Output type defining the process result.
  */
 public interface Processable<I, O> {
-    public O process(final I input) throws CouldNotPerformException, InterruptedException;
+    O process(final I input) throws CouldNotPerformException, InterruptedException;
     
 }
