@@ -119,7 +119,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
-        this.mainHandler = new InternalUpdateHandler();
+        this.mainHandler = generateHandler();
         this.initialized = false;
         this.shutdownInitiated = false;
         this.remoteServer = new NotInitializedRSBRemoteServer();
@@ -377,6 +377,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register Handler!", ex);
         }
+    }
+
+    protected Handler generateHandler() {
+        return new InternalUpdateHandler();
     }
 
     /**
@@ -1057,7 +1061,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                         try {
                             try {
-                                internalFuture = remoteServer.callAsync(RPC_REQUEST_STATUS);
+                                internalFuture = internalRequestStatus();
                             } catch (CouldNotPerformException ex) {
                                 logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
                                 continue;
@@ -1124,9 +1128,17 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    protected RSBRemoteServer getRemoteServer() {
+        return remoteServer;
+    }
+
+    protected Future<Event> internalRequestStatus() throws CouldNotPerformException {
+        return remoteServer.callAsync(RPC_REQUEST_STATUS);
+    }
+
     private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
 
-    private M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
+    protected M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
         return applyEventUpdate(event, null);
     }
 

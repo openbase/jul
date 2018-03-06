@@ -22,30 +22,16 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.openbase.jul.extension.protobuf.MessageObservable;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.GeneratedMessage;
-
-import java.util.Date;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
-
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.CouldNotTransformException;
-import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.NotInitializedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.extension.protobuf.MessageController;
+import org.openbase.jul.extension.protobuf.MessageObservable;
 import org.openbase.jul.extension.rsb.iface.RSBInformer;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -54,14 +40,10 @@ import org.openbase.jul.extension.rst.iface.ScopeProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.iface.Requestable;
-
-import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
-
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import org.openbase.jul.schedule.GlobalScheduledExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
 import org.slf4j.Logger;
@@ -69,6 +51,15 @@ import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.config.ParticipantConfig;
 import rst.rsb.ScopeType.Scope;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+
+import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 
 /**
  * @param <M>  the message type of the communication service
@@ -142,7 +133,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             throw new InstantiationException(this, ex);
         }
     }
-
 
 
     /**
@@ -606,11 +596,12 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
                 throw ex;
             }
 
-            newData = getData();
+            // update the current data builder before updating to allow implementations to change data beforehand
+            newData = updateDataToPublish(cloneDataBuilder());
             Event event = new Event(informer.getScope(), newData.getClass(), getData());
             event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
 
-            if(isActive()) {
+            if (isActive()) {
                 try {
                     waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
                     informer.publish(event);
@@ -628,6 +619,18 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
 
         dataObserver.notifyObservers(newData);
+    }
+
+    /**
+     * Called before publishing data via the informer. Can be implemented by
+     * sub classes to update data which can be received by everyone.
+     *
+     * @param dataBuilder a clone of the current data builder.
+     * @return a message build from the data builder
+     * @throws CouldNotPerformException if the update fails
+     */
+    protected M updateDataToPublish(MB dataBuilder) throws CouldNotPerformException {
+        return (M) dataBuilder.build();
     }
 
     /**
@@ -842,6 +845,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * Method returns true if this instance was initialized, activated and is successfully connected to the middleware.
+     *
      * @return returns true if this instance is ready otherwise false.
      */
     @Override

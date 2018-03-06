@@ -1,9 +1,8 @@
+package org.openbase.jul.visual.javafx.geometry.svg.provider;
 
-package org.openbase.jul.exception;
-
-/*
+/*-
  * #%L
- * JUL Exception
+ * JUL Visual JavaFX
  * %%
  * Copyright (C) 2015 - 2018 openbase.org
  * %%
@@ -23,25 +22,23 @@ package org.openbase.jul.exception;
  * #L%
  */
 
+import javafx.scene.shape.SVGPath;
+import javafx.scene.shape.SVGPathBuilder;
+import javafx.scene.shape.Shape;
+import org.openbase.jul.visual.javafx.geometry.ShapeProcessor;
 
-/**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- */
-public class CouldNotPerformException extends Exception {
+public interface SVGPathShapeProvider extends ShapeProvider<SVGPath> {
 
-    public CouldNotPerformException(String message) {
-        super(message);
-    }
-
-    public CouldNotPerformException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public CouldNotPerformException(Throwable cause) {
-        super(cause);
-    }
-
-    public CouldNotPerformException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    /**
+     * {@inheritDoc}
+     * @param path {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
+    default Shape getShape(final SVGPath path) {
+        // create a copy and return it as shape.
+        final SVGPath svgPath = new SVGPath();
+        svgPath.setContent(path.getContent());
+        return svgPath;
     }
 }

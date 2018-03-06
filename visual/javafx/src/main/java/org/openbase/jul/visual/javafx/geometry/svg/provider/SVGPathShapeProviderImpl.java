@@ -1,9 +1,8 @@
+package org.openbase.jul.visual.javafx.geometry.svg.provider;
 
-package org.openbase.jul.exception;
-
-/*
+/*-
  * #%L
- * JUL Exception
+ * JUL Visual JavaFX
  * %%
  * Copyright (C) 2015 - 2018 openbase.org
  * %%
@@ -24,24 +23,5 @@ package org.openbase.jul.exception;
  */
 
 
-/**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- */
-public class CouldNotPerformException extends Exception {
-
-    public CouldNotPerformException(String message) {
-        super(message);
-    }
-
-    public CouldNotPerformException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public CouldNotPerformException(Throwable cause) {
-        super(cause);
-    }
-
-    public CouldNotPerformException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
+public class SVGPathShapeProviderImpl implements SVGPathShapeProvider {
 }

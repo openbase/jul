@@ -1,8 +1,8 @@
-package org.openbase.jul.iface;
+package org.openbase.jul.visual.javafx.control;
 
-/*
+/*-
  * #%L
- * JUL Interface
+ * JUL Visual JavaFX
  * %%
  * Copyright (C) 2015 - 2018 openbase.org
  * %%
@@ -22,15 +22,29 @@ package org.openbase.jul.iface;
  * #L%
  */
 
+import javafx.fxml.Initializable;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InitializationException;
+import org.openbase.jul.visual.javafx.iface.DynamicPane;
+import org.openbase.jul.visual.javafx.launch.AbstractFXApplication;
 
-/**
- * Interface is used to process any 
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <I> Input type needed for processing.
- * @param <O> Output type defining the process result.
- */
-public interface Processable<I, O> {
-    O process(final I input) throws CouldNotPerformException, InterruptedException;
-    
+import java.net.URL;
+import java.util.ResourceBundle;
+
+public abstract class AbstractFXController implements Initializable, DynamicPane {
+
+    /**
+     * Initializes the controller class.
+     *
+     * @param url
+     * @param rb
+     */
+    @Override
+    public void initialize(final URL url, final ResourceBundle rb) {
+        try {
+            initContent();
+        } catch(Exception ex) {
+            AbstractFXApplication.exit(10, new InitializationException(this, ex));
+        }
+    }
 }

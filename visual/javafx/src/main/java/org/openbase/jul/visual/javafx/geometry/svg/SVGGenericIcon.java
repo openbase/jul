@@ -1,9 +1,8 @@
+package org.openbase.jul.visual.javafx.geometry.svg;
 
-package org.openbase.jul.exception;
-
-/*
+/*-
  * #%L
- * JUL Exception
+ * JUL Visual JavaFX
  * %%
  * Copyright (C) 2015 - 2018 openbase.org
  * %%
@@ -23,25 +22,15 @@ package org.openbase.jul.exception;
  * #L%
  */
 
+import javafx.scene.shape.Shape;
+import org.openbase.jul.visual.javafx.geometry.svg.provider.GenericShapeProvider;
 
-/**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- */
-public class CouldNotPerformException extends Exception {
-
-    public CouldNotPerformException(String message) {
-        super(message);
+public class SVGGenericIcon extends SVGIcon<Object, GenericShapeProvider> {
+    public SVGGenericIcon(final Object foregroundIcon, final double size, final boolean styled) {
+        super(foregroundIcon, new GenericShapeProvider(), size, styled);
     }
 
-    public CouldNotPerformException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public CouldNotPerformException(Throwable cause) {
-        super(cause);
-    }
-
-    public CouldNotPerformException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    public SVGGenericIcon(Object backgroundIconProvider, Shape foregroundIconProvider, double size) {
+        super(backgroundIconProvider, foregroundIconProvider, new GenericShapeProvider(), size);
     }
 }
