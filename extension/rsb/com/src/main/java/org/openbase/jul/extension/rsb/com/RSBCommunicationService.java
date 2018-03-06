@@ -598,7 +598,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
             // update the current data builder before updating to allow implementations to change data beforehand
             newData = updateDataToPublish(cloneDataBuilder());
-            Event event = new Event(informer.getScope(), newData.getClass(), getData());
+            Event event = new Event(informer.getScope(), newData.getClass(), newData);
             event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
 
             if (isActive()) {
