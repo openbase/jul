@@ -26,7 +26,6 @@ import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
- *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class SimpleMessageProcessor<M extends GeneratedMessage> implements MessageProcessor<GeneratedMessage, M> {
@@ -42,8 +41,11 @@ public class SimpleMessageProcessor<M extends GeneratedMessage> implements Messa
         if (dataClass.isInstance(input)) {
             return (M) input;
         } else {
-            throw new CouldNotPerformException("Input does not match output in SimpleMessageProcessor!");
+            throw new CouldNotPerformException("Input does not match output in SimpleMessageProcessor! Expected[" + dataClass.getSimpleName() + "] but was [" + input.getClass().getSimpleName() + "]");
         }
     }
 
+    public Class<M> getDataClass() {
+        return dataClass;
+    }
 }

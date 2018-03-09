@@ -26,36 +26,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 
 import java.util.List;
 
-/**
- * Filter which decides for a list of objects which to keep and which to filter out.
- *
- * @param <T> the type of object on which the filter works
- * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.de">Tamino Huxohl</a>
- */
-public interface Filter<T> {
-
-    /**
-     * Verifies an object of type t.
-     *
-     * @param type the object which is verified
-     * @return true if it should be kept and else false
-     * @throws CouldNotPerformException if the verification fails
-     */
-    boolean filter(T type) throws CouldNotPerformException;
-
-    /**
-     * Verifies an object of type t.
-     *
-     * @param type the object which is verified
-     * @return true if it should be kept and else false
-     * @throws CouldNotPerformException if the verification fails
-     *
-     * @deprecated refactored to filter so use this instead
-     */
-    @Deprecated
-    default boolean verify(T type) throws CouldNotPerformException {
-        return filter(type);
-    }
+public interface ListFilter<T> extends Filter<T> {
 
     /**
      * Filter object from the list for which the verification fails.
@@ -64,9 +35,8 @@ public interface Filter<T> {
      * @return a filtered list
      * @throws CouldNotPerformException if an error occurs while filtering
      *
-     * @deprecated not part of filter anymore use ListFilter instead
+     * @deprecated ATTENTION: is not really deprecated just for compatibility reasons, will be not deprecated in release 2.0
      */
-    @Deprecated
     default List<T> filter(List<T> list) throws CouldNotPerformException {
         for (int i = 0; i < list.size(); i++) {
             if (!filter(list.get(i))) {

@@ -45,7 +45,7 @@ public class MockUpFilter<T> extends AbstractFilter<T>{
      * @return True for all messages.
      */
     @Override
-    public boolean verify(T type) {
+    public boolean filter(T type) {
         // every value is fine
         return true;
     }

@@ -31,21 +31,23 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.de">Tamino Huxohl</a>
  * @param <T> the type of object on which the filter works
  */
-public abstract class AbstractFilter<T> implements Filter<T> {
+public abstract class AbstractFilter<T> implements ListFilter<T> {
 
     /**
      * Filter object from the list for which the verification fails.
      * 
      * @param list the list which is filtered
      * @return a filtered list
-     * @throws CouldNotPerformException if an error occurs while filtering 
+     * @throws CouldNotPerformException if an error occurs while filtering
+     *
+     * @deprecated ATTENTION: is not really deprecated just for compatibility reasons, will be not deprecated in release 2.0
      */
     @Override
     public List<T> filter(final List<T> list) throws CouldNotPerformException {
         beforeFilter();
 
         for (int i = 0; i < list.size(); i++) {
-            if (!verify(list.get(i))) {
+            if (!filter(list.get(i))) {
                 list.remove(i);
                 i--;
             }
