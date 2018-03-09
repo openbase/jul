@@ -66,7 +66,7 @@ import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
  * @param <MB> the builder for message M
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable {
+public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable, TransactionIdProvider {
 
     public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
     public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
@@ -101,6 +101,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private final MessageObservable dataObserver;
     private Future initialDataSyncFuture;
+
+    long transaction_id = 0;
 
     /**
      * Create a communication service.
@@ -878,5 +880,18 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     @Override
     public void removeDataObserver(Observer<M> observer) {
         dataObserver.removeObserver(observer);
+    }
+
+    @Override
+    public long getTransactionId() {
+        return transaction_id;
+    }
+
+    public long generateTransactionId() {
+        return ++transaction_id;
+    }
+
+    public void updateTransactionId() throws CouldNotPerformException {
+        setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
     }
 }
