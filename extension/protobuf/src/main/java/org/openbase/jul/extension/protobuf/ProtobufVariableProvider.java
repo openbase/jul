@@ -92,9 +92,6 @@ public class ProtobufVariableProvider implements VariableProvider {
                 }
             }
         }
-        if (variableSelection.isEmpty()) {
-            throw new NotAvailableException("No values found because no protobuf fields are matching [" + variableContains + "]!");
-        }
         return variableSelection;
     }
 }
