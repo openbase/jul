@@ -21,17 +21,18 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.VariableProcessor;
 import org.openbase.jul.processing.VariableProvider;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
-import org.openbase.jul.exception.NotSupportedException;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class MetaConfigPool implements VariableProvider {
@@ -50,6 +51,15 @@ public class MetaConfigPool implements VariableProvider {
         variableProviderPool.add(provider);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param variable {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     *
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public String getValue(final String variable) throws NotAvailableException {
         try {
@@ -59,10 +69,22 @@ public class MetaConfigPool implements VariableProvider {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param variableContains {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     *
+     * @throws NotAvailableException {@inheritDoc}
+     */
     @Override
     public Map<String, String> getValues(final String variableContains) throws NotAvailableException {
-        //TODO: Should be implemented.
-        throw new NotAvailableException(new NotSupportedException("Method[getValues]", MetaConfigPool.class));
+        final Map<String, String> valueMap = new HashMap<>();
+        for (final VariableProvider variableProvider : variableProviderPool) {
+            valueMap.putAll(variableProvider.getValues(variableContains));
+        }
+        return valueMap;
     }
 
     @Override

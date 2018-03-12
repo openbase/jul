@@ -71,9 +71,6 @@ public class MetaConfigProcessor {
                 }
             }
         }
-        if (variableSelection.isEmpty()) {
-            throw new NotAvailableException("No values found because no variables are matching [" + variableContains + "]!");
-        }
         return variableSelection;
     }
 
