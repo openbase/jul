@@ -64,4 +64,8 @@ public class GenericMessageProcessor<M extends GeneratedMessage> implements Mess
         });
         return (M) builder.build();
     }
+
+    public Class<M> getDataClass() {
+        return dataClass;
+    }
 }
