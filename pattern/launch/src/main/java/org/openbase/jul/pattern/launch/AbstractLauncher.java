@@ -305,7 +305,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 try {
                     //filter excluded launcher
                     for (String exclusionPatter : JPService.getProperty(JPExcludeLauncher.class).getValue()) {
-                        if (launcherEntry.getKey().getName().toLowerCase().contains(exclusionPatter.toLowerCase())) {
+                        if (launcherEntry.getKey().getName().toLowerCase().contains(exclusionPatter.replace("-", "").replace("_", "").toLowerCase())) {
                             exclude = true;
                         }
                     }
