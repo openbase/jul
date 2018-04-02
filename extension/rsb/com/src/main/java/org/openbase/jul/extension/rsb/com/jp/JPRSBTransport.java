@@ -50,7 +50,8 @@ public class JPRSBTransport extends AbstractJPEnum<JPRSBTransport.TransportType>
         if (JPService.testMode()) {
             return TransportType.INPROCESS;
         }
-        return TransportType.DEFAULT;
+        // Default is set to SPREAD because SOCKET communication is to unstable implemented for RSB.
+        return TransportType.SPREAD;
     }
 
     @Override
