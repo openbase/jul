@@ -92,7 +92,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
                     throw new NotAvailableException("event");
                 }
                 return getParticipant().publish(event);
-            } catch (IllegalStateException ex) {
+            } catch (IllegalStateException | NullPointerException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Fatal error occured!", ex), logger);
             } catch (CouldNotPerformException | RSBException ex) {
                 throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
