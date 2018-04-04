@@ -90,7 +90,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                     try {
                         internalSync();
                     } finally {
-                        registry.notifySynchronization();
+                        localRegistry.notifySynchronization();
                     }
                 }
             };

@@ -26,30 +26,30 @@ import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
-import java.util.List;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <M>
  * @param <MB>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> {
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(ProtobufListDiff.class);
 
-    private IdentifiableMessageMap<KEY, M, MB> newMessages, updatedMessages, removedMessages, originMessages;
+    private IdentifiableMessageMap<KEY, M, MB> newMessages, updatedMessages, removedMessages, originalMessages;
 
-    public ProtobufListDiff(final List<M> originMessages) {
+    public ProtobufListDiff(final List<M> originalMessages) {
         this();
-        this.originMessages.putAll(new IdentifiableMessageMap<>(originMessages));
+        this.originalMessages.putAll(new IdentifiableMessageMap<>(originalMessages));
     }
 
-    public ProtobufListDiff(IdentifiableMessageMap<KEY, M, MB> originMessages) {
+    public ProtobufListDiff(IdentifiableMessageMap<KEY, M, MB> originalMessages) {
         this();
-        this.originMessages.putAll(originMessages);
+        this.originalMessages.putAll(originalMessages);
 
     }
 
@@ -57,35 +57,35 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
         this.newMessages = new IdentifiableMessageMap<>();
         this.updatedMessages = new IdentifiableMessageMap<>();
         this.removedMessages = new IdentifiableMessageMap<>();
-        this.originMessages = new IdentifiableMessageMap<>();
+        this.originalMessages = new IdentifiableMessageMap<>();
     }
 
-    public void diff(final List<M> modifieredList) {
-        diff(new IdentifiableMessageMap<>(modifieredList));
+    public void diff(final List<M> modifiedList) {
+        diff(new IdentifiableMessageMap<>(modifiedList));
     }
 
-    public void diff(final List<M> originalList, final List<M> modifieredList) {
-        diff(new IdentifiableMessageMap<>(originalList), new IdentifiableMessageMap<>(modifieredList));
+    public void diff(final List<M> originalList, final List<M> modifiedList) {
+        diff(new IdentifiableMessageMap<>(originalList), new IdentifiableMessageMap<>(modifiedList));
     }
 
-    public void diff(final IdentifiableMessageMap<KEY, M, MB> modifieredMap) {
-        diff(originMessages, modifieredMap);
+    public void diff(final IdentifiableMessageMap<KEY, M, MB> modifiedMap) {
+        diff(originalMessages, modifiedMap);
     }
 
-    public void diff(final IdentifiableMessageMap<KEY, M, MB> originalMap, final IdentifiableMessageMap<KEY, M, MB> modifieredMap) {
+    public void diff(final IdentifiableMessageMap<KEY, M, MB> originalMap, final IdentifiableMessageMap<KEY, M, MB> modifiedMap) {
         newMessages.clear();
         updatedMessages.clear();
         removedMessages.clear();
 
-        final IdentifiableMessageMap<KEY, M, MB> modifieredListCopy = new IdentifiableMessageMap<>(modifieredMap);
+        final IdentifiableMessageMap<KEY, M, MB> modifiedListCopy = new IdentifiableMessageMap<>(modifiedMap);
 
         originalMap.keySet().stream().forEach((id) -> {
             try {
-                if (modifieredMap.containsKey(id)) {
-                    if (!originalMap.get(id).getMessage().equals(modifieredMap.get(id).getMessage())) {
-                        updatedMessages.put(modifieredMap.get(id));
+                if (modifiedMap.containsKey(id)) {
+                    if (!originalMap.get(id).getMessage().equals(modifiedMap.get(id).getMessage())) {
+                        updatedMessages.put(modifiedMap.get(id));
                     }
-                    modifieredListCopy.remove(id);
+                    modifiedListCopy.remove(id);
                 } else {
                     removedMessages.put(originalMap.get(id));
                 }
@@ -94,10 +94,10 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
             }
         });
         // add all messages which are not included in original list.
-        newMessages.putAll(modifieredListCopy);
+        newMessages.putAll(modifiedListCopy);
 
         // update original messages.
-        originMessages = modifieredMap;
+        originalMessages = modifiedMap;
     }
 
     public IdentifiableMessageMap<KEY, M, MB> getNewMessageMap() {
@@ -116,12 +116,31 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
         return newMessages.size() + updatedMessages.size() + removedMessages.size();
     }
 
+    /**
+     *
+     * @param originMap
+     * @deprecated  use replaceOriginalMap instead
+     */
+    @Deprecated
     public void replaceOriginMap(IdentifiableMessageMap<KEY, M, MB> originMap) {
-        originMessages.clear();
-        originMessages.putAll(originMap);
+        replaceOriginalMap(originMap);
     }
 
+    public void replaceOriginalMap(IdentifiableMessageMap<KEY, M, MB> originalMap) {
+        originalMessages.clear();;
+        originalMessages.putAll(originalMap);
+    }
+
+    /**
+     *
+     * @return
+     * @deprecated use getOriginalMessages instead
+     */
     public IdentifiableMessageMap<KEY, M, MB> getOriginMessages() {
-        return originMessages;
+        return getOriginalMessages();
+    }
+
+    public IdentifiableMessageMap<KEY, M, MB> getOriginalMessages() {
+        return originalMessages;
     }
 }

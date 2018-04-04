@@ -23,17 +23,19 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Identifiable;
-import java.util.HashMap;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <VALUE>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class IdentifiableValueMap<KEY, VALUE extends Identifiable<KEY>> extends HashMap<KEY, VALUE> {
 
@@ -66,4 +68,18 @@ public class IdentifiableValueMap<KEY, VALUE extends Identifiable<KEY>> extends 
         return super.remove(value.getId());
     }
 
+    public static <K, V extends Identifiable<K>> IdentifiableValueMap<K, V> fromCollection(final Collection<V> valueCollection) {
+        final IdentifiableValueMap<K, V> identifiableValueMap = new IdentifiableValueMap<>();
+        final Logger logger = LoggerFactory.getLogger(IdentifiableValueMap.class);
+
+        for (final V value : valueCollection) {
+            try {
+                identifiableValueMap.put(value);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not add value[" + value + "] to map!", ex), logger);
+            }
+        }
+
+        return identifiableValueMap;
+    }
 }
