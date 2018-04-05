@@ -38,5 +38,5 @@ public interface Observer<T> {
      * @param data the updated data
      * @throws java.lang.Exception a possibly thrown exception
      */
-    public void update(final Observable<T> source, final T data) throws Exception;
+    void update(final Observable<T> source, final T data) throws Exception;
 }

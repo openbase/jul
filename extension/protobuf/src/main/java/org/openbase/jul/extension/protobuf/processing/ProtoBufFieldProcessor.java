@@ -21,23 +21,23 @@ package org.openbase.jul.extension.protobuf.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
-import java.lang.reflect.InvocationTargetException;
-import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.provider.LabelProvider;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+
 /**
- *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- *
  */
 public class ProtoBufFieldProcessor {
 
@@ -104,6 +104,21 @@ public class ProtoBufFieldProcessor {
         missingFieldList.stream().forEach((initError) -> {
             initFieldWithDefault(builder, initError);
         });
+    }
+
+    /**
+     * Tests if a message is empty. If a message is empty none of its fields are set.
+     *
+     * @param messageOrBuilder the message or builder which is tested
+     * @return true if none of the fields is set, else false
+     */
+    public static boolean isMessageEmpty(final MessageOrBuilder messageOrBuilder) {
+        for (FieldDescriptor fieldDescriptor : messageOrBuilder.getDescriptorForType().getFields()) {
+            if (messageOrBuilder.hasField(fieldDescriptor)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static Message.Builder initFieldWithDefault(final Message.Builder builder, final String fieldPath) {
@@ -187,7 +202,7 @@ public class ProtoBufFieldProcessor {
         SOME_REQUIRED_FIELDS_SET;
     }
 
-//    public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
+    //    public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
 //        return checkBuilderInitialization(builder) == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
 //    }
 //
