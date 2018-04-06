@@ -21,6 +21,7 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -32,26 +33,27 @@ import org.openbase.jul.extension.protobuf.IdentifiableMessageMap;
 import org.openbase.jul.extension.protobuf.ProtobufListDiff;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Configurable;
-import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Factory;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
+
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  * @param <CONFIG_M>
  * @param <CONFIG_MB>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> implements Activatable, Shutdownable {
-    
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final SynchronizableRegistry<KEY, ENTRY> localRegistry;
     private final Observer remoteRegistryChangeObserver;
@@ -61,14 +63,14 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry;
     protected final RegistryRemote registryRemote;
     private boolean active;
-    
+
     private final SyncObject synchronizationLock = new SyncObject("SynchronizationLock");
-    
+
     @Deprecated
     public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         this(registry, remoteRegistry, null, factory);
     }
-    
+
     public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final RegistryRemote registryRemote, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.localRegistry = registry;
@@ -77,7 +79,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
             this.entryConfigDiff = new ProtobufListDiff<>();
             this.factory = factory;
             this.recurrenceSyncFilter = new RecurrenceEventFilter(15000) {
-                
+
                 @Override
                 public void relay() throws Exception {
 
@@ -85,7 +87,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                     if (!isActive()) {
                         return;
                     }
-                    
+
                     logger.debug("Incomming updates passed filter...");
                     try {
                         internalSync();
@@ -94,17 +96,23 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                     }
                 }
             };
-            
+
             this.remoteRegistryChangeObserver = (Observable source, Object data) -> {
-                logger.debug("Incomming updates...");
-                recurrenceSyncFilter.trigger();
+                logger.debug("Incoming update...");
+                GlobalCachedExecutorService.submit(() -> {
+                    try {
+                        recurrenceSyncFilter.trigger();
+                    } catch (CouldNotPerformException ex) {
+                        logger.error("Could not trigger registry synchronization", ex);
+                    }
+                });
             };
-            
+
         } catch (Exception ex) {
             throw new org.openbase.jul.exception.InstantiationException(this, ex);
         }
     }
-    
+
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
         // for compatibility reasons with the deprecated constructor
@@ -113,7 +121,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         } else {
             remoteRegistry.addObserver(remoteRegistryChangeObserver);
         }
-        
+
         try {
             // trigger internal sync if data is available.
             if (remoteRegistry.isDataAvailable()) {
@@ -124,7 +132,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         }
         active = true;
     }
-    
+
     @Override
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         logger.debug("deactivate " + this);
@@ -137,12 +145,12 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         }
         recurrenceSyncFilter.cancel();
     }
-    
+
     @Override
     public boolean isActive() {
         return active;
     }
-    
+
     @Override
     public void shutdown() {
         try {
@@ -156,15 +164,15 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
             ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
         }
     }
-    
+
     private void internalSync() throws CouldNotPerformException, InterruptedException {
         synchronized (synchronizationLock) {
             logger.debug("Perform registry sync...");
-            
+
             try {
                 entryConfigDiff.diff(remoteRegistry.getMessages());
                 int skippedChanges = 0;
-                
+
                 MultiException.ExceptionStack removeExceptionStack = null;
                 for (CONFIG_M config : entryConfigDiff.getRemovedMessageMap().getMessages()) {
                     try {
@@ -173,7 +181,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                         removeExceptionStack = MultiException.push(this, ex, removeExceptionStack);
                     }
                 }
-                
+
                 MultiException.ExceptionStack updateExceptionStack = null;
                 for (CONFIG_M config : entryConfigDiff.getUpdatedMessageMap().getMessages()) {
                     try {
@@ -187,7 +195,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                         updateExceptionStack = MultiException.push(this, ex, updateExceptionStack);
                     }
                 }
-                
+
                 MultiException.ExceptionStack registerExceptionStack = null;
                 for (CONFIG_M config : entryConfigDiff.getNewMessageMap().getMessages()) {
                     try {
@@ -259,24 +267,24 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
             }
         }
     }
-    
+
     public ENTRY register(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
         return localRegistry.register(factory.newInstance(config));
     }
-    
+
     public ENTRY update(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
         ENTRY entry = localRegistry.get(remoteRegistry.getId(config));
         entry.applyConfigUpdate(config);
-        
+
         // entry is already updated but a local registry update is needed to trigger depending observers of the local registry.
         localRegistry.update(entry);
         return entry;
     }
-    
+
     public ENTRY remove(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
         return localRegistry.remove(getId(config));
     }
-    
+
     public KEY getId(final CONFIG_M entry) throws CouldNotPerformException {
         KEY key = (KEY) entry.getField(entry.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
         if (!localRegistry.contains(key)) {
