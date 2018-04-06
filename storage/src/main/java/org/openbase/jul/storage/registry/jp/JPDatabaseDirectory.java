@@ -21,7 +21,6 @@ package org.openbase.jul.storage.registry.jp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.io.File;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
@@ -29,6 +28,8 @@ import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.JPShareDirectory;
 import org.openbase.jps.preset.JPVarDirectory;
 import org.openbase.jps.tools.FileHandler;
+
+import java.io.File;
 
 /**
  *
@@ -79,10 +80,5 @@ public class JPDatabaseDirectory extends AbstractJPLocalDatabaseDirectory {
             setExistenceHandling(FileHandler.ExistenceHandling.Must);
         }
         super.validate();
-    }
-
-    @Override
-    public String getDescription() {
-        return "Specifies the database directory. Use  " + JPInitializeDB.COMMAND_IDENTIFIERS[0] + " to auto create database directories.";
     }
 }

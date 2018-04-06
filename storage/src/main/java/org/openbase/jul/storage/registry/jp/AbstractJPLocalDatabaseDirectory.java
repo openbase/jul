@@ -25,8 +25,6 @@ package org.openbase.jul.storage.registry.jp;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.exception.JPValidationException;
-import org.openbase.jps.preset.AbstractJPDirectory;
-import org.openbase.jps.preset.JPHelp;
 import org.openbase.jps.tools.FileHandler;
 import org.openbase.jps.tools.FileHandler.AutoMode;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -45,32 +43,14 @@ public abstract class AbstractJPLocalDatabaseDirectory extends AbstractJPDatabas
 
     @Override
     public void validate() throws JPValidationException {
-        boolean reinitDetected = false;
-
-        try {
-            if (JPService.getProperty(JPInitializeDB.class).getValue()) {
-                setAutoCreateMode(AutoMode.On);
-                setExistenceHandling(FileHandler.ExistenceHandling.Must);
-                reinitDetected = true;
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-        }
-
         try {
             if (JPService.getProperty(JPResetDB.class).getValue()) {
                 setAutoCreateMode(AutoMode.On);
                 setExistenceHandling(FileHandler.ExistenceHandling.MustBeNew);
-                reinitDetected = true;
             }
         } catch (JPServiceException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
-
-        if (!getValue().exists() && !reinitDetected) {
-            throw new JPValidationException("Could not detect Database[" + getValue().getAbsolutePath() + "]! You can use the argument " + JPInitializeDB.COMMAND_IDENTIFIERS[0] + " to initialize a new db enviroment. Use " + JPHelp.COMMAND_IDENTIFIERS[0] + " to get more options.");
-        }
-
         super.validate();
     }
 }

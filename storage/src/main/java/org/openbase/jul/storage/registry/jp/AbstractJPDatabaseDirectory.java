@@ -23,14 +23,12 @@ package org.openbase.jul.storage.registry.jp;
  */
 
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.AbstractJPDirectory;
-import org.openbase.jps.preset.JPHelp;
 import org.openbase.jps.tools.FileHandler;
 import org.openbase.jps.tools.FileHandler.AutoMode;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jps.tools.FileHandler.ExistenceHandling;
+import org.openbase.jul.processing.StringProcessor;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -42,5 +40,19 @@ public abstract class AbstractJPDatabaseDirectory extends AbstractJPDirectory {
 
     public AbstractJPDatabaseDirectory(String[] commandIdentifier) {
         super(commandIdentifier, EXISTENCE_HANDLING, AUTO_MODE);
+    }
+
+    @Override
+    public void validate() throws JPValidationException {
+        if (JPService.testMode()) {
+            setAutoCreateMode(AutoMode.On);
+            setExistenceHandling(ExistenceHandling.Must);
+        }
+        super.validate();
+    }
+
+    @Override
+    public String getDescription() {
+        return "Specifies the "+StringProcessor.transformToUpperCase(getClass().getSimpleName().replace("JP", "")).toLowerCase().replace("_", " ")+". This database directory is auto generated if not existent.";
     }
 }

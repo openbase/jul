@@ -26,8 +26,6 @@ import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -36,7 +34,6 @@ import org.openbase.jul.storage.file.FileProvider;
 import org.openbase.jul.storage.registry.AbstractVersionConsistencyHandler;
 import org.openbase.jul.storage.registry.ConsistencyHandler;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
-import org.openbase.jul.storage.registry.jp.JPInitializeDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -309,10 +306,7 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                if (JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    return getLatestDBVersion();
-                }
-                throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
+                return getLatestDBVersion();
             }
 
             // load db version
@@ -328,7 +322,7 @@ public class DBVersionControl {
             } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not parse db version information!", ex);
             }
-        } catch (CouldNotPerformException | JPServiceException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect current db version of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
@@ -346,9 +340,6 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
-                }
                 upgradeCurrentDBVersion();
             }
 
@@ -361,7 +352,7 @@ public class DBVersionControl {
             } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not load Field[" + VERSION_FIELD + "]!", ex);
             }
-        } catch (JPServiceException | CouldNotPerformException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect db version of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
@@ -554,7 +545,7 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
+                throw new CouldNotPerformException("No version information available!");
             }
 
             // load db version
