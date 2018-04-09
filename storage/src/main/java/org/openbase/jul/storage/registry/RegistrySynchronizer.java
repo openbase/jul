@@ -213,7 +213,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                 final int errorCounter = MultiException.size(removeExceptionStack) + MultiException.size(updateExceptionStack) + MultiException.size(registerExceptionStack);
                 final int changeCounter = (entryConfigDiff.getChangeCounter() - skippedChanges);
                 if (changeCounter != 0 || errorCounter != 0) {
-                    logger.info(changeCounter + " registry changes synchronized." + (errorCounter == 0 ? "" : " " + errorCounter + (errorCounter == 1 ? " is" : " are") + " skipped."));
+                    logger.info(changeCounter + " registry change"+(changeCounter == 1 ? "" : "s")+" synchronized." + (errorCounter == 0 ? "" : " " + errorCounter + (errorCounter == 1 ? " is" : " are") + " skipped."));
                 }
 
                 // sync origin list.
@@ -232,7 +232,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                     } else {
                         counter = 0;
                     }
-                    MultiException.checkAndThrow("Could not remove " + counter + " entries!", removeExceptionStack);
+                    MultiException.checkAndThrow("Could not remove " + counter + " entr"+(counter == 1 ? "y": "ies")+"!", removeExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
@@ -242,7 +242,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                     } else {
                         counter = 0;
                     }
-                    MultiException.checkAndThrow("Could not update " + counter + " entries!", updateExceptionStack);
+                    MultiException.checkAndThrow("Could not update " + counter + " entr"+(counter == 1 ? "y": "ies")+"!", updateExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
@@ -252,7 +252,7 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
                     } else {
                         counter = 0;
                     }
-                    MultiException.checkAndThrow("Could not register " + counter + " entries!", registerExceptionStack);
+                    MultiException.checkAndThrow("Could not register " + counter + " entr"+(counter == 1 ? "y": "ies")+"!", registerExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
