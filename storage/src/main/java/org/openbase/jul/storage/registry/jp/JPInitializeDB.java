@@ -31,6 +31,7 @@ import org.openbase.jps.preset.JPInitialize;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
+@Deprecated
 public class JPInitializeDB extends AbstractJPBoolean {
 
     public final static String[] COMMAND_IDENTIFIERS = {"--init-db"};

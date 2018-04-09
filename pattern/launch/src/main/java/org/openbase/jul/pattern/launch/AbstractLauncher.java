@@ -21,23 +21,11 @@ package org.openbase.jul.pattern.launch;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.Callable;   
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import org.openbase.jul.pattern.launch.jp.JPExcludeLauncher;
-import org.openbase.jul.pattern.launch.jp.JPPrintLauncher;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.InitializationException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.VerificationFailedException;
+import org.openbase.jul.exception.*;
+import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.rsb.com.AbstractIdentifiableController;
@@ -48,19 +36,28 @@ import org.openbase.jul.iface.Launchable;
 import org.openbase.jul.iface.VoidInitializable;
 import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.pattern.Launcher;
+import org.openbase.jul.pattern.launch.jp.JPExcludeLauncher;
+import org.openbase.jul.pattern.launch.jp.JPPrintLauncher;
 import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Scope;
-import org.openbase.jul.exception.InstantiationException;
 import rst.domotic.state.ActivationStateType.ActivationState;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <L> the launchable to launch by this launcher.
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<ActivationState, ActivationState.Builder> implements Launcher, VoidInitializable, NameProvider {
 
@@ -80,18 +77,18 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     /**
      * Constructor prepares the launcher and registers already a shutdown hook.
      * The launcher class is used to instantiate a new launcher instance if the instantiateLaunchable() method is not overwritten.
-     *
+     * <p>
      * After instantiation of this class the launcher must be initialized and activated before the RSB interface is provided.
      *
-     * @param launchableClass the class to be launched.
+     * @param launchableClass  the class to be launched.
      * @param applicationClass the class representing this application. Those is used for scope generation if the getName() method is not overwritten.
      * @throws org.openbase.jul.exception.InstantiationException
      */
     public AbstractLauncher(final Class applicationClass, final Class<L> launchableClass) throws InstantiationException {
         super(ActivationState.newBuilder());
 //        try {
-            this.launchableClass = launchableClass;
-            this.applicationClass = applicationClass;
+        this.launchableClass = launchableClass;
+        this.applicationClass = applicationClass;
 //        } catch (CouldNotPerformException ex) {
 //            throw new InstantiationException(this, ex);
 //        }
@@ -117,7 +114,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     /**
      * Method returns the application name.
-     *
+     * <p>
      * By default the application name is the name of the given application class name.
      *
      * @return the name as string.
@@ -149,7 +146,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      * Method verifies a running application.
      *
      * @throws VerificationFailedException is thrown if the application is started with any restrictions.
-     * @throws InterruptedException is thrown if the verification process is externally interrupted.
+     * @throws InterruptedException        is thrown if the verification process is externally interrupted.
      */
     protected void verify() throws VerificationFailedException, InterruptedException {
         // overwrite for verification.
@@ -245,9 +242,12 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     }
 
     public static void main(final String args[], final Class application, final Class<? extends AbstractLauncher>... launchers) {
-
         final Logger logger = LoggerFactory.getLogger(Launcher.class);
         JPService.setApplicationName(application);
+
+        // register interruption of this thread as shutdown hook
+        final Thread mainThread = Thread.currentThread();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> mainThread.interrupt()));
 
         MultiException.ExceptionStack errorExceptionStack = null;
         MultiException.ExceptionStack verificationExceptionStack = null;
@@ -265,7 +265,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             launcher.loadProperties();
         }
 
-        // regsiter launcher jps
+        // register launcher jps
         JPService.registerProperty(JPPrintLauncher.class);
         JPService.registerProperty(JPExcludeLauncher.class);
 
@@ -305,7 +305,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 try {
                     //filter excluded launcher
                     for (String exclusionPatter : JPService.getProperty(JPExcludeLauncher.class).getValue()) {
-                        if (launcherEntry.getKey().getName().toLowerCase().contains(exclusionPatter.toLowerCase())) {
+                        if (launcherEntry.getKey().getName().toLowerCase().contains(exclusionPatter.replace("-", "").replace("_", "").toLowerCase())) {
                             exclude = true;
                         }
                     }
@@ -317,13 +317,9 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                     continue;
                 }
 
-                launchableFutureMap.put(launcherEntry, GlobalCachedExecutorService.submit(new Callable<Void>() {
-
-                    @Override
-                    public Void call() throws Exception {
-                        launcherEntry.getValue().launch();
-                        return null;
-                    }
+                launchableFutureMap.put(launcherEntry, GlobalCachedExecutorService.submit((Callable<Void>) () -> {
+                    launcherEntry.getValue().launch();
+                    return null;
                 }));
             }
 
@@ -348,9 +344,8 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 }
             }
         } catch (InterruptedException ex) {
-            ExceptionPrinter.printHistoryAndExit(JPService.getApplicationName() + " catched shutdown signal during startup phase!", ex, logger);
+            ExceptionPrinter.printHistoryAndExit(new CouldNotPerformException(JPService.getApplicationName() + " caught shutdown signal during startup phase!"), logger);
         }
-
         try {
             MultiException.ExceptionStack exceptionStack = null;
             try {
@@ -359,7 +354,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
             try {
-                MultiException.checkAndThrow("Cause detections during startup phase!", verificationExceptionStack);
+                MultiException.checkAndThrow("Verification process not passed!", verificationExceptionStack);
             } catch (MultiException ex) {
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
