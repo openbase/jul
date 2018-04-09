@@ -86,7 +86,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private final MB dataBuilder;
     private final Class<M> messageClass;
-
+    // todo release: this field should definitely be at least protected, otherwise its external manipulation can cause bad issues.
     public final SyncObject manageableLock = new SyncObject(getClass());
 
     private final ReentrantReadWriteLock dataLock;
