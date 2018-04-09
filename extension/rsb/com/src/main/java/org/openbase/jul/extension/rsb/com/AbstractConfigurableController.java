@@ -43,7 +43,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     public static final String FIELD_SCOPE = "scope";
 
-//    private final SyncObject CONFIG_LOCK = new SyncObject("ConfigLock");
+    private final SyncObject CONFIG_LOCK = new SyncObject("ConfigLock");
 
     private CONFIG config;
 
@@ -62,7 +62,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
-        synchronized (manageableLock) {
+        synchronized (CONFIG_LOCK) {
             try {
                 if (config == null) {
                     throw new NotAvailableException("config");
@@ -86,7 +86,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        synchronized (manageableLock) {
+        synchronized (CONFIG_LOCK) {
             try {
                 this.config = config;
 
@@ -124,13 +124,13 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     }
 
     private Scope detectScope() throws NotAvailableException {
-        synchronized (manageableLock) {
+        synchronized (CONFIG_LOCK) {
             return detectScope(getConfig());
         }
     }
 
     protected final Object getConfigField(String name) throws CouldNotPerformException {
-        synchronized (manageableLock) {
+        synchronized (CONFIG_LOCK) {
             return getConfigField(name, getConfig());
         }
     }
@@ -148,7 +148,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     }
 
     protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
-        synchronized (manageableLock) {
+        synchronized (CONFIG_LOCK) {
             try {
                 Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
                 if (findFieldByName == null) {
@@ -162,7 +162,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
     }
 
     protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
-        synchronized (manageableLock) {
+        synchronized (CONFIG_LOCK) {
             try {
                 Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
                 return findFieldByName != null;
@@ -174,7 +174,7 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
 
     @Override
     public CONFIG getConfig() throws NotAvailableException {
-        synchronized (manageableLock) {
+        synchronized (CONFIG_LOCK) {
             if (config == null) {
                 throw new NotAvailableException("config");
             }
