@@ -677,7 +677,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     connectionFailure = false;
 
                     // make sure to start a new ping to detect the correct connection quality
-                    // this has to be done in a seperate task since ping can cause a change of the
+                    // this has to be done in a separate task since ping can cause a change of the
                     // connection state and this part is inside the connectionMonitor
                     GlobalCachedExecutorService.submit(() -> {
                         synchronized (pingLock) {
@@ -1388,6 +1388,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the connection state does not match and the shutdown of this remote
      *                                                             has been initialized
      */
+    @Override
     public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException {
         synchronized (connectionMonitor) {
             boolean delayDetected = false;
