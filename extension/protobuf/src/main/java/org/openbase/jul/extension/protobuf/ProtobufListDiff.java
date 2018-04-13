@@ -36,28 +36,20 @@ import java.util.List;
  * @param <MB>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> {
-
-    protected final org.slf4j.Logger logger = LoggerFactory.getLogger(ProtobufListDiff.class);
-
-    private IdentifiableMessageMap<KEY, M, MB> newMessages, updatedMessages, removedMessages, originalMessages;
+public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractListDiff<KEY, IdentifiableMessage<KEY, M, MB>, IdentifiableMessageMap<KEY, M, MB>> {
 
     public ProtobufListDiff(final List<M> originalMessages) {
         this();
-        this.originalMessages.putAll(new IdentifiableMessageMap<>(originalMessages));
+        getOriginalMessages().putAll(new IdentifiableMessageMap<>(originalMessages));
     }
 
     public ProtobufListDiff(IdentifiableMessageMap<KEY, M, MB> originalMessages) {
         this();
-        this.originalMessages.putAll(originalMessages);
-
+        getOriginalMessages().putAll(originalMessages);
     }
 
     public ProtobufListDiff() {
-        this.newMessages = new IdentifiableMessageMap<>();
-        this.updatedMessages = new IdentifiableMessageMap<>();
-        this.removedMessages = new IdentifiableMessageMap<>();
-        this.originalMessages = new IdentifiableMessageMap<>();
+        super(new IdentifiableMessageMap<>(), new IdentifiableMessageMap<>(), new IdentifiableMessageMap<>(),  new IdentifiableMessageMap<>());
     }
 
     public void diff(final List<M> modifiedList) {
@@ -68,79 +60,39 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
         diff(new IdentifiableMessageMap<>(originalList), new IdentifiableMessageMap<>(modifiedList));
     }
 
-    public void diff(final IdentifiableMessageMap<KEY, M, MB> modifiedMap) {
-        diff(originalMessages, modifiedMap);
-    }
-
-    public void diff(final IdentifiableMessageMap<KEY, M, MB> originalMap, final IdentifiableMessageMap<KEY, M, MB> modifiedMap) {
-        newMessages.clear();
-        updatedMessages.clear();
-        removedMessages.clear();
-
-        final IdentifiableMessageMap<KEY, M, MB> modifiedListCopy = new IdentifiableMessageMap<>(modifiedMap);
-
-        originalMap.keySet().stream().forEach((id) -> {
-            try {
-                if (modifiedMap.containsKey(id)) {
-                    if (!originalMap.get(id).getMessage().equals(modifiedMap.get(id).getMessage())) {
-                        updatedMessages.put(modifiedMap.get(id));
-                    }
-                    modifiedListCopy.remove(id);
-                } else {
-                    removedMessages.put(originalMap.get(id));
-                }
-            } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Ignoring invalid Message[" + id + "]", ex), logger, LogLevel.ERROR);
-            }
-        });
-        // add all messages which are not included in original list.
-        newMessages.putAll(modifiedListCopy);
-
-        // update original messages.
-        originalMessages = modifiedMap;
-    }
-
     public IdentifiableMessageMap<KEY, M, MB> getNewMessageMap() {
-        return newMessages;
+        return getNewValueMap();
     }
 
     public IdentifiableMessageMap<KEY, M, MB> getUpdatedMessageMap() {
-        return updatedMessages;
+        return getUpdatedValueMap();
     }
 
     public IdentifiableMessageMap<KEY, M, MB> getRemovedMessageMap() {
-        return removedMessages;
-    }
-
-    public int getChangeCounter() {
-        return newMessages.size() + updatedMessages.size() + removedMessages.size();
+        return getRemovedValueMap();
     }
 
     /**
      *
      * @param originMap
-     * @deprecated  use replaceOriginalMap instead
+     * @deprecated  use replaceOriginalMap instead, will be removed in 3.0
      */
     @Deprecated
     public void replaceOriginMap(IdentifiableMessageMap<KEY, M, MB> originMap) {
         replaceOriginalMap(originMap);
     }
 
-    public void replaceOriginalMap(IdentifiableMessageMap<KEY, M, MB> originalMap) {
-        originalMessages.clear();;
-        originalMessages.putAll(originalMap);
-    }
-
     /**
      *
      * @return
-     * @deprecated use getOriginalMessages instead
+     * @deprecated use getOriginalMessageMap instead, will be removed in 3.0
      */
+    @Deprecated
     public IdentifiableMessageMap<KEY, M, MB> getOriginMessages() {
         return getOriginalMessages();
     }
 
     public IdentifiableMessageMap<KEY, M, MB> getOriginalMessages() {
-        return originalMessages;
+        return getOriginalValueMap();
     }
 }

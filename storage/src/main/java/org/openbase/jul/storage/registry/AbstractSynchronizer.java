@@ -27,13 +27,17 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.IdentifiableValueMap;
-import org.openbase.jul.extension.protobuf.ListDiff;
+import org.openbase.jul.extension.protobuf.ListDiffImpl;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,30 +46,70 @@ import java.util.List;
 
 public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>> implements Activatable, Shutdownable {
 
+    public static final long DEFAULT_MAX_FREQUENCY = 15000;
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final IdentifiableValueMap<KEY, ENTRY> currentEntryMap;
-    private final ListDiff<KEY, ENTRY> listDiff;
-    private final Observable observable;
+    private final ListDiffImpl<KEY, ENTRY> listDiff;
+    private final DataProvider observable;
     private boolean isActive = false;
     private final Observer observer;
+    private final RecurrenceEventFilter recurrenceSyncFilter;
 
-    private final SyncObject synchronizationLock = new SyncObject("SynchronizationLock");
+    protected final SyncObject synchronizationLock = new SyncObject("SynchronizationLock");
 
-    public AbstractSynchronizer(final Observable observable) {
-        this.listDiff = new ListDiff<>();
-        this.observable = observable;
-        this.currentEntryMap = new IdentifiableValueMap<>();
-        this.observer = (source, data) -> internalSync();
+    public AbstractSynchronizer(final DataProvider observable) throws org.openbase.jul.exception.InstantiationException {
+        this(observable, DEFAULT_MAX_FREQUENCY);
+    }
+
+    public AbstractSynchronizer(final DataProvider observable, final long maxFrequency) throws org.openbase.jul.exception.InstantiationException {
+        try {
+            this.listDiff = new ListDiffImpl<>();
+            this.observable = observable;
+            this.currentEntryMap = new IdentifiableValueMap<>();
+            this.recurrenceSyncFilter = new RecurrenceEventFilter(maxFrequency) {
+                @Override
+                public void relay() throws Exception {
+                    // skip relay if synchronizer is not active.
+                    if (!isActive()) {
+                        return;
+                    }
+
+                    try {
+                        internalSync();
+                    } finally {
+                        afterInternalSync();
+                    }
+                }
+            };
+            this.observer = (Observable source, Object data) -> {
+                logger.debug("Incoming update...");
+                GlobalCachedExecutorService.submit(() -> {
+                    try {
+                        recurrenceSyncFilter.trigger();
+                    } catch (CouldNotPerformException ex) {
+                        ExceptionPrinter.printHistory("Could not trigger synchronization", ex, logger);
+                    }
+                });
+            };
+        } catch (Exception ex) {
+            throw new org.openbase.jul.exception.InstantiationException(this, ex);
+        }
     }
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
         // add data observer
-        observable.addObserver(observer);
+        observable.addDataObserver(observer);
 
-        if (observable.isValueAvailable()) {
-            internalSync();
+        try {
+            // trigger internal sync if data is available.
+            if (observable.isDataAvailable()) {
+                internalSync();
+            }
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
         }
         isActive = true;
     }
@@ -74,7 +118,8 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         isActive = false;
 
-        observable.removeObserver(observer);
+        observable.removeDataObserver(observer);
+        recurrenceSyncFilter.cancel();
     }
 
     @Override
@@ -192,28 +237,28 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
         }
     }
 
-    private void updateInternal(final ENTRY entry) throws CouldNotPerformException {
+    private void updateInternal(final ENTRY entry) throws CouldNotPerformException, InterruptedException {
         update(entry);
         this.currentEntryMap.put(entry);
     }
 
-    private void registerInternal(final ENTRY entry) throws CouldNotPerformException {
+    private void registerInternal(final ENTRY entry) throws CouldNotPerformException, InterruptedException {
         register(entry);
         this.currentEntryMap.put(entry);
     }
 
-    private void removeInternal(final ENTRY entry) throws CouldNotPerformException {
+    private void removeInternal(final ENTRY entry) throws CouldNotPerformException, InterruptedException {
         remove(entry);
         this.currentEntryMap.removeValue(entry);
     }
 
-    public abstract void update(final ENTRY entry) throws CouldNotPerformException;
+    public abstract void update(final ENTRY entry) throws CouldNotPerformException, InterruptedException;
 
-    public abstract void register(final ENTRY entry) throws CouldNotPerformException;
+    public abstract void register(final ENTRY entry) throws CouldNotPerformException, InterruptedException;
 
-    public abstract void remove(final ENTRY entry) throws CouldNotPerformException;
+    public abstract void remove(final ENTRY entry) throws CouldNotPerformException, InterruptedException;
 
-    public abstract List<ENTRY> getEntries();
+    public abstract List<ENTRY> getEntries() throws CouldNotPerformException;
 
     /**
      * Method should return true if the given entry is valid, otherwise
@@ -224,7 +269,8 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
      * @return if the entry should be synchronized
      * @throws org.openbase.jul.exception.VerificationFailedException if verifying the entry fails
      */
-    public boolean verifyEntry(final ENTRY entry) throws VerificationFailedException {
-        return true;
+    public abstract boolean verifyEntry(final ENTRY entry) throws VerificationFailedException;
+
+    protected void afterInternalSync() {
     }
 }
