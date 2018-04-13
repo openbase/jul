@@ -23,36 +23,34 @@ package org.openbase.jul.storage.registry.jp;
  */
 
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.exception.JPValidationException;
-import org.openbase.jps.preset.AbstractJPDirectory;
 import org.openbase.jps.tools.FileHandler;
 import org.openbase.jps.tools.FileHandler.AutoMode;
-import org.openbase.jps.tools.FileHandler.ExistenceHandling;
-import org.openbase.jul.processing.StringProcessor;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * <p>
+ * This class is the base implementaion of a local database directory. Local means this directory can be reacted from scratch if needed.
  */
-public abstract class AbstractJPDatabaseDirectory extends AbstractJPDirectory {
+public abstract class AbstractJPLocalDatabaseDirectory extends AbstractJPDatabaseDirectory {
 
-    public static final FileHandler.ExistenceHandling EXISTENCE_HANDLING = FileHandler.ExistenceHandling.Must;
-    public static final FileHandler.AutoMode AUTO_MODE = FileHandler.AutoMode.Off;
-
-    public AbstractJPDatabaseDirectory(String[] commandIdentifier) {
-        super(commandIdentifier, EXISTENCE_HANDLING, AUTO_MODE);
+    public AbstractJPLocalDatabaseDirectory(final String[] commandIdentifier) {
+        super(commandIdentifier);
     }
 
     @Override
     public void validate() throws JPValidationException {
-        if (JPService.testMode()) {
-            setAutoCreateMode(AutoMode.On);
-            setExistenceHandling(ExistenceHandling.Must);
+        try {
+            if (JPService.getProperty(JPResetDB.class).getValue()) {
+                setAutoCreateMode(AutoMode.On);
+                setExistenceHandling(FileHandler.ExistenceHandling.MustBeNew);
+            }
+        } catch (JPServiceException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
         }
         super.validate();
-    }
-
-    @Override
-    public String getDescription() {
-        return "Specifies the "+StringProcessor.transformToUpperCase(getClass().getSimpleName().replace("JP", "")).toLowerCase().replace("_", " ")+". This database directory is auto generated if not existent.";
     }
 }

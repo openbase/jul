@@ -26,6 +26,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Lockable;
 import org.openbase.jul.iface.Pingable;
@@ -159,6 +160,22 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @return the current connection state.
      */
     public ConnectionState getConnectionState();
+
+    /**
+     * Method blocks until the remote reaches the desired connection state. In
+     * case the timeout is expired an TimeoutException will be thrown.
+     *
+     * @param connectionState the desired connection state
+     * @param timeout         the timeout in milliseconds until the method throw a
+     *                        TimeoutException in case the connection state was not reached.
+     * @throws InterruptedException                                is thrown in case the thread is externally
+     *                                                             interrupted.
+     * @throws org.openbase.jul.exception.TimeoutException         is thrown in case the
+     *                                                             timeout is expired without reaching the connection state.
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the connection state does not match and the shutdown of this remote
+     *                                                             has been initialized
+     */
+    void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException;
 
     /**
      * This method synchronizes this remote instance with the main controller

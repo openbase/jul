@@ -21,9 +21,6 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
 
 import com.google.protobuf.GeneratedMessage;
 import org.eclipse.jgit.api.Git;
@@ -37,36 +34,35 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileSynchronizer;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistryImpl;
-import org.openbase.jul.storage.registry.Registry;
 import org.openbase.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
-import org.openbase.jul.storage.registry.jp.JPInitializeDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
 /**
+ * @param <KEY>
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> //
- * @param <KEY>
  */
-public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M,MB> {
+public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M, MB> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY,M,MB>> registry;
+    private final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> registry;
     private final Git git;
     private boolean detached;
 
-    public GitRegistryPlugin(final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY,M,MB>> registry) throws org.openbase.jul.exception.InstantiationException {
+    public GitRegistryPlugin(final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> registry) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.detached = false;
             this.registry = registry;
@@ -76,6 +72,14 @@ public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Bui
             shutdown();
             throw new org.openbase.jul.exception.InstantiationException(this, ex);
         }
+    }
+
+    private static Ref getHead(final Repository repository) throws IOException {
+        return repository.getRef(Constants.HEAD);
+    }
+
+    private static boolean isTag(final Ref ref) {
+        return !ref.getTarget().getName().contains("refs/heads");
     }
 
     private void initialSync() throws CouldNotPerformException {
@@ -124,10 +128,6 @@ public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Bui
                     return Git.cloneRepository().setURI(remoteRepositoryMap.get(registry.getName())).setDirectory(databaseDirectory).call();
                 }
 
-                // ===  init new git === //
-                if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    throw ex;
-                }
                 repo = FileRepositoryBuilder.create(databaseDirectory);
             }
             return new Git(repo);
@@ -193,14 +193,6 @@ public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Bui
         } catch (IOException ex) {
             throw new RejectedException("Could not access database!", ex);
         }
-    }
-
-    private static Ref getHead(final Repository repository) throws IOException {
-        return repository.getRef(Constants.HEAD);
-    }
-
-    private static boolean isTag(final Ref ref) {
-        return !ref.getTarget().getName().contains("refs/heads");
     }
 
     @Override

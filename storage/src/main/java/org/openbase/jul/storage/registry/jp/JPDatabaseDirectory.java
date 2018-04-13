@@ -21,7 +21,6 @@ package org.openbase.jul.storage.registry.jp;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.io.File;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
@@ -30,13 +29,17 @@ import org.openbase.jps.preset.JPShareDirectory;
 import org.openbase.jps.preset.JPVarDirectory;
 import org.openbase.jps.tools.FileHandler;
 
+import java.io.File;
+
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @deprecated This java property has been moved to the bco registry module.
  */
-public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
+@Deprecated
+public class JPDatabaseDirectory extends AbstractJPLocalDatabaseDirectory {
 
-    public static final String DEFAULT_DB_PATH = "bco/registry/db";
+    public static final String DEFAULT_DB_PATH = "registry/db";
 
     public static final String[] COMMAND_IDENTIFIERS = {"--db", "--database"};
 
@@ -51,7 +54,7 @@ public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
                 return JPService.getProperty(JPVarDirectory.class).getValue();
             }
         } catch (JPNotAvailableException ex) {
-            JPService.printError("Could not detect global var directory!", ex);
+            // continue with resolution via share folder...
         }
 
         try {
@@ -59,7 +62,7 @@ public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
                 return JPService.getProperty(JPShareDirectory.class).getValue();
             }
         } catch (JPNotAvailableException ex) {
-            JPService.printError("Could not detect global share directory!", ex);
+            // share could not be detected but exception is thrown anyway in next line so no report needed.
         }
 
         throw new JPServiceException("Could not detect db location!");
@@ -77,10 +80,5 @@ public class JPDatabaseDirectory extends AbstractJPDatabaseDirectory {
             setExistenceHandling(FileHandler.ExistenceHandling.Must);
         }
         super.validate();
-    }
-
-    @Override
-    public String getDescription() {
-        return "Specifies the device database directory. Use  " + JPInitializeDB.COMMAND_IDENTIFIERS[0] + " to auto create database directories.";
     }
 }

@@ -21,51 +21,32 @@ package org.openbase.jul.storage.registry.version;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
+
+import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.StringReader;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Writable;
 import org.openbase.jul.storage.file.FileProvider;
 import org.openbase.jul.storage.registry.AbstractVersionConsistencyHandler;
 import org.openbase.jul.storage.registry.ConsistencyHandler;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
-import org.openbase.jul.storage.registry.jp.JPDatabaseDirectory;
-import org.openbase.jul.storage.registry.jp.JPInitializeDB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.StringReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+import java.util.Map.Entry;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class DBVersionControl {
@@ -80,8 +61,6 @@ public class DBVersionControl {
     protected final Logger logger = LoggerFactory.getLogger(DBVersionControl.class);
     private final JsonParser parser;
     private final Gson gson;
-    private int latestDBVersion;
-    private int versionOnStart;
     private final Package converterPackage;
     private final List<DBVersionConverter> converterPipeline;
     private final FileProvider entryFileProvider;
@@ -89,6 +68,8 @@ public class DBVersionControl {
     private final File databaseDirectory;
     private final Writable databaseWriteAccess;
     private final List<File> globalDatabaseDirectories;
+    private int latestDBVersion;
+    private int versionOnStart;
 
     public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory, final Writable databaseWriteAccess) throws InstantiationException {
         try {
@@ -100,7 +81,7 @@ public class DBVersionControl {
             this.entryFileProvider = entryFileProvider;
             this.converterPipeline = loadDBConverterPipelineAndDetectLatestVersion(converterPackage);
             this.databaseDirectory = databaseDirectory;
-            this.globalDatabaseDirectories = detectGlobalDatabaseDirectories();
+            this.globalDatabaseDirectories = detectNeighbourDatabaseDirectories(databaseDirectory);
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -260,9 +241,10 @@ public class DBVersionControl {
     }
 
     /**
-     *
      * @param jsonEntry
+     *
      * @return
+     *
      * @throws CouldNotPerformException
      */
     public String formatEntryToHumanReadableString(final JsonObject jsonEntry) throws CouldNotPerformException {
@@ -312,7 +294,9 @@ public class DBVersionControl {
      * Method detects the current db version of the given database.
      *
      * @param databaseDirectory
+     *
      * @return the current db version as integer.
+     *
      * @throws CouldNotPerformException
      */
     public int detectCurrentDBVersion(final File databaseDirectory) throws CouldNotPerformException {
@@ -322,10 +306,7 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                if (JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    return getLatestDBVersion();
-                }
-                throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
+                return getLatestDBVersion();
             }
 
             // load db version
@@ -341,7 +322,7 @@ public class DBVersionControl {
             } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not parse db version information!", ex);
             }
-        } catch (CouldNotPerformException | JPServiceException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect current db version of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
@@ -350,6 +331,7 @@ public class DBVersionControl {
      * Method detects the current db version and returns the version number as integer.
      *
      * @return
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public int detectAndUpgradeCurrentDBVersion() throws CouldNotPerformException {
@@ -358,9 +340,6 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                if (!JPService.getProperty(JPInitializeDB.class).getValue()) {
-                    throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
-                }
                 upgradeCurrentDBVersion();
             }
 
@@ -373,7 +352,7 @@ public class DBVersionControl {
             } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not load Field[" + VERSION_FIELD + "]!", ex);
             }
-        } catch (JPServiceException | CouldNotPerformException ex) {
+        } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not detect db version of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
@@ -420,7 +399,9 @@ public class DBVersionControl {
      *
      * @param currentVersion
      * @param targetVersion
+     *
      * @return
+     *
      * @throws CouldNotPerformException
      */
     public List<DBVersionConverter> getDBConverterPipeline(final int currentVersion, final int targetVersion) throws CouldNotPerformException {
@@ -458,7 +439,9 @@ public class DBVersionControl {
      * Loads a consistency handler list which is used for consistency reconstruction after a db upgrade.
      *
      * @param registry
+     *
      * @return the consistency handler list.
+     *
      * @throws CouldNotPerformException
      */
     public List<ConsistencyHandler> loadDBVersionConsistencyHandlers(final FileSynchronizedRegistry registry) throws CouldNotPerformException {
@@ -500,6 +483,7 @@ public class DBVersionControl {
      * Method upgrades the applied db version consistency handler list of the version file.
      *
      * @param versionConsistencyHandler
+     *
      * @throws CouldNotPerformException
      */
     public void registerConsistencyHandlerExecution(final ConsistencyHandler versionConsistencyHandler) throws CouldNotPerformException {
@@ -552,6 +536,7 @@ public class DBVersionControl {
      * Method detects the already executed version consistency handler which are registered within the db version file.
      *
      * @return
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public Set<String> detectExecutedVersionConsistencyHandler() throws CouldNotPerformException {
@@ -560,7 +545,7 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                throw new CouldNotPerformException("No version information available! Add \"" + JPInitializeDB.COMMAND_IDENTIFIERS[0] + "\" as registry argument to generate the version information.");
+                throw new CouldNotPerformException("No version information available!");
             }
 
             // load db version
@@ -582,22 +567,27 @@ public class DBVersionControl {
         }
     }
 
-    private List<File> detectGlobalDatabaseDirectories() throws CouldNotPerformException {
+    /**
+     * Method detects all database directories which are on the same file level than the given database.
+     *
+     * @param databaseDirectory the database directory used for extracting the base directory
+     *
+     * @return a list which all top level database directories excluding the currently handled database itself.
+     *
+     * @throws CouldNotPerformException is thrown if the detection fails.
+     */
+    private List<File> detectNeighbourDatabaseDirectories(final File databaseDirectory) throws CouldNotPerformException {
         ArrayList<File> globalDatabaseDirectoryList = new ArrayList<>();
-        try {
-            FileFilter dbFilter = new DirectoryFileFilter() {
+        FileFilter dbFilter = new DirectoryFileFilter() {
 
-                @Override
-                public boolean accept(File file) {
-                    return super.accept(file) && !file.equals(databaseDirectory);
-                }
-            };
+            @Override
+            public boolean accept(File file) {
+                return super.accept(file) && !file.equals(databaseDirectory);
+            }
+        };
 
-            globalDatabaseDirectoryList.addAll(Arrays.asList(JPService.getProperty(JPDatabaseDirectory.class).getValue().listFiles(dbFilter)));
-            return globalDatabaseDirectoryList;
-        } catch (JPServiceException ex) {
-            throw new CouldNotPerformException("Could not detect neighbout databases!", ex);
-        }
+        globalDatabaseDirectoryList.addAll(Arrays.asList(databaseDirectory.getParentFile().listFiles(dbFilter)));
+        return globalDatabaseDirectoryList;
     }
 
     public Package getConverterPackage() {
