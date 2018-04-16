@@ -800,7 +800,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             if (!consistencyHandlerQueue.isEmpty()) {
                                 note += " after " + consistencyHandlerQueue.size() + " applied modifications";
                             }
-                            consistencyFeedbackEventFilter.trigger(((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100)) + "% of max consistency checks passed of " + this + note + ".");
+
+                            final int percentage = ((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100));
+                            // only print progress information if more than 10% of the max tests are already performed to reduce logger load during unit tests.
+                            if(percentage > 10) {
+                                consistencyFeedbackEventFilter.trigger(percentage + "% of max consistency checks passed of " + this + note + ".");
+                            }
                         }
                         consistencyHandlerQueue.clear();
 
