@@ -52,21 +52,21 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
 
     private final IdentifiableValueMap<KEY, ENTRY> currentEntryMap;
     private final ListDiffImpl<KEY, ENTRY> listDiff;
-    private final DataProvider observable;
+    private final DataProvider dataProvider;
     private boolean isActive = false;
     private final Observer observer;
     private final RecurrenceEventFilter recurrenceSyncFilter;
 
     protected final SyncObject synchronizationLock = new SyncObject("SynchronizationLock");
 
-    public AbstractSynchronizer(final DataProvider observable) throws org.openbase.jul.exception.InstantiationException {
-        this(observable, DEFAULT_MAX_FREQUENCY);
+    public AbstractSynchronizer(final DataProvider dataProvider) throws org.openbase.jul.exception.InstantiationException {
+        this(dataProvider, DEFAULT_MAX_FREQUENCY);
     }
 
-    public AbstractSynchronizer(final DataProvider observable, final long maxFrequency) throws org.openbase.jul.exception.InstantiationException {
+    public AbstractSynchronizer(final DataProvider dataProvider, final long maxFrequency) throws org.openbase.jul.exception.InstantiationException {
         try {
             this.listDiff = new ListDiffImpl<>();
-            this.observable = observable;
+            this.dataProvider = dataProvider;
             this.currentEntryMap = new IdentifiableValueMap<>();
             this.recurrenceSyncFilter = new RecurrenceEventFilter(maxFrequency) {
                 @Override
@@ -101,11 +101,11 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
         // add data observer
-        observable.addDataObserver(observer);
+        dataProvider.addDataObserver(observer);
 
         try {
             // trigger internal sync if data is available.
-            if (observable.isDataAvailable()) {
+            if (dataProvider.isDataAvailable()) {
                 internalSync();
             }
         } catch (CouldNotPerformException ex) {
@@ -118,7 +118,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         isActive = false;
 
-        observable.removeDataObserver(observer);
+        dataProvider.removeDataObserver(observer);
         recurrenceSyncFilter.cancel();
     }
 
@@ -272,5 +272,9 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     public abstract boolean verifyEntry(final ENTRY entry) throws VerificationFailedException;
 
     protected void afterInternalSync() {
+    }
+
+    protected DataProvider getDataProvider() {
+        return dataProvider;
     }
 }
