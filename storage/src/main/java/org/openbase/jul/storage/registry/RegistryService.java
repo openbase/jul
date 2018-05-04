@@ -37,7 +37,7 @@ public interface RegistryService {
      * @throws java.lang.InterruptedException
      */
     @RPCMethod
-    public Boolean isReady() throws InterruptedException;
+    Boolean isReady() throws InterruptedException;
 
     /**
      * Method blocks until the registry is not handling any tasks and is currently consistent.
@@ -49,7 +49,7 @@ public interface RegistryService {
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the wait could not be performed.
      */
     @RPCMethod
-    public void waitUntilReady() throws InterruptedException, CouldNotPerformException;
+    void waitUntilReady() throws InterruptedException, CouldNotPerformException;
 
     /**
      * Method blocks until the registry is not handling any tasks and is currently consistent.
@@ -59,5 +59,13 @@ public interface RegistryService {
      *
      * @return a future which is finished if the registry is ready.
      */
-    public Future<Void> waitUntilReadyFuture();
+    Future<Void> waitUntilReadyFuture();
+
+    /**
+     * Test if all internal registries managed by this service are consistent.
+     *
+     * @throws if the consistency cannot be tested
+     * @return true if all managed registries are consistent and else false
+     */
+    Boolean isConsistent() throws CouldNotPerformException;
 }
