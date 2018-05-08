@@ -21,9 +21,10 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.annotations.RPCMethod;
+
+import java.util.concurrent.Future;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -33,11 +34,12 @@ public interface RegistryService {
     /**
      * This method checks if the registry is not handling any tasks and is currently consistent.
      *
+     * @throws InterruptedException exception will be removed within next release.
      * @return Returns true if this registry is consistent and not busy.
-     * @throws java.lang.InterruptedException
      */
     @RPCMethod
-    public Boolean isReady() throws InterruptedException;
+    Boolean isReady() throws InterruptedException;
+    // todo release: "is" method should not block and return an InterruptedException
 
     /**
      * Method blocks until the registry is not handling any tasks and is currently consistent.
@@ -49,7 +51,7 @@ public interface RegistryService {
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the wait could not be performed.
      */
     @RPCMethod
-    public void waitUntilReady() throws InterruptedException, CouldNotPerformException;
+    void waitUntilReady() throws InterruptedException, CouldNotPerformException;
 
     /**
      * Method blocks until the registry is not handling any tasks and is currently consistent.
@@ -59,5 +61,13 @@ public interface RegistryService {
      *
      * @return a future which is finished if the registry is ready.
      */
-    public Future<Void> waitUntilReadyFuture();
+    Future<Void> waitUntilReadyFuture();
+
+    /**
+     * Test if all internal registries managed by this service are consistent.
+     *
+     * @throws CouldNotPerformException if the consistency cannot be tested
+     * @return true if all managed registries are consistent and else false
+     */
+    Boolean isConsistent() throws CouldNotPerformException;
 }
