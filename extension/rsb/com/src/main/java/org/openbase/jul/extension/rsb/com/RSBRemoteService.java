@@ -62,7 +62,7 @@ import static org.openbase.jul.pattern.Remote.ConnectionState.*;
  * @param <M>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M> {
+public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M>, TransactionIdProvider {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -1730,5 +1730,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     private static long generateTimeout(long currentTimeout) {
         return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (JITTER_RANDOM.nextDouble() * 1000)));
+    }
+
+    @Override
+    public long getTransactionId() throws NotAvailableException {
+        try {
+            return (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME);
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("TransactionId not available");
+        }
     }
 }
