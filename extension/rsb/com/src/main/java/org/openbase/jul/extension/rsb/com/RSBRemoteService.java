@@ -1120,7 +1120,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger);
+                    syncTask = sync();
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync failed of " + getScopeStringRep() + ". Try to recover...", ex), logger, LogLevel.WARN);
                 }
             } catch (Exception ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
@@ -1171,7 +1172,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 return dataUpdate;
             } else {
                 // received correct data
-                dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
+                try {
+                    dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
+                } catch (CouldNotPerformException ex) {
+                    throw new CouldNotPerformException("Could not process message", ex);
+                }
 
                 // skip events which were send later than the last received update
                 long userTime = RPCHelper.USER_TIME_VALUE_INVALID;
