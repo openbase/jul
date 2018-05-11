@@ -34,8 +34,6 @@ public interface ListFilter<T> extends Filter<T> {
      * @param list the list which is filtered
      * @return a filtered list
      * @throws CouldNotPerformException if an error occurs while filtering
-     *
-     * @deprecated ATTENTION: is not really deprecated just for compatibility reasons, will be not deprecated in release 2.0
      */
     default List<T> filter(List<T> list) throws CouldNotPerformException {
         for (int i = 0; i < list.size(); i++) {

@@ -24,8 +24,6 @@ package org.openbase.jul.pattern;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 
-import java.util.List;
-
 /**
  * Filter which decides for a list of objects which to keep and which to filter out.
  *
@@ -42,38 +40,4 @@ public interface Filter<T> {
      * @throws CouldNotPerformException if the verification fails
      */
     boolean filter(T type) throws CouldNotPerformException;
-
-    /**
-     * Verifies an object of type t.
-     *
-     * @param type the object which is verified
-     * @return true if it should be kept and else false
-     * @throws CouldNotPerformException if the verification fails
-     *
-     * @deprecated refactored to filter so use this instead
-     */
-    @Deprecated
-    default boolean verify(T type) throws CouldNotPerformException {
-        return filter(type);
-    }
-
-    /**
-     * Filter object from the list for which the verification fails.
-     *
-     * @param list the list which is filtered
-     * @return a filtered list
-     * @throws CouldNotPerformException if an error occurs while filtering
-     *
-     * @deprecated not part of filter anymore use ListFilter instead
-     */
-    @Deprecated
-    default List<T> filter(List<T> list) throws CouldNotPerformException {
-        for (int i = 0; i < list.size(); i++) {
-            if (!filter(list.get(i))) {
-                list.remove(i);
-                i--;
-            }
-        }
-        return list;
-    }
 }

@@ -22,6 +22,7 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.iface.annotations.RPCMethod;
 
 import java.util.concurrent.Future;
@@ -70,4 +71,10 @@ public interface RegistryService {
      * @return true if all managed registries are consistent and else false
      */
     Boolean isConsistent() throws CouldNotPerformException;
+
+    /**
+     * Method validates if the registry data object.
+     * @throws InvalidStateException is thrown if the data object is not available or invalid.
+     */
+    void validateData() throws InvalidStateException;
 }
