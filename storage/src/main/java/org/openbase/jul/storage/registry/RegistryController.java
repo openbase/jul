@@ -21,6 +21,7 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.iface.DefaultInitializable;
 import org.openbase.jul.pattern.Controller;
 
@@ -31,4 +32,8 @@ import org.openbase.jul.pattern.Controller;
  */
 public interface RegistryController<M> extends Controller<M>, DefaultInitializable, RegistryService {
 
+    @Override
+    default void validateData() throws InvalidStateException {
+        // data is always valid for controller.
+    }
 }
