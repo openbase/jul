@@ -203,8 +203,8 @@
         
         <dependency.jps.version>[3.4,3.5-alpha)</dependency.jps.version>
 
-        <dependency.rsx.version>[0.17,0.18-alpha)</dependency.rsx.version>
-        <!--<dependency.rsx.version>0.18-SNAPSHOT</dependency.rsx.version>-->
+        <!--dependency.rsx.version>[0.17,0.18-alpha)</dependency.rsx.version-->
+        <dependency.rsx.version>0.18-SNAPSHOT</dependency.rsx.version>
         <dependency.rst.stable.artifact>rst</dependency.rst.stable.artifact>
         <dependency.rst.stable.version>${dependency.rsx.version}</dependency.rst.stable.version>
         <dependency.rst.sandbox.artifact>rst-sandbox</dependency.rst.sandbox.artifact>
