@@ -510,7 +510,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 sandbox.replaceInternalMap(map);
                 entryMap.clear();
                 entryMap.putAll(map);
-                if (finishTransaction) {
+                if (finishTransaction && !(this instanceof RemoteRegistry)) {
+                    logger.warn("Replace internal map of ["+this+"]");
                     finishTransaction();
                 }
             } catch (CouldNotPerformException ex) {
@@ -520,6 +521,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             }
         } finally {
             unlock();
+        }
+        if(this instanceof RemoteRegistry) {
+            dependingRegistryObservable.notifyObservers(entryMap);
         }
         notifyObservers();
     }
@@ -1094,6 +1098,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         boolean successfullyLocked;
         try {
             while (true) {
+//                if (!this.isSandbox()) {
+//                    logger.info("Lock registry [" + this + "]");
+//                }
                 /* Acquire the write lock first before recursively locking because the set used for it
                  * is the same for different threads. Else while one thread is currently recursively locking
                  * another can call the same method which will return true because the set already contains
@@ -1127,7 +1134,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                 // sleep for a random time before trying to lock again
                 try {
-                    Thread.sleep(20 + randomJitter.nextInt(30));
+                    long sleepTime = 20 + randomJitter.nextInt(50);
+//                    if (!this.isSandbox()) {
+//                        logger.info("Could not lock this so sleep for [" + sleepTime + "][" + this + "]");
+//                    }
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     if (!shutdownInitiated) {
@@ -1208,8 +1219,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     @Override
     public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException {
         if (lockedRegistries.contains(this)) {
-            /* If this registry is in the set the lock is already acqiuired, so return true.
-             * This prevents infinite recursions for dependecy loops but is also the reason why
+            /* If this registry is in the set the lock is already acquired, so return true.
+             * This prevents infinite recursions for dependency loops but is also the reason why
              * this method should be called while already holding the write lock for the current registry.
              * Because if two threads use the same set, which is the case for the lock method, than one
              * can be in the process and has already acquired the lock for this registry but still needs
@@ -1236,6 +1247,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 // all registries this one depends on could be locked recursively as well, so return true
                 return true;
             } else {
+//                if (!isSandbox()) {
+//                    logger.info("Failed to lock " + this);
+//                }
                 // acquiring the write lock for this registry failed, so return false
                 return false;
             }
@@ -1282,7 +1296,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             //TODO: update on sandbox level should be handled first
             try {
                 if (dependency.isConsistent()) {
-                    boolean notificationNeeded = false;
+                    boolean notificationNeeded;
+                    logger.info(AbstractRegistry.this + " check trigger by dependency [" + dependency + "]");
                     lock();
                     try {
                         notificationNeeded = checkConsistency() > 0 || notificationSkipped;
