@@ -56,7 +56,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @param <MAP>      RegistryEntryMap
  * @param <REGISTRY> Registry
  * @param <PLUGIN>   RegistryPluginType
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
@@ -165,9 +164,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
-     *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -230,9 +227,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
-     *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -271,9 +266,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
-     *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -285,9 +278,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
-     *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -334,9 +325,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
-     *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -384,7 +373,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -442,9 +430,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
-     *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -459,9 +445,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
-     *
      * @return {@inheritDoc}
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -497,7 +481,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Use with care!
      *
      * @param map
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
@@ -515,7 +498,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @param map
      * @param finishTransaction is true the registry transaction will be verified.
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
@@ -578,7 +560,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Consistency checks are skipped as well if at least one depending registry is not consistent.
      *
      * @param registry the dependency of these registry.
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void registerDependency(final Registry registry) throws CouldNotPerformException {
@@ -601,7 +582,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * This method allows the removal of a registered registry dependency.
      *
      * @param registry the dependency to remove.
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void removeDependency(final Registry registry) throws CouldNotPerformException {
@@ -721,6 +701,25 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
+    boolean initalCheckReady = false;
+
+    public void initialCheck() throws CouldNotPerformException, InterruptedException {
+        lock();
+        try {
+            for (final Registry dependency : dependingRegistryMap.keySet()) {
+                if (dependency instanceof RemoteRegistry) {
+                    logger.info(this + " wait for dependency [" + dependency + "]");
+                    ((RemoteRegistry) dependency).waitUntilReady();
+                }
+            }
+            initalCheckReady = true;
+            checkConsistency();
+            logger.info(this + " finished initial check");
+        } finally {
+            unlock();
+        }
+    }
+
     @SuppressWarnings("UseSpecificCatch")
     public final int checkConsistency() throws CouldNotPerformException {
         int modificationCounter = 0;
@@ -762,7 +761,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     int iterationErrorCounter;
                     String note;
 
-                    mainLoop : while (true) {
+                    mainLoop:
+                    while (true) {
 
                         // do not burn cpu
                         Thread.yield();
@@ -803,7 +803,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
                             final int percentage = ((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100));
                             // only print progress information if more than 10% of the max tests are already performed to reduce logger load during unit tests.
-                            if(percentage > 10) {
+                            if (percentage > 10) {
                                 consistencyFeedbackEventFilter.trigger(percentage + "% of max consistency checks passed of " + this + note + ".");
                             }
                         }
@@ -861,13 +861,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                 for (int i = 0; i < exceptionStack.size(); i++) {
 
                                     // Check if the error source is not the same.
-                                    if(!exceptionStack.get(i).getSource().equals(previousExceptionStack.get(i).getSource())) {
+                                    if (!exceptionStack.get(i).getSource().equals(previousExceptionStack.get(i).getSource())) {
                                         // continue with consistency check
                                         continue mainLoop;
                                     }
 
                                     // check if the initial cause of the error is not the same.
-                                    if(!ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException()).equals(ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException()))) {
+                                    if (!ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException()).equals(ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException()))) {
                                         // continue with consistency check
                                         continue mainLoop;
                                     }
@@ -987,7 +987,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * registry.
      *
      * @param plugin the plugin to register.
-     *
      * @throws CouldNotPerformException is thrown in case the plugin could not
      *                                  be registered.
      * @throws InterruptedException     is thrown if the thread is externally
@@ -1080,7 +1079,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Info messages of a sandbox instance are redirected to the debug channel.
      *
      * @param message the info message to print as string.
-     *
      * @deprecated please use method {@code log(String message)}.
      */
     @Deprecated
@@ -1108,13 +1106,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         try {
             while (true) {
                 /* Acquire the write lock first before recursively locking because the set used for it
-                 * is the same for different theads. Else while one thread is currently recursively locking
+                 * is the same for different threads. Else while one thread is currently recursively locking
                  * another can call the same method which will return true because the set already contains
                  * this registry. */
                 if (registryLock.writeLock().tryLock()) {
                     try {
                         /* The method recursiveTryLockRegistry is disabled for remote registries so that they cannot be locked
-                         * extenerally. So, call the internal method which does the process but is only visible in this
+                         * externally. So, call the internal method which does the process but is only visible in this
                          * package. */
                         if (this instanceof RemoteRegistry) {
                             successfullyLocked = ((RemoteRegistry) this).internalRecursiveTryLockRegistry(lockedRegistries);
@@ -1126,7 +1124,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             /*
                              * If all registries could be locked return and increase the lock counter. The counter is necessary
                              * because the recursive method will only lock every registry once to prevent infinite recursion for
-                             * dependecy loops. */
+                             * dependency loops. */
                             lockCounter++;
                             return;
                         } else {
@@ -1205,7 +1203,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws RejectedException {@inheritDoc}
      */
     @Override
@@ -1217,7 +1214,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws RejectedException {@inheritDoc}
      */
     @Override
@@ -1290,11 +1286,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          *
          * @param source {@inheritDoc}
          * @param data   {@inheritDoc}
-         *
          * @throws Exception {@inheritDoc}
          */
         @Override
         public void update(Observable source, Object data) throws Exception {
+            if (!initalCheckReady) {
+                return;
+            }
             //TODO: update on sandbox level should be handled first
             try {
                 if (dependency.isConsistent()) {
@@ -1314,7 +1312,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     }
                 }
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory("Registry inconsistend after change of depending " + source + " change.", ex, logger);
+                ExceptionPrinter.printHistory("Registry inconsistent after change of depending " + source + " change.", ex, logger);
             } finally {
                 syncSandbox();
             }
