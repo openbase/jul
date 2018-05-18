@@ -701,22 +701,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
     }
 
-    boolean initalCheckReady = false;
-
-    public void initialCheck() throws CouldNotPerformException, InterruptedException {
-        lock();
-        try {
-            for (final Registry dependency : dependingRegistryMap.keySet()) {
-                if (dependency instanceof RemoteRegistry) {
-                    logger.info(this + " wait for dependency [" + dependency + "]");
-                    ((RemoteRegistry) dependency).waitUntilReady();
-                }
+    public void waitForRemoteDependencies() throws CouldNotPerformException, InterruptedException {
+        for (final Registry dependency : dependingRegistryMap.keySet()) {
+            if (dependency instanceof RemoteRegistry) {
+                ((RemoteRegistry) dependency).waitUntilReady();
             }
-            initalCheckReady = true;
-            checkConsistency();
-            logger.info(this + " finished initial check");
-        } finally {
-            unlock();
         }
     }
 
@@ -1290,9 +1279,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          */
         @Override
         public void update(Observable source, Object data) throws Exception {
-            if (!initalCheckReady) {
-                return;
-            }
             //TODO: update on sandbox level should be handled first
             try {
                 if (dependency.isConsistent()) {
