@@ -1297,7 +1297,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             try {
                 if (dependency.isConsistent()) {
                     boolean notificationNeeded;
-                    logger.info(AbstractRegistry.this + " check trigger by dependency [" + dependency + "]");
                     lock();
                     try {
                         notificationNeeded = checkConsistency() > 0 || notificationSkipped;

@@ -10,12 +10,12 @@ package org.openbase.jul.pattern.launch;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -343,7 +343,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                         if (!launcherEntry.getKey().getValue().isVerified()) {
                             pushToVerificationExceptionStack(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getKey().getSimpleName() + "!", launcherEntry.getKey().getValue().getVerificationFailedCause()));
                         }
-
+                        break;
                     } catch (InterruptedException ex) {
                         launcherEntry.getValue().cancel(true);
                         return null;
@@ -401,24 +401,24 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         printSummary(application, logger, JPService.getApplicationName() + " was started with restrictions!");
     }
 
-    private static final SyncObject VER_SYNC = new SyncObject("VerSync");
-    private static final SyncObject ERROR_SYNC = new SyncObject("ERRSync");
-    private static final SyncObject KILLING_SYNC = new SyncObject("KillSync");
+    private static final SyncObject VERIFICATION_STACK_LOCK = new SyncObject("VerificationStackLock");
+    private static final SyncObject ERROR_STACK_LOCK = new SyncObject("ErrorStackLock");
+    private static final SyncObject WAITING_STOP_LOCK = new SyncObject("WaitingStopLock");
 
     private static void pushToVerificationExceptionStack(Object source, Exception ex) {
-        synchronized (VER_SYNC) {
+        synchronized (VERIFICATION_STACK_LOCK) {
             verificationExceptionStack = MultiException.push(source, ex, verificationExceptionStack);
         }
     }
 
     private static void pushToErrorExceptionStack(Object source, Exception ex) {
-        synchronized (ERROR_SYNC) {
+        synchronized (ERROR_STACK_LOCK) {
             errorExceptionStack = MultiException.push(source, ex, errorExceptionStack);
         }
     }
 
     private static void stopWaiting() {
-        synchronized (KILLING_SYNC) {
+        synchronized (WAITING_STOP_LOCK) {
             for (final Future waitingTask : waitingTaskList) {
                 if (!waitingTask.isDone()) {
                     waitingTask.cancel(true);
