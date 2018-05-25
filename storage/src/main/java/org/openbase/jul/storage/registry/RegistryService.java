@@ -23,7 +23,7 @@ package org.openbase.jul.storage.registry;
  */
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.iface.annotations.RPCMethod;
+import org.openbase.jul.annotation.RPCMethod;
 
 import java.util.concurrent.Future;
 

@@ -23,7 +23,7 @@ package org.openbase.jul.iface;
  */
 import java.util.concurrent.Future;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.iface.annotations.RPCMethod;
+import org.openbase.jul.annotation.RPCMethod;
 
 /**
  *

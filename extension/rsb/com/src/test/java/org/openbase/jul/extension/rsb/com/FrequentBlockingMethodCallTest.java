@@ -22,13 +22,12 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.iface.annotations.RPCMethod;
+import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

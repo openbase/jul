@@ -34,5 +34,10 @@
             <artifactId>jul.exception</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.annotation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

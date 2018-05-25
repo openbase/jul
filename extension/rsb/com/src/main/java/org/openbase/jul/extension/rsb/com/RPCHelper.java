@@ -22,12 +22,9 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
-import org.openbase.jul.iface.annotations.RPCMethod;
+import org.openbase.jul.annotation.RPCMethod;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Map;
 import java.util.concurrent.*;
 
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -39,7 +36,6 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
-import rsb.patterns.Callback;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import rsb.patterns.Callback.UserCodeException;

@@ -22,7 +22,7 @@ package org.openbase.jul.iface;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.iface.annotations.RPCMethod;
+import org.openbase.jul.annotation.RPCMethod;
 
 /**
  *

@@ -179,6 +179,7 @@
     </profiles>
     
     <modules>
+        <module>annotation</module>
         <module>schedule</module>
         <module>pattern</module>
         <module>exception</module>
