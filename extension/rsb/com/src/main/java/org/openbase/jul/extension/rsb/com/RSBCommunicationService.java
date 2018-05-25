@@ -77,7 +77,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final ShutdownDeamon shutdownDeamon;
+    private final ShutdownDaemon shutdownDaemon;
 
     protected RSBInformer<Object> informer;
     protected RSBLocalServer server;
@@ -130,7 +130,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             this.dataObserver.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
             this.initialized = false;
             this.destroyed = false;
-            this.shutdownDeamon = registerShutdownHook(this);
+            this.shutdownDaemon = registerShutdownHook(this);
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
@@ -402,8 +402,8 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         reset();
         destroyed = true;
 
-        if (shutdownDeamon != null) {
-            shutdownDeamon.cancel();
+        if (shutdownDaemon != null) {
+            shutdownDaemon.cancel();
         }
     }
 

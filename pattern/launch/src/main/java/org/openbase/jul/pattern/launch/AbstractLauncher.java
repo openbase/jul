@@ -48,11 +48,10 @@ import rst.domotic.state.ActivationStateType.ActivationState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -108,6 +107,17 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         RPCHelper.registerInterface(Launcher.class, this, server);
     }
 
+    /**
+     * This method can be overwritten to identify a core launcher.
+     * This means that if the start of this launcher fails the whole launching
+     * process will be stopped.
+     *
+     * @return false, can be overwritten to return true
+     */
+    public boolean isCoreLauncher() {
+        return false;
+    }
+
     public L getLaunchable() {
         return launchable;
     }
@@ -156,7 +166,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     public enum LauncherState {
 
-        INITALIZING,
+        INITIALIZING,
         LAUNCHING,
         RUNNING,
         STOPPING,
@@ -171,7 +181,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     @Override
     public void launch() throws CouldNotPerformException, InterruptedException {
         synchronized (LAUNCHER_LOCK) {
-            setState(LauncherState.INITALIZING);
+            setState(LauncherState.INITIALIZING);
             launchable = instantiateLaunchable();
             try {
                 launchable.init();
@@ -241,16 +251,16 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         return verificationFailedException;
     }
 
+    private static MultiException.ExceptionStack errorExceptionStack = null;
+    private static MultiException.ExceptionStack verificationExceptionStack = null;
+
     public static void main(final String args[], final Class application, final Class<? extends AbstractLauncher>... launchers) {
         final Logger logger = LoggerFactory.getLogger(Launcher.class);
         JPService.setApplicationName(application);
 
         // register interruption of this thread as shutdown hook
         final Thread mainThread = Thread.currentThread();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> mainThread.interrupt()));
-
-        MultiException.ExceptionStack errorExceptionStack = null;
-        MultiException.ExceptionStack verificationExceptionStack = null;
+        Runtime.getRuntime().addShutdownHook(new Thread(mainThread::interrupt));
 
         Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap = new HashMap<>();
         for (final Class<? extends AbstractLauncher> launcherClass : launchers) {
@@ -297,55 +307,106 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         logger.info("Start " + JPService.getApplicationName() + "...");
 
         final Map<Entry<Class<? extends AbstractLauncher>, AbstractLauncher>, Future> launchableFutureMap = new HashMap<>();
-        try {
-            for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
+        for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
 
-                // check if launcher was excluded
-                boolean exclude = false;
-                try {
-                    //filter excluded launcher
-                    for (String exclusionPatter : JPService.getProperty(JPExcludeLauncher.class).getValue()) {
-                        if (launcherEntry.getKey().getName().toLowerCase().contains(exclusionPatter.replace("-", "").replace("_", "").toLowerCase())) {
-                            exclude = true;
-                        }
+            // check if launcher was excluded
+            boolean exclude = false;
+            try {
+                //filter excluded launcher
+                for (String exclusionPatter : JPService.getProperty(JPExcludeLauncher.class).getValue()) {
+                    if (launcherEntry.getKey().getName().toLowerCase().contains(exclusionPatter.replace("-", "").replace("_", "").toLowerCase())) {
+                        exclude = true;
                     }
-                } catch (JPNotAvailableException ex) {
-                    ExceptionPrinter.printHistory("Could not process launcher exclusion!", ex, logger);
                 }
-                if (exclude) {
-                    logger.info(launcherEntry.getKey().getSimpleName() + " excluded from execution.");
-                    continue;
-                }
-
-                launchableFutureMap.put(launcherEntry, GlobalCachedExecutorService.submit((Callable<Void>) () -> {
-                    launcherEntry.getValue().launch();
-                    return null;
-                }));
+            } catch (JPNotAvailableException ex) {
+                ExceptionPrinter.printHistory("Could not process launcher exclusion!", ex, logger);
+            }
+            if (exclude) {
+                logger.info(launcherEntry.getKey().getSimpleName() + " excluded from execution.");
+                continue;
             }
 
-            while (!Thread.interrupted() && !launchableFutureMap.isEmpty()) {
-                for (Entry<Entry<Class<? extends AbstractLauncher>, AbstractLauncher>, Future> launcherEntry : new ArrayList<>(launchableFutureMap.entrySet())) {
+            launchableFutureMap.put(launcherEntry, GlobalCachedExecutorService.submit((Callable<Void>) () -> {
+                launcherEntry.getValue().launch();
+                return null;
+            }));
+        }
+
+        // start all waiting tasks in parallel
+        final List<Future> waitingTaskList = new ArrayList<>();
+        for (final Entry<Entry<Class<? extends AbstractLauncher>, AbstractLauncher>, Future> launcherEntry : new ArrayList<>(launchableFutureMap.entrySet())) {
+            final Future waitingTask = GlobalCachedExecutorService.submit(() -> {
+                while (!Thread.interrupted()) {
                     try {
                         launcherEntry.getValue().get(LAUNCHER_TIMEOUT, TimeUnit.MILLISECONDS);
                         if (!launcherEntry.getKey().getValue().isVerified()) {
-                            verificationExceptionStack = MultiException.push(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getKey().getSimpleName() + "!", launcherEntry.getKey().getValue().getVerificationFailedCause()), verificationExceptionStack);
+                            logger.info("Launcher[" + launcherEntry.getKey().getKey() + "] is not verified");
+                            pushToVerificationExceptionStack(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getKey().getSimpleName() + "!", launcherEntry.getKey().getValue().getVerificationFailedCause()));
                         }
-                        // remove from stack because launcher was successfully started.
-                        launchableFutureMap.remove(launcherEntry.getKey());
+
                     } catch (InterruptedException ex) {
-                        throw ex;
+                        // interrupt is handled by the main thread
+                        // is caught here so below where general exceptions are caught
+                        return null;
                     } catch (TimeoutException ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Launcher " + launcherEntry.getKey().getKey().getSimpleName() + " startup delay detected!"), logger, LogLevel.WARN);
                     } catch (Exception ex) {
-                        // remove from stack because launcher failed and generate exception report.
-                        launchableFutureMap.remove(launcherEntry.getKey());
-                        errorExceptionStack = MultiException.push(application, new CouldNotPerformException("Could not launch " + launcherEntry.getKey().getKey().getSimpleName() + "!", ex), errorExceptionStack);
+                        logger.info("Launcher[" + launcherEntry.getKey().getKey() + "] exception");
+                        final CouldNotPerformException exx = new CouldNotPerformException("Could not launch " + launcherEntry.getKey().getKey().getSimpleName() + "!", ex);
+
+                        // if a core launcher could not be started the whole startup failed so interrupt
+                        if (launcherEntry.getKey().getValue().isCoreLauncher()) {
+                            pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
+                            System.exit(1);
+                        }
+
+                        pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
+                        return null;
                     }
+                }
+                return null;
+            });
+            waitingTaskList.add(waitingTask);
+        }
+
+        try {
+            for (final Future waitingTask : waitingTaskList) {
+                try {
+                    waitingTask.get();
+                } catch (ExecutionException ex) {
+                    // these exception will be pushed to the error exception stack in printed in the summary
                 }
             }
         } catch (InterruptedException ex) {
-            ExceptionPrinter.printHistoryAndExit(new CouldNotPerformException(JPService.getApplicationName() + " caught shutdown signal during startup phase!"), logger);
+            // kill all remaining waiting tasks
+            for (final Future waitingTask : waitingTaskList) {
+                if (!waitingTask.isDone()) {
+                    waitingTask.cancel(true);
+                }
+            }
+            // print a summary containing the exceptions
+            printSummary(application, logger, JPService.getApplicationName() + " caught shutdown signal during startup phase!");
+            return;
         }
+        printSummary(application, logger, JPService.getApplicationName() + " was started with restrictions!");
+    }
+
+    private static final SyncObject VER_SYNC = new SyncObject("VerSync");
+    private static final SyncObject ERROR_SYNC = new SyncObject("ERRSync");
+
+    private static void pushToVerificationExceptionStack(Object source, Exception ex) {
+        synchronized (VER_SYNC) {
+            verificationExceptionStack = MultiException.push(source, ex, verificationExceptionStack);
+        }
+    }
+
+    private static void pushToErrorExceptionStack(Object source, Exception ex) {
+        synchronized (ERROR_SYNC) {
+            errorExceptionStack = MultiException.push(source, ex, errorExceptionStack);
+        }
+    }
+
+    private static void printSummary(final Class application, final Logger logger, final String errorMessage) {
         try {
             MultiException.ExceptionStack exceptionStack = null;
             try {
@@ -359,7 +420,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
 
-            MultiException.checkAndThrow(JPService.getApplicationName() + " was started with restrictions!", exceptionStack);
+            MultiException.checkAndThrow(errorMessage, exceptionStack);
             logger.info(JPService.getApplicationName() + " successfully started.");
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger);
