@@ -2,7 +2,7 @@ package org.openbase.jul.annotation;
 
 /*-
  * #%L
- * JUL Interface
+ * JUL Annoation
  * %%
  * Copyright (C) 2015 - 2018 openbase.org
  * %%
