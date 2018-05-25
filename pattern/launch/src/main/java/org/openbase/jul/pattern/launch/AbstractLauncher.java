@@ -10,12 +10,12 @@ package org.openbase.jul.pattern.launch;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -254,6 +254,8 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     private static MultiException.ExceptionStack errorExceptionStack = null;
     private static MultiException.ExceptionStack verificationExceptionStack = null;
 
+    private static final List<Future> waitingTaskList = new ArrayList<>();
+
     public static void main(final String args[], final Class application, final Class<? extends AbstractLauncher>... launchers) {
         final Logger logger = LoggerFactory.getLogger(Launcher.class);
         JPService.setApplicationName(application);
@@ -333,31 +335,28 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         }
 
         // start all waiting tasks in parallel
-        final List<Future> waitingTaskList = new ArrayList<>();
         for (final Entry<Entry<Class<? extends AbstractLauncher>, AbstractLauncher>, Future> launcherEntry : new ArrayList<>(launchableFutureMap.entrySet())) {
             final Future waitingTask = GlobalCachedExecutorService.submit(() -> {
                 while (!Thread.interrupted()) {
                     try {
                         launcherEntry.getValue().get(LAUNCHER_TIMEOUT, TimeUnit.MILLISECONDS);
                         if (!launcherEntry.getKey().getValue().isVerified()) {
-                            logger.info("Launcher[" + launcherEntry.getKey().getKey() + "] is not verified");
                             pushToVerificationExceptionStack(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getKey().getSimpleName() + "!", launcherEntry.getKey().getValue().getVerificationFailedCause()));
                         }
 
                     } catch (InterruptedException ex) {
-                        // interrupt is handled by the main thread
-                        // is caught here so below where general exceptions are caught
+                        launcherEntry.getValue().cancel(true);
                         return null;
                     } catch (TimeoutException ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Launcher " + launcherEntry.getKey().getKey().getSimpleName() + " startup delay detected!"), logger, LogLevel.WARN);
                     } catch (Exception ex) {
-                        logger.info("Launcher[" + launcherEntry.getKey().getKey() + "] exception");
                         final CouldNotPerformException exx = new CouldNotPerformException("Could not launch " + launcherEntry.getKey().getKey().getSimpleName() + "!", ex);
 
                         // if a core launcher could not be started the whole startup failed so interrupt
                         if (launcherEntry.getKey().getValue().isCoreLauncher()) {
                             pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
-                            System.exit(1);
+                            stopWaiting();
+                            return null;
                         }
 
                         pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
@@ -375,17 +374,28 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                     waitingTask.get();
                 } catch (ExecutionException ex) {
                     // these exception will be pushed to the error exception stack in printed in the summary
+                } catch (CancellationException ex) {
+                    // if a core launcher fails a cancellation exception will be thrown
+                    throw new InterruptedException();
                 }
             }
         } catch (InterruptedException ex) {
             // kill all remaining waiting tasks
-            for (final Future waitingTask : waitingTaskList) {
-                if (!waitingTask.isDone()) {
-                    waitingTask.cancel(true);
-                }
+            stopWaiting();
+
+            // shutdown all launcher
+            for (Entry<?, AbstractLauncher> entry : launcherMap.entrySet()) {
+                entry.getValue().shutdown();
             }
             // print a summary containing the exceptions
             printSummary(application, logger, JPService.getApplicationName() + " caught shutdown signal during startup phase!");
+
+            //TODO: remove after fixing https://github.com/openbase/bco.registry/issues/84
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException exx) {
+            }
+            System.exit(1);
             return;
         }
         printSummary(application, logger, JPService.getApplicationName() + " was started with restrictions!");
@@ -393,6 +403,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     private static final SyncObject VER_SYNC = new SyncObject("VerSync");
     private static final SyncObject ERROR_SYNC = new SyncObject("ERRSync");
+    private static final SyncObject KILLING_SYNC = new SyncObject("KillSync");
 
     private static void pushToVerificationExceptionStack(Object source, Exception ex) {
         synchronized (VER_SYNC) {
@@ -403,6 +414,16 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     private static void pushToErrorExceptionStack(Object source, Exception ex) {
         synchronized (ERROR_SYNC) {
             errorExceptionStack = MultiException.push(source, ex, errorExceptionStack);
+        }
+    }
+
+    private static void stopWaiting() {
+        synchronized (KILLING_SYNC) {
+            for (final Future waitingTask : waitingTaskList) {
+                if (!waitingTask.isDone()) {
+                    waitingTask.cancel(true);
+                }
+            }
         }
     }
 
