@@ -37,19 +37,19 @@ import rst.timing.IntervalType.Interval;
  * #L%
  */
 /**
- *
+ * TODO: release : remove all action authority parts
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class ActionDescriptionProcessor {
 
-    public static final String TOKEN_SEPERATOR = "#";
+    public static final String TOKEN_SEPARATOR = "#";
 
     public static final String AUTHORITY_KEY = "$AUTHORITY";
     public static final String SERVICE_TYPE_KEY = "$SERVICE_TYPE";
     public static final String LABEL_KEY = "$LABEL";
-    public static final String SERVICE_ATTIBUTE_KEY = "SERVICE_ATTIBUTE";
-    public static final String GENERIC_ACTION_LABEL = LABEL_KEY + "[" + SERVICE_ATTIBUTE_KEY + "]";
-    public static final String GENERIC_ACTION_DESCSRIPTION = AUTHORITY_KEY + " changed " + SERVICE_TYPE_KEY + " of unit " + LABEL_KEY + " to " + SERVICE_ATTIBUTE_KEY;
+    public static final String SERVICE_ATTRIBUTE_KEY = "SERVICE_ATTRIBUTE";
+    public static final String GENERIC_ACTION_LABEL = LABEL_KEY + "[" + SERVICE_ATTRIBUTE_KEY + "]";
+    public static final String GENERIC_ACTION_DESCRIPTION = AUTHORITY_KEY + " changed " + SERVICE_TYPE_KEY + " of unit " + LABEL_KEY + " to " + SERVICE_ATTRIBUTE_KEY;
 
     public static long MIN_ALLOCATION_TIME_MILLI = 10000;
 
@@ -81,7 +81,7 @@ public class ActionDescriptionProcessor {
         actionDescription.setId(UUID.randomUUID().toString());
         actionDescription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
         actionDescription.setLabel(GENERIC_ACTION_LABEL);
-        actionDescription.setDescription(GENERIC_ACTION_DESCSRIPTION);
+        actionDescription.setDescription(GENERIC_ACTION_DESCRIPTION);
 
         // initialize other required fields from ResourceAllocation
         resourceAllocation.setId(actionDescription.getId());
@@ -89,7 +89,7 @@ public class ActionDescriptionProcessor {
         resourceAllocation.setState(ResourceAllocation.State.REQUESTED);
 
         // add Authority and ResourceAllocation.Initiator
-        actionDescription.setActionAuthority(actionAuthority);
+//        actionDescription.setActionAuthority(actionAuthority);
         resourceAllocation.setInitiator(initiator);
 
         // add values from ActionParameter
@@ -107,7 +107,7 @@ public class ActionDescriptionProcessor {
             List<ActionReference> actionReferenceList = actionParameter.getInitiator().getActionChainList();
             ActionReference.Builder actionReference = ActionReference.newBuilder();
             actionReference.setActionId(actionParameter.getInitiator().getId());
-            actionReference.setAuthority(actionParameter.getInitiator().getActionAuthority());
+//            actionReference.setAuthority(actionParameter.getInitiator().getActionAuthority());
             actionReference.setServiceStateDescription(actionParameter.getInitiator().getServiceStateDescription());
             actionReferenceList.add(actionReference.build());
             actionDescription.addAllActionChain(actionReferenceList);
@@ -213,7 +213,7 @@ public class ActionDescriptionProcessor {
     public static ActionReference getActionReferenceFromActionDescription(final ActionDescriptionOrBuilder actionDescription) {
         ActionReference.Builder actionReference = ActionReference.newBuilder();
         actionReference.setActionId(actionDescription.getId());
-        actionReference.setAuthority(actionDescription.getActionAuthority());
+//        actionReference.setAuthority(actionDescription.getActionAuthority());
         actionReference.setServiceStateDescription(actionDescription.getServiceStateDescription());
         return actionReference.build();
     }
@@ -241,7 +241,7 @@ public class ActionDescriptionProcessor {
      * @return true if the id field contains a # which it the token separator and else false
      */
     public static boolean hasResourceAllocationToken(final ActionDescriptionOrBuilder actionDescription) {
-        return actionDescription.getResourceAllocation().getId().contains(TOKEN_SEPERATOR);
+        return actionDescription.getResourceAllocation().getId().contains(TOKEN_SEPARATOR);
     }
 
     /**
@@ -257,7 +257,7 @@ public class ActionDescriptionProcessor {
             return actionDescription;
         } else {
             String token = UUID.randomUUID().toString();
-            resourceAllocation.setId(resourceAllocation.getId() + TOKEN_SEPERATOR + token);
+            resourceAllocation.setId(resourceAllocation.getId() + TOKEN_SEPARATOR + token);
             return actionDescription;
         }
     }
@@ -275,8 +275,8 @@ public class ActionDescriptionProcessor {
         if (!hasResourceAllocationToken(actionDescription)) {
             resourceAllocation.setId(newId);
         } else {
-            String token = resourceAllocation.getId().split(TOKEN_SEPERATOR)[1];
-            resourceAllocation.setId(newId + TOKEN_SEPERATOR + token);
+            String token = resourceAllocation.getId().split(TOKEN_SEPARATOR)[1];
+            resourceAllocation.setId(newId + TOKEN_SEPARATOR + token);
         }
         return actionDescription;
     }

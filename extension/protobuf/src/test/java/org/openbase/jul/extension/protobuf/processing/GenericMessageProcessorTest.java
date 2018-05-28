@@ -69,15 +69,15 @@ public class GenericMessageProcessorTest {
         GenericMessageProcessor<LightData> messageProcessor = new GenericMessageProcessor<>(LightData.class);
 
         String id = "ID";
-        String testLabel = "Label";
+        String testAlias = "Alias";
         PowerState powerState = PowerState.newBuilder().setValue(PowerState.State.OFF).build();
         ColorState colorState = ColorState.newBuilder().setColor(ColorType.Color.getDefaultInstance()).build();
-        ColorableLightData colorableLightData = ColorableLightData.newBuilder().setId(id).setColorState(colorState).setPowerState(powerState).setLabel(testLabel).build();
+        ColorableLightData colorableLightData = ColorableLightData.newBuilder().setId(id).setColorState(colorState).setPowerState(powerState).addAlias(testAlias).build();
 
         LightData lightData = messageProcessor.process(colorableLightData);
 
         assertEquals("Id has not been set!", id, lightData.getId());
-        assertEquals("Label has not been set!", testLabel, lightData.getLabel());
+        assertEquals("Label has not been set!", testAlias, lightData.getAlias(0));
         assertEquals("PowerState has not been set!", powerState, lightData.getPowerState());
     }
 
