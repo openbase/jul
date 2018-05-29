@@ -64,9 +64,13 @@ import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 /**
  * @param <M>  the message type of the communication service
  * @param <MB> the builder for message M
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
+
 public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable, TransactionIdProvider {
+
+    // todo release: refactor class name into AbstractControllerService and document in jul changelog
 
     public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
     public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
@@ -86,8 +90,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     private final MB dataBuilder;
     private final Class<M> messageClass;
-    // todo release: this field should definitely be at least protected, otherwise its external manipulation can cause bad issues.
-    public final SyncObject manageableLock = new SyncObject(getClass());
+
+    protected final SyncObject manageableLock = new SyncObject(getClass());
+    private final SyncObject transactionIdLock = new SyncObject(getClass());
 
     private final ReentrantReadWriteLock dataLock;
     private final ReadLock dataBuilderReadLock;
@@ -102,12 +107,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     private final MessageObservable dataObserver;
     private Future initialDataSyncFuture;
 
+
     long transaction_id = 0;
 
     /**
      * Create a communication service.
      *
      * @param builder the initial data builder
+     *
      * @throws InstantiationException if the creation fails
      */
     public RSBCommunicationService(final MB builder) throws InstantiationException {
@@ -139,6 +146,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param scope
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -148,6 +156,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param scope
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -157,6 +166,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param scope
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -172,6 +182,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @param label
      * @param type
      * @param location
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -186,6 +197,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param scope
      * @param participantConfig
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -200,6 +212,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param scope
      * @param participantConfig
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -426,6 +439,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
@@ -456,6 +470,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param controllerAvailability
+     *
      * @throws InterruptedException
      */
     private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) throws InterruptedException {
@@ -544,6 +559,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -555,6 +571,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -566,6 +583,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -628,7 +646,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * sub classes to update data which can be received by everyone.
      *
      * @param dataBuilder a clone of the current data builder.
+     *
      * @return a message build from the data builder
+     *
      * @throws CouldNotPerformException if the update fails
      */
     protected M updateDataToPublish(MB dataBuilder) throws CouldNotPerformException {
@@ -639,6 +659,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * Overwrite this method to get informed about data updates.
      *
      * @param data new arrived data messages.
+     *
      * @throws CouldNotPerformException
      */
     protected void notifyDataUpdate(M data) throws CouldNotPerformException {
@@ -648,6 +669,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param fieldNumber
      * @param value
+     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
@@ -670,6 +692,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param fieldName
      * @param value
+     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
@@ -692,7 +715,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param name
+     *
      * @return
+     *
      * @throws NotAvailableException
      */
     protected final Object getDataField(String name) throws NotAvailableException {
@@ -710,7 +735,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param name
+     *
      * @return
+     *
      * @throws CouldNotPerformException
      */
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
@@ -728,7 +755,9 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param name
+     *
      * @return
+     *
      * @throws CouldNotPerformException
      */
     protected final boolean supportsDataField(final String name) throws CouldNotPerformException {
@@ -742,6 +771,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param fieldId
+     *
      * @return
      */
     protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
@@ -758,8 +788,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         return controllerAvailabilityState;
     }
 
+
     /**
-     * @throws NotInitializedException
+     * This method validates the controller initialisation.
+     * @throws NotInitializedException is thrown if the controller is not initialized.
      */
     public void validateInitialization() throws NotInitializedException {
         synchronized (manageableLock) {
@@ -769,6 +801,10 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * This method validates the controller activation.
+     * @throws InvalidStateException is thrown if the controller is not active.
+     */
     public void validateActivation() throws InvalidStateException {
         if (!isActive()) {
             throw new InvalidStateException(this + " not activated!");
@@ -796,6 +832,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc }
      *
      * @param timestamp {@inheritDoc }
+     *
      * @return {@inheritDoc }
      */
     @Override
@@ -807,6 +844,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -823,19 +861,15 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param server
+     *
      * @throws CouldNotPerformException
      */
     public abstract void registerMethods(final RSBLocalServer server) throws CouldNotPerformException;
 
-    @Override
-    public String toString() {
-        try {
-            return getClass().getSimpleName() + "[" + informer.getScope().toString() + "]";
-        } catch (NotAvailableException ex) {
-            return getClass().getSimpleName() + "[]";
-        }
-    }
-
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isDataAvailable() {
         try {
@@ -862,36 +896,96 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     */
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
         // because this is the controller, the data is already available.
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param timeout  {@inheritDoc}
+     * @param timeUnit {@inheritDoc}.
+     *
+     * @throws CouldNotPerformException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
+     */
     @Override
     public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         // because this is the controller, the data is already available.
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param observer {@inheritDoc}
+     */
     @Override
     public void addDataObserver(Observer<M> observer) {
         dataObserver.addObserver(observer);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param observer {@inheritDoc}
+     */
     @Override
     public void removeDataObserver(Observer<M> observer) {
         dataObserver.removeObserver(observer);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
     @Override
     public long getTransactionId() {
-        return transaction_id;
+        synchronized (transactionIdLock) {
+            return transaction_id;
+        }
     }
 
+    /**
+     * Method generates a new id which can be used for the next transaction (e.g. state transition).
+     *
+     * @return the next transaction identifier.
+     */
     public long generateTransactionId() {
-        return ++transaction_id;
+        synchronized (transactionIdLock) {
+            // Transaction id should never be 0 because thats the builder default value.
+            return ++transaction_id;
+        }
     }
 
+    /**
+     * Methde sets a new generated transaction id in the global data field of this controller.
+     *
+     * @throws CouldNotPerformException
+     */
     public void updateTransactionId() throws CouldNotPerformException {
-        setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
+        synchronized (transactionIdLock) {
+            setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        try {
+            return getClass().getSimpleName() + "[" + informer.getScope().toString() + "]";
+        } catch (NotAvailableException ex) {
+            return getClass().getSimpleName() + "[]";
+        }
     }
 }

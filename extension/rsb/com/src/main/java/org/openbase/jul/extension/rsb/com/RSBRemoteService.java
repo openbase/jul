@@ -62,7 +62,10 @@ import static org.openbase.jul.pattern.Remote.ConnectionState.*;
  * @param <M>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
+//
 public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M>, TransactionIdProvider {
+
+    // todo release: refactor class name into AbstractControllerRemoteService and document in jul changelog
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
