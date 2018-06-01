@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -24,25 +24,26 @@ package org.openbase.jul.storage.registry;
 
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.pattern.Observer;
 
 /**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface SynchronizableRegistry<KEY, ENTRY extends Identifiable<KEY>> extends Registry<KEY, ENTRY> {
 
     /**
      * Informs the controller registry that the synchronization with the external controller configuration registry was done.
      */
-    public void notifySynchronization();
+    void notifySynchronization();
 
     /**
      * Method returns the initial synchronization state.
      *
      * @return true if the the initial synchronization is done.
      */
-    public boolean isInitiallySynchronized();
+    boolean isInitiallySynchronized();
 
     /**
      * Method returns the timestamp of the last synchronization.
@@ -50,6 +51,20 @@ public interface SynchronizableRegistry<KEY, ENTRY extends Identifiable<KEY>> ex
      * @return the timestamp in milliseconds.
      * @throws NotAvailableException is thrown in case the synchronization was never performed.
      */
-    public long getLastSynchronizationTimestamp() throws NotAvailableException;
+    long getLastSynchronizationTimestamp() throws NotAvailableException;
+
+    /**
+     * Add an observer that is notified after a synchronization.
+     *
+     * @param observer the observer that will be added.
+     */
+    void addSynchronizationObserver(Observer<Long> observer);
+
+    /**
+     * Remove an observer that is notified after a synchronization.
+     *
+     * @param observer the observer that will be removed.
+     */
+    void removeSynchronizationObserver(Observer<Long> observer);
 
 }

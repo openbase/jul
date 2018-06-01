@@ -10,41 +10,41 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.HashMap;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
+
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.pattern.ObservableImpl;
+import org.openbase.jul.pattern.Observer;
+
+import java.util.HashMap;
 
 /**
  * A simple {@code AbstractRegistry} implementation providing the timestamp of the last synchronization by implementing the {@code SynchronizableRegistry} interface.
  *
- * @author <a href="mailto:thuppke@techfak.uni-bielefeld.de">Thoren Huppke</a>
- * @param <KEY> The registry key type.
+ * @param <KEY>   The registry key type.
  * @param <ENTRY> The registry entry type.
+ * @author <a href="mailto:thuppke@techfak.uni-bielefeld.de">Thoren Huppke</a>
  */
 public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> extends RegistryImpl<KEY, ENTRY> implements SynchronizableRegistry<KEY, ENTRY> {
 
     /**
-     * Never synchronized constant.
+     * Observable notifying when a synchronization is complete.
      */
-    public static final long NEVER_SYNCHRONIZED = -1;
-
-    /**
-     * This variable provides the latest synchronization timestamp.
-     */
-    private long lastSynchronizationTimestamp = NEVER_SYNCHRONIZED;
+    private final ObservableImpl<Long> synchronisationObservable = new ObservableImpl<>();
 
     /**
      * Creates a new SynchronizableRegistry with a default {@code HashMap} as internal map.
@@ -70,7 +70,11 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
      */
     @Override
     public void notifySynchronization() {
-        lastSynchronizationTimestamp = System.currentTimeMillis();
+        try {
+            synchronisationObservable.notifyObservers(System.currentTimeMillis());
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify observer about synchronization", ex), logger);
+        }
     }
 
     /**
@@ -80,7 +84,7 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
      */
     @Override
     public boolean isInitiallySynchronized() {
-        return lastSynchronizationTimestamp != NEVER_SYNCHRONIZED;
+        return synchronisationObservable.isValueAvailable();
     }
 
     /**
@@ -91,9 +95,26 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
      */
     @Override
     public long getLastSynchronizationTimestamp() throws NotAvailableException {
-        if (!isInitiallySynchronized()) {
-            throw new NotAvailableException("SynchronizationTimestamp", new InvalidStateException("ControllerRegistry was never fully synchronized yet!"));
-        }
-        return lastSynchronizationTimestamp;
+        return synchronisationObservable.getValue();
+    }
+
+    /**
+     *  {@inheritDoc}
+     *
+     * @param observer  {@inheritDoc}
+     */
+    @Override
+    public void addSynchronizationObserver(Observer<Long> observer) {
+        synchronisationObservable.addObserver(observer);
+    }
+
+    /**
+     *  {@inheritDoc}
+     *
+     * @param observer  {@inheritDoc}
+     */
+    @Override
+    public void removeSynchronizationObserver(Observer<Long> observer) {
+        synchronisationObservable.removeObserver(observer);
     }
 }

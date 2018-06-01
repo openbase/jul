@@ -35,11 +35,7 @@ import org.openbase.jul.pattern.Remote;
  * @param <KEY>
  * @param <ENTRY>
  */
-public class RemoteControllerRegistryImpl<KEY, ENTRY extends Remote & Identifiable<KEY>> extends RegistryImpl<KEY, ENTRY> implements SynchronizableRegistry<KEY, ENTRY> {
-
-    private static final long NEVER_SYNCHRONIZED = -1;
-
-    private long lastSynchronizationTimestamp = NEVER_SYNCHRONIZED;
+public class RemoteControllerRegistryImpl<KEY, ENTRY extends Remote & Identifiable<KEY>> extends SynchronizableRegistryImpl<KEY, ENTRY> {
 
     public RemoteControllerRegistryImpl() throws InstantiationException {
         super(new HashMap<>());
@@ -58,37 +54,5 @@ public class RemoteControllerRegistryImpl<KEY, ENTRY extends Remote & Identifiab
         }
 
         super.clear();
-    }
-
-    /**
-     * {@inheritDoc }
-     */
-    @Override
-    public void notifySynchronization() {
-        lastSynchronizationTimestamp = System.currentTimeMillis();
-    }
-
-    /**
-     * {@inheritDoc }
-     *
-     * @return {@inheritDoc }
-     */
-    @Override
-    public boolean isInitiallySynchronized() {
-        return lastSynchronizationTimestamp != NEVER_SYNCHRONIZED;
-    }
-
-    /**
-     * {@inheritDoc }
-     *
-     * @return {@inheritDoc }
-     * @throws NotAvailableException {@inheritDoc }
-     */
-    @Override
-    public long getLastSynchronizationTimestamp() throws NotAvailableException {
-        if (!isInitiallySynchronized()) {
-            throw new NotAvailableException("SynchronizationTimestamp", new InvalidStateException("RemoteControllerRegistry was never fully synchronized yet!"));
-        }
-        return lastSynchronizationTimestamp;
     }
 }
