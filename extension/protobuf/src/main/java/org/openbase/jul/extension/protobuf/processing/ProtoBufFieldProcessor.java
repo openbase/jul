@@ -29,11 +29,14 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.provider.LabelProvider;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 /**
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
@@ -297,5 +300,44 @@ public class ProtoBufFieldProcessor {
             }
         }
         return false;
+    }
+
+    public static void updateMapEntry(final GeneratedMessage entryMessage, FieldDescriptor mapFieldDescriptor, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
+        try {
+
+            final FieldDescriptor key = entryMessage.getDescriptorForType().findFieldByName("KEY");
+            final FieldDescriptor value = entryMessage.getDescriptorForType().findFieldByName("VALUE");
+
+            if (key == null) {
+                throw new NotAvailableException("Field[KEY] does not exist for type " + entryMessage.getClass().getName());
+            }
+
+            if (value == null) {
+                throw new NotAvailableException("Field[VALUE] does not exist for type " + entryMessage.getClass().getName());
+            }
+
+            // build map representation
+            final TreeMap<Object, Object> latestValueOccurrenceMap = new TreeMap<>();
+            for (int i = 0; i < mapHolder.getRepeatedFieldCount(mapFieldDescriptor); i++) {
+                final Message entry = (Message) mapHolder.getRepeatedField(mapFieldDescriptor, i);
+                latestValueOccurrenceMap.put(entry.getField(key), entry.getField(value));
+            }
+
+            // insert entry to update
+            latestValueOccurrenceMap.put(entryMessage.getField(key), entryMessage.getField(value));
+
+            // update map holder
+            mapHolder.clearField(mapFieldDescriptor);
+            for (Entry<Object, Object> entry : latestValueOccurrenceMap.entrySet()) {
+                final Message.Builder entryBuilder = entryMessage.newBuilderForType();
+                entryBuilder.setField(key, entry.getKey());
+                entryBuilder.setField(value, entry.getValue());
+                mapHolder.addRepeatedField(mapFieldDescriptor, entryBuilder);
+            }
+
+
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not add entry to map!");
+        }
     }
 }

@@ -10,29 +10,45 @@ package org.openbase.jul.extension.protobuf;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Time;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.AfterClass;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -42,14 +58,17 @@ import rst.domotic.state.ColorStateType.ColorState;
 import rst.domotic.state.MotionStateType.MotionState;
 import rst.domotic.state.PowerStateType.PowerState;
 import rst.domotic.state.PresenceStateType.PresenceState;
+import rst.domotic.state.PresenceStateType.PresenceState.MapFieldEntry;
+import rst.domotic.state.PresenceStateType.PresenceState.State;
 import rst.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
 import rst.domotic.unit.location.LocationDataType.LocationData;
 import rst.timing.TimestampType.Timestamp;
+import rst.timing.TimestampType.Timestamp.Builder;
+import rst.timing.TimestampType.TimestampOrBuilder;
 import rst.vision.ColorType.Color;
 import rst.vision.HSBColorType.HSBColor;
 
 /**
- *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class MessageObservableTest {
@@ -131,7 +150,14 @@ public class MessageObservableTest {
         color1.setType(Color.Type.HSB);
         final HSBColor.Builder hsbColor1 = color1.getHsbColorBuilder();
         hsbColor1.setBrightness(10).setHue(20).setSaturation(30);
-        presenceState1.setLastPresence(Timestamp.newBuilder().setTime(500)).setTimestamp(Timestamp.newBuilder().setTime(500)).setValue(PresenceState.State.ABSENT);
+
+        PresenceState.MapFieldEntry
+        presenceState1.getl
+        Builder time = Timestamp.newBuilder().setTime(500);
+        State state = State.PRESENT;
+
+
+        presenceState1.setTimestamp(Timestamp.newBuilder().setTime(500)).setValue(PresenceState.State.ABSENT);
 
         final LocationData.Builder locationData2 = LocationData.newBuilder();
         final PowerState.Builder powerState2 = locationData2.getPowerStateBuilder();
@@ -147,7 +173,11 @@ public class MessageObservableTest {
         color2.setType(Color.Type.HSB);
         final HSBColor.Builder hsbColor2 = color2.getHsbColorBuilder();
         hsbColor2.setBrightness(10).setHue(20).setSaturation(30);
-        presenceState2.setLastPresence(Timestamp.newBuilder().setTime(1231)).setTimestamp(Timestamp.newBuilder().setTime(1231)).setValue(PresenceState.State.ABSENT);
+
+
+        updateLatestValueOccurrence(PresenceState.MapFieldEntry.newBuilder().setKey(State.PRESENT).setValue(Timestamp.newBuilder().setTime(1231)), presenceState2);
+        , presenceState2.getLastValueOccurrenceBuilderList());
+        presenceState2.setTimestamp(Timestamp.newBuilder().setTime(1231)).setValue(PresenceState.State.ABSENT);
 
         messageObservable.addObserver(new Observer<LocationData>() {
 
@@ -166,6 +196,17 @@ public class MessageObservableTest {
 
         messageObservable.notifyObservers(locationData1.build());
         messageObservable.notifyObservers(locationData2.build());
+    }
+
+    public static void updateLatestValueOccurrence(final GeneratedMessage entryMessage, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
+
+        FieldDescriptor mapFieldDescriptor = mapHolder.getDescriptorForType().findFieldByName("LAST_VALUE_OCCURRENCE_FIELD");
+
+        if (mapFieldDescriptor == null) {
+            throw new NotAvailableException("Field[LAST_VALUE_OCCURRENCE_FIELD] does not exist for type " + mapHolder.getClass().getName());
+        }
+
+        ProtoBufFieldProcessor.updateMapEntry(entryMessage, mapFieldDescriptor, mapHolder);
     }
 
     public class MessageObservableImpl<M extends Message> extends MessageObservable<M> {

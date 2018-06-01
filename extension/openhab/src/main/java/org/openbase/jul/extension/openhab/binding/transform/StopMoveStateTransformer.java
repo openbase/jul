@@ -35,16 +35,16 @@ public class StopMoveStateTransformer {
     public static BlindState transform(final StopMoveHolder.StopMove stopMoveType) throws CouldNotTransformException {
         switch (stopMoveType) {
             case STOP:
-                return BlindState.newBuilder().setMovementState(BlindState.MovementState.STOP).build();
+                return BlindState.newBuilder().setValue(BlindState.State.STOP).build();
             case MOVE:
-                return BlindState.newBuilder().setMovementState(BlindState.MovementState.UNKNOWN).build();
+                return BlindState.newBuilder().setValue(BlindState.State.UNKNOWN).build();
             default:
                 throw new CouldNotTransformException("Could not transform " + StopMoveHolder.StopMove.class.getName() + "! " + StopMoveHolder.StopMove.class.getSimpleName() + "[" + stopMoveType.name() + "] is unknown!");
         }
     }
 
     public static StopMoveHolder transform(BlindState blindState) throws TypeNotSupportedException, CouldNotTransformException {
-        switch (blindState.getMovementState()) {
+        switch (blindState.getValue()) {
             case STOP:
                 return StopMoveHolder.newBuilder().setState(StopMoveHolder.StopMove.STOP).build();
             case UP:
@@ -54,7 +54,7 @@ public class StopMoveStateTransformer {
             case UNKNOWN:
                 throw new TypeNotSupportedException(blindState, StopMoveHolder.StopMove.class);
             default:
-                throw new CouldNotTransformException("Could not transform " + BlindState.class.getName() + "! " + BlindState.class.getSimpleName() + "[" + blindState.getMovementState().name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + BlindState.class.getName() + "! " + BlindState.class.getSimpleName() + "[" + blindState.getState().name() + "] is unknown!");
         }
     }
 }
