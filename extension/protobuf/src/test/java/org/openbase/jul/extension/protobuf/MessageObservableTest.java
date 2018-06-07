@@ -22,7 +22,11 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
+import com.google.protobuf.Descriptors.Descriptor;
+import com.google.protobuf.Descriptors.EnumDescriptor;
+import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
+import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
 import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
 
@@ -37,6 +41,8 @@ import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import com.google.protobuf.MessageOrBuilder;
+import com.google.protobuf.ProtocolMessageEnum;
 import org.junit.After;
 import org.junit.AfterClass;
 
@@ -55,6 +61,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.Stopwatch;
 import rst.domotic.state.BrightnessStateType.BrightnessState;
 import rst.domotic.state.ColorStateType.ColorState;
+import rst.domotic.state.ContactStateType.ContactState;
 import rst.domotic.state.MotionStateType.MotionState;
 import rst.domotic.state.PowerStateType.PowerState;
 import rst.domotic.state.PresenceStateType.PresenceState;
@@ -128,85 +135,6 @@ public class MessageObservableTest {
         }
         stopwatch.stop();
         System.out.println("Computing 1000 hashes took " + stopwatch.getTime() + "ms");
-    }
-
-    @Test
-    public void testForNestedType() throws Exception {
-        System.out.println("testForNestedType");
-
-        final MessageObservable<LocationData> messageObservable = new MessageObservableImpl<>(LocationData.class);
-
-        final LocationData.Builder locationData1 = LocationData.newBuilder();
-        final PowerState.Builder powerState1 = locationData1.getPowerStateBuilder();
-        final BrightnessState.Builder brightnessState1 = locationData1.getBrightnessStateBuilder();
-        final MotionState.Builder motionState1 = locationData1.getMotionStateBuilder();
-        final ColorState.Builder colorState1 = locationData1.getColorStateBuilder();
-        final PresenceState.Builder presenceState1 = locationData1.getPresenceStateBuilder();
-        powerState1.setValue(PowerState.State.ON).setTimestamp(Timestamp.newBuilder().setTime(100));
-        brightnessState1.setBrightness(65).setTimestamp(Timestamp.newBuilder().setTime(200));
-        motionState1.setValue(MotionState.State.MOTION).setTimestamp(Timestamp.newBuilder().setTime(300));
-        colorState1.setTimestamp(Timestamp.newBuilder().setTime(400));
-        final Color.Builder color1 = colorState1.getColorBuilder();
-        color1.setType(Color.Type.HSB);
-        final HSBColor.Builder hsbColor1 = color1.getHsbColorBuilder();
-        hsbColor1.setBrightness(10).setHue(20).setSaturation(30);
-
-//        PresenceState.MapFieldEntry
-//        presenceState1.getl
-        Builder time = Timestamp.newBuilder().setTime(500);
-        State state = State.PRESENT;
-
-
-        presenceState1.setTimestamp(Timestamp.newBuilder().setTime(500)).setValue(PresenceState.State.ABSENT);
-
-        final LocationData.Builder locationData2 = LocationData.newBuilder();
-        final PowerState.Builder powerState2 = locationData2.getPowerStateBuilder();
-        final BrightnessState.Builder brightnessState2 = locationData2.getBrightnessStateBuilder();
-        final MotionState.Builder motionState2 = locationData2.getMotionStateBuilder();
-        final ColorState.Builder colorState2 = locationData2.getColorStateBuilder();
-        final PresenceState.Builder presenceState2 = locationData2.getPresenceStateBuilder();
-        powerState2.setValue(PowerState.State.ON).setTimestamp(Timestamp.newBuilder().setTime(12));
-        brightnessState2.setBrightness(65).setTimestamp(Timestamp.newBuilder().setTime(15));
-        motionState2.setValue(MotionState.State.MOTION).setTimestamp(Timestamp.newBuilder().setTime(62));
-        colorState2.setTimestamp(Timestamp.newBuilder().setTime(152));
-        final Color.Builder color2 = colorState2.getColorBuilder();
-        color2.setType(Color.Type.HSB);
-        final HSBColor.Builder hsbColor2 = color2.getHsbColorBuilder();
-        hsbColor2.setBrightness(10).setHue(20).setSaturation(30);
-
-
-//        updateLatestValueOccurrence(PresenceState.MapFieldEntry.newBuilder().setKey(State.PRESENT).setValue(Timestamp.newBuilder().setTime(1231)), presenceState2);
-//        , presenceState2.getLastValueOccurrenceBuilderList());
-        presenceState2.setTimestamp(Timestamp.newBuilder().setTime(1231)).setValue(PresenceState.State.ABSENT);
-
-        messageObservable.addObserver(new Observer<LocationData>() {
-
-            private int notificationCounter = 0;
-
-            @Override
-            public void update(Observable<LocationData> source, LocationData data) throws Exception {
-                notificationCounter++;
-                assertEquals("LocationData has been notified even though only the timestamp changed", 1, notificationCounter);
-            }
-        });
-
-        assertFalse("LocationData equal even though they have different timestamps", locationData1.build().equals(locationData2.build()));
-        assertFalse("LocationData hashcodes are equal even though they have different timestamps", locationData1.build().hashCode() == locationData2.build().hashCode());
-        assertEquals("Hashes of both data types do not match after removed timestamps", messageObservable.removeTimestamps(locationData1).build().hashCode(), messageObservable.removeTimestamps(locationData2).build().hashCode());
-
-        messageObservable.notifyObservers(locationData1.build());
-        messageObservable.notifyObservers(locationData2.build());
-    }
-
-    public static void updateLatestValueOccurrence(final GeneratedMessage entryMessage, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
-
-        FieldDescriptor mapFieldDescriptor = mapHolder.getDescriptorForType().findFieldByName("LAST_VALUE_OCCURRENCE_FIELD");
-
-        if (mapFieldDescriptor == null) {
-            throw new NotAvailableException("Field[LAST_VALUE_OCCURRENCE_FIELD] does not exist for type " + mapHolder.getClass().getName());
-        }
-
-        ProtoBufFieldProcessor.updateMapEntry(entryMessage, mapFieldDescriptor, mapHolder);
     }
 
     public class MessageObservableImpl<M extends Message> extends MessageObservable<M> {

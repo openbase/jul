@@ -10,25 +10,27 @@ package org.openbase.jul.extension.protobuf.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import com.google.protobuf.Descriptors;
+import com.google.protobuf.*;
+import com.google.protobuf.DescriptorProtos.EnumValueDescriptorProto;
+import com.google.protobuf.Descriptors.EnumDescriptor;
+import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.GeneratedMessage;
-import com.google.protobuf.Message;
+import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
 import com.google.protobuf.Message.Builder;
-import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.provider.LabelProvider;
@@ -113,6 +115,7 @@ public class ProtoBufFieldProcessor {
      * Tests if a message is empty. If a message is empty none of its fields are set.
      *
      * @param messageOrBuilder the message or builder which is tested
+     *
      * @return true if none of the fields is set, else false
      */
     public static boolean isMessageEmpty(final MessageOrBuilder messageOrBuilder) {
@@ -302,42 +305,128 @@ public class ProtoBufFieldProcessor {
         return false;
     }
 
-    public static void updateMapEntry(final GeneratedMessage entryMessage, FieldDescriptor mapFieldDescriptor, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
+    /**
+     * Method can be used within protobuf 2 to already have some kind of map support. The map is actually a repeated field of an entry with a key and a value field.
+     * To simplify the map access this method can be used to put new entry in the list while this method takes care of the unique key handling.
+     *
+     * @param entryMessage       the entry to put into the map.
+     * @param mapFieldDescriptor the descriptor which refers the map field of the {@code mapHolder}.
+     * @param mapHolder          the message builder providing the map field.
+     *
+     * @throws CouldNotPerformException is thrown if something went wrong during the reflection process which mostly means the data types are not compatible.
+     */
+    public static void putMapEntry(final Message entryMessage, FieldDescriptor mapFieldDescriptor, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
         try {
+            final FieldDescriptor keyDescriptor = entryMessage.getDescriptorForType().findFieldByName("key");
+            final FieldDescriptor valueDescriptor = entryMessage.getDescriptorForType().findFieldByName("value");
 
-            final FieldDescriptor key = entryMessage.getDescriptorForType().findFieldByName("KEY");
-            final FieldDescriptor value = entryMessage.getDescriptorForType().findFieldByName("VALUE");
-
-            if (key == null) {
+            if (keyDescriptor == null) {
                 throw new NotAvailableException("Field[KEY] does not exist for type " + entryMessage.getClass().getName());
             }
 
-            if (value == null) {
+            if (valueDescriptor == null) {
                 throw new NotAvailableException("Field[VALUE] does not exist for type " + entryMessage.getClass().getName());
             }
+
+            final boolean keyIsEnum = keyDescriptor.getJavaType() == JavaType.ENUM;
 
             // build map representation
             final TreeMap<Object, Object> latestValueOccurrenceMap = new TreeMap<>();
             for (int i = 0; i < mapHolder.getRepeatedFieldCount(mapFieldDescriptor); i++) {
                 final Message entry = (Message) mapHolder.getRepeatedField(mapFieldDescriptor, i);
-                latestValueOccurrenceMap.put(entry.getField(key), entry.getField(value));
+
+                if (keyIsEnum) {
+                    latestValueOccurrenceMap.put(((EnumValueDescriptor) entry.getField(keyDescriptor)).getNumber(), entry.getField(valueDescriptor));
+                } else {
+                    latestValueOccurrenceMap.put(entry.getField(keyDescriptor), entry.getField(valueDescriptor));
+                }
             }
 
             // insert entry to update
-            latestValueOccurrenceMap.put(entryMessage.getField(key), entryMessage.getField(value));
+            Object field = entryMessage.getField(keyDescriptor);
+            if (keyIsEnum) {
+                latestValueOccurrenceMap.put(((EnumValueDescriptor) field).getNumber(), entryMessage.getField(valueDescriptor));
+            } else {
+                latestValueOccurrenceMap.put(field, entryMessage.getField(valueDescriptor));
+            }
 
             // update map holder
             mapHolder.clearField(mapFieldDescriptor);
             for (Entry<Object, Object> entry : latestValueOccurrenceMap.entrySet()) {
                 final Message.Builder entryBuilder = entryMessage.newBuilderForType();
-                entryBuilder.setField(key, entry.getKey());
-                entryBuilder.setField(value, entry.getValue());
-                mapHolder.addRepeatedField(mapFieldDescriptor, entryBuilder);
+                if (keyIsEnum) {
+                    entryBuilder.setField(keyDescriptor, keyDescriptor.getEnumType().findValueByNumber((Integer) entry.getKey()));
+                } else {
+                    entryBuilder.setField(keyDescriptor, entry.getKey());
+                }
+                entryBuilder.setField(valueDescriptor, entry.getValue());
+                mapHolder.addRepeatedField(mapFieldDescriptor, entryBuilder.build());
+            }
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not add entry to map!", ex);
+        }
+    }
+
+    /**
+     * Method can be used within protobuf 2 to already have some kind of map support. The map is actually a repeated field of an entry with a key and a value field.
+     * To simplify the map access this method can be used to resolve an value via its related {@code key}.
+     *
+     * @param key                the key to identify the value within the map.
+     * @param mapFieldDescriptor the descriptor which refers the map field of the {@code mapHolder}.
+     * @param mapHolder          the message builder providing the map field.
+     *
+     * @return the resolved entry related to the given {@code key}
+     *
+     * @throws CouldNotPerformException is thrown if the entry could not be resolved.
+     */
+    public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
+        try {
+
+            if (mapHolder.getRepeatedFieldCount(mapFieldDescriptor) == 0) {
+                throw new InvalidStateException("Referred map is empty!");
             }
 
+            // generic lookup of field descriptors
+            final Message entryExample = (Message) mapHolder.getRepeatedField(mapFieldDescriptor, 0);
 
+            final FieldDescriptor keyDescriptor = entryExample.getDescriptorForType().findFieldByName("key");
+            final FieldDescriptor valueDescriptor = entryExample.getDescriptorForType().findFieldByName("value");
+
+            if (keyDescriptor == null) {
+                throw new NotAvailableException("keyDescriptor");
+            }
+
+            if (valueDescriptor == null) {
+                throw new NotAvailableException("valueDescriptor");
+            }
+
+            if (keyDescriptor == null) {
+                throw new NotAvailableException("Field[KEY] does not exist for type " + entryExample.getClass().getName());
+            }
+
+            if (valueDescriptor == null) {
+                throw new NotAvailableException("Field[VALUE] does not exist for type " + entryExample.getClass().getName());
+            }
+
+            final boolean keyIsEnum = keyDescriptor.getJavaType() == JavaType.ENUM;
+
+            // lookup key in map representation
+            for (int i = 0; i < mapHolder.getRepeatedFieldCount(mapFieldDescriptor); i++) {
+                final Message entryMessage = (Message) mapHolder.getRepeatedField(mapFieldDescriptor, i);
+
+                if (keyIsEnum) {
+                    if (((EnumValueDescriptor) entryMessage.getField(keyDescriptor)).getNumber() == ((ProtocolMessageEnum) key).getNumber()) {
+                        return entryMessage.getField(valueDescriptor);
+                    }
+                } else {
+                    if (entryMessage.getField(keyDescriptor) == key) {
+                        return entryMessage.getField(valueDescriptor);
+                    }
+                }
+            }
+            throw new NotAvailableException("Entry for Key[" + key + "]");
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not add entry to map!");
+            throw new CouldNotPerformException("Could not lookup value for given Key[" + key + "]!", ex);
         }
     }
 }
