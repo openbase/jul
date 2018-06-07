@@ -72,7 +72,7 @@ public class ConfigurableControllerAndRemoteTest {
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test").addComponent("configurable").addComponent("controller").addComponent("and").addComponent("remote").build();
-        UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setLabel("TestScene").setScope(scope).build();
+        UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setScope(scope).build();
 
         AbstractConfigurableController controller = new AbstractConfigurableControllerImpl();
         controller.init(unitConfig);
@@ -108,7 +108,7 @@ public class ConfigurableControllerAndRemoteTest {
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test2").addComponent("configurable2").addComponent("controller2").addComponent("and2").addComponent("remote2").build();
-        UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setLabel("TestScene2").setScope(scope).build();
+        UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setScope(scope).build();
 
         AbstractConfigurableController controller = new AbstractConfigurableControllerImpl();
         controller.init(unitConfig);

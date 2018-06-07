@@ -25,6 +25,7 @@ package org.openbase.jul.extension.rsb.scope;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
+import org.openbase.jul.extension.rst.processing.LabelProcessor;
 import org.openbase.jul.processing.StringProcessor;
 import rsb.Scope;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
@@ -33,6 +34,7 @@ import rst.domotic.unit.app.AppClassType.AppClass;
 import rst.rsb.ScopeType;
 
 import java.util.Collection;
+import java.util.Locale;
 
 /**
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -130,7 +132,7 @@ public class ScopeGenerator {
         if (!unitConfig.getLocationConfig().getRoot()) {
             scope.addAllComponent(registry.get(unitConfig.getPlacementConfig().getLocationId()).getMessage().getScope().getComponentList());
         }
-        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(unitConfig.getLabel())));
 
         return scope.build();
     }
@@ -145,9 +147,7 @@ public class ScopeGenerator {
             throw new NotAvailableException("connectionConfig.label");
         }
 
-        if (connectionConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field connectionConfig.label isEmpty");
-        }
+        final String defaultLabel = LabelProcessor.getFirstLabel(connectionConfig.getLabel());
 
         if (locationConfig == null) {
             throw new NotAvailableException("location");
@@ -161,10 +161,10 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add unit type
-        scope.addComponent(convertIntoValidScopeComponent(connectionConfig.getType().name().replace("_", "")));
+        scope.addComponent(convertIntoValidScopeComponent(connectionConfig.getUnitType().name().replace("_", "")));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(connectionConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(defaultLabel));
 
         return scope.build();
     }
@@ -198,7 +198,7 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent("device"));
 
         // add device scope
-        scope.addComponent(convertIntoValidScopeComponent(deviceConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(deviceConfig.getLabel())));
 
         return scope.build();
     }
@@ -211,10 +211,6 @@ public class ScopeGenerator {
 
         if (!unitConfig.hasLabel()) {
             throw new NotAvailableException("unitConfig.label");
-        }
-
-        if (unitConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field unitConfig.label isEmpty");
         }
 
         if (!unitConfig.hasPlacementConfig()) {
@@ -233,10 +229,10 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add unit type
-        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getType().name().replace("_", "")));
+        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getUnitType().name().replace("_", "")));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(unitConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(unitConfig.getLabel())));
 
         return scope.build();
     }
@@ -251,10 +247,6 @@ public class ScopeGenerator {
             throw new NotAvailableException("unitConfig.label");
         }
 
-        if (unitGroupConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field unitConfig.label isEmpty");
-        }
-//
         if (!unitGroupConfig.hasPlacementConfig()) {
             throw new NotAvailableException("placement config");
         }
@@ -274,7 +266,7 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent("UnitGroup"));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(unitGroupConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(unitGroupConfig.getLabel())));
 
         return scope.build();
     }
@@ -301,10 +293,6 @@ public class ScopeGenerator {
             throw new NotAvailableException("agentUnitConfig.label");
         }
 
-        if (agentUnitConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field unitConfig.label isEmpty");
-        }
-
         if (locationUnitConfig == null) {
             throw new NotAvailableException("location");
         }
@@ -317,13 +305,13 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationUnitConfig.getScope().toBuilder();
 
         // add unit type
-        scope.addComponent(convertIntoValidScopeComponent(agentUnitConfig.getType().name()));
+        scope.addComponent(convertIntoValidScopeComponent(agentUnitConfig.getUnitType().name()));
 
         // add agent class label
-        scope.addComponent(convertIntoValidScopeComponent(agentClass.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(agentClass.getLabel())));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(agentUnitConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(agentUnitConfig.getLabel())));
 
         return scope.build();
     }
@@ -346,10 +334,6 @@ public class ScopeGenerator {
             throw new NotAvailableException("appClass.label");
         }
 
-        if (appUnitConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field appConfig.label isEmpty");
-        }
-
         if (locationUnitConfig == null) {
             throw new NotAvailableException("location");
         }
@@ -362,13 +346,13 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationUnitConfig.getScope().toBuilder();
 
         // add unit type
-        scope.addComponent(convertIntoValidScopeComponent(appUnitConfig.getType().name()));
+        scope.addComponent(convertIntoValidScopeComponent(appUnitConfig.getUnitType().name()));
 
         // add unit app
-        scope.addComponent(convertIntoValidScopeComponent(appClass.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(appClass.getLabel())));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(appUnitConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(appUnitConfig.getLabel())));
 
         return scope.build();
     }
@@ -383,10 +367,6 @@ public class ScopeGenerator {
             throw new NotAvailableException("sceneConfig.label");
         }
 
-        if (sceneUnitConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field sceneConfig.label isEmpty");
-        }
-
         if (locationConfig == null) {
             throw new NotAvailableException("location");
         }
@@ -399,10 +379,10 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = locationConfig.getScope().toBuilder();
 
         // add unit type
-        scope.addComponent(convertIntoValidScopeComponent(sceneUnitConfig.getType().name()));
+        scope.addComponent(convertIntoValidScopeComponent(sceneUnitConfig.getUnitType().name()));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(sceneUnitConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(sceneUnitConfig.getLabel())));
 
         return scope.build();
     }
@@ -429,7 +409,7 @@ public class ScopeGenerator {
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
 
         // add unit type
-        scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getType().name()));
+        scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getUnitType().name()));
 
         // add user name
         scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getUserConfig().getUserName()));
@@ -447,10 +427,6 @@ public class ScopeGenerator {
             throw new NotAvailableException("authorizationGroupConfig.label");
         }
 
-        if (authorizationGroupUniConfig.getLabel().isEmpty()) {
-            throw new NotAvailableException("Field authorizationGroupConfig.label isEmpty");
-        }
-
         // add manager
         ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
         // add user
@@ -458,7 +434,7 @@ public class ScopeGenerator {
         // add group
         scope.addComponent(convertIntoValidScopeComponent("group"));
         // add user name
-        scope.addComponent(convertIntoValidScopeComponent(authorizationGroupUniConfig.getLabel()));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(authorizationGroupUniConfig.getLabel())));
 
         return scope.build();
     }

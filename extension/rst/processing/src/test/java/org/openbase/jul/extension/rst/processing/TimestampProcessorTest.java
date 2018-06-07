@@ -30,6 +30,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import rst.domotic.state.PowerStateType;
 
+import java.util.Locale;
+
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

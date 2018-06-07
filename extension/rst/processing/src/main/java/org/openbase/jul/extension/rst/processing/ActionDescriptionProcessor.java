@@ -80,7 +80,8 @@ public class ActionDescriptionProcessor {
         // initialize values which are true for every ActionDescription
         actionDescription.setId(UUID.randomUUID().toString());
         actionDescription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
-        actionDescription.setLabel(GENERIC_ACTION_LABEL);
+        //TODO: change after label processor
+//        actionDescription.setLabel(GENERIC_ACTION_LABEL);
         actionDescription.setDescription(GENERIC_ACTION_DESCRIPTION);
 
         // initialize other required fields from ResourceAllocation
