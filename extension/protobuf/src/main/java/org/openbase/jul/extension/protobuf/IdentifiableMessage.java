@@ -241,14 +241,15 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
      * Method generates a short string description of the given message. This description is bases on internal message fields like label or id provided by the message itself.
      * If non of this fields could be detected a ? char is returned.
      *
+     * //TODO: release: is it okay if this is now an alias, parsing the label is now quite difficult without access to the rst type
      * @return a short description of the message as string.
      */
     public static String generateMessageDescription(final GeneratedMessage message) {
-        if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
-            if (message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
-                return (String) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
-            }
-        }
+//        if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
+//            if (message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
+//                return (String) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
+//            }
+//        }
 
         try {
             return getId(message).toString();
