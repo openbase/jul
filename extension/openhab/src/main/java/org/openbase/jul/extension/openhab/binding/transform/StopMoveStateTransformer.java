@@ -54,7 +54,7 @@ public class StopMoveStateTransformer {
             case UNKNOWN:
                 throw new TypeNotSupportedException(blindState, StopMoveHolder.StopMove.class);
             default:
-                throw new CouldNotTransformException("Could not transform " + BlindState.class.getName() + "! " + BlindState.class.getSimpleName() + "[" + blindState.getState().name() + "] is unknown!");
+                throw new CouldNotTransformException("Could not transform " + BlindState.class.getName() + "! " + BlindState.class.getSimpleName() + "[" + blindState.getValue().name() + "] is unknown!");
         }
     }
 }

@@ -430,7 +430,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                         }
                     }
                     try {
-                        MultiException.checkAndThrow("Multi task processing delayed! "+runningFutures.size()+" are still running while "+failedFutures.size()+" are failed and "+finishedFutures.size()+" are finished after "+iteration+" interrations.", exceptionStack);
+                        MultiException.checkAndThrow("Multi task processing delayed! "+runningFutures.size()+" are still running while "+failedFutures.size()+" are failed and "+finishedFutures.size()+" are finished after "+iteration+" iterations.", exceptionStack);
                     } catch (CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(ex, LoggerFactory.getLogger(source.getClass()));
                     }

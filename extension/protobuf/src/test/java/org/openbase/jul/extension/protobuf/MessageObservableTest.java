@@ -10,12 +10,12 @@ package org.openbase.jul.extension.protobuf;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -151,8 +151,8 @@ public class MessageObservableTest {
         final HSBColor.Builder hsbColor1 = color1.getHsbColorBuilder();
         hsbColor1.setBrightness(10).setHue(20).setSaturation(30);
 
-        PresenceState.MapFieldEntry
-        presenceState1.getl
+//        PresenceState.MapFieldEntry
+//        presenceState1.getl
         Builder time = Timestamp.newBuilder().setTime(500);
         State state = State.PRESENT;
 
@@ -175,8 +175,8 @@ public class MessageObservableTest {
         hsbColor2.setBrightness(10).setHue(20).setSaturation(30);
 
 
-        updateLatestValueOccurrence(PresenceState.MapFieldEntry.newBuilder().setKey(State.PRESENT).setValue(Timestamp.newBuilder().setTime(1231)), presenceState2);
-        , presenceState2.getLastValueOccurrenceBuilderList());
+//        updateLatestValueOccurrence(PresenceState.MapFieldEntry.newBuilder().setKey(State.PRESENT).setValue(Timestamp.newBuilder().setTime(1231)), presenceState2);
+//        , presenceState2.getLastValueOccurrenceBuilderList());
         presenceState2.setTimestamp(Timestamp.newBuilder().setTime(1231)).setValue(PresenceState.State.ABSENT);
 
         messageObservable.addObserver(new Observer<LocationData>() {
