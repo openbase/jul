@@ -39,6 +39,17 @@ public class LabelProcessor {
 
     private static final FieldDescriptor ENTRY_FIELD = Label.getDescriptor().findFieldByNumber(Label.ENTRY_FIELD_NUMBER);
 
+    public static boolean contains(final Label label, final String labelString) {
+        for(Label.MapFieldEntry entry : label.getEntryList()) {
+            for(String value : entry.getValueList()) {
+                if(value.equalsIgnoreCase(labelString)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public static Label.Builder addLabel(final Label.Builder labelBuilder, final Locale locale, final String label) {
         return addLabel(labelBuilder, locale.getLanguage(), label);
     }
@@ -49,7 +60,7 @@ public class LabelProcessor {
             if (labelBuilder.getEntry(i).getKey().equals(languageCode)) {
                 // check if the new value is not already contained
                 for (String value : labelBuilder.getEntryBuilder(i).getValueList()) {
-                    if (value.equals(label)) {
+                    if (value.equalsIgnoreCase(label)) {
                         // return because label is already in there
                         return labelBuilder;
                     }
