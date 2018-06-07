@@ -39,6 +39,33 @@ public class LabelProcessor {
 
     private static final FieldDescriptor ENTRY_FIELD = Label.getDescriptor().findFieldByNumber(Label.ENTRY_FIELD_NUMBER);
 
+    public static Label.Builder addLabel(final Label.Builder labelBuilder, final Locale locale, final String label) {
+        return addLabel(labelBuilder, locale.getLanguage(), label);
+    }
+
+    public static Label.Builder addLabel(final Label.Builder labelBuilder, final String languageCode, final String label) {
+        for (int i = 0; i < labelBuilder.getEntryCount(); i++) {
+            // found labels for the given entry key
+            if (labelBuilder.getEntry(i).getKey().equals(languageCode)) {
+                // check if the new value is not already contained
+                for (String value : labelBuilder.getEntryBuilder(i).getValueList()) {
+                    if (value.equals(label)) {
+                        // return because label is already in there
+                        return labelBuilder;
+                    }
+                }
+
+                // add new label
+                labelBuilder.getEntryBuilder(i).addValue(label);
+                return labelBuilder;
+            }
+        }
+
+        // language code not present yet
+        labelBuilder.addEntryBuilder().setKey(languageCode).addValue(label);
+        return labelBuilder;
+    }
+
     public static String getFirstLabel(final Label label) throws NotAvailableException {
         for (Label.MapFieldEntry entry : label.getEntryList()) {
             for (String value : entry.getValueList()) {
