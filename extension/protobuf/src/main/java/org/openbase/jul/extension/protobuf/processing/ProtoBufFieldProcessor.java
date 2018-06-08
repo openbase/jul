@@ -379,7 +379,7 @@ public class ProtoBufFieldProcessor {
      *
      * @throws CouldNotPerformException is thrown if the entry could not be resolved.
      */
-    public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
+    public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, MessageOrBuilder mapHolder) throws CouldNotPerformException {
         try {
 
             if (mapHolder.getRepeatedFieldCount(mapFieldDescriptor) == 0) {
@@ -391,14 +391,6 @@ public class ProtoBufFieldProcessor {
 
             final FieldDescriptor keyDescriptor = entryExample.getDescriptorForType().findFieldByName("key");
             final FieldDescriptor valueDescriptor = entryExample.getDescriptorForType().findFieldByName("value");
-
-            if (keyDescriptor == null) {
-                throw new NotAvailableException("keyDescriptor");
-            }
-
-            if (valueDescriptor == null) {
-                throw new NotAvailableException("valueDescriptor");
-            }
 
             if (keyDescriptor == null) {
                 throw new NotAvailableException("Field[KEY] does not exist for type " + entryExample.getClass().getName());

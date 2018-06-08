@@ -2,6 +2,7 @@ package org.openbase.jul.extension.rst.processing;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import rst.calendar.DateTimeType.DateTime;
 import rst.communicationpatterns.ResourceAllocationType.ResourceAllocation;
@@ -80,8 +81,8 @@ public class ActionDescriptionProcessor {
         // initialize values which are true for every ActionDescription
         actionDescription.setId(UUID.randomUUID().toString());
         actionDescription.setActionState(ActionState.newBuilder().setValue(ActionState.State.INITIALIZED).build());
-        //TODO: change after label processor
-//        actionDescription.setLabel(GENERIC_ACTION_LABEL);
+
+        LabelProcessor.addLabel(actionDescription.getLabelBuilder(), Locale.ENGLISH, GENERIC_ACTION_LABEL);
         actionDescription.setDescription(GENERIC_ACTION_DESCRIPTION);
 
         // initialize other required fields from ResourceAllocation
