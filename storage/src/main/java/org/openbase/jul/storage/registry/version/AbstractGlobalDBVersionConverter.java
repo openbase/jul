@@ -22,14 +22,57 @@ package org.openbase.jul.storage.registry.version;
  * #L%
  */
 
+import com.google.gson.JsonObject;
+import org.openbase.jul.exception.CouldNotPerformException;
+
+import java.io.File;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
 /**
- *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  */
 public abstract class AbstractGlobalDBVersionConverter extends AbstractDBVersionConverter implements GlobalDBVersionConverter {
 
     public AbstractGlobalDBVersionConverter(DBVersionControl versionControl) {
         super(versionControl);
+    }
+
+    protected void removeFromGlobalDBSnapshot(final JsonObject remove, final String databaseKey,
+                                           final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots)
+            throws CouldNotPerformException {
+        // test if database key is valid
+        if (!globalDbSnapshots.containsKey(databaseKey)) {
+            String keys = "";
+            for (Iterator<String> keyIterator = globalDbSnapshots.keySet().iterator(); keyIterator.hasNext(); ) {
+                String key = keyIterator.next();
+
+                keys += key;
+                if (keyIterator.hasNext()) {
+                    keys += ", ";
+                }
+            }
+            throw new CouldNotPerformException("Invalid database key[" + databaseKey + "] valid keys are [" + keys + "]");
+        }
+
+        // find according file
+        File file = null;
+        for (Entry<File, DatabaseEntryDescriptor> entry : globalDbSnapshots.get(databaseKey).entrySet()) {
+            if (entry.getValue().getEntry().equals(remove)) {
+                // file found
+                file = entry.getKey();
+                break;
+            }
+        }
+
+        // file could not be found
+        if (file == null) {
+            throw new CouldNotPerformException("Could not find File of [" + remove + "]");
+        }
+
+        // remove file
+        globalDbSnapshots.get(databaseKey).remove(file);
     }
 
 }

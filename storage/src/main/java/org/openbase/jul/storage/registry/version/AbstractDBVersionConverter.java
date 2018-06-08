@@ -22,6 +22,13 @@ package org.openbase.jul.storage.registry.version;
  * #L%
  */
 
+import com.google.gson.JsonObject;
+import org.openbase.jul.exception.CouldNotPerformException;
+
+import java.io.File;
+import java.util.Map;
+import java.util.Map.Entry;
+
 /**
  *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
@@ -37,5 +44,20 @@ public abstract class AbstractDBVersionConverter implements DBVersionConverter {
     @Override
     public DBVersionControl getVersionControl() {
         return versionControl;
+    }
+
+    protected void removeFromDBSnapshot(final JsonObject jsonObject, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException {
+        File file = null;
+        for(Entry<File, JsonObject> entry : dbSnapshot.entrySet()) {
+            if(entry.getValue().equals(jsonObject)) {
+                file = entry.getKey();
+            }
+        }
+
+        if(file == null) {
+            throw new CouldNotPerformException("Could not find file for entry["+jsonObject+"]");
+        }
+
+        dbSnapshot.remove(file);
     }
 }

@@ -115,6 +115,7 @@ public class DBVersionControl {
 
             // init
             Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots = null;
+            final Map<String, Set<File>> globalKeySet = new HashMap<>();
             final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
 
             int versionOfCurrentTransaction = currentVersion;
@@ -136,11 +137,25 @@ public class DBVersionControl {
                 // load global dbs if needed
                 if (globalDbSnapshots == null && converter instanceof GlobalDBVersionConverter) {
                     globalDbSnapshots = loadGlobalDbSnapshots();
+                    for (Entry<String, Map<File, DatabaseEntryDescriptor>> entry : globalDbSnapshots.entrySet()) {
+                        globalKeySet.put(entry.getKey(), new HashSet<>(entry.getValue().keySet()));
+                    }
                 }
 
-                for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
+                for (Entry<File, JsonObject> dbEntry : new HashSet<>(dbFileEntryMap.entrySet())) {
                     // update converted entry
-                    dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), upgradeDBEntry(dbEntry.getValue(), converter, dbFileEntryMap, globalDbSnapshots));
+                    final JsonObject jsonObject = upgradeDBEntry(dbEntry.getValue(), converter, dbFileEntryMap, globalDbSnapshots);
+
+                    // entry was not converted but removed
+                    if (!dbFileEntryMap.values().contains(jsonObject)) {
+                        if (!dbEntry.getKey().delete()) {
+                            throw new CouldNotPerformException("Could not remove database entry[" + dbEntry + "]");
+                        }
+                        dbFileEntryMap.remove(dbEntry.getKey());
+                        continue;
+                    }
+
+                    dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), jsonObject);
                 }
 
                 // upgrade latest version to current version
@@ -150,7 +165,7 @@ public class DBVersionControl {
                 storeDbSnapshot(dbFileEntryMap);
 
                 // format and store global db if changed
-                storeGlobalDbSnapshots(globalDbSnapshots);
+                storeGlobalDbSnapshots(globalDbSnapshots, globalKeySet);
 
                 // upgrade db version
                 upgradeCurrentDBVersion();
@@ -193,6 +208,7 @@ public class DBVersionControl {
         Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshotMap = new HashMap<>();
         globalDatabaseDirectories.stream().forEach((globalDatabaseDirectory) -> {
             try {
+                logger.warn("Test directory [" + globalDatabaseDirectory + "]");
                 if (!FileUtils.isSymlink(globalDatabaseDirectory)) {
                     if (globalDatabaseDirectory.canWrite()) {
                         globalDbSnapshotMap.put(globalDatabaseDirectory.getName(), loadDbSnapshotAsDBEntryDescriptors(globalDatabaseDirectory));
@@ -229,22 +245,34 @@ public class DBVersionControl {
         }
     }
 
-    private void storeGlobalDbSnapshots(final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots) throws CouldNotPerformException {
+    private void storeGlobalDbSnapshots(final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots,
+                                        final Map<String, Set<File>> globalKeySet) throws CouldNotPerformException {
         if (globalDbSnapshots == null) {
             // skip because globally databases were never loaded.
             return;
         }
 
+        // store every entry in globalDBSnapshot
         for (Entry<String, Map<File, DatabaseEntryDescriptor>> entry : globalDbSnapshots.entrySet()) {
             storeDbSnapshotASDBEntryDescriptors(entry.getValue());
         }
+
+        // remove all entries which have been removed
+        for (final Entry<String, Set<File>> entry : globalKeySet.entrySet()) {
+            for (File file : entry.getValue()) {
+                if (!globalDbSnapshots.get(entry.getKey()).keySet().contains(file)) {
+                    if (!file.delete()) {
+                        throw new CouldNotPerformException("Could not delete file[" + file + "]");
+                    }
+                }
+            }
+        }
+
     }
 
     /**
      * @param jsonEntry
-     *
      * @return
-     *
      * @throws CouldNotPerformException
      */
     public String formatEntryToHumanReadableString(final JsonObject jsonEntry) throws CouldNotPerformException {
@@ -294,9 +322,7 @@ public class DBVersionControl {
      * Method detects the current db version of the given database.
      *
      * @param databaseDirectory
-     *
      * @return the current db version as integer.
-     *
      * @throws CouldNotPerformException
      */
     public int detectCurrentDBVersion(final File databaseDirectory) throws CouldNotPerformException {
@@ -331,7 +357,6 @@ public class DBVersionControl {
      * Method detects the current db version and returns the version number as integer.
      *
      * @return
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public int detectAndUpgradeCurrentDBVersion() throws CouldNotPerformException {
@@ -399,9 +424,7 @@ public class DBVersionControl {
      *
      * @param currentVersion
      * @param targetVersion
-     *
      * @return
-     *
      * @throws CouldNotPerformException
      */
     public List<DBVersionConverter> getDBConverterPipeline(final int currentVersion, final int targetVersion) throws CouldNotPerformException {
@@ -439,9 +462,7 @@ public class DBVersionControl {
      * Loads a consistency handler list which is used for consistency reconstruction after a db upgrade.
      *
      * @param registry
-     *
      * @return the consistency handler list.
-     *
      * @throws CouldNotPerformException
      */
     public List<ConsistencyHandler> loadDBVersionConsistencyHandlers(final FileSynchronizedRegistry registry) throws CouldNotPerformException {
@@ -483,7 +504,6 @@ public class DBVersionControl {
      * Method upgrades the applied db version consistency handler list of the version file.
      *
      * @param versionConsistencyHandler
-     *
      * @throws CouldNotPerformException
      */
     public void registerConsistencyHandlerExecution(final ConsistencyHandler versionConsistencyHandler) throws CouldNotPerformException {
@@ -536,7 +556,6 @@ public class DBVersionControl {
      * Method detects the already executed version consistency handler which are registered within the db version file.
      *
      * @return
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public Set<String> detectExecutedVersionConsistencyHandler() throws CouldNotPerformException {
@@ -571,9 +590,7 @@ public class DBVersionControl {
      * Method detects all database directories which are on the same file level than the given database.
      *
      * @param databaseDirectory the database directory used for extracting the base directory
-     *
      * @return a list which all top level database directories excluding the currently handled database itself.
-     *
      * @throws CouldNotPerformException is thrown if the detection fails.
      */
     private List<File> detectNeighbourDatabaseDirectories(final File databaseDirectory) throws CouldNotPerformException {
