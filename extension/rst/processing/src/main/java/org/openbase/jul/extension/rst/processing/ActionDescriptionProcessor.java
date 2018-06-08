@@ -38,7 +38,6 @@ import rst.timing.IntervalType.Interval;
  * #L%
  */
 /**
- * TODO: release : remove all action authority parts
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class ActionDescriptionProcessor {
@@ -91,7 +90,7 @@ public class ActionDescriptionProcessor {
         resourceAllocation.setState(ResourceAllocation.State.REQUESTED);
 
         // add Authority and ResourceAllocation.Initiator
-//        actionDescription.setActionAuthority(actionAuthority);
+        actionDescription.setActionAuthority(actionAuthority);
         resourceAllocation.setInitiator(initiator);
 
         // add values from ActionParameter
@@ -109,7 +108,7 @@ public class ActionDescriptionProcessor {
             List<ActionReference> actionReferenceList = actionParameter.getInitiator().getActionChainList();
             ActionReference.Builder actionReference = ActionReference.newBuilder();
             actionReference.setActionId(actionParameter.getInitiator().getId());
-//            actionReference.setAuthority(actionParameter.getInitiator().getActionAuthority());
+            actionReference.setAuthority(actionParameter.getInitiator().getActionAuthority());
             actionReference.setServiceStateDescription(actionParameter.getInitiator().getServiceStateDescription());
             actionReferenceList.add(actionReference.build());
             actionDescription.addAllActionChain(actionReferenceList);
@@ -215,7 +214,7 @@ public class ActionDescriptionProcessor {
     public static ActionReference getActionReferenceFromActionDescription(final ActionDescriptionOrBuilder actionDescription) {
         ActionReference.Builder actionReference = ActionReference.newBuilder();
         actionReference.setActionId(actionDescription.getId());
-//        actionReference.setAuthority(actionDescription.getActionAuthority());
+        actionReference.setAuthority(actionDescription.getActionAuthority());
         actionReference.setServiceStateDescription(actionDescription.getServiceStateDescription());
         return actionReference.build();
     }
