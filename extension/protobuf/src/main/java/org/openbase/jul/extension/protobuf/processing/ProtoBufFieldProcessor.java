@@ -379,7 +379,7 @@ public class ProtoBufFieldProcessor {
      *
      * @throws CouldNotPerformException is thrown if the entry could not be resolved.
      */
-    public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, MessageOrBuilder mapHolder) throws CouldNotPerformException {
+    public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, MessageOrBuilder mapHolder) throws NotAvailableException {
         try {
 
             if (mapHolder.getRepeatedFieldCount(mapFieldDescriptor) == 0) {
@@ -416,9 +416,9 @@ public class ProtoBufFieldProcessor {
                     }
                 }
             }
-            throw new NotAvailableException("Entry for Key[" + key + "]");
+            throw new InvalidStateException("Key is unknown!");
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not lookup value for given Key[" + key + "]!", ex);
+            throw new NotAvailableException("Entry of Key", key, ex);
         }
     }
 }
