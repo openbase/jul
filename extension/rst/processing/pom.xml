@@ -33,10 +33,5 @@
             <artifactId>jul.processing</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.protobuf</artifactId>
-            <version>${project.version}</version>
-        </dependency>
     </dependencies>
 </project>

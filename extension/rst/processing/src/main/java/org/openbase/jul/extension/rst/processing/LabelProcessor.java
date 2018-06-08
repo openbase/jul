@@ -22,27 +22,34 @@ package org.openbase.jul.extension.rst.processing;
  * #L%
  */
 
-import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.Message;
-import com.google.protobuf.MessageOrBuilder;
-import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import rst.configuration.LabelType.Label;
+import rst.configuration.LabelType.Label.Builder;
 
 import java.util.List;
 import java.util.Locale;
 
 /**
+ * The LabelProcessor is a helper class which makes dealing with {@link rst.configuration.LabelType.Label}
+ * easier.
+ *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class LabelProcessor {
 
-    private static final FieldDescriptor ENTRY_FIELD = Label.getDescriptor().findFieldByNumber(Label.ENTRY_FIELD_NUMBER);
-
+    /**
+     * Test if a label contains a label string. This test iterates over all languages and all
+     * label strings for the language and check if one equals the label string.
+     * The test is done ignoring the case of the label string.
+     *
+     * @param label       the label type which is checked
+     * @param labelString the label string that is tested if it is contained in the label type
+     * @return if the labelString is contained in the label type
+     */
     public static boolean contains(final Label label, final String labelString) {
-        for(Label.MapFieldEntry entry : label.getEntryList()) {
-            for(String value : entry.getValueList()) {
-                if(value.equalsIgnoreCase(labelString)) {
+        for (Label.MapFieldEntry entry : label.getEntryList()) {
+            for (String value : entry.getValueList()) {
+                if (value.equalsIgnoreCase(labelString)) {
                     return true;
                 }
             }
@@ -50,13 +57,34 @@ public class LabelProcessor {
         return false;
     }
 
+    /**
+     * Add a label to a labelBuilder by locale. This is equivalent to calling
+     * {@link #addLabel(Builder, String, String)} but the language code is extracted from the locale
+     * by calling {@link Locale#getLanguage()}.
+     *
+     * @param labelBuilder the label builder to be updated
+     * @param locale       the locale from which the language code is extracted for which the label is added
+     * @param label        the label to be added
+     * @return the updated label builder
+     */
     public static Label.Builder addLabel(final Label.Builder labelBuilder, final Locale locale, final String label) {
         return addLabel(labelBuilder, locale.getLanguage(), label);
     }
 
+    /**
+     * Add a label to a labelBuilder by languageCode. If the label is already contained for the
+     * language code nothing will be done. If the languageCode already exists and the label is not contained
+     * it will be added to the end of the label list by this language code. If no entry for the languageCode
+     * exists a new entry will be added and the label added as its first value.
+     *
+     * @param labelBuilder the label builder to be updated
+     * @param languageCode the languageCode for which the label is added
+     * @param label        the label to be added
+     * @return the updated label builder
+     */
     public static Label.Builder addLabel(final Label.Builder labelBuilder, final String languageCode, final String label) {
         for (int i = 0; i < labelBuilder.getEntryCount(); i++) {
-            // found labels for the given entry key
+            // found labels for the entry key
             if (labelBuilder.getEntry(i).getKey().equals(languageCode)) {
                 // check if the new value is not already contained
                 for (String value : labelBuilder.getEntryBuilder(i).getValueList()) {
@@ -77,6 +105,13 @@ public class LabelProcessor {
         return labelBuilder;
     }
 
+    /**
+     * Get the first label found in the label type. This is independent of the language of the label.
+     *
+     * @param label the label type which is searched for the first label
+     * @return the first label found
+     * @throws NotAvailableException if now label is contained in the label type.
+     */
     public static String getFirstLabel(final Label label) throws NotAvailableException {
         for (Label.MapFieldEntry entry : label.getEntryList()) {
             for (String value : entry.getValueList()) {
@@ -86,11 +121,31 @@ public class LabelProcessor {
         throw new NotAvailableException("No label available");
     }
 
-    public static String getLabelByLanguage(final Locale locale, final Label label) throws CouldNotPerformException {
+    /**
+     * Get the first label for a languageCode from a label type. This is equivalent to calling
+     * {@link #getLabelByLanguage(String, Label)} but the language code is extracted from the locale by calling
+     * {@link Locale#getLanguage()}.
+     *
+     * @param locale the locale from which a language code is extracted
+     * @param label  the label type which is searched for labels in the language
+     * @return the first label from the label type for the locale
+     * @throws NotAvailableException if no label list for the locale exists of if the list is empty
+     */
+    public static String getLabelByLanguage(final Locale locale, final Label label) throws NotAvailableException {
         return getLabelByLanguage(locale.getLanguage(), label);
     }
 
-    public static String getLabelByLanguage(final String languageCode, final Label label) throws CouldNotPerformException {
+    /**
+     * Get the first label for a languageCode from a label type.
+     * This method will call {@link #getLabelListByLanguage(String, Label)} to extract the list of labels
+     * for the languageCode and then return its first entry.
+     *
+     * @param languageCode the languageCode which is checked
+     * @param label        the label type which is searched for labels in the language
+     * @return the first label from the label type for the language code.
+     * @throws NotAvailableException if no label list for the language code exists or if the list is empty
+     */
+    public static String getLabelByLanguage(final String languageCode, final Label label) throws NotAvailableException {
         final List<String> labelList = getLabelListByLanguage(languageCode, label);
         if (labelList.isEmpty()) {
             throw new NotAvailableException("Label for language[" + languageCode + "]");
@@ -98,34 +153,36 @@ public class LabelProcessor {
         return labelList.get(0);
     }
 
-    public static List<String> getLabelListByLanguage(final Locale locale, final Label label) throws CouldNotPerformException {
+    /**
+     * Get a list of all labels for a locale in a label type. This is equivalent to calling
+     * {@link #getLabelListByLanguage(String, Label)} but the language code is extracted from the locale by calling
+     * {@link Locale#getLanguage()}.
+     *
+     * @param locale the locale from which the language code is extracted
+     * @param label  the label type that is searched for a label list
+     * @return a list of all labels for the locale in the language type
+     * @throws NotAvailableException if no entry for the locale exist in the label type
+     */
+    public static List<String> getLabelListByLanguage(final Locale locale, final Label label) throws NotAvailableException {
         return getLabelListByLanguage(locale.getLanguage(), label);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<String> getLabelListByLanguage(final String languageCode, final Label label) throws CouldNotPerformException {
-        return (List<String>) getMapValue(languageCode, ENTRY_FIELD, label, List.class);
-    }
-
-    public static <VT> VT getMapValue(final Object key, final FieldDescriptor mapFieldDescriptor, final MessageOrBuilder mapHolder, final Class<VT> valueClass) throws CouldNotPerformException {
-        try {
-            FieldDescriptor keyDescriptor = null;
-            FieldDescriptor valueDescriptor = null;
-            for (int i = 0; i < mapHolder.getRepeatedFieldCount(mapFieldDescriptor); i++) {
-                final Message entry = (Message) mapHolder.getRepeatedField(mapFieldDescriptor, i);
-
-                if (keyDescriptor == null || valueDescriptor == null) {
-                    keyDescriptor = entry.getDescriptorForType().findFieldByName("KEY");
-                    valueDescriptor = entry.getDescriptorForType().findFieldByName("VALUE");
-                }
-
-                if (entry.getField(keyDescriptor).equals(key)) {
-                    return (VT) entry.getField(valueDescriptor);
-                }
+    /**
+     * Get a list of all labels for a languageCode in a label type. This is done by iterating over all entries
+     * in the label type and checking if the key matches the languageCode. If it matches the value list is
+     * returned. Thus the returned list can be empty depending on the label.
+     *
+     * @param languageCode the languageCode which is checked
+     * @param label        the label type that is searched for a label list
+     * @return a list of all labels for the languageCode in the language type
+     * @throws NotAvailableException if no entry for the languageCode exist in the label type
+     */
+    public static List<String> getLabelListByLanguage(final String languageCode, final Label label) throws NotAvailableException {
+        for (Label.MapFieldEntry entry : label.getEntryList()) {
+            if (entry.getKey().equalsIgnoreCase(languageCode)) {
+                return entry.getValueList();
             }
-            throw new NotAvailableException("Entry with key[" + key + "]");
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not get value from map", ex);
         }
+        throw new NotAvailableException("LabelList of language[" + languageCode + "] in labelType[" + label + "]");
     }
 }
