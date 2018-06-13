@@ -23,8 +23,11 @@ package org.openbase.jul.extension.rst.processing;
  */
 
 import org.openbase.jul.exception.NotAvailableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rst.configuration.LabelType.Label;
 import rst.configuration.LabelType.Label.Builder;
+import rst.configuration.LabelType.LabelOrBuilder;
 
 import java.util.List;
 import java.util.Locale;
@@ -36,6 +39,8 @@ import java.util.Locale;
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class LabelProcessor {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LabelProcessor.class);
 
     /**
      * Test if a label contains a label string. This test iterates over all languages and all
@@ -130,7 +135,7 @@ public class LabelProcessor {
      * @return the first label found
      * @throws NotAvailableException if now label is contained in the label type.
      */
-    public static String getFirstLabel(final Label label) throws NotAvailableException {
+    public static String getFirstLabel(final LabelOrBuilder label) throws NotAvailableException {
         for (Label.MapFieldEntry entry : label.getEntryList()) {
             for (String value : entry.getValueList()) {
                 return value;
@@ -141,7 +146,7 @@ public class LabelProcessor {
 
     /**
      * Get the first label for a languageCode from a label type. This is equivalent to calling
-     * {@link #getLabelByLanguage(String, Label)} but the language code is extracted from the locale by calling
+     * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
      * {@link Locale#getLanguage()}.
      *
      * @param locale the locale from which a language code is extracted
@@ -149,13 +154,13 @@ public class LabelProcessor {
      * @return the first label from the label type for the locale
      * @throws NotAvailableException if no label list for the locale exists of if the list is empty
      */
-    public static String getLabelByLanguage(final Locale locale, final Label label) throws NotAvailableException {
+    public static String getLabelByLanguage(final Locale locale, final LabelOrBuilder label) throws NotAvailableException {
         return getLabelByLanguage(locale.getLanguage(), label);
     }
 
     /**
      * Get the first label for a languageCode from a label type.
-     * This method will call {@link #getLabelListByLanguage(String, Label)} to extract the list of labels
+     * This method will call {@link #getLabelListByLanguage(String, LabelOrBuilder)} to extract the list of labels
      * for the languageCode and then return its first entry.
      *
      * @param languageCode the languageCode which is checked
@@ -163,7 +168,7 @@ public class LabelProcessor {
      * @return the first label from the label type for the language code.
      * @throws NotAvailableException if no label list for the language code exists or if the list is empty
      */
-    public static String getLabelByLanguage(final String languageCode, final Label label) throws NotAvailableException {
+    public static String getLabelByLanguage(final String languageCode, final LabelOrBuilder label) throws NotAvailableException {
         final List<String> labelList = getLabelListByLanguage(languageCode, label);
         if (labelList.isEmpty()) {
             throw new NotAvailableException("Label for language[" + languageCode + "]");
@@ -173,7 +178,7 @@ public class LabelProcessor {
 
     /**
      * Get a list of all labels for a locale in a label type. This is equivalent to calling
-     * {@link #getLabelListByLanguage(String, Label)} but the language code is extracted from the locale by calling
+     * {@link #getLabelListByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
      * {@link Locale#getLanguage()}.
      *
      * @param locale the locale from which the language code is extracted
@@ -181,7 +186,7 @@ public class LabelProcessor {
      * @return a list of all labels for the locale in the language type
      * @throws NotAvailableException if no entry for the locale exist in the label type
      */
-    public static List<String> getLabelListByLanguage(final Locale locale, final Label label) throws NotAvailableException {
+    public static List<String> getLabelListByLanguage(final Locale locale, final LabelOrBuilder label) throws NotAvailableException {
         return getLabelListByLanguage(locale.getLanguage(), label);
     }
 
@@ -195,7 +200,7 @@ public class LabelProcessor {
      * @return a list of all labels for the languageCode in the language type
      * @throws NotAvailableException if no entry for the languageCode exist in the label type
      */
-    public static List<String> getLabelListByLanguage(final String languageCode, final Label label) throws NotAvailableException {
+    public static List<String> getLabelListByLanguage(final String languageCode, final LabelOrBuilder label) throws NotAvailableException {
         for (Label.MapFieldEntry entry : label.getEntryList()) {
             if (entry.getKey().equalsIgnoreCase(languageCode)) {
                 return entry.getValueList();
