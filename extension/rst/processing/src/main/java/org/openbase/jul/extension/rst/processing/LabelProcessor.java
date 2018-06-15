@@ -288,4 +288,9 @@ public class LabelProcessor {
         }
         throw new NotAvailableException("LabelList of language[" + languageCode + "] in labelType[" + label + "]");
     }
+
+    public static Label replace(Label label, String replacementKey, Label replacement) {
+        //todo: to be continue...
+        return label;
+    }
 }
