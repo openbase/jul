@@ -96,6 +96,15 @@ public class ProtoBufFieldProcessor {
         }
     }
 
+    /**
+     *
+     * @param msg
+     * @return
+     * @throws CouldNotPerformException
+     *
+     * @deprecated cannot be used in its current form because the label is now an RST type and not a string
+     */
+    @Deprecated
     public static String getLabel(final Message.Builder msg) throws CouldNotPerformException {
         try {
             return (String) msg.getField(getFieldDescriptor(msg, LabelProvider.TYPE_FIELD_LABEL));
