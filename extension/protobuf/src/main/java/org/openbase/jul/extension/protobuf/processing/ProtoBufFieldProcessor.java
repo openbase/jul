@@ -10,25 +10,26 @@ package org.openbase.jul.extension.protobuf.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import com.google.protobuf.*;
-import com.google.protobuf.DescriptorProtos.EnumValueDescriptorProto;
-import com.google.protobuf.Descriptors.EnumDescriptor;
+import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
+import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
+import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -97,11 +98,9 @@ public class ProtoBufFieldProcessor {
     }
 
     /**
-     *
      * @param msg
      * @return
      * @throws CouldNotPerformException
-     *
      * @deprecated cannot be used in its current form because the label is now an RST type and not a string
      */
     @Deprecated
@@ -124,7 +123,6 @@ public class ProtoBufFieldProcessor {
      * Tests if a message is empty. If a message is empty none of its fields are set.
      *
      * @param messageOrBuilder the message or builder which is tested
-     *
      * @return true if none of the fields is set, else false
      */
     public static boolean isMessageEmpty(final MessageOrBuilder messageOrBuilder) {
@@ -321,7 +319,6 @@ public class ProtoBufFieldProcessor {
      * @param entryMessage       the entry to put into the map.
      * @param mapFieldDescriptor the descriptor which refers the map field of the {@code mapHolder}.
      * @param mapHolder          the message builder providing the map field.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong during the reflection process which mostly means the data types are not compatible.
      */
     public static void putMapEntry(final Message entryMessage, FieldDescriptor mapFieldDescriptor, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
@@ -383,9 +380,7 @@ public class ProtoBufFieldProcessor {
      * @param key                the key to identify the value within the map.
      * @param mapFieldDescriptor the descriptor which refers the map field of the {@code mapHolder}.
      * @param mapHolder          the message builder providing the map field.
-     *
      * @return the resolved entry related to the given {@code key}
-     *
      * @throws CouldNotPerformException is thrown if the entry could not be resolved.
      */
     public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, MessageOrBuilder mapHolder) throws NotAvailableException {
@@ -409,20 +404,12 @@ public class ProtoBufFieldProcessor {
                 throw new NotAvailableException("Field[VALUE] does not exist for type " + entryExample.getClass().getName());
             }
 
-            final boolean keyIsEnum = keyDescriptor.getJavaType() == JavaType.ENUM;
-
             // lookup key in map representation
             for (int i = 0; i < mapHolder.getRepeatedFieldCount(mapFieldDescriptor); i++) {
                 final Message entryMessage = (Message) mapHolder.getRepeatedField(mapFieldDescriptor, i);
 
-                if (keyIsEnum) {
-                    if (((EnumValueDescriptor) entryMessage.getField(keyDescriptor)).getNumber() == ((ProtocolMessageEnum) key).getNumber()) {
-                        return entryMessage.getField(valueDescriptor);
-                    }
-                } else {
-                    if (entryMessage.getField(keyDescriptor) == key) {
-                        return entryMessage.getField(valueDescriptor);
-                    }
+                if (entryMessage.getField(keyDescriptor).equals(key)) {
+                    return entryMessage.getField(valueDescriptor);
                 }
             }
             throw new InvalidStateException("Key is unknown!");

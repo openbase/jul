@@ -80,7 +80,7 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
             if (!field.isRepeated() && field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
                 //===============================================================
                 //TODO: This is just a hack since states in units now contain action descriptions,
-                //      This line preventes resource allocations to be checked because they contain required fields
+                //      This line prevents resource allocations to be checked because they contain required fields
                 //      and thus if they are checked calling build on the builder afterwards fails.
                 if(field.getName().equals(RESOURCE_ALLOCATION_FIELD)) {
                     continue;
