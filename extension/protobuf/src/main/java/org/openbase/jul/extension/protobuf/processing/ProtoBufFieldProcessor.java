@@ -10,12 +10,12 @@ package org.openbase.jul.extension.protobuf.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -321,7 +321,7 @@ public class ProtoBufFieldProcessor {
      * @param mapHolder          the message builder providing the map field.
      * @throws CouldNotPerformException is thrown if something went wrong during the reflection process which mostly means the data types are not compatible.
      */
-    public static void putMapEntry(final Message entryMessage, FieldDescriptor mapFieldDescriptor, GeneratedMessage.Builder mapHolder) throws CouldNotPerformException {
+    public static void putMapEntry(final Message entryMessage, FieldDescriptor mapFieldDescriptor, Message.Builder mapHolder) throws CouldNotPerformException {
         try {
             final FieldDescriptor keyDescriptor = entryMessage.getDescriptorForType().findFieldByName("key");
             final FieldDescriptor valueDescriptor = entryMessage.getDescriptorForType().findFieldByName("value");
