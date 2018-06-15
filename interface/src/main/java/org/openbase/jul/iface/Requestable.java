@@ -31,7 +31,6 @@ import org.openbase.jul.annotation.RPCMethod;
  */
 public interface Requestable<T> {
 
-    // todo next release: replace by requestData and rename in DataRequestable<T>
     @RPCMethod
     public T requestStatus() throws CouldNotPerformException;
 }

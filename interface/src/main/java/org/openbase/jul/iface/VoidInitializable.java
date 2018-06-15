@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
 public interface VoidInitializable extends DefaultInitializableImpl<Void> {
 
     @Override
-    public default void init(Void config) throws InitializationException, InterruptedException {
+    public default void init(final Void config) throws InitializationException, InterruptedException {
         // todo any better solution here?
         init();
     }
