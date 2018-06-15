@@ -76,11 +76,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                         return;
                     }
 
-                    try {
-                        internalSync();
-                    } finally {
-                        afterInternalSync();
-                    }
+                    internalSync();
                 }
             };
             this.observer = (Observable source, Object data) -> {
@@ -233,6 +229,8 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                     assert false; // exit if errors occurs during unit tests.
                 }
                 throw exx;
+            } finally {
+                afterInternalSync();
             }
         }
     }

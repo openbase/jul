@@ -99,9 +99,9 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
     }
 
     /**
-     *  {@inheritDoc}
+     * {@inheritDoc}
      *
-     * @param observer  {@inheritDoc}
+     * @param observer {@inheritDoc}
      */
     @Override
     public void addSynchronizationObserver(Observer<Long> observer) {
@@ -109,9 +109,9 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
     }
 
     /**
-     *  {@inheritDoc}
+     * {@inheritDoc}
      *
-     * @param observer  {@inheritDoc}
+     * @param observer {@inheritDoc}
      */
     @Override
     public void removeSynchronizationObserver(Observer<Long> observer) {
