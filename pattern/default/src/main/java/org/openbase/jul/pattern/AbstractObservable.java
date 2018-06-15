@@ -10,12 +10,12 @@ package org.openbase.jul.pattern;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @param <T> the data type on whose changes is notified
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class AbstractObservable<T> implements Observable<T> {
@@ -182,7 +183,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * has not changed and false is returned.
      *
      * @param observable the value which is notified
+     *
      * @return true if the observable has changed
+     *
      * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
@@ -205,7 +208,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *
      * @param source     the source of the notification
      * @param observable the value which is notified
+     *
      * @return true if the observable has changed
+     *
      * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
@@ -299,10 +304,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     /**
      * Method is called if a observer notification delivers a new value.
+     * Note: Overwrite this method for getting informed about value changes.
      *
      * @param value the new value
-     *              <p>
-     *              Note: Overwrite this method for getting informed about value changes.
      */
     protected void applyValueUpdate(final T value) throws NotAvailableException {
         // overwrite for current state holding obervable implementations.
