@@ -41,6 +41,8 @@ package org.openbase.jul.visual.javafx.iface;
  */
 
 import javafx.application.Platform;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.pattern.ThrowableValueHolderImpl;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.iface.DefaultInitializable;
 import org.openbase.jul.schedule.SyncObject;
@@ -50,11 +52,11 @@ import org.openbase.jul.schedule.SyncObject;
  */
 public interface StaticPane extends DefaultInitializable {
 
-    // todo release: this method could throw an CouldNotPerform exception!?
     /**
      * Init pane content.
+     * @throws CouldNotPerformException if the content could not be initialized
      */
-    void initContent();
+    void initContent() throws InitializationException;
 
     @Override
     default void init() throws InitializationException, InterruptedException {
@@ -68,13 +70,19 @@ public interface StaticPane extends DefaultInitializable {
         // invoke on fx application thread and wait until done.
         final SyncObject initSync = new SyncObject("StaticPaneInitSync");
         synchronized (initSync) {
+            final ThrowableValueHolderImpl<InitializationException> throwableValueHolderImpl = new ThrowableValueHolderImpl<>();
             Platform.runLater(() -> {
-                initContent();
+                try {
+                    initContent();
+                } catch (InitializationException ex) {
+                    throwableValueHolderImpl.setValue(ex);
+                }
                 synchronized (initSync) {
                     initSync.notifyAll();
                 }
             });
             initSync.wait();
+            throwableValueHolderImpl.throwIfAvailable();
         }
     }
 }
