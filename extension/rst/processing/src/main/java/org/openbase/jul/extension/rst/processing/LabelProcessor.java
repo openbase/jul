@@ -81,6 +81,48 @@ public class LabelProcessor {
     }
 
     /**
+     * Create a new labelBuilder and register label with the default locale.
+     *
+     * @param label        the label to be added
+     * @return the updated label builder
+     */
+    public static Label.Builder generateLabelBuilder(final String label) {
+        return addLabel(Label.newBuilder(), Locale.getDefault(), label);
+    }
+
+    /**
+     * Create a new labelBuilder and register label with given locale.
+     *
+     * @param locale       the locale from which the language code is extracted for which the label is added
+     * @param label        the label to be added
+     * @return the updated label builder
+     */
+    public static Label.Builder generateLabelBuilder(final Locale locale, final String label) {
+        return addLabel(Label.newBuilder(), locale.getLanguage(), label);
+    }
+
+    /**
+     * Create a new labelBuilder and register label with the default locale.
+     *
+     * @param label        the label to be added
+     * @return the updated label builder
+     */
+    public static Label buildLabel(final String label) {
+        return addLabel(Label.newBuilder(), Locale.getDefault(), label).build();
+    }
+
+    /**
+     * Create a new labelBuilder and register label with given locale.
+     *
+     * @param locale       the locale from which the language code is extracted for which the label is added
+     * @param label        the label to be added
+     * @return the updated label builder
+     */
+    public static Label buildLabel(final Locale locale, final String label) {
+        return addLabel(Label.newBuilder(), locale.getLanguage(), label).build();
+    }
+
+    /**
      * Add a label to a labelBuilder by locale. This is equivalent to calling
      * {@link #addLabel(Builder, String, String)} but the language code is extracted from the locale
      * by calling {@link Locale#getLanguage()}.
@@ -142,6 +184,44 @@ public class LabelProcessor {
             }
         }
         throw new NotAvailableException("No label available");
+    }
+
+    /**
+     * Get the first label for a languageCode from a label type. This is equivalent to calling
+     * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
+     * {@link Locale#getLanguage()}. If no label matches the languageCode, than the first label of any other provided language is returned.
+     *
+     * @param locale the locale from which a language code is extracted
+     * @param label  the label type which is searched for labels in the language
+     * @return the first label from the label type for the locale
+     * @throws NotAvailableException if no label is provided by the {@code label} argument.
+     */
+    public static String getBestMatch(final Locale locale, final LabelOrBuilder label) throws NotAvailableException {
+        try {
+            // resolve label via preferred locale.
+            return getLabelByLanguage(locale.getLanguage(), label);
+        } catch (NotAvailableException ex) {
+            try {
+                // resolve world language label.
+                return getLabelByLanguage(Locale.ENGLISH, label);
+            } catch (NotAvailableException exx) {
+                // resolve any label.
+                return getFirstLabel(label);
+            }
+        }
+    }
+
+    /**
+     * Get the first label for the default language from a label type. This is equivalent to calling
+     * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
+     * {@link Locale#getDefault()} . If no label matches the languageCode, than the first label of any other provided language is returned.
+     *
+     * @param label  the label type which is searched for labels in the language
+     * @return the first label from the label type for the locale
+     * @throws NotAvailableException if no label is provided by the {@code label} argument.
+     */
+    public static String getBestMatch(final LabelOrBuilder label) throws NotAvailableException {
+        return getBestMatch(Locale.getDefault(), label);
     }
 
     /**
