@@ -54,7 +54,7 @@ public interface StaticPane extends DefaultInitializable {
 
     /**
      * Init pane content.
-     * @throws CouldNotPerformException if the content could not be initialized
+     * @throws InitializationException if the content could not be initialized
      */
     void initContent() throws InitializationException;
 

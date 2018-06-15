@@ -49,7 +49,6 @@ public class ThrowableValueHolderImpl<T extends Throwable> extends ValueHolderIm
      * {@inheritDoc}
      *
      * @throws T {@inheritDoc}
-     * @return{@inheritDoc}
      */
     @Override
     public void throwIfAvailable() throws T {

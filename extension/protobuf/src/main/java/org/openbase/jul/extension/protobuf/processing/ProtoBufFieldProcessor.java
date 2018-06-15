@@ -381,7 +381,7 @@ public class ProtoBufFieldProcessor {
      * @param mapFieldDescriptor the descriptor which refers the map field of the {@code mapHolder}.
      * @param mapHolder          the message builder providing the map field.
      * @return the resolved entry related to the given {@code key}
-     * @throws CouldNotPerformException is thrown if the entry could not be resolved.
+     * @throws NotAvailableException is thrown if the entry could not be resolved.
      */
     public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, MessageOrBuilder mapHolder) throws NotAvailableException {
         try {
