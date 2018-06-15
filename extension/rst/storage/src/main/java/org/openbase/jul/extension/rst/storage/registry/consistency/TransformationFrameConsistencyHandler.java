@@ -21,31 +21,32 @@ package org.openbase.jul.extension.rst.storage.registry.consistency;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
-import java.util.ArrayList;
-import java.util.List;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.extension.protobuf.IdentifiableMessage;
+import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.storage.registry.AbstractProtoBufRegistryConsistencyHandler;
 import org.openbase.jul.storage.registry.EntryModification;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
+import rst.domotic.unit.UnitConfigType;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.UnitConfigType.UnitConfig.Builder;
 import rst.spatial.PlacementConfigType.PlacementConfig;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <KEY>
- * @param <M>
- * @param <MB>
  */
-public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
+public class TransformationFrameConsistencyHandler extends AbstractProtoBufRegistryConsistencyHandler<String, UnitConfigType.UnitConfig, UnitConfig.Builder> {
 
     private final List<String> labelCollisionList;
     private final ProtoBufRegistry<String, UnitConfig, UnitConfig.Builder> locationRegistry;
 
-    public AbstractTransformationFrameConsistencyHandler(final ProtoBufRegistry<String, UnitConfig, UnitConfig.Builder> locationRegistry) {
+    public TransformationFrameConsistencyHandler(final ProtoBufRegistry<String, UnitConfig, UnitConfig.Builder> locationRegistry) {
         this.labelCollisionList = new ArrayList<>();
         this.locationRegistry = locationRegistry;
     }
@@ -54,15 +55,15 @@ public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends 
      * Methods verifies and updates the transformation frame id for the given placement configuration.
      * If the given placement configuration is up to date this the method returns null.
      *
-     * @param label
+     * @param alias
      * @param placementConfig
      * @return
      * @throws CouldNotPerformException
      * @throws EntryModification
      */
-    protected PlacementConfig verifyAndUpdatePlacement(final String label, final PlacementConfig placementConfig) throws CouldNotPerformException, EntryModification {
+    protected PlacementConfig verifyAndUpdatePlacement(final String alias, final PlacementConfig placementConfig) throws CouldNotPerformException, EntryModification {
         try {
-            if (label == null || label.isEmpty()) {
+            if (alias == null || alias.isEmpty()) {
                 throw new NotAvailableException("label");
             }
 
@@ -70,7 +71,7 @@ public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends 
                 throw new NotAvailableException("placementconfig");
             }
 
-            String frameId = generateFrameId(label, placementConfig);
+            String frameId = generateFrameId(alias, placementConfig);
 
             // verify and update frame id
             if (placementConfig.getTransformationFrameId().equals(frameId)) {
@@ -83,9 +84,9 @@ public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends 
         }
     }
 
-    protected String generateFrameId(final String label, final PlacementConfig placementConfig) throws CouldNotPerformException {
+    protected String generateFrameId(final String alias, final PlacementConfig placementConfig) throws CouldNotPerformException {
         try {
-            String frameId = StringProcessor.transformToIdString(label);
+            String frameId = StringProcessor.transformToIdString(alias);
 
             if (labelCollisionList.contains(frameId.toLowerCase())) {
                 return locationRegistry.get(placementConfig.getLocationId()).getMessage().getPlacementConfig().getTransformationFrameId() + "_" + frameId;
@@ -94,6 +95,21 @@ public abstract class AbstractTransformationFrameConsistencyHandler<KEY extends 
             return frameId;
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not generate frame id!", ex);
+        }
+    }
+
+    @Override
+    public void processData(String id, IdentifiableMessage<String, UnitConfig, Builder> entry, ProtoBufMessageMap<String, UnitConfig, Builder> entryMap, ProtoBufRegistry<String, UnitConfig, Builder> registry) throws CouldNotPerformException, EntryModification {
+        UnitConfig unitConfig = entry.getMessage();
+
+        if (unitConfig.getAliasList().isEmpty()) {
+            throw new NotAvailableException("alias");
+        }
+        PlacementConfig placementConfig = verifyAndUpdatePlacement(unitConfig.getAlias(0), unitConfig.getPlacementConfig());
+
+        if (placementConfig != null) {
+            entry.setMessage(unitConfig.toBuilder().setPlacementConfig(placementConfig));
+            throw new EntryModification(entry, this);
         }
     }
 

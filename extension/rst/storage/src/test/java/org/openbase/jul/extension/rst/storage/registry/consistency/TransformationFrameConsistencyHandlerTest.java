@@ -54,7 +54,7 @@ import rst.spatial.PlacementConfigType.PlacementConfig;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  *
  */
-public class AbstractTransformationFrameConsistencyHandlerTest {
+public class TransformationFrameConsistencyHandlerTest {
 
     public static final String DEVICE_A = "DeviceA";
     public static final String DEVICE_B = "DeviceB";
@@ -110,7 +110,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                 .setLocationId(LOCATION_A);
         PlacementConfig.Builder placementConfigB = PlacementConfigType.PlacementConfig.newBuilder()
                 .setLocationId(LOCATION_B);
-        AbstractTransformationFrameConsistencyHandler instance = new AbstractTransformationFrameConsistencyHandlerImpl();
+        TransformationFrameConsistencyHandler instance = new TransformationFrameConsistencyHandlerImpl();
         assertEquals(DEVICE_A, placementConfigA.setTransformationFrameId(instance.verifyAndUpdatePlacement(DEVICE_A, placementConfigA.build()).getTransformationFrameId()).getTransformationFrameId());
         assertEquals(DEVICE_B, placementConfigB.setTransformationFrameId(instance.verifyAndUpdatePlacement(DEVICE_B, placementConfigB.build()).getTransformationFrameId()).getTransformationFrameId());
         assertEquals(LOCATION_A + "_" + DEVICE_A, placementConfigA.setTransformationFrameId(instance.verifyAndUpdatePlacement(DEVICE_A, placementConfigA.build()).getTransformationFrameId()).getTransformationFrameId());
@@ -132,7 +132,7 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
         PlacementConfig placementConfigB = PlacementConfigType.PlacementConfig.newBuilder()
                 .setLocationId(LOCATION_B)
                 .build();
-        AbstractTransformationFrameConsistencyHandler instance = new AbstractTransformationFrameConsistencyHandlerImpl();
+        TransformationFrameConsistencyHandler instance = new TransformationFrameConsistencyHandlerImpl();
         assertEquals(DEVICE_A, instance.generateFrameId(DEVICE_A, placementConfigA));
         assertEquals(DEVICE_B, instance.generateFrameId(DEVICE_B, placementConfigA));
         assertEquals(LOCATION_B + "_" + DEVICE_B, instance.generateFrameId(DEVICE_B, placementConfigB));
@@ -140,9 +140,9 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
 
     }
 
-    public class AbstractTransformationFrameConsistencyHandlerImpl extends AbstractTransformationFrameConsistencyHandler {
+    public class TransformationFrameConsistencyHandlerImpl extends TransformationFrameConsistencyHandler {
 
-        public AbstractTransformationFrameConsistencyHandlerImpl() {
+        public TransformationFrameConsistencyHandlerImpl() {
             super(new ProtoBufRegistry<String, UnitConfig, UnitConfig.Builder>() {
 
                 @Override
@@ -358,11 +358,6 @@ public class AbstractTransformationFrameConsistencyHandlerTest {
                     throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });
-        }
-
-        @Override
-        public void processData(Object id, Identifiable entry, Map entryMap, Registry registry) throws CouldNotPerformException, EntryModification {
-            throw new UnsupportedOperationException("Not supported yet.");
         }
     }
 }
