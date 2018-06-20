@@ -23,7 +23,8 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
@@ -36,18 +37,18 @@ import java.util.List;
  */
 public class BuilderProcessor {
 
-    public static List<GeneratedMessage.Builder> extractRepeatedFieldBuilderList(final int repeatedFieldNumber, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static List<Message.Builder> extractRepeatedFieldBuilderList(final int repeatedFieldNumber, final Message.Builder builder) throws CouldNotPerformException {
         return extractRepeatedFieldBuilderList(builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber), builder);
     }
 
-    public static List<GeneratedMessage.Builder> extractRepeatedFieldBuilderList(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static List<Message.Builder> extractRepeatedFieldBuilderList(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final Message.Builder builder) throws CouldNotPerformException {
         if (repeatedFieldDescriptor == null) {
             throw new NotAvailableException("repeatedFieldDescriptor");
         }
         return extractRepeatedFieldBuilderList(repeatedFieldDescriptor.getName(), builder);
     }
 
-    public static List<GeneratedMessage.Builder> extractRepeatedFieldBuilderList(final String repeatedFieldName, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static List<Message.Builder> extractRepeatedFieldBuilderList(final String repeatedFieldName, final Message.Builder builder) throws CouldNotPerformException {
         try {
             Class builderClass = builder.getClass();
             Method method;
@@ -59,7 +60,7 @@ public class BuilderProcessor {
             }
 
             try {
-                return (List<GeneratedMessage.Builder>) method.invoke(builder);
+                return (List<Message.Builder>) method.invoke(builder);
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not extract builder list!", ex);
             }
@@ -69,18 +70,18 @@ public class BuilderProcessor {
         }
     }
 
-    public static GeneratedMessage.Builder addMessageToRepeatedField(final int repeatedFieldNumber, final GeneratedMessage.Builder messageBuilder, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static Message.Builder addMessageToRepeatedField(final int repeatedFieldNumber, final Message.Builder messageBuilder, final Message.Builder builder) throws CouldNotPerformException {
         return addMessageToRepeatedField(builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber), messageBuilder, builder);
     }
 
-    public static GeneratedMessage.Builder addMessageToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final GeneratedMessage.Builder messageBuilder, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static Message.Builder addMessageToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final Message.Builder messageBuilder, final Message.Builder builder) throws CouldNotPerformException {
         if (repeatedFieldDescriptor == null) {
             throw new NotAvailableException("repeatedFieldDescriptor");
         }
         return addMessageToRepeatedField(repeatedFieldDescriptor.getName(), messageBuilder, builder);
     }
 
-    public static GeneratedMessage.Builder addMessageToRepeatedField(final String repeatedFieldName, final GeneratedMessage.Builder messageBuilder, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static Message.Builder addMessageToRepeatedField(final String repeatedFieldName, final Message.Builder messageBuilder, final Message.Builder builder) throws CouldNotPerformException {
         try {
             Class builderClass = builder.getClass();
             Method method;
@@ -111,7 +112,7 @@ public class BuilderProcessor {
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
-    public static GeneratedMessage.Builder addDefaultInstanceToRepeatedField(final int repeatedFieldNumber, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static Message.Builder addDefaultInstanceToRepeatedField(final int repeatedFieldNumber, final Message.Builder builder) throws CouldNotPerformException {
         return addDefaultInstanceToRepeatedField(builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber), builder);
     }
 
@@ -122,7 +123,7 @@ public class BuilderProcessor {
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
-    public static GeneratedMessage.Builder addDefaultInstanceToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static Message.Builder addDefaultInstanceToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final Message.Builder builder) throws CouldNotPerformException {
         if (repeatedFieldDescriptor == null) {
             throw new NotAvailableException("repeatedFieldDescriptor");
         }
@@ -136,7 +137,7 @@ public class BuilderProcessor {
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
-    public static GeneratedMessage.Builder addDefaultInstanceToRepeatedField(final String repeatedFieldName, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static Message.Builder addDefaultInstanceToRepeatedField(final String repeatedFieldName, final Message.Builder builder) throws CouldNotPerformException {
         try {
             Class builderClass = builder.getClass();
             Method method;
@@ -148,7 +149,7 @@ public class BuilderProcessor {
             }
 
             try {
-                return (GeneratedMessage.Builder) method.invoke(builder);
+                return (Message.Builder) method.invoke(builder);
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not add default message builder to repeated field!", ex);
             }
