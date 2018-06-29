@@ -860,12 +860,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     }
 
                                     // check if the initial cause of the error is not the same.
-                                    if (!ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException()).equals(ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException()))) {
+
+                                    final String initialCauseMessage = ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException());
+                                    final String previousInitialCauseMessage = ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException());
+                                    if (!initialCauseMessage.equals(previousInitialCauseMessage)) {
                                         // continue with consistency check
                                         continue mainLoop;
                                     }
                                 }
-                                MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occoured during processing!", exceptionStack);
+                                MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
                             }
                             continue;
                         }
