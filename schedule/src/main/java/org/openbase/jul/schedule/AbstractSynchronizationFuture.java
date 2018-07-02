@@ -47,7 +47,7 @@ import java.util.concurrent.*;
  * @param <T> The return type of the internal future.
  * @author pleminoq
  */
-public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T>, DefaultInitializable {
+public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T> {
 
     protected final Logger logger;
 
@@ -74,8 +74,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         this.logger = LoggerFactory.getLogger(dataProvider.getClass());
     }
 
-    @Deprecated
-    public void init() {
+    protected void init() {
         // create a synchronisation task which makes sure that the change requested by
         // the internal future has at one time been synchronized to the remote
         synchronisationFuture = GlobalCachedExecutorService.submit(() -> {
