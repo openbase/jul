@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -35,6 +35,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.exception.printer.LogLevelFilter;
 import org.openbase.jul.exception.printer.Printer;
+import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.HashGenerator;
@@ -511,7 +512,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 entryMap.clear();
                 entryMap.putAll(map);
                 if (finishTransaction && !(this instanceof RemoteRegistry)) {
-                    logger.warn("Replace internal map of ["+this+"]");
+                    logger.warn("Replace internal map of [" + this + "]");
                     finishTransaction();
                 }
             } catch (CouldNotPerformException ex) {
@@ -522,7 +523,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } finally {
             unlock();
         }
-        if(this instanceof RemoteRegistry) {
+        if (this instanceof RemoteRegistry) {
             dependingRegistryObservable.notifyObservers(entryMap);
         }
         notifyObservers();
@@ -562,6 +563,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * If this registry depends on other registries, this method can be used to tell this registry all depending registries.
      * For instance this is used to switch to read only mode in case one depending registry is not consistent.
      * Consistency checks are skipped as well if at least one depending registry is not consistent.
+     * <p>
+     * NOTE: the registered dependencies have to be activated later by calling {@link #activateDependencies()}.
      *
      * @param registry the dependency of these registry.
      * @throws org.openbase.jul.exception.CouldNotPerformException
@@ -579,6 +582,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
         } finally {
             registryLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Activate all {@code DependencyConsistencyCheckTrigger} added by calling {@link #registerDependency(Registry)}.
+     *
+     * @throws CouldNotPerformException if the activation fails
+     * @throws InterruptedException     if the activation is interrupted
+     */
+    public void activateDependencies() throws CouldNotPerformException, InterruptedException {
+        for (final DependencyConsistencyCheckTrigger dependencyConsistencyCheckTrigger : dependingRegistryMap.values()) {
+            dependencyConsistencyCheckTrigger.activate();
         }
     }
 
@@ -1278,13 +1293,15 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         dependingRegistryObservable.removeObserver(observer);
     }
 
-    private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
+    private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable, Activatable {
 
         private final Registry dependency;
+        private boolean active;
 
         public DependencyConsistencyCheckTrigger(final Registry dependency) {
             this.dependency = dependency;
-            dependency.addDependencyObserver(this);
+            this.active = false;
+//            dependency.addDependencyObserver(this);
         }
 
         /**
@@ -1326,7 +1343,30 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          */
         @Override
         public void shutdown() {
-            removeObserver(this);
+            try {
+                deactivate();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        @Override
+        public void activate() throws CouldNotPerformException, InterruptedException {
+            active = true;
+            dependency.addDependencyObserver(this);
+        }
+
+        @Override
+        public void deactivate() throws CouldNotPerformException, InterruptedException {
+            dependency.removeDependencyObserver(this);
+            active = false;
+        }
+
+        @Override
+        public boolean isActive() {
+            return active;
         }
     }
 }

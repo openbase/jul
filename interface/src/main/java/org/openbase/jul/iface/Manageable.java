@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public interface Manageable<CONFIG> extends Initializable<CONFIG>, Shutdownable, Activatable {
 
     @Override
-    public default void shutdown() {
+    default void shutdown() {
         try {
             deactivate();
         } catch (InterruptedException ex) {
