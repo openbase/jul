@@ -21,6 +21,7 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.MessageOrBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeUnit;
@@ -28,6 +29,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor;
 import org.slf4j.Logger;
 import rst.timing.TimestampType.Timestamp;
 
@@ -38,7 +40,8 @@ import rst.timing.TimestampType.Timestamp;
 public class TimestampProcessor {
 
     public static final String SET = "set";
-    public static final String TIMESTEMP_FIELD = "Timestamp";
+    public static final String TIMESTEMP_NAME = "Timestamp";
+    public static final String TIMESTEMP_FIELD_NAME = TIMESTEMP_NAME.toLowerCase();
 
     /**
      * Method returns a new Timestamp object with the current system time.
@@ -98,13 +101,13 @@ public class TimestampProcessor {
             try {
                 // handle builder
                 if (messageOrBuilder.getClass().getSimpleName().equals("Builder")) {
-                    messageOrBuilder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(messageOrBuilder, TimestampJavaTimeTransform.transform(milliseconds));
+                    messageOrBuilder.getClass().getMethod(SET + TIMESTEMP_NAME, Timestamp.class).invoke(messageOrBuilder, TimestampJavaTimeTransform.transform(milliseconds));
                     return messageOrBuilder;
                 }
 
                 //handle message
                 final Object builder = messageOrBuilder.getClass().getMethod("toBuilder").invoke(messageOrBuilder);
-                builder.getClass().getMethod(SET + TIMESTEMP_FIELD, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
+                builder.getClass().getMethod(SET + TIMESTEMP_NAME, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
                 return (M) builder.getClass().getMethod("build").invoke(builder);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
                 throw new NotSupportedException("Field[Timestamp]", messageOrBuilder.getClass().getName(), ex);
@@ -169,5 +172,10 @@ public class TimestampProcessor {
             ExceptionPrinter.printHistory(ex, logger);
             return messageOrBuilder;
         }
+    }
+
+    public static boolean hasTimestamp(final MessageOrBuilder messageOrBuilder) {
+        final FieldDescriptor fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(messageOrBuilder, TIMESTEMP_FIELD_NAME);
+        return messageOrBuilder.hasField(fieldDescriptor);
     }
 }
