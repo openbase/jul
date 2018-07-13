@@ -1541,7 +1541,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
         // Notify data update
         try {
-            notifyDataUpdate(data);
             internalPriorizedDataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
@@ -1554,16 +1553,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    /**
-     * Overwrite this method to get informed about data updates.
-     * This is now equivalent to adding an observer on the internalPriorizedDataObserver.
-     *
-     * @param data new arrived data messages.
-     * @throws CouldNotPerformException
-     */
-    @Deprecated
-    protected void notifyDataUpdate(M data) throws CouldNotPerformException {
-        // dummy method, please overwrite if needed.
+    protected void setData(final M data) {
+        this.data = data;
+
+        // Notify data update
+        try {
+            internalPriorizedDataObservable.notifyObservers(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+        }
+
+        try {
+            dataObservable.notifyObservers(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
+        }
     }
 
     /**
@@ -1752,6 +1756,16 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public boolean isSyncRunning() {
         synchronized (syncMonitor) {
             return syncFuture != null && !syncFuture.isDone();
+        }
+    }
+
+    protected void restartSyncTask() throws CouldNotPerformException {
+        synchronized (syncMonitor) {
+            if (syncTask != null && !syncTask.isDone()) {
+                syncTask.cancel(true);
+                syncTask = null;
+            }
+            requestData();
         }
     }
 }
