@@ -661,6 +661,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 case DISCONNECTED:
                     break;
                 case CONNECTING:
+                    logger.info(this + ": switched to connectionState CONNECTING");
                     // if disconnected before the data request is already initiated.
                     if (isActive() && oldConnectionState != DISCONNECTED) {
                         connectionFailure = true;
@@ -962,7 +963,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 // Check if sync is in process.
                 if (syncFuture != null && !syncFuture.isDone()) {
 
-                    // Recover sync task if those was canceled for instance during remote reinitialization.
+                    // Recover sync task if it was canceled for instance during remote reinitialization.
                     if (syncTask == null || syncTask.isDone()) {
                         syncTask = sync();
                     }
@@ -1160,6 +1161,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             M dataUpdate = (M) event.getData();
 
             if (dataUpdate == null) {
+                logger.info("Received dataUpdate null while in connection state[" + getConnectionState().name() + "]");
                 // received null data from controller which indicates a shutdown
 
                 // do not set to connecting while reconnecting because when timed wrong this can cause

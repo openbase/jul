@@ -31,14 +31,16 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.iface.DefaultInitializable;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * The synchronization future is used to guarantee that the change done by the internal
@@ -65,8 +67,8 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     protected final DATA_PROVIDER dataProvider;
 
     /**
-     * @param internalFuture
-     * @param dataProvider
+     * @param internalFuture the internal future
+     * @param dataProvider   the data provider
      */
     public AbstractSynchronizationFuture(final Future<T> internalFuture, final DATA_PROVIDER dataProvider) {
         this.internalFuture = internalFuture;
