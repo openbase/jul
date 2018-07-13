@@ -10,12 +10,12 @@ package org.openbase.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -661,7 +661,8 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 case DISCONNECTED:
                     break;
                 case CONNECTING:
-                    logger.info(this + ": switched to connectionState CONNECTING");
+                    final boolean isActive = isActive();
+                    logger.info(this + ": switched to connectionState CONNECTING while being active[" + isActive + "]");
                     // if disconnected before the data request is already initiated.
                     if (isActive() && oldConnectionState != DISCONNECTED) {
                         connectionFailure = true;
@@ -1745,6 +1746,12 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             return (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME);
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("TransactionId not available");
+        }
+    }
+
+    public boolean isSyncRunning() {
+        synchronized (syncMonitor) {
+            return syncFuture != null && !syncFuture.isDone();
         }
     }
 }
