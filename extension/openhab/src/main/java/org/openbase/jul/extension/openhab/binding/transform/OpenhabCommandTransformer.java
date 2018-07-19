@@ -21,8 +21,8 @@ package org.openbase.jul.extension.openhab.binding.transform;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.Message;
-import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.NotSupportedException;
@@ -32,15 +32,16 @@ import org.slf4j.LoggerFactory;
 import rst.domotic.binding.openhab.OpenhabCommandType.OpenhabCommand;
 import rst.domotic.service.ServiceTemplateType.ServiceTemplate.ServiceType;
 
+import java.util.concurrent.TimeUnit;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public final class OpenhabCommandTransformer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenhabCommandTransformer.class);
 
-    public static Object getServiceData(OpenhabCommand command, ServiceType serviceType) throws CouldNotPerformException {
+    public static Message getServiceData(OpenhabCommand command, ServiceType serviceType) throws CouldNotPerformException {
         Message msg;
 
         // Transform service data.
@@ -78,7 +79,8 @@ public final class OpenhabCommandTransformer {
                         break;
                     default:
                         // native double type
-                        return command.getDecimal();
+                        //return command.getDecimal();
+                        throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
                 }
                 break;
             case HSB:
@@ -121,7 +123,8 @@ public final class OpenhabCommandTransformer {
                         msg = BlindStateTransformer.transform(command.getPercent().getValue());
                         break;
                     default:
-                        return command.getPercent().getValue();
+                        //return command.getPercent().getValue();
+                        throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);
                 }
                 break;
             case STOPMOVE:
@@ -134,8 +137,8 @@ public final class OpenhabCommandTransformer {
                         break;
                     default:
                         // native string type
-                        return command.getText();
-                }
+                        //return command.getText();
+                        throw new NotSupportedException(serviceType, OpenhabCommandTransformer.class);                }
                 break;
             case UPDOWN:
                 msg = UpDownStateTransformer.transform(command.getUpDown().getState());
