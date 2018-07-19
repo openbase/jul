@@ -661,7 +661,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 case DISCONNECTED:
                     break;
                 case CONNECTING:
-                    final boolean isActive = isActive();
                     // if disconnected before the data request is already initiated.
                     if (isActive() && oldConnectionState != DISCONNECTED) {
                         connectionFailure = true;
