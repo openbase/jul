@@ -662,7 +662,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     break;
                 case CONNECTING:
                     final boolean isActive = isActive();
-                    logger.info(this + ": switched to connectionState CONNECTING while being active[" + isActive + "]");
                     // if disconnected before the data request is already initiated.
                     if (isActive() && oldConnectionState != DISCONNECTED) {
                         connectionFailure = true;
