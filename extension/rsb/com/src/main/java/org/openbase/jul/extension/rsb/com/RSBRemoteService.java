@@ -1070,12 +1070,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                 continue;
                             }
                             try {
-                                event = internalFuture.get(timeout, TimeUnit.MILLISECONDS);
-                            } catch (final java.util.concurrent.ExecutionException ex) {
-                                // still apply the timeout to avoid fast error loops.
-                                Thread.sleep(timeout);
-                                throw ex;
+                                ping().get(timeout, TimeUnit.MILLISECONDS);
+                            } catch (ExecutionException ex) {
+                                internalFuture.cancel(true);
+                                continue;
                             }
+
+                            event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
