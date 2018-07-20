@@ -36,6 +36,7 @@ import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
+import org.openbase.jul.extension.rst.iface.TransactionIdProvider;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -661,8 +662,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 case DISCONNECTED:
                     break;
                 case CONNECTING:
-                    final boolean isActive = isActive();
-                    logger.info(this + ": switched to connectionState CONNECTING while being active[" + isActive + "]");
                     // if disconnected before the data request is already initiated.
                     if (isActive() && oldConnectionState != DISCONNECTED) {
                         connectionFailure = true;
