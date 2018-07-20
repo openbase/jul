@@ -38,6 +38,7 @@ import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
+import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +137,9 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
 
     private void internalSync() throws CouldNotPerformException, InterruptedException {
         synchronized (synchronizationLock) {
-            logger.debug("Perform sync...");
+            logger.warn("Perform sync...");
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.start();
 
             try {
                 listDiff.diff(getEntries());
@@ -231,6 +234,11 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 throw exx;
             } finally {
                 afterInternalSync();
+            }
+
+            long time = stopwatch.stop();
+            if (time > 500) {
+                logger.warn("Internal sync of synchronizer took: " + time + "ms");
             }
         }
     }

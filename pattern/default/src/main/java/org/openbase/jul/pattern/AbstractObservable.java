@@ -22,16 +22,6 @@ package org.openbase.jul.pattern;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.MultiException;
@@ -40,9 +30,14 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
 /**
  * @param <T> the data type on whose changes is notified
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class AbstractObservable<T> implements Observable<T> {
@@ -183,9 +178,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * has not changed and false is returned.
      *
      * @param observable the value which is notified
-     *
      * @return true if the observable has changed
-     *
      * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
@@ -208,14 +201,13 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *
      * @param source     the source of the notification
      * @param observable the value which is notified
-     *
      * @return true if the observable has changed
-     *
      * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
     public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException, CouldNotPerformException {
         synchronized (NOTIFICATION_MESSAGE_LOCK) {
+            long wholeTime = System.currentTimeMillis();
             if (observable == null) {
                 LOGGER.debug("Skip notification because observable is null!");
                 return false;
@@ -254,8 +246,13 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                         }
 
                         // synchronous notification
+                        long time = System.currentTimeMillis();
                         try {
                             observer.update(source, observable);
+                            time = System.currentTimeMillis() - time;
+                            if (time > 500) {
+                                LOGGER.warn("Notification to observer[" + observer + "] took: " + time + "ms");
+                            }
                         } catch (InterruptedException ex) {
                             latestValueHash = lastHashValue;
                             Thread.currentThread().interrupt();
@@ -298,6 +295,10 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                 }
             }
             MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
+            wholeTime = System.currentTimeMillis() - wholeTime;
+            if (wholeTime > 500) {
+                LOGGER.warn("Notification on observable[" + observable.getClass().getName() + "] took: " + wholeTime + "ms");
+            }
             return true;
         }
     }
