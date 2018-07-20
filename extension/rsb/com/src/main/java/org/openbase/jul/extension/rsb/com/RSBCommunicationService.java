@@ -37,6 +37,7 @@ import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.rst.iface.ScopeProvider;
+import org.openbase.jul.extension.rst.iface.TransactionIdProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.iface.Requestable;

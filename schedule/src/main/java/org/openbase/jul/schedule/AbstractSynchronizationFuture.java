@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.openbase.jul.schedule;
 
 /*-
@@ -43,11 +38,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * The synchronization future is used to guarantee that the change done by the internal
- * future has at one time been synchronized.
+ * This abstract future can be wrapped around another future to guarantee that changes caused by the internal future
+ * have at one time been synchronized to a data provider.
+ * To do this a task is started that calls get on the internal future and registers an observer on the data provider.
+ * When the data provider notifies a change the method {@link #check(Object)} is called. This method returns true
+ * if the data change caused by the internal future has been synchronized. This future only returns on get if this
+ * synchronization check finished.
  *
  * @param <T> The return type of the internal future.
- * @author pleminoq
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T> {
 
@@ -67,15 +66,30 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     protected final DATA_PROVIDER dataProvider;
 
     /**
+     * Create a new abstract synchronization future.
+     * <p>
+     * Note: If the initTask parameter is false the implementation of this future should call {@link #init()} at
+     * the end of its constructor. It should be false if you need to initialize more variables inside the constructor
+     * which have to be available during the {@link #check(Object)} and {@link #beforeWaitForSynchronization(Object)} methods.
+     * Otherwise these values could be null if the internal task is too fast.
+     *
      * @param internalFuture the internal future
      * @param dataProvider   the data provider
+     * @param initTask       value indicating if the internal task should already be started
      */
-    public AbstractSynchronizationFuture(final Future<T> internalFuture, final DATA_PROVIDER dataProvider) {
+    public AbstractSynchronizationFuture(final Future<T> internalFuture, final DATA_PROVIDER dataProvider, final boolean initTask) {
+        this.logger = LoggerFactory.getLogger(dataProvider.getClass());
         this.internalFuture = internalFuture;
         this.dataProvider = dataProvider;
-        this.logger = LoggerFactory.getLogger(dataProvider.getClass());
+
+        if (initTask) {
+            init();
+        }
     }
 
+    /**
+     * Start the internal synchronization task.
+     */
     protected void init() {
         // create a synchronisation task which makes sure that the change requested by
         // the internal future has at one time been synchronized to the remote
@@ -94,7 +108,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         });
     }
 
-    public void validateInitialization() throws InvalidStateException {
+    private void validateInitialization() throws InvalidStateException {
         if (synchronisationFuture == null) {
             throw new InvalidStateException(this + " not initialized!");
         }
@@ -138,7 +152,6 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     public T get() throws InterruptedException, ExecutionException {
         // when get returns without an exception the synchronisation is complete
         // and else the exception will be thrown
-
         if (checkInitialization()) {
             synchronisationFuture.get();
         }
@@ -164,11 +177,8 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     private void waitForSynchronization(T message) throws CouldNotPerformException, InterruptedException {
         try {
             try {
-                beforeWaitForSynchronization();
+                beforeWaitForSynchronization(message);
             } catch (final Exception ex) {
-                if (ex instanceof InterruptedException) {
-                    throw (InterruptedException) ex;
-                }
                 throw new CouldNotPerformException("Pre execution task failed!", ex);
             }
 
@@ -183,30 +193,6 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     }
 
     /**
-     * Called to add an observer to the component whose synchronization is waited for
-     * by this future. This is done in this way because sometimes the change is notified
-     * through a normal observer and sometime by a data observer so the internal call
-     * changes.
-     *
-     * @param observer In this case always the notify change observer that is added.
-     */
-    @Deprecated
-    protected void addObserver(Observer observer) {
-        // are never called because of deprecation!
-    }
-
-    /**
-     * Remove the notify change observer from the component whose synchronization is
-     * waited for after the synchronization is complete or failed.
-     *
-     * @param observer In this case always the notify change observer that is added.
-     */
-    @Deprecated
-    protected void removeObserver(Observer observer) {
-        // are never called because of deprecation!
-    }
-
-    /**
      * Called before the synchronization task enters its loop. Can for example
      * be used to wait for initial data so that the check that is done afterwards
      * in the loop does not fail immediately.
@@ -215,7 +201,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
      *
      * @throws CouldNotPerformException if something goes wrong
      */
-    protected void beforeWaitForSynchronization() throws CouldNotPerformException {
+    protected void beforeWaitForSynchronization(final T message) throws CouldNotPerformException {
         // Method can be overwritten for custom pre synchronization actions.
     }
 
