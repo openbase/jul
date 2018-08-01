@@ -21,10 +21,7 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.openbase.jps.core.JPService;
+
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -33,14 +30,17 @@ import org.openbase.jul.storage.registry.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  * @param <PLUGIN>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN extends RegistryPlugin<KEY, ENTRY,  REGISTRY>, REGISTRY extends Registry<KEY, ENTRY>> implements RegistryPlugin<KEY, ENTRY, REGISTRY> {
+public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY extends Registry<KEY, ENTRY>> implements RegistryPlugin<KEY, ENTRY, REGISTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(RegistryPluginPool.class);
 
@@ -296,6 +296,21 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 throw ex;
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not check registry access with RegistryPlugin[" + plugin + "]!", plugin, ex), logger, LogLevel.ERROR);
+            }
+        }
+    }
+
+    @Override
+    public void beforeUpstreamDependencyNotification(Registry dependency) throws CouldNotPerformException {
+        if (pluginList.isEmpty()) {
+            return;
+        }
+
+        for (PLUGIN plugin : pluginList) {
+            try {
+                plugin.beforeUpstreamDependencyNotification(dependency);
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about upstream dependency notification!", plugin, ex), logger, LogLevel.ERROR);
             }
         }
     }

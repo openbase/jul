@@ -940,6 +940,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     private void syncSandbox() throws CouldNotPerformException {
+//        if (registryLock.isWriteLocked()) {
+//            throw new FatalImplementationErrorException("Sync sandbox registry while write locked", this);
+//        }
         registryLock.readLock().lock();
         try {
             sandbox.sync(entryMap);
@@ -1319,6 +1322,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     boolean notificationNeeded;
                     lock();
                     try {
+                        pluginPool.beforeUpstreamDependencyNotification(dependency);
                         notificationNeeded = checkConsistency() > 0 || notificationSkipped;
                         if (notificationNeeded) {
                             dependingRegistryObservable.notifyObservers(entryMap);
