@@ -37,35 +37,37 @@ import org.openbase.jul.storage.registry.Registry;
  */
 public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends Registry<KEY, ENTRY>> extends Initializable<REGISTRY>, Shutdownable {
 
-    public void beforeRegister(final ENTRY entry) throws RejectedException;
+    void beforeRegister(final ENTRY entry) throws RejectedException;
 
-    public void afterRegister(final ENTRY entry) throws CouldNotPerformException;
+    void afterRegister(final ENTRY entry) throws CouldNotPerformException;
 
-    public void beforeUpdate(final ENTRY entry) throws RejectedException;
+    void beforeUpdate(final ENTRY entry) throws RejectedException;
 
-    public void afterUpdate(final ENTRY entry) throws CouldNotPerformException;
+    void afterUpdate(final ENTRY entry) throws CouldNotPerformException;
 
-    public void beforeRemove(final ENTRY entry) throws RejectedException;
+    void beforeRemove(final ENTRY entry) throws RejectedException;
 
-    public void afterRemove(final ENTRY entry) throws CouldNotPerformException;
+    void afterRemove(final ENTRY entry) throws CouldNotPerformException;
 
-    public void afterConsistencyModification(final ENTRY entry) throws CouldNotPerformException;
+    void afterConsistencyModification(final ENTRY entry) throws CouldNotPerformException;
     
-    public void afterRegistryChange() throws CouldNotPerformException;
+    void afterRegistryChange() throws CouldNotPerformException;
 
-    public void beforeConsistencyCheck() throws CouldNotPerformException;
+    void beforeConsistencyCheck() throws CouldNotPerformException;
 
-    public void afterConsistencyCheck() throws CouldNotPerformException;
+    void afterConsistencyCheck() throws CouldNotPerformException;
     
-    public void beforeClear() throws CouldNotPerformException;
+    void beforeClear() throws CouldNotPerformException;
 
-    public void beforeGet(final KEY key) throws RejectedException;
+    void beforeGet(final KEY key) throws RejectedException;
 
-    public void beforeGetEntries() throws CouldNotPerformException;
+    void beforeGetEntries() throws CouldNotPerformException;
 
-    public void checkAccess() throws RejectedException;
+    void checkAccess() throws RejectedException;
+
+    void beforeUpstreamDependencyNotification(final Registry dependency) throws CouldNotPerformException;
 
     @Override
-    public void init(REGISTRY registry) throws InitializationException, InterruptedException;
+    void init(REGISTRY registry) throws InitializationException, InterruptedException;
     
 }

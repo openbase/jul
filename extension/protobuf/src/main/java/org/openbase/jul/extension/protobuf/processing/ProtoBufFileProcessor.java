@@ -86,7 +86,7 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
             jsonFormat.merge(new FileInputStream(file), Charset.forName(UTF_8), transformer.transform(data).newBuilderForType());
             return data;
         } catch (IOException ex) {
-            throw new CouldNotPerformException("Could not deserialize " + file + " inot " + data + "!", ex);
+            throw new CouldNotPerformException("Could not deserialize " + file + " into " + data + "!", ex);
         }
     }
 

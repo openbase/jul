@@ -21,10 +21,7 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.HashSet;
-import java.util.Set;
 
-import jnr.ffi.annotations.In;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -32,11 +29,13 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.registry.Registry;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends Registry<KEY, ENTRY>> implements RegistryPlugin<KEY, ENTRY, REGISTRY> {
 
@@ -108,12 +107,15 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     }
 
     @Override
-    public void beforeConsistencyCheck() throws RejectedException{
+    public void beforeConsistencyCheck() throws RejectedException {
     }
 
     /**
      * Method triggers entry updates of all entries which was been modified during the last consistency check.
-     * @throws CouldNotPerformException 
+     * <p>
+     * Note: do not register new entries within this method because consistency checks will be skipped.
+     *
+     * @throws CouldNotPerformException
      */
     @Override
     public void afterConsistencyCheck() throws CouldNotPerformException {
@@ -126,5 +128,9 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     @Override
     public void afterConsistencyModification(ENTRY entry) throws CouldNotPerformException {
         changedEntryList.add(entry);
+    }
+
+    @Override
+    public void beforeUpstreamDependencyNotification(Registry dependency) throws CouldNotPerformException {
     }
 }
