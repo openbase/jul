@@ -183,7 +183,7 @@ public class LabelProcessor {
                 return value;
             }
         }
-        throw new NotAvailableException("No label available");
+        throw new NotAvailableException("Label");
     }
 
     /**
@@ -251,7 +251,7 @@ public class LabelProcessor {
     public static String getLabelByLanguage(final String languageCode, final LabelOrBuilder label) throws NotAvailableException {
         final List<String> labelList = getLabelListByLanguage(languageCode, label);
         if (labelList.isEmpty()) {
-            throw new NotAvailableException("Label for language[" + languageCode + "]");
+            throw new NotAvailableException("Label for Language[" + languageCode + "]");
         }
         return labelList.get(0);
     }
@@ -286,7 +286,7 @@ public class LabelProcessor {
                 return entry.getValueList();
             }
         }
-        throw new NotAvailableException("LabelList of language[" + languageCode + "] in labelType[" + label + "]");
+        throw new NotAvailableException("LabelList of Language[" + languageCode + "] in labelType[" + label + "]");
     }
 
     public static Label replace(Label label, String replacementKey, Label replacement) {

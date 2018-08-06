@@ -30,7 +30,7 @@
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.processing</artifactId>
+            <artifactId>jul.extension.protobuf</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

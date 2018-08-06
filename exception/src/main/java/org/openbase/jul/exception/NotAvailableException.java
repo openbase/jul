@@ -64,69 +64,69 @@ public class NotAvailableException extends InvalidStateException {
 
     /**
      *
-     * @param identifiere
+     * @param identifier
      */
-    public NotAvailableException(final String identifiere) {
-        super("Context[" + identifiere + "] is not available!");
+    public NotAvailableException(final String identifier) {
+        super("Context[" + identifier + "] is not available!");
     }
 
     /**
      *
-     * @param identifiere
+     * @param identifier
      * @param cause
      */
-    public NotAvailableException(final String identifiere, final Throwable cause) {
-        super("Context[" + identifiere + "] is not available!", cause);
+    public NotAvailableException(final String identifier, final Throwable cause) {
+        super("Context[" + identifier + "] is not available!", cause);
     }
 
     /**
      *
      * @param clazz
-     * @param identifiere
+     * @param identifier
      */
-    public NotAvailableException(final Class clazz, final String identifiere) {
-        this(clazz.getSimpleName(), identifiere);
+    public NotAvailableException(final Class clazz, final String identifier) {
+        this(clazz.getSimpleName(), identifier);
     }
 
     /**
      *
      * @param context
-     * @param identifiere
+     * @param identifier
      */
-    public NotAvailableException(final String context, final String identifiere) {
-        super(context + "[" + identifiere + "]] is not available!");
+    public NotAvailableException(final String context, final String identifier) {
+        super(context + "[" + identifier + "]] is not available!");
     }
 
     /**
      *
      * @param context
-     * @param identifiere
+     * @param identifier
      * @param cause
      */
-    public NotAvailableException(final String context, final String identifiere, final Throwable cause) {
-        super(context + "[" + identifiere + "]] is not available!", cause);
+    public NotAvailableException(final String context, final String identifier, final Throwable cause) {
+        super(context + "[" + identifier + "]] is not available!", cause);
     }
 
-    public NotAvailableException(final String context, final Object identifiere, final Throwable cause) {
-        this(context, identifiere.toString(), cause);
+    public NotAvailableException(final String context, final Object identifier, final Throwable cause) {
+        this(context, identifier.toString(), cause);
     }
 
-    public NotAvailableException(final Class context, final Object identifiere, final Throwable cause) {
-        this(context, identifiere.toString(), cause);
+    public NotAvailableException(final Class context, final Object identifier, final Throwable cause) {
+        this(context, identifier.toString(), cause);
     }
 
-    public NotAvailableException(final String context, final String identifiere, final String message) {
-        super(context + "[" + identifiere + "]] is not available! " + message);
+    public NotAvailableException(final String context, final String identifier, final String message) {
+        super(context + "[" + identifier + "]] is not available! " + message);
     }
 
     /**
      *
      * @param context
-     * @param identifiere
+     * @param identifier
      * @param cause
      */
-    public NotAvailableException(final Class context, final String identifiere, final Throwable cause) {
-        this(context.getSimpleName(), identifiere, cause);
+    public NotAvailableException(final Class context, final String identifier, final Throwable cause) {
+        this(context.getSimpleName(), identifier, cause);
     }
 
     /**

@@ -35,9 +35,9 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.exception.printer.LogLevelFilter;
 import org.openbase.jul.exception.printer.Printer;
+import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Shutdownable;
-import org.openbase.jul.pattern.HashGenerator;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -121,16 +121,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     log(getLatestValue());
                 }
             };
-            setHashGenerator(new HashGenerator<Map<KEY, ENTRY>>() {
-
-                @Override
-                public int computeHash(Map<KEY, ENTRY> value) throws CouldNotPerformException {
-                    try {
-                        registryLock.readLock().lock();
-                        return value.hashCode();
-                    } finally {
-                        registryLock.readLock().unlock();
-                    }
+            setHashGenerator(value -> {
+                try {
+                    registryLock.readLock().lock();
+                    return value.hashCode();
+                } finally {
+                    registryLock.readLock().unlock();
                 }
             });
 
@@ -142,7 +138,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     protected <S extends AbstractRegistry<KEY, ENTRY, MAP, REGISTRY, PLUGIN> & RegistrySandbox<KEY, ENTRY, MAP, REGISTRY>> void setupSandbox(final S sandbox) throws CouldNotPerformException {
-        final RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> oldSandbox = sandbox;
+        final RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> oldSandbox = this.sandbox;
         try {
             if (sandbox == null) {
                 throw new NotAvailableException("sandbox");
@@ -186,12 +182,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 finishTransaction();
                 pluginPool.afterRegister(entry);
             } finally {
+                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
-        } finally {
-            syncSandbox();
         }
         notifyObservers();
         return get(entry);
@@ -213,12 +208,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 entryMap.put(entry.getId(), entry);
                 pluginPool.afterRegister(entry);
             } finally {
+                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
-        } finally {
-            syncSandbox();
         }
         return entry;
     }
@@ -251,12 +245,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 finishTransaction();
                 pluginPool.afterUpdate(entry);
             } finally {
+                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
-        } finally {
-            syncSandbox();
         }
         notifyObservers();
         return get(entry);
@@ -310,12 +303,11 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
                 pluginPool.afterRemove(entry);
             } finally {
+                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + " in " + this + "!", ex);
-        } finally {
-            syncSandbox();
         }
         notifyObservers();
         return oldEntry;
@@ -346,7 +338,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     if (o1 instanceof String && o2 instanceof String) {
                         return ((String) o1).toLowerCase().compareTo(((String) o2).toLowerCase());
                     } else if (o1 instanceof Comparable && o2 instanceof Comparable) {
-                        return ((Comparable) o1).compareTo(((Comparable) o2));
+                        return ((Comparable) o1).compareTo((o2));
                     }
                     return (o1).toString().compareTo(o2.toString());
                 });
@@ -506,23 +498,20 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         lock();
         try {
-            try {
-                sandbox.replaceInternalMap(map);
-                entryMap.clear();
-                entryMap.putAll(map);
-                if (finishTransaction && !(this instanceof RemoteRegistry)) {
-                    logger.warn("Replace internal map of ["+this+"]");
-                    finishTransaction();
-                }
-            } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Internal map replaced by invalid data!", ex), logger, LogLevel.ERROR);
-            } finally {
-                syncSandbox();
+            sandbox.replaceInternalMap(map);
+            entryMap.clear();
+            entryMap.putAll(map);
+            if (finishTransaction && !(this instanceof RemoteRegistry)) {
+                logger.warn("Replace internal map of [" + this + "]");
+                finishTransaction();
             }
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Internal map replaced by invalid data!", ex), logger, LogLevel.ERROR);
         } finally {
+            syncSandbox();
             unlock();
         }
-        if(this instanceof RemoteRegistry) {
+        if (this instanceof RemoteRegistry) {
             dependingRegistryObservable.notifyObservers(entryMap);
         }
         notifyObservers();
@@ -562,6 +551,8 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * If this registry depends on other registries, this method can be used to tell this registry all depending registries.
      * For instance this is used to switch to read only mode in case one depending registry is not consistent.
      * Consistency checks are skipped as well if at least one depending registry is not consistent.
+     * <p>
+     * NOTE: the registered dependencies have to be activated later by calling {@link #activateDependencies()}.
      *
      * @param registry the dependency of these registry.
      * @throws org.openbase.jul.exception.CouldNotPerformException
@@ -579,6 +570,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
         } finally {
             registryLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Activate all {@code DependencyConsistencyCheckTrigger} added by calling {@link #registerDependency(Registry)}.
+     *
+     * @throws CouldNotPerformException if the activation fails
+     * @throws InterruptedException     if the activation is interrupted
+     */
+    public void activateDependencies() throws CouldNotPerformException, InterruptedException {
+        for (final DependencyConsistencyCheckTrigger dependencyConsistencyCheckTrigger : dependingRegistryMap.values()) {
+            dependencyConsistencyCheckTrigger.activate();
         }
     }
 
@@ -748,7 +751,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     MultiException.ExceptionStack exceptionStack = null, previousExceptionStack = null;
 
                     final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
-                    Object lastModifieredEntry = null;
+                    Object lastModifiedEntry = null;
                     final ArrayList<ENTRY> entryValueCopy = new ArrayList<>();
                     int maxConsistencyChecks;
                     int iterationErrorCounter;
@@ -764,17 +767,17 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             throw new InvalidStateException("Cancel check because " + getName() + " shutdown detected!");
                         }
 
-                        // init next interation
+                        // init next iteration
                         iterationCounter++;
 
                         // handle handler interference
                         maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
                         if (iterationCounter > maxConsistencyChecks) {
-                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occoured during processing!", exceptionStack);
+                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
                             throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
-                        // prepare for next iteraction
+                        // prepare for next iteration
                         if (exceptionStack != null) {
                             iterationErrorCounter = exceptionStack.size();
                             previousExceptionStack = new ExceptionStack(exceptionStack);
@@ -820,13 +823,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                         } catch (EntryModification ex) {
 
                             // check if consistency handler is looping
-                            if (ex.getConsistencyHandler() == consistencyHandlerQueue.peekLast() && ex.getEntry().equals(lastModifieredEntry)) {
-                                throw new InvalidStateException("ConsistencyHandler[" + consistencyHandlerQueue.peekLast() + "] is looping over same Entry[" + lastModifieredEntry + "] more than once!");
+                            if (ex.getConsistencyHandler() == consistencyHandlerQueue.peekLast() && ex.getEntry().equals(lastModifiedEntry)) {
+                                throw new InvalidStateException("ConsistencyHandler[" + consistencyHandlerQueue.peekLast() + "] is looping over same Entry[" + lastModifiedEntry + "] more than once!");
                             }
 
                             consistencyHandlerQueue.remove(ex.getConsistencyHandler());
                             consistencyHandlerQueue.offer(ex.getConsistencyHandler());
-                            lastModifieredEntry = ex.getEntry();
+                            lastModifiedEntry = ex.getEntry();
 
                             // inform about modifications
                             try {
@@ -842,7 +845,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                             modificationCounter++;
                             continue;
                         } catch (Throwable ex) {
-                            throw ExceptionPrinter.printHistoryAndReturnThrowable(new InvalidStateException("Fatal error occured during consistency check!", ex), logger);
+                            throw ExceptionPrinter.printHistoryAndReturnThrowable(new InvalidStateException("Fatal error occurred during consistency check!", ex), logger);
                         }
 
                         // has been an error occurred during current run?
@@ -860,17 +863,20 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                                     }
 
                                     // check if the initial cause of the error is not the same.
-                                    if (!ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException()).equals(ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException()))) {
+
+                                    final String initialCauseMessage = ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException());
+                                    final String previousInitialCauseMessage = ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException());
+                                    if (!initialCauseMessage.equals(previousInitialCauseMessage)) {
                                         // continue with consistency check
                                         continue mainLoop;
                                     }
                                 }
-                                MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occoured during processing!", exceptionStack);
+                                MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
                             }
                             continue;
                         }
 
-                        logger.debug(this + " consistend.");
+                        logger.debug(this + " consistent.");
                         break;
                     }
                     consistent = true;
@@ -904,7 +910,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     /**
      * Can be overwritten for further registry actions scheduled after consistency checks.
      * <p>
-     * Don't forgett to pass-througt the call to the super class. (super.afterConsistencyCheck())
+     * Don't forget to pass-through the call to the super class. (super.afterConsistencyCheck())
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if any plugin afterConsistencyCheck fails.
      */
@@ -922,6 +928,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     private void syncSandbox() throws CouldNotPerformException {
+//        if (consistencyCheckLock.isWriteLocked()) {
+//            throw new FatalImplementationErrorException("Sync sandbox registry during consistency check[" + consistencyCheckLock.writeLock().isHeldByCurrentThread() + "]", this);
+//        }
         registryLock.readLock().lock();
         try {
             sandbox.sync(entryMap);
@@ -1275,13 +1284,14 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         dependingRegistryObservable.removeObserver(observer);
     }
 
-    private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable {
+    private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable, Activatable {
 
         private final Registry dependency;
+        private boolean active;
 
         public DependencyConsistencyCheckTrigger(final Registry dependency) {
             this.dependency = dependency;
-            dependency.addDependencyObserver(this);
+            this.active = false;
         }
 
         /**
@@ -1299,11 +1309,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                     boolean notificationNeeded;
                     lock();
                     try {
+                        pluginPool.beforeUpstreamDependencyNotification(dependency);
                         notificationNeeded = checkConsistency() > 0 || notificationSkipped;
                         if (notificationNeeded) {
                             dependingRegistryObservable.notifyObservers(entryMap);
                         }
                     } finally {
+                        syncSandbox();
                         unlock();
                     }
 
@@ -1313,8 +1325,6 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
                 }
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory("Registry inconsistent after change of depending " + source + " change.", ex, logger);
-            } finally {
-                syncSandbox();
             }
         }
 
@@ -1323,7 +1333,30 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          */
         @Override
         public void shutdown() {
-            removeObserver(this);
+            try {
+                deactivate();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not shutdown " + this, ex, logger);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        @Override
+        public void activate() throws CouldNotPerformException, InterruptedException {
+            active = true;
+            dependency.addDependencyObserver(this);
+        }
+
+        @Override
+        public void deactivate() throws CouldNotPerformException, InterruptedException {
+            dependency.removeDependencyObserver(this);
+            active = false;
+        }
+
+        @Override
+        public boolean isActive() {
+            return active;
         }
     }
 }

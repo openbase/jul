@@ -36,6 +36,7 @@ import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
+import org.openbase.jul.extension.rst.iface.TransactionIdProvider;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -962,7 +963,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 // Check if sync is in process.
                 if (syncFuture != null && !syncFuture.isDone()) {
 
-                    // Recover sync task if those was canceled for instance during remote reinitialization.
+                    // Recover sync task if it was canceled for instance during remote reinitialization.
                     if (syncTask == null || syncTask.isDone()) {
                         syncTask = sync();
                     }
@@ -971,7 +972,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     // cleanup old sync task
                     if (syncTask != null && !syncTask.isDone()) {
                         syncTask.cancel(true);
-                        ExceptionPrinter.printHistory(new FatalImplementationErrorException("Old sync task was still running without known sync future!", this), logger);
                     }
                 }
 
@@ -1160,6 +1160,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             M dataUpdate = (M) event.getData();
 
             if (dataUpdate == null) {
+                logger.info("Received dataUpdate null while in connection state[" + getConnectionState().name() + "]");
                 // received null data from controller which indicates a shutdown
 
                 // do not set to connecting while reconnecting because when timed wrong this can cause
@@ -1539,7 +1540,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
         // Notify data update
         try {
-            notifyDataUpdate(data);
             internalPriorizedDataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
@@ -1552,16 +1552,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    /**
-     * Overwrite this method to get informed about data updates.
-     * This is now equivalent to adding an observer on the internalPriorizedDataObserver.
-     *
-     * @param data new arrived data messages.
-     * @throws CouldNotPerformException
-     */
-    @Deprecated
-    protected void notifyDataUpdate(M data) throws CouldNotPerformException {
-        // dummy method, please overwrite if needed.
+    protected void setData(final M data) {
+        this.data = data;
+
+        // Notify data update
+        try {
+            internalPriorizedDataObservable.notifyObservers(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+        }
+
+        try {
+            dataObservable.notifyObservers(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
+        }
     }
 
     /**
@@ -1697,8 +1702,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                     currentSyncFuture = syncFuture;
                     syncFuture = null;
                 }
-//            currentSyncTask = syncTask;
-
                 currentSyncTask = syncTask;
                 syncTask = null;
             }
@@ -1746,6 +1749,22 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             return (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME);
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("TransactionId not available");
+        }
+    }
+
+    public boolean isSyncRunning() {
+        synchronized (syncMonitor) {
+            return syncFuture != null && !syncFuture.isDone();
+        }
+    }
+
+    protected void restartSyncTask() throws CouldNotPerformException {
+        synchronized (syncMonitor) {
+            if (syncTask != null && !syncTask.isDone()) {
+                syncTask.cancel(true);
+                syncTask = null;
+            }
+            requestData();
         }
     }
 }

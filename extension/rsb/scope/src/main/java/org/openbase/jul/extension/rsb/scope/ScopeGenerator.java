@@ -132,7 +132,7 @@ public class ScopeGenerator {
         if (!unitConfig.getLocationConfig().getRoot()) {
             scope.addAllComponent(registry.get(unitConfig.getPlacementConfig().getLocationId()).getMessage().getScope().getComponentList());
         }
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(unitConfig.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(unitConfig.getLabel())));
 
         return scope.build();
     }
@@ -147,7 +147,7 @@ public class ScopeGenerator {
             throw new NotAvailableException("connectionConfig.label");
         }
 
-        final String defaultLabel = LabelProcessor.getFirstLabel(connectionConfig.getLabel());
+        final String defaultLabel = LabelProcessor.getBestMatch(connectionConfig.getLabel());
 
         if (locationConfig == null) {
             throw new NotAvailableException("location");
@@ -198,7 +198,7 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent("device"));
 
         // add device scope
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(deviceConfig.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(deviceConfig.getLabel())));
 
         return scope.build();
     }
@@ -266,7 +266,7 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent("UnitGroup"));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(unitGroupConfig.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(Locale.ENGLISH, unitGroupConfig.getLabel())));
 
         return scope.build();
     }
@@ -308,10 +308,10 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent(agentUnitConfig.getUnitType().name()));
 
         // add agent class label
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(agentClass.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(Locale.ENGLISH, agentClass.getLabel())));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(agentUnitConfig.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(Locale.ENGLISH, agentUnitConfig.getLabel())));
 
         return scope.build();
     }
@@ -349,10 +349,10 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent(appUnitConfig.getUnitType().name()));
 
         // add unit app
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(appClass.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(Locale.ENGLISH, appClass.getLabel())));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(appUnitConfig.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(Locale.ENGLISH, appUnitConfig.getLabel())));
 
         return scope.build();
     }
@@ -382,7 +382,7 @@ public class ScopeGenerator {
         scope.addComponent(convertIntoValidScopeComponent(sceneUnitConfig.getUnitType().name()));
 
         // add unit label
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(sceneUnitConfig.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(Locale.ENGLISH, sceneUnitConfig.getLabel())));
 
         return scope.build();
     }
@@ -434,7 +434,7 @@ public class ScopeGenerator {
         // add group
         scope.addComponent(convertIntoValidScopeComponent("group"));
         // add user name
-        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getFirstLabel(authorizationGroupUniConfig.getLabel())));
+        scope.addComponent(convertIntoValidScopeComponent(LabelProcessor.getBestMatch(Locale.ENGLISH, authorizationGroupUniConfig.getLabel())));
 
         return scope.build();
     }

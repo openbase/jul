@@ -1,8 +1,8 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.extension.rst.iface;
 
 /*-
  * #%L
- * JUL Extension RSB Communication
+ * JUL Extension RST Interface
  * %%
  * Copyright (C) 2015 - 2018 openbase.org
  * %%

@@ -96,8 +96,17 @@ public class MultiException extends CouldNotPerformException {
         private final Throwable exception;
 
         public SourceExceptionEntry(final Object source, final Throwable exception) {
-            this.source = source;
-            this.exception = exception;
+            if(source != null) {
+                this.source = source;
+            } else {
+                assert false;
+                this.source = "UNKNOWN";
+            }
+            if(exception != null) {
+                this.exception = exception;
+            } else {
+                this.exception = new FatalImplementationErrorException("Unknown exception!", this);
+            }
         }
 
         public Object getSource() {

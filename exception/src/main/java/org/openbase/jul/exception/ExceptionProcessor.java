@@ -35,27 +35,42 @@ public class ExceptionProcessor {
 
     /**
      * Method returns the message of the initial cause of the given throwable.
+     * If the throwable does not provide a message its class name is returned.
      *
-     * @param th the throwable to detect the message.
+     * @param throwable the throwable to detect the message.
+     *
      * @return the message as string.
+     * @throws NotAvailableException if the cause message could not be detected.
      */
-    public static String getInitialCauseMessage(final Throwable th) {
-        return getInitialCause(th).getMessage();
+    public static String getInitialCauseMessage(final Throwable throwable) throws NotAvailableException {
+        try {
+            final Throwable cause = getInitialCause(throwable);
+            if (cause.getLocalizedMessage() == null) {
+                return cause.getClass().getSimpleName();
+            }
+            return cause.getLocalizedMessage();
+        } catch (CouldNotPerformException ex){
+            throw new NotAvailableException("cause message");
+        }
     }
 
     /**
      * Method returns the initial cause of the given throwable.
      *
-     * @param th the throwable to detect the message.
+     * @param throwable the throwable to detect the message.
+     *
      * @return the cause as throwable.
+     * @throws NotAvailableException if the given {@code throwable} is null.
      */
-    public static Throwable getInitialCause(final Throwable th) {
-        Throwable cause = th;
+    public static Throwable getInitialCause(final Throwable throwable) throws NotAvailableException {
+        if (throwable == null) {
+            throw new NotAvailableException("cause");
+        }
 
+        Throwable cause = throwable;
         while (cause.getCause() != null) {
             cause = cause.getCause();
         }
-
         return cause;
     }
 }
