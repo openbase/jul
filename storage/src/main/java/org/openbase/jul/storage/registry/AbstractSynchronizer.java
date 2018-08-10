@@ -57,14 +57,26 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     private final Observer observer;
     private final RecurrenceEventFilter recurrenceSyncFilter;
 
-    protected final SyncObject synchronizationLock = new SyncObject("SynchronizationLock");
+    private boolean initialSync;
+
+    protected final SyncObject synchronizationLock;
 
     public AbstractSynchronizer(final DataProvider dataProvider) throws org.openbase.jul.exception.InstantiationException {
         this(dataProvider, DEFAULT_MAX_FREQUENCY);
     }
 
+    public AbstractSynchronizer(final DataProvider dataProvider, final SyncObject synchronizationLock) throws org.openbase.jul.exception.InstantiationException {
+        this(dataProvider, DEFAULT_MAX_FREQUENCY, synchronizationLock);
+    }
+
     public AbstractSynchronizer(final DataProvider dataProvider, final long maxFrequency) throws org.openbase.jul.exception.InstantiationException {
+        this(dataProvider, maxFrequency, new SyncObject("SynchronizationLock"));
+    }
+
+    public AbstractSynchronizer(final DataProvider dataProvider, final long maxFrequency, final SyncObject synchronizationLock) throws org.openbase.jul.exception.InstantiationException {
         try {
+            this.synchronizationLock = synchronizationLock;
+            this.initialSync = true;
             this.listDiff = new ListDiffImpl<>();
             this.dataProvider = dataProvider;
             this.currentEntryMap = new IdentifiableValueMap<>();
@@ -231,6 +243,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 throw exx;
             } finally {
                 afterInternalSync();
+                initialSync = false;
             }
         }
     }
@@ -270,6 +283,16 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     public abstract boolean verifyEntry(final ENTRY entry) throws VerificationFailedException;
 
     protected void afterInternalSync() {
+    }
+
+    /**
+     * Get if the a sync is the initial sync. This can be used by implementations to do something different on the
+     * initial sync because in the initial sync entries will only be registered.
+     *
+     * @return true if the initial sync has not yet been performed.
+     */
+    protected boolean isInitialSync() {
+        return initialSync;
     }
 
     protected DataProvider getDataProvider() {
