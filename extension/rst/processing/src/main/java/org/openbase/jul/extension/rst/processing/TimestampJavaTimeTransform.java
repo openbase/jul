@@ -21,10 +21,11 @@ package org.openbase.jul.extension.rst.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import rst.timing.TimestampType.Timestamp;
+import rst.timing.TimestampType.TimestampOrBuilder;
 
 /**
- *
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
  */
 public class TimestampJavaTimeTransform {
@@ -47,7 +48,7 @@ public class TimestampJavaTimeTransform {
      * @param timestamp the timestamp to readout the milliseconds.
      * @return the time in milliseconds.
      */
-    public static long transform(final Timestamp timestamp) {
+    public static long transform(final TimestampOrBuilder timestamp) {
         return timestamp.getTime() / FROM_MILLI_TO_MICRO_MULTIPLIER;
     }
 }

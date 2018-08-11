@@ -1161,6 +1161,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             M dataUpdate = (M) event.getData();
 
             if (dataUpdate == null) {
+                logger.debug("Received dataUpdate null while in connection state[" + getConnectionState().name() + "]");
                 // received null data from controller which indicates a shutdown
 
                 // do not set to connecting while reconnecting because when timed wrong this can cause
