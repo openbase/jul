@@ -76,12 +76,12 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
         });
     }
 
-    public void addPlugin(final PLUGIN plugin) throws InitializationException, InterruptedException {
+    public void addPlugin(final PLUGIN plugin) throws CouldNotPerformException, InterruptedException {
         try {
             plugin.init(registry);
             pluginList.add(plugin);
         } catch (CouldNotPerformException ex) {
-            throw new InitializationException("Could not add Plugin[" + plugin.getClass().getName() + "] to Registry[" + registry.getClass().getSimpleName() + "]", ex);
+            throw new CouldNotPerformException("Could not add Plugin[" + plugin.getClass().getName() + "] to Registry[" + registry.getClass().getSimpleName() + "]", ex);
         }
     }
 
