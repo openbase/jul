@@ -27,8 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rst.configuration.LabelType.Label;
 import rst.configuration.LabelType.Label.Builder;
+import rst.configuration.LabelType.Label.MapFieldEntry;
 import rst.configuration.LabelType.LabelOrBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -83,7 +85,7 @@ public class LabelProcessor {
     /**
      * Create a new labelBuilder and register label with the default locale.
      *
-     * @param label        the label to be added
+     * @param label the label to be added
      * @return the updated label builder
      */
     public static Label.Builder generateLabelBuilder(final String label) {
@@ -93,8 +95,8 @@ public class LabelProcessor {
     /**
      * Create a new labelBuilder and register label with given locale.
      *
-     * @param locale       the locale from which the language code is extracted for which the label is added
-     * @param label        the label to be added
+     * @param locale the locale from which the language code is extracted for which the label is added
+     * @param label  the label to be added
      * @return the updated label builder
      */
     public static Label.Builder generateLabelBuilder(final Locale locale, final String label) {
@@ -104,7 +106,7 @@ public class LabelProcessor {
     /**
      * Create a new labelBuilder and register label with the default locale.
      *
-     * @param label        the label to be added
+     * @param label the label to be added
      * @return the updated label builder
      */
     public static Label buildLabel(final String label) {
@@ -114,8 +116,8 @@ public class LabelProcessor {
     /**
      * Create a new labelBuilder and register label with given locale.
      *
-     * @param locale       the locale from which the language code is extracted for which the label is added
-     * @param label        the label to be added
+     * @param locale the locale from which the language code is extracted for which the label is added
+     * @param label  the label to be added
      * @return the updated label builder
      */
     public static Label buildLabel(final Locale locale, final String label) {
@@ -216,7 +218,7 @@ public class LabelProcessor {
      * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
      * {@link Locale#getDefault()} . If no label matches the languageCode, than the first label of any other provided language is returned.
      *
-     * @param label  the label type which is searched for labels in the language
+     * @param label the label type which is searched for labels in the language
      * @return the first label from the label type for the locale
      * @throws NotAvailableException if no label is provided by the {@code label} argument.
      */
@@ -289,8 +291,27 @@ public class LabelProcessor {
         throw new NotAvailableException("LabelList of Language[" + languageCode + "] in labelType[" + label + "]");
     }
 
-    public static Label replace(Label label, String replacementKey, Label replacement) {
-        //todo: to be continue...
+    /**
+     * Replace all instances of a label string in a label builder. The check for the label string which should be
+     * replaced is done ignoring the case.
+     *
+     * @param label    the label builder in which label string will be replaced
+     * @param oldLabel the label string which is replaced
+     * @param newLabel the label string replacement
+     * @return the updated label builder
+     */
+    public static Label.Builder replace(final Label.Builder label, final String oldLabel, final String newLabel) {
+        for (final MapFieldEntry.Builder entryBuilder : label.getEntryBuilderList()) {
+            final List<String> valueList = new ArrayList<>(entryBuilder.getValueList());
+            entryBuilder.clearValue();
+            for (String value : valueList) {
+                if (value.equalsIgnoreCase(oldLabel)) {
+                    entryBuilder.addValue(newLabel);
+                } else {
+                    entryBuilder.addValue(value);
+                }
+            }
+        }
         return label;
     }
 }
