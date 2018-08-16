@@ -227,6 +227,23 @@ public class LabelProcessor {
     }
 
     /**
+     * Get the first label for the default language from a label type. This is equivalent to calling
+     * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
+     * {@link Locale#getDefault()} . If no label matches the languageCode, than the first label of any other provided language is returned.
+     *
+     * @param label the label type which is searched for labels in the language
+     * @param alternative an alternative string which is returned in error case.
+     * @return the first label from the label type for the locale or if no label is provided by the {@code label} argument the {@code alternative} is returned.
+     */
+    public static String getBestMatch(final LabelOrBuilder label, final String alternative) {
+        try {
+            return getBestMatch(Locale.getDefault(), label);
+        } catch (NotAvailableException e) {
+            return alternative;
+        }
+    }
+
+    /**
      * Get the first label for a languageCode from a label type. This is equivalent to calling
      * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
      * {@link Locale#getLanguage()}.
