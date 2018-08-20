@@ -1,4 +1,3 @@
-
 package org.openbase.jul.exception;
 
 /*
@@ -29,18 +28,42 @@ package org.openbase.jul.exception;
  */
 public class CouldNotPerformException extends Exception {
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param message {@inheritDoc}
+     */
     public CouldNotPerformException(String message) {
         super(message);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param message {@inheritDoc}
+     * @param cause   {@inheritDoc}
+     */
     public CouldNotPerformException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param cause {@inheritDoc}
+     */
     public CouldNotPerformException(Throwable cause) {
         super(cause);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param message            {@inheritDoc}
+     * @param cause              {@inheritDoc}
+     * @param enableSuppression  {@inheritDoc}
+     * @param writableStackTrace {@inheritDoc}
+     */
     public CouldNotPerformException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }

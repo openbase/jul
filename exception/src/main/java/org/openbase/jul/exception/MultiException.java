@@ -21,10 +21,11 @@ package org.openbase.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import java.util.Collection;
 
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  *
@@ -33,6 +34,11 @@ import org.slf4j.LoggerFactory;
 public class MultiException extends CouldNotPerformException {
 
     private final ExceptionStack exceptionStack;
+
+    public MultiException(final String message, final Throwable cause) {
+        super(message, cause);
+        this.exceptionStack = new ExceptionStack(cause);
+    }
 
     public MultiException(final String message, final ExceptionStack exceptionStack) {
         super(message, exceptionStack.get(0).getException());
@@ -74,6 +80,8 @@ public class MultiException extends CouldNotPerformException {
 
     public static class ExceptionStack extends ArrayList<SourceExceptionEntry> {
 
+        public ExceptionStack() {}
+
         public ExceptionStack(final Collection<? extends SourceExceptionEntry> collection) {
             super(collection);
         }
@@ -82,7 +90,8 @@ public class MultiException extends CouldNotPerformException {
             super(initialCapacity);
         }
 
-        public ExceptionStack() {
+        public ExceptionStack(final Throwable initialCause) {
+            add(new SourceExceptionEntry(initialCause));
         }
 
         public void push(final Object source, final Exception exception) {
@@ -95,6 +104,9 @@ public class MultiException extends CouldNotPerformException {
         private final Object source;
         private final Throwable exception;
 
+        public SourceExceptionEntry(final Throwable exception) {
+            this(null, exception);
+        }
         public SourceExceptionEntry(final Object source, final Throwable exception) {
             if(source != null) {
                 this.source = source;

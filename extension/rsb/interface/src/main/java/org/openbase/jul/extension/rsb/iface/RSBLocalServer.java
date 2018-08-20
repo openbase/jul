@@ -31,7 +31,7 @@ import rsb.patterns.Callback;
  */
 public interface RSBLocalServer extends RSBServer {
 
-    public void addMethod(String name, Callback callback) throws CouldNotPerformException;
+    void addMethod(String name, Callback callback) throws CouldNotPerformException;
 
-    public void waitForShutdown() throws CouldNotPerformException, InterruptedException;
+    void waitForShutdown() throws CouldNotPerformException, InterruptedException;
 }

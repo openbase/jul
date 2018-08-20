@@ -25,6 +25,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -94,7 +95,9 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
                 return getParticipant().publish(event);
             } catch (IllegalStateException | NullPointerException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Fatal error occured!", ex), logger);
-            } catch (CouldNotPerformException | RSBException ex) {
+            } catch (RSBException ex) {
+                throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", new RSBResolvedException(ex));
+            } catch (CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
             }
         }
@@ -116,8 +119,10 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
                 return getParticipant().publish(data);
             } catch (IllegalStateException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Fatal error occured!", ex), logger);
-            } catch (CouldNotPerformException | RSBException ex) {
+            } catch (CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Could not publish Data[" + data + "]!", ex);
+            } catch (RSBException ex) {
+                throw new CouldNotPerformException("Could not publish Data[" + data + "]!", new RSBResolvedException(ex));
             }
         }
     }

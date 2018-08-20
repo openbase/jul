@@ -84,7 +84,7 @@ public class StateRunner implements Runnable, Initializable<Class<? extends Stat
      * Because this class is implementing the runnable interface its not recommended to call this method manually.
      * Start the state machine via the global executor service.
      *
-     * e.g. GlobalCachedExecutorService.submit(stateMaschineInstance)
+     * e.g. GlobalCachedExecutorService.submit(stateMachineInstance)
      */
     @Override
     public synchronized void run() {
@@ -98,7 +98,7 @@ public class StateRunner implements Runnable, Initializable<Class<? extends Stat
             try {
                 nextStateClass = currentState.call();
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory("Somthing went wrong during state execution!", ex, LOGGER);
+                ExceptionPrinter.printHistory("Something went wrong during state execution!", ex, LOGGER);
                 if (Thread.currentThread().isInterrupted()) {
                     return;
                 }
@@ -162,7 +162,7 @@ public class StateRunner implements Runnable, Initializable<Class<? extends Stat
                 stateMap.put(stateClass, state);
                 return state;
             } catch (CouldNotPerformException ex) {
-                throw new NotAvailableException("State[" + stateClass.getSimpleName() + "]", ex);
+                throw new NotAvailableException(stateClass, ex);
             }
         }
         return stateMap.get(stateClass);

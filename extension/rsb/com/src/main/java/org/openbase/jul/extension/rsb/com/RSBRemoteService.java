@@ -32,6 +32,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
+import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
@@ -48,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
+import rsb.RSBException;
 import rsb.config.ParticipantConfig;
 import rst.rsb.ScopeType.Scope;
 
@@ -61,14 +63,13 @@ import static org.openbase.jul.pattern.Remote.ConnectionState.*;
 
 /**
  * @param <M>
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 //
 public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M>, TransactionIdProvider {
 
     // todo release: refactor class name into AbstractControllerRemoteService and document in jul changelog
-
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final long REQUEST_TIMEOUT = 15000;
     /**
@@ -82,42 +83,35 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     public static final long METHOD_CALL_START_TIMEOUT = 500;
     public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
     public static final long METHOD_CALL_MAX_TIMEOUT = 30000;
-
     private static final Random JITTER_RANDOM = new Random();
-
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Handler mainHandler;
+    private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
+    private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
+    private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
+    private final SyncObject pingLock = new SyncObject("PingLock");
+    private final Class<M> dataClass;
+    private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<M> internalPriorizedDataObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
+    private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
+    protected Object maintainer;
+    protected Scope scope;
     private RSBListener listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private RSBRemoteServer remoteServer;
     private Remote.ConnectionState connectionState;
     private long connectionPing;
     private long lastPingReceived;
-    private final Handler mainHandler;
-
-    private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
-    private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
-    private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
-    private final SyncObject pingLock = new SyncObject("PingLock");
-    protected Object maintainer;
-
     private CompletableFuture<M> syncFuture;
     private Future<M> syncTask;
-
-    protected Scope scope;
     private M data;
     private boolean initialized;
-    private final Class<M> dataClass;
     private MessageProcessor<GeneratedMessage, M> messageProcessor;
     private Set<StackTraceElement[]> reinitStackTraces = new HashSet<>();
-
-    private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
-    private final ObservableImpl<M> internalPriorizedDataObservable = new ObservableImpl<>(this);
-    private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
-
     private boolean shutdownInitiated;
-
     private long newestEventTime = 0;
     private long newestEventTimeNano = 0;
-
     private boolean connectionFailure = false;
     private Future<Long> pingTask = null;
 
@@ -135,6 +129,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         this.connectionStateObservable.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
     }
 
+    private static long generateTimeout(long currentTimeout) {
+        return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (JITTER_RANDOM.nextDouble() * 1000)));
+    }
+
     public void setMessageProcessor(MessageProcessor<GeneratedMessage, M> messageProcessor) {
         this.messageProcessor = messageProcessor;
     }
@@ -143,6 +141,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @param scope {@inheritDoc}
+     *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
@@ -155,6 +154,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @param scope {@inheritDoc}
+     *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
@@ -167,6 +167,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Initialize the remote on a scope.
      *
      * @param scope the scope where the remote communicates
+     *
      * @throws InitializationException if the initialization fails
      * @throws InterruptedException    if the initialization is interrupted
      */
@@ -184,6 +185,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param scope             {@inheritDoc}
      * @param participantConfig {@inheritDoc}
+     *
      * @throws InitializationException {@inheritDoc}
      * @throws InterruptedException    {@inheritDoc}
      */
@@ -212,6 +214,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param scope             {@inheritDoc}
      * @param participantConfig {@inheritDoc}
+     *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
@@ -344,6 +347,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Method unlocks this instance.
      *
      * @param maintainer the instance which currently holds the lock.
+     *
      * @throws CouldNotPerformException is thrown if the instance could not be
      *                                  unlocked.
      */
@@ -372,6 +376,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param handler
      * @param wait
+     *
      * @throws InterruptedException
      * @throws CouldNotPerformException
      */
@@ -453,6 +458,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Atomic deactivate which makes sure that the maintainer stays the same.
      *
      * @param maintainer the current maintainer of this remote
+     *
      * @throws InterruptedException        if deactivation is interrupted
      * @throws CouldNotPerformException    if deactivation fails
      * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
@@ -550,6 +556,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * it is necessary to call {@code requestData.get()}.
      *
      * @param scope the new scope to configure.
+     *
      * @throws InterruptedException     is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException is throws if the reinit has been failed.
      */
@@ -601,6 +608,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * it is necessary to call {@code requestData.get()}.
      *
      * @param maintainer the current maintainer of this remote
+     *
      * @throws InterruptedException        is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
@@ -618,6 +626,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param scope      the new scope to configure.
      * @param maintainer the current maintainer of this remote
+     *
      * @throws InterruptedException        is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
@@ -636,6 +645,14 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     @Override
     public boolean isConnected() {
         return connectionState == CONNECTED;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConnectionState getConnectionState() {
+        return connectionState;
     }
 
     private void setConnectionState(final ConnectionState connectionState) {
@@ -709,14 +726,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify ConnectionState[" + connectionState + "] change to all observers!", ex), logger);
             }
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ConnectionState getConnectionState() {
-        return connectionState;
     }
 
     /**
@@ -854,7 +863,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @param <T>        {@inheritDoc}
      * @param methodName {@inheritDoc}
      * @param argument   {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -910,6 +921,11 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                         internalCallFuture.cancel(true);
                                     }
                                 }
+                            } catch (ExecutionException ex) {
+                                if (ex.getCause() instanceof RSBException) {
+                                    throw new RSBResolvedException((RSBException) ex.getCause());
+                                }
+                                throw ex;
                             } catch (InterruptedException ex) {
                                 Thread.currentThread().interrupt();
                             }
@@ -940,7 +956,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         }
                         throw ex;
                     }
-                } catch (final CouldNotPerformException | ExecutionException | CancellationException | InterruptedException ex) {
+                } catch (final CouldNotPerformException | CancellationException | InterruptedException ex) {
                     throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
                 }
             }
@@ -951,6 +967,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -991,6 +1008,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * reconnection.
      *
      * @return fresh synchronized data object.
+     *
      * @throws CouldNotPerformException
      */
     private Future<M> sync() throws CouldNotPerformException {
@@ -1007,132 +1025,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private class SyncTaskCallable implements Callable<M> {
-
-        private Future<M> relatedFuture;
-
-        public void setRelatedFuture(Future<M> relatedFuture) {
-            this.relatedFuture = relatedFuture;
-        }
-
-        private boolean isRelatedFutureCancelled() {
-            return relatedFuture != null && relatedFuture.isCancelled();
-        }
-
-        @Override
-        public M call() throws CouldNotPerformException {
-
-            Future<Event> internalFuture = null;
-            Event event;
-            boolean active = isActive();
-            try {
-                try {
-                    logger.debug("call request");
-
-                    long timeout = METHOD_CALL_START_TIMEOUT;
-                    while (true) {
-                        // if reconnecting wait until activated again
-                        if (getConnectionState() == ConnectionState.RECONNECTING) {
-                            waitForConnectionState(ConnectionState.CONNECTING);
-                            waitForMiddleware();
-                        }
-
-                        synchronized (maintainerLock) {
-                            // update activation state
-                            active = isActive();
-
-                            // needed for synchronization, it happened that between this check and checking
-                            // again when catching the exception the remote has activated
-                            if (!active) {
-                                // if not active the sync is not possible and will be canceled to avoid executor service overload. After next remote activation a new sync is triggered anyway.
-                                if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
-                                    syncFuture.cancel(true);
-                                }
-                                throw new InvalidStateException("Remote service is not active within ConnectionState[\" + getConnectionState().name() + \"] and sync will be triggered after reactivation, so current sync is skipped.!");
-                            }
-                        }
-
-                        waitForMiddleware();
-
-                        // handle shutdown
-                        if (shutdownInitiated) {
-                            if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
-                                syncFuture.cancel(true);
-                            }
-                            return null;
-                        }
-
-                        try {
-                            try {
-                                internalFuture = internalRequestStatus();
-                            } catch (CouldNotPerformException ex) {
-                                logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
-                                continue;
-                            }
-                            try {
-                                ping().get(timeout, TimeUnit.MILLISECONDS);
-                            } catch (ExecutionException ex) {
-                                internalFuture.cancel(true);
-                                continue;
-                            }
-
-                            event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-
-                            if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
-                                logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
-                            }
-                            break;
-
-                        } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
-
-                            // handle interruption.
-                            if (ex.getCause() instanceof InterruptedException) {
-                                throw ex;
-                            }
-
-                            // cancel internal future because it will be recreated within the next iteration anyway.
-                            if (internalFuture != null) {
-                                internalFuture.cancel(true);
-                            }
-
-                            // if sync was already performed by global data update skip sync
-                            if (isRelatedFutureCancelled()) {
-                                return data;
-                            }
-
-                            timeout = generateTimeout(timeout);
-
-                            // only print warning if timeout is too long.
-                            if (timeout > 15000) {
-                                ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                                logger.warn("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
-                            } else {
-                                ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
-                                logger.debug("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
-                            }
-                        }
-                    }
-
-                    return applyEventUpdate(event, relatedFuture);
-                } catch (InterruptedException ex) {
-                    if (internalFuture != null) {
-                        internalFuture.cancel(true);
-                    }
-                    return null;
-                }
-            } catch (CouldNotPerformException | CancellationException ex) {
-                if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
-                } else {
-                    syncTask = sync();
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync failed of " + getScopeStringRep() + ". Try to recover...", ex), logger, LogLevel.WARN);
-                }
-            } catch (Exception ex) {
-                throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
-            }
-        }
-    }
-
     protected RSBRemoteServer getRemoteServer() {
         return remoteServer;
     }
@@ -1140,8 +1032,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     protected Future<Event> internalRequestStatus() throws CouldNotPerformException {
         return remoteServer.callAsync(RPC_REQUEST_STATUS);
     }
-
-    private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
 
     protected M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
         return applyEventUpdate(event, null);
@@ -1234,6 +1124,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -1242,6 +1133,23 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new NotAvailableException("data");
         }
         return data;
+    }
+
+    protected void setData(final M data) {
+        this.data = data;
+
+        // Notify data update
+        try {
+            internalPriorizedDataObservable.notifyObservers(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+        }
+
+        try {
+            dataObservable.notifyObservers(data);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
+        }
     }
 
     /**
@@ -1279,6 +1187,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}
+     *
      * @throws CouldNotPerformException       {@inheritDoc}
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
@@ -1391,6 +1300,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * @param connectionState the desired connection state
      * @param timeout         the timeout in milliseconds until the method throw a
      *                        TimeoutException in case the connection state was not reached.
+     *
      * @throws InterruptedException                                is thrown in case the thread is externally
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.TimeoutException         is thrown in case the
@@ -1453,6 +1363,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * Method blocks until the remote reaches the desired connection state.
      *
      * @param connectionState the desired connection state
+     *
      * @throws InterruptedException                                is thrown in case the thread is externally
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
@@ -1470,6 +1381,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -1478,20 +1390,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw new NotAvailableException("scope", new InvalidStateException("remote service not initialized yet!"));
         }
         return scope;
-    }
-
-    private class InternalUpdateHandler implements Handler {
-
-        @Override
-        public void internalNotify(Event event) {
-            try {
-                logger.debug("Internal notification: " + event.toString());
-                applyEventUpdate(event);
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
-            }
-        }
-
     }
 
     /**
@@ -1553,23 +1451,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    protected void setData(final M data) {
-        this.data = data;
-
-        // Notify data update
-        try {
-            internalPriorizedDataObservable.notifyObservers(data);
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
-        }
-
-        try {
-            dataObservable.notifyObservers(data);
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
-        }
-    }
-
     /**
      * This observable notifies sequentially and prior to the normal dataObserver.
      * It should be used by remote services which need to do some things before
@@ -1583,6 +1464,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     /**
      * @param observer
+     *
      * @deprecated use addDataObserver(observer); instead!
      */
     @Deprecated
@@ -1592,6 +1474,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
     /**
      * @param observer
+     *
      * @deprecated use removeDataObserver(observer); instead
      */
     @Deprecated
@@ -1740,10 +1623,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
-    private static long generateTimeout(long currentTimeout) {
-        return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (JITTER_RANDOM.nextDouble() * 1000)));
-    }
-
     @Override
     public long getTransactionId() throws NotAvailableException {
         try {
@@ -1767,5 +1646,145 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
             requestData();
         }
+    }
+
+    private class SyncTaskCallable implements Callable<M> {
+
+        private Future<M> relatedFuture;
+
+        public void setRelatedFuture(Future<M> relatedFuture) {
+            this.relatedFuture = relatedFuture;
+        }
+
+        private boolean isRelatedFutureCancelled() {
+            return relatedFuture != null && relatedFuture.isCancelled();
+        }
+
+        @Override
+        public M call() throws CouldNotPerformException {
+
+            Future<Event> internalFuture = null;
+            Event event;
+            boolean active = isActive();
+            try {
+                try {
+                    logger.debug("call request");
+
+                    long timeout = METHOD_CALL_START_TIMEOUT;
+                    while (true) {
+                        // if reconnecting wait until activated again
+                        if (getConnectionState() == ConnectionState.RECONNECTING) {
+                            waitForConnectionState(ConnectionState.CONNECTING);
+                            waitForMiddleware();
+                        }
+
+                        synchronized (maintainerLock) {
+                            // update activation state
+                            active = isActive();
+
+                            // needed for synchronization, it happened that between this check and checking
+                            // again when catching the exception the remote has activated
+                            if (!active) {
+                                // if not active the sync is not possible and will be canceled to avoid executor service overload. After next remote activation a new sync is triggered anyway.
+                                if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
+                                    syncFuture.cancel(true);
+                                }
+                                throw new InvalidStateException("Remote service is not active within ConnectionState[\" + getConnectionState().name() + \"] and sync will be triggered after reactivation, so current sync is skipped.!");
+                            }
+                        }
+
+                        waitForMiddleware();
+
+                        // handle shutdown
+                        if (shutdownInitiated) {
+                            if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
+                                syncFuture.cancel(true);
+                            }
+                            return null;
+                        }
+
+                        try {
+                            try {
+                                internalFuture = internalRequestStatus();
+                            } catch (CouldNotPerformException ex) {
+                                logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
+                                continue;
+                            }
+                            try {
+                                ping().get(timeout, TimeUnit.MILLISECONDS);
+                            } catch (ExecutionException ex) {
+                                internalFuture.cancel(true);
+                                continue;
+                            }
+
+                            event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+                            if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
+                                logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
+                            }
+                            break;
+
+                        } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
+
+                            // handle interruption.
+                            if (ex.getCause() instanceof InterruptedException) {
+                                throw ex;
+                            }
+
+                            // cancel internal future because it will be recreated within the next iteration anyway.
+                            if (internalFuture != null) {
+                                internalFuture.cancel(true);
+                            }
+
+                            // if sync was already performed by global data update skip sync
+                            if (isRelatedFutureCancelled()) {
+                                return data;
+                            }
+
+                            timeout = generateTimeout(timeout);
+
+                            // only print warning if timeout is too long.
+                            if (timeout > 15000) {
+                                ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+                                logger.warn("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                            } else {
+                                ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
+                                logger.debug("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                            }
+                        }
+                    }
+
+                    return applyEventUpdate(event, relatedFuture);
+                } catch (InterruptedException ex) {
+                    if (internalFuture != null) {
+                        internalFuture.cancel(true);
+                    }
+                    return null;
+                }
+            } catch (CouldNotPerformException | CancellationException ex) {
+                if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
+                } else {
+                    syncTask = sync();
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync failed of " + getScopeStringRep() + ". Try to recover...", ex), logger, LogLevel.WARN);
+                }
+            } catch (Exception ex) {
+                throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
+            }
+        }
+    }
+
+    private class InternalUpdateHandler implements Handler {
+
+        @Override
+        public void internalNotify(Event event) {
+            try {
+                logger.debug("Internal notification: " + event.toString());
+                applyEventUpdate(event);
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
+            }
+        }
+
     }
 }

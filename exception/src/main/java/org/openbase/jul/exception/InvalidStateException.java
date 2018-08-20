@@ -23,25 +23,48 @@ package org.openbase.jul.exception;
  */
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class InvalidStateException extends CouldNotPerformException {
 
-	public InvalidStateException(String message) {
-		super(message);
-	}
+    /**
+     * {@inheritDoc}
+     *
+     * @param message {@inheritDoc}
+     */
+    public InvalidStateException(String message) {
+        super(message);
+    }
 
-	public InvalidStateException(String message, Throwable cause) {
-		super(message, cause);
-	}
+    /**
+     * {@inheritDoc}
+     *
+     * @param message {@inheritDoc}
+     * @param cause   {@inheritDoc}
+     */
+    public InvalidStateException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public InvalidStateException(Throwable cause) {
-		super(cause);
-	}
+    /**
+     * {@inheritDoc}
+     *
+     * @param cause {@inheritDoc}
+     */
+    public InvalidStateException(Throwable cause) {
+        super(cause);
+    }
 
-	public InvalidStateException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
-	}
-	
+    /**
+     * {@inheritDoc}
+     *
+     * @param message            {@inheritDoc}
+     * @param cause              {@inheritDoc}
+     * @param enableSuppression  {@inheritDoc}
+     * @param writableStackTrace {@inheritDoc}
+     */
+    public InvalidStateException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
+
 }

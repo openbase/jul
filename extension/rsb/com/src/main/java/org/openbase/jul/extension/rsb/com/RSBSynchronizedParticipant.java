@@ -22,25 +22,25 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
+import org.openbase.jul.extension.rsb.iface.RSBParticipant;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.*;
 import rsb.config.ParticipantConfig;
-import org.openbase.jul.extension.rsb.iface.RSBParticipant;
-import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import rst.domotic.unit.location.LocationConfigType.LocationConfig.LocationType;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -49,14 +49,12 @@ import rst.domotic.unit.location.LocationConfigType.LocationConfig.LocationType;
  */
 public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipant {
 
-    private final Logger logger = LoggerFactory.getLogger(RSBSynchronizedParticipant.class);
-
     private static final long DEACTIVATION_TIMEOUT = 10000;
-
-    private P participant;
     protected final SyncObject participantLock = new SyncObject("participant");
     protected final Scope scope;
     protected final ParticipantConfig config;
+    private final Logger logger = LoggerFactory.getLogger(RSBSynchronizedParticipant.class);
+    private P participant;
 
     protected RSBSynchronizedParticipant(final Scope scope, final ParticipantConfig config) throws InstantiationException {
         try {
@@ -201,10 +199,14 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 final P tmpParticipant = getParticipant();
                 deactivationFuture = GlobalCachedExecutorService.submit(() -> {
                     try {
-                        if (tmpParticipant.isActive()) {
-                            tmpParticipant.deactivate();
+                        try {
+                            if (tmpParticipant.isActive()) {
+                                tmpParticipant.deactivate();
+                            }
+                        } catch (RSBException ex) {
+                            throw new RSBResolvedException(ex);
                         }
-                    } catch (final RSBException | IllegalStateException ex) {
+                    } catch (final IllegalStateException | RSBResolvedException ex) {
                         ExceptionPrinter.printHistory(new InvalidStateException("RSB Participant[" + tmpParticipant.toString() + "] deactivation bug detected!", ex), logger, LogLevel.WARN);
                         // no need for deactivating non existing participant.
                     }

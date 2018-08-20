@@ -129,11 +129,11 @@ public class FileSynchronizer<D> extends ObservableImpl<D> {
             this.data = data;
 
             if (!file.exists()) {
-                throw new NotAvailableException(File.class, file, new InvalidStateException("File does not exist!"));
+                throw new NotAvailableException(File.class, file, "File does not exist!");
             }
             
             if (!file.canWrite()) {
-                throw new InvalidStateException(new InvalidStateException("File["+file.getAbsolutePath()+"] does not provide write access!"));
+                new InvalidStateException("File["+file.getAbsolutePath()+"] does not provide write access!");
             }
 
             return fileProcessor.serialize(data, file);

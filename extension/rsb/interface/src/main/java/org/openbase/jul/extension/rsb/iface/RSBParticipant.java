@@ -36,16 +36,16 @@ import rsb.config.ParticipantConfig;
  */
 public interface RSBParticipant extends Activatable {
 
-    public String getKind() throws NotAvailableException;
+    String getKind() throws NotAvailableException;
 
-    public Class<?> getDataType() throws NotAvailableException;
+    Class<?> getDataType() throws NotAvailableException;
 
-    public ParticipantId getId() throws NotAvailableException;
+    ParticipantId getId() throws NotAvailableException;
 
-    public Scope getScope() throws NotAvailableException;
+    Scope getScope() throws NotAvailableException;
 
-    public ParticipantConfig getConfig() throws NotAvailableException;
+    ParticipantConfig getConfig() throws NotAvailableException;
 
-    public void setObserverManager(Factory.ParticipantObserverManager observerManager) throws CouldNotPerformException;
+    void setObserverManager(Factory.ParticipantObserverManager observerManager) throws CouldNotPerformException;
 
 }

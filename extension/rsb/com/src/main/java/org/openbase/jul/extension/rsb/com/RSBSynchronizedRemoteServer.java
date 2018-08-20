@@ -22,26 +22,23 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeoutException;
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
+import org.openbase.jul.extension.rsb.iface.RSBFuture;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Event;
-import rsb.Factory;
-import rsb.InitializeException;
-import rsb.RSBException;
-import rsb.Scope;
+import rsb.*;
 import rsb.config.ParticipantConfig;
 import rsb.patterns.RemoteServer;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 /**
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -102,57 +99,69 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
     }
 
     @Override
-    public Future<Event> callAsync(final String name, final Event event) throws CouldNotPerformException {
+    public RSBFuture<Event> callAsync(final String name, final Event event) throws CouldNotPerformException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
             synchronized (participantLock) {
-                return getParticipant().callAsync(name, event);
+                try {
+                    return new RSBFutureImpl<>(getParticipant().callAsync(name, event));
+                } catch (RSBException ex) {
+                    throw new RSBResolvedException(ex);
+                }
             }
-        } catch (CouldNotPerformException | RSBException ex) {
+        } catch (CouldNotPerformException ex) {
             if (Thread.currentThread().isInterrupted()) {
-                return FutureProcessor.canceledFuture(Event.class, ex);
+                return new RSBFutureImpl<>(FutureProcessor.canceledFuture(Event.class, ex));
             }
-            return FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex));
+            return new RSBFutureImpl<>(FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex)));
         } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         }
     }
 
     @Override
-    public Future<Event> callAsync(final String name) throws CouldNotPerformException {
+    public RSBFuture<Event> callAsync(final String name) throws CouldNotPerformException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
             synchronized (participantLock) {
-                return getParticipant().callAsync(name);
+                try {
+                    return new RSBFutureImpl<>(getParticipant().callAsync(name));
+                } catch (RSBException ex) {
+                    throw new RSBResolvedException(ex);
+                }
             }
-        } catch (CouldNotPerformException | RSBException ex) {
+        } catch (CouldNotPerformException ex) {
             if (Thread.currentThread().isInterrupted()) {
-                return FutureProcessor.canceledFuture(Event.class, ex);
+                return new RSBFutureImpl<>(FutureProcessor.canceledFuture(Event.class, ex));
             }
-            return FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex));
+            return new RSBFutureImpl<>(FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex)));
         } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         }
     }
 
     @Override
-    public Future<Object> callAsync(final String name, final Object data) throws CouldNotPerformException {
+    public RSBFuture<Object> callAsync(final String name, final Object data) throws CouldNotPerformException {
         try {
             if (name == null || name.isEmpty()) {
                 throw new NotAvailableException("name");
             }
             synchronized (participantLock) {
-                return getParticipant().callAsync(name, data);
+                try {
+                    return new RSBFutureImpl<>(getParticipant().callAsync(name, data));
+                } catch (RSBException ex) {
+                    throw new RSBResolvedException(ex);
+                }
             }
-        } catch (CouldNotPerformException | RSBException ex) {
+        } catch (CouldNotPerformException ex) {
             if (Thread.currentThread().isInterrupted()) {
-                return FutureProcessor.canceledFuture(Object.class, ex);
+                return new RSBFutureImpl<>(FutureProcessor.canceledFuture(Object.class, ex));
             }
-            return FutureProcessor.canceledFuture(Object.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex));
+            return new RSBFutureImpl<>(FutureProcessor.canceledFuture(Object.class, new CouldNotPerformException("Could not call Method[" + name + "] asynchronous!", ex)));
         } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         }
@@ -175,7 +184,9 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             throw ex;
         } catch (TimeoutException ex) {
             throw new org.openbase.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (RSBException ex) {
+            throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", new RSBResolvedException(ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "]!", ex);
@@ -211,7 +222,9 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             throw ex;
         } catch (TimeoutException ex) {
             throw new org.openbase.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (RSBException ex) {
+            throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", new RSBResolvedException(ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "]!", ex);
@@ -235,7 +248,9 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             throw ex;
         } catch (TimeoutException ex) {
             throw new org.openbase.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (RSBException ex) {
+            throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", new RSBResolvedException(ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "]!", ex);
@@ -259,7 +274,9 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             throw ex;
         } catch (TimeoutException ex) {
             throw new org.openbase.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (RSBException ex) {
+            throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", new RSBResolvedException(ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "]!", ex);
@@ -283,7 +300,9 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             throw ex;
         } catch (TimeoutException ex) {
             throw new org.openbase.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (RSBException ex) {
+            throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", new RSBResolvedException(ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "]!", ex);
@@ -307,7 +326,9 @@ public class RSBSynchronizedRemoteServer extends RSBSynchronizedServer<RemoteSer
             throw ex;
         } catch (TimeoutException ex) {
             throw new org.openbase.jul.exception.TimeoutException("Could not call Method[" + name + "] in time!", ex);
-        } catch (RuntimeException | RSBException ex) {
+        } catch (RSBException ex) {
+            throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", new RSBResolvedException(ex));
+        } catch (RuntimeException ex) {
             throw new InvalidStateException("Could not call Method[" + name + "] asynchronous because of a middleware issue!", ex);
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not call Method[" + name + "]!", ex);

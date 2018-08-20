@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import org.openbase.jul.exception.InvalidStateException;
+import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
@@ -80,14 +81,14 @@ public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServe
         }
     }
 
-    private void initMethods(final LocalServer localServer) throws NotAvailableException, CouldNotPerformException {
+    private void initMethods(final LocalServer localServer) throws CouldNotPerformException {
         MultiException.ExceptionStack exceptionStack = null;
         synchronized (participantLock) {
             for (Entry<String, Callback> entry : localMethodStack.entrySet()) {
                 try {
                     localServer.addMethod(entry.getKey(), entry.getValue());
                 } catch (RSBException ex) {
-                    exceptionStack = MultiException.push(this, ex, exceptionStack);
+                    exceptionStack = MultiException.push(this, new RSBResolvedException(ex), exceptionStack);
                 }
             }
             try {

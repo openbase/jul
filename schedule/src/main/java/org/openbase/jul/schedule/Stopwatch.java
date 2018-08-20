@@ -24,6 +24,7 @@ package org.openbase.jul.schedule;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.NotAvailableException.ContextType;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -101,7 +102,7 @@ public class Stopwatch {
 
                 return endTime - startTime;
             } catch (CouldNotPerformException ex) {
-                throw new NotAvailableException("time", ex);
+                throw new NotAvailableException(ContextType.INSTANCE, "time", ex);
             }
         }
     }

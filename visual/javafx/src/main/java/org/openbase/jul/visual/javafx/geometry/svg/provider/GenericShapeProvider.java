@@ -27,6 +27,7 @@ import javafx.scene.shape.SVGPath;
 import javafx.scene.shape.Shape;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.NotAvailableException.ContextType;
 
 public class GenericShapeProvider implements ShapeProvider<Object> {
 
@@ -49,7 +50,7 @@ public class GenericShapeProvider implements ShapeProvider<Object> {
             return SVG_PATH_SHAPE_PROVIDER.getShape((SVGPath) o);
         }
 
-        throw new NotAvailableException("ShapeProvider", new InvalidStateException("Shape description " + o + " is not supported!"));
+        throw new NotAvailableException(ContextType.USE_ID_AS_CONTEXT, "ShapeProvider", new InvalidStateException("Shape description " + o + " is not supported!"));
     }
 
     /**
@@ -69,6 +70,6 @@ public class GenericShapeProvider implements ShapeProvider<Object> {
             return SVG_PATH_SHAPE_PROVIDER.getShape((SVGPath) o);
         }
 
-        throw new NotAvailableException("ShapeProvider", new InvalidStateException("Shape description " + o + " is not supported!"));
+        throw new NotAvailableException(ContextType.USE_ID_AS_CONTEXT, "ShapeProvider", new InvalidStateException("Shape description " + o + " is not supported!"));
     }
 }

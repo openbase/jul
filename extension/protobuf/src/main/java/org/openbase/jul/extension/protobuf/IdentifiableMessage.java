@@ -31,6 +31,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.NotAvailableException.ContextType;
 import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -141,7 +142,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             return id;
 
         } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException("id", ex);
+            throw new NotAvailableException(ContextType.USE_ID_AS_CONTEXT, "id", ex);
         }
     }
 

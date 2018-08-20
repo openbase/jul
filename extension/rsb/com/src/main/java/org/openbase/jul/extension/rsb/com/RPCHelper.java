@@ -113,7 +113,9 @@ public class RPCHelper {
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                 } catch (CouldNotPerformException | IllegalArgumentException | ExecutionException | CancellationException | RejectedExecutionException ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new UserCodeException(new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")] of "+instance+"!", ex)), logger);
+                    final CouldNotPerformException exx = new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")] of " + instance + "!", ex);
+                    ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger);
+                    throw new UserCodeException(exx);
                 }
                 return new Event(Void.class);
             });

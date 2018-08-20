@@ -1,6 +1,6 @@
 package org.openbase.jul.extension.rsb.iface;
 
-/*
+/*-
  * #%L
  * JUL Extension RSB Interface
  * %%
@@ -22,19 +22,8 @@ package org.openbase.jul.extension.rsb.iface;
  * #L%
  */
 
-import org.openbase.jul.exception.NotAvailableException;
-import java.util.Collection;
-import rsb.patterns.Method;
+import java.util.concurrent.Future;
 
-/**
- *
- * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
- */
-public interface RSBServer extends RSBParticipant {
+public interface RSBFuture<V> extends Future<V> {
 
-    Collection<? extends Method> getMethods() throws NotAvailableException;
-
-    Method getMethod(String name) throws NotAvailableException;
-
-    boolean hasMethod(String name);
 }

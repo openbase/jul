@@ -109,7 +109,7 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
                 timeUnit.timedWait(VALUE_LOCK, timeout);
             }
             if (value == null) {
-                throw new NotAvailableException("Observable was not available in time.", new TimeoutException());
+                throw new NotAvailableException(Observable.class, new TimeoutException());
             }
         }
 

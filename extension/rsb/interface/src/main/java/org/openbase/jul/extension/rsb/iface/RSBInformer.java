@@ -41,7 +41,7 @@ public interface RSBInformer<DataType extends Object> extends RSBParticipant {
      * @throws CouldNotPerformException error sending event
      * @throws java.lang.InterruptedException
      */
-    public Event publish(final Event event) throws CouldNotPerformException, InterruptedException;
+    Event publish(final Event event) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Send data (of type T) to all subscribed participants.
@@ -51,7 +51,7 @@ public interface RSBInformer<DataType extends Object> extends RSBParticipant {
      * @throws CouldNotPerformException
      * @throws java.lang.InterruptedException
      */
-    public Event publish(final DataType data) throws CouldNotPerformException, InterruptedException;
+    Event publish(final DataType data) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Returns the class describing the type of data sent by this informer.
@@ -59,7 +59,7 @@ public interface RSBInformer<DataType extends Object> extends RSBParticipant {
      * @return class
      * @throws org.openbase.jul.exception.NotAvailableException
      */
-    public Class<?> getTypeInfo() throws NotAvailableException;
+    Class<?> getTypeInfo() throws NotAvailableException;
 
     /**
      * Set the class object describing the type of data sent by this informer.
@@ -67,6 +67,6 @@ public interface RSBInformer<DataType extends Object> extends RSBParticipant {
      * @param typeInfo a {@link Class} instance describing the sent data
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
-    public void setTypeInfo(final Class<DataType> typeInfo) throws CouldNotPerformException;
+    void setTypeInfo(final Class<DataType> typeInfo) throws CouldNotPerformException;
 
 }
