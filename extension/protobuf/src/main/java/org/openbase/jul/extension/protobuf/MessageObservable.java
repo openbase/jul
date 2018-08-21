@@ -21,26 +21,28 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.AbstractObservable;
 import org.openbase.jul.pattern.provider.DataProvider;
+
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class computes the hashCode to check if the observed value has changed invariant of
  * its timestamp.
  * Currently for efficiency reasons the timestamp of messages in repeated fields is still considered.
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  * @param <M> the type which is notified by this observable
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class MessageObservable<M extends Message> extends AbstractObservable<M> {
-    
+
     public static final String TIMESTAMP_MESSAGE_NAME = "Timestamp";
     public static final String RESOURCE_ALLOCATION_FIELD = "resource_allocation";
 
@@ -73,23 +75,32 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
         return dataProvider.getDataFuture();
     }
 
+    /**
+     * Recursively clear timestamp messages from a builder. For efficiency repeated fields are ignored.
+     *
+     * @param builder the builder from which all timestamps are cleared
+     * @return the updated builder
+     */
     public Builder removeTimestamps(final Builder builder) {
-        Descriptors.Descriptor descriptorForType = builder.getDescriptorForType();
-        for (Descriptors.FieldDescriptor field : descriptorForType.getFields()) {
+        final Descriptors.Descriptor descriptorForType = builder.getDescriptorForType();
+        for (final Descriptors.FieldDescriptor field : descriptorForType.getFields()) {
             // if the field is not repeated, a message and a timestamp it is cleared
             if (!field.isRepeated() && field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
                 //===============================================================
                 //TODO: This is just a hack since states in units now contain action descriptions,
                 //      This line prevents resource allocations to be checked because they contain required fields
                 //      and thus if they are checked calling build on the builder afterwards fails.
-                if(field.getName().equals(RESOURCE_ALLOCATION_FIELD)) {
+                if (field.getName().equals(RESOURCE_ALLOCATION_FIELD)) {
                     continue;
                 }
                 //===============================================================
                 if (field.getMessageType().getName().equals(TIMESTAMP_MESSAGE_NAME)) {
                     builder.clearField(field);
                 } else {
-                    removeTimestamps(builder.getFieldBuilder(field));
+                    // skip checking recursively if the field is not even initialized
+                    if (builder.hasField(field)) {
+                        removeTimestamps(builder.getFieldBuilder(field));
+                    }
                 }
             }
         }

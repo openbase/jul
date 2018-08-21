@@ -99,9 +99,9 @@ public class ProtoBufJSonProcessor {
             throw new InvalidStateException("Service attribute is not a protobuf message!");
         }
 
-        if (jsonStringRep.isEmpty() || jsonStringRep.equals(EMPTY_MESSAGE)) {
-            throw new InvalidStateException("Service attribute does not contain any context!");
-        }
+//        if (jsonStringRep.isEmpty() || jsonStringRep.equals(EMPTY_MESSAGE)) {
+//            throw new InvalidStateException("Service attribute does not contain any context!");
+//        }
 
         return jsonStringRep;
     }
