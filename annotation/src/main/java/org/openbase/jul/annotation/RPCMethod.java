@@ -21,6 +21,7 @@ package org.openbase.jul.annotation;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -37,4 +38,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RPCMethod {
+
+    /**
+     * Flag marking legacy RPCs. When true they will not be registered per default, but can be activated using
+     * a jp property. TODO: which property.
+     *
+     * @return if the annotated method is an rpc method
+     */
+    boolean legacy() default false;
 }

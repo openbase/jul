@@ -32,5 +32,5 @@ import org.openbase.jul.annotation.RPCMethod;
 public interface Requestable<T> {
 
     @RPCMethod
-    public T requestStatus() throws CouldNotPerformException;
+    T requestStatus() throws CouldNotPerformException;
 }

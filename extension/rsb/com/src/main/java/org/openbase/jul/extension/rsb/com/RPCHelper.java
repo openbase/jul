@@ -22,28 +22,36 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jul.annotation.RPCMethod;
-
-import java.lang.reflect.Method;
-import java.util.concurrent.*;
-
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.extension.rsb.com.jp.JPRSBLegacyMode;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import rsb.patterns.Callback.UserCodeException;
+
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.*;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RPCHelper {
+
+    private static final Map<String, Integer> methodCountMap = new HashMap<>();
 
     public static final long RPC_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
@@ -52,15 +60,59 @@ public class RPCHelper {
     //    static final Logger logger = LoggerFactory.getLogger(RPCHelper.class);
     private static final String INTERNAL_CALL_REMOTE_METHOD_NAME = "internalCallRemoteMethod";
 
+    //TODO: remove or enable for debugging
+//    public static SyncObject syncObject = new SyncObject("MapSync");
+
     public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
         for (final Method method : interfaceClass.getMethods()) {
             if (method.getAnnotation(RPCMethod.class) != null) {
-                registerMethod(method, instance, server);
+                boolean legacy = false;
+                try {
+                    legacy = JPService.getProperty(JPRSBLegacyMode.class).getValue();
+                } catch (JPNotAvailableException e) {
+                    // if not available just register legacy methods
+                }
+                // if legacy register always, else only register if not marked as legacy
+                if (legacy || !method.getAnnotation(RPCMethod.class).legacy()) {
+                    registerMethod(method, instance, server);
+                }
             }
         }
     }
 
+//    private static int test = 1;
+//
+//    private static void printMap() {
+//        int sum = 0;
+//        System.out.println("Registered methods");
+//        for (Entry<String, Integer> stringIntegerEntry : methodCountMap.entrySet()) {
+//            sum += stringIntegerEntry.getValue();
+//            if (stringIntegerEntry.getValue() < 2) {
+//                continue;
+//            }
+//            System.out.println(stringIntegerEntry.getKey() + ": " + stringIntegerEntry.getValue());
+//        }
+//        System.out.println("Overall " + sum + " methods");
+//    }
+
     public static <I, T extends I> void registerMethod(final Method method, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
+//        synchronized (syncObject) {
+//            if (!methodCountMap.containsKey(method.getName())) {
+//                methodCountMap.put(method.getName(), 0);
+//            }
+//            methodCountMap.put(method.getName(), methodCountMap.get(method.getName()) + 1);
+//
+//            int sum = 0;
+//            for (Integer value : methodCountMap.values()) {
+//                sum += value;
+//            }
+//
+//            if (sum > (500 * test)) {
+//                test++;
+//                printMap();
+//            }
+//
+//        }
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
         logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
         try {
@@ -122,9 +174,9 @@ public class RPCHelper {
         } catch (CouldNotPerformException ex) {
             if (ex.getCause() instanceof InvalidStateException) {
                 // method was already register
-                ExceptionPrinter.printHistory("Skip Method[" + method.getName() + "] registration on Scope[" + server.getScope() + "] of "+instance+" because message was already registered!", ex, logger, LogLevel.DEBUG);
+                ExceptionPrinter.printHistory("Skip Method[" + method.getName() + "] registration on Scope[" + server.getScope() + "] of " + instance + " because message was already registered!", ex, logger, LogLevel.DEBUG);
             } else {
-                throw new CouldNotPerformException("Could not register Method[" + method.getName() + "] on Scope[" + server.getScope() + "] of "+instance+"!", ex);
+                throw new CouldNotPerformException("Could not register Method[" + method.getName() + "] on Scope[" + server.getScope() + "] of " + instance + "!", ex);
             }
         }
     }

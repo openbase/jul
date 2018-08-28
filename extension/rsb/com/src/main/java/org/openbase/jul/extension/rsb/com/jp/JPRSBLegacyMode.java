@@ -1,4 +1,3 @@
-
 package org.openbase.jul.extension.rsb.com.jp;
 
 /*-
@@ -26,18 +25,18 @@ package org.openbase.jul.extension.rsb.com.jp;
 import org.openbase.jps.preset.AbstractJPBoolean;
 
 /**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class JPRSBThreadPooling extends AbstractJPBoolean {
+public class JPRSBLegacyMode extends AbstractJPBoolean {
 
-    public final static String[] COMMAND_IDENTIFIERS = {"--rsb-thread-pooling"};
+    public final static String[] COMMAND_IDENTIFIERS = {"--rsb-legacy"};
 
-    public JPRSBThreadPooling() {
+    public JPRSBLegacyMode() {
         super(COMMAND_IDENTIFIERS);
     }
-    
+
     @Override
     public String getDescription() {
-        return "Forces rsb to use the global executor thread pool which will extremly minimize the usage of thread. Use this feature if you get in trouble with your os thread limitations.";
+        return "Forces BCO to registers RPCs which are marked as legacy.";
     }
 }
