@@ -65,7 +65,6 @@ import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 /**
  * @param <M>  the message type of the communication service
  * @param <MB> the builder for message M
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 
@@ -115,7 +114,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * Create a communication service.
      *
      * @param builder the initial data builder
-     *
      * @throws InstantiationException if the creation fails
      */
     public RSBCommunicationService(final MB builder) throws InstantiationException {
@@ -147,7 +145,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param scope
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -157,7 +154,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param scope
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -167,7 +163,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param scope
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -183,7 +178,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @param label
      * @param type
      * @param location
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -198,7 +192,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param scope
      * @param participantConfig
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -213,7 +206,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param scope
      * @param participantConfig
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -440,7 +432,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
@@ -471,7 +462,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param controllerAvailability
-     *
      * @throws InterruptedException
      */
     private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) throws InterruptedException {
@@ -560,7 +550,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
-     *
      * @return {@inheritDoc}
      */
     @Override
@@ -572,7 +561,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
-     *
      * @return {@inheritDoc}
      */
     @Override
@@ -584,7 +572,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -647,9 +634,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * sub classes to update data which can be received by everyone.
      *
      * @param dataBuilder a clone of the current data builder.
-     *
      * @return a message build from the data builder
-     *
      * @throws CouldNotPerformException if the update fails
      */
     protected M updateDataToPublish(MB dataBuilder) throws CouldNotPerformException {
@@ -660,7 +645,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * Overwrite this method to get informed about data updates.
      *
      * @param data new arrived data messages.
-     *
      * @throws CouldNotPerformException
      */
     protected void notifyDataUpdate(M data) throws CouldNotPerformException {
@@ -670,7 +654,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param fieldNumber
      * @param value
-     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
@@ -693,7 +676,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     /**
      * @param fieldName
      * @param value
-     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
@@ -716,9 +698,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param name
-     *
      * @return
-     *
      * @throws NotAvailableException
      */
     protected final Object getDataField(String name) throws NotAvailableException {
@@ -736,9 +716,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param name
-     *
      * @return
-     *
      * @throws CouldNotPerformException
      */
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
@@ -756,9 +734,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param name
-     *
      * @return
-     *
      * @throws CouldNotPerformException
      */
     protected final boolean supportsDataField(final String name) throws CouldNotPerformException {
@@ -772,7 +748,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * @param fieldId
-     *
      * @return
      */
     protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
@@ -792,6 +767,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * This method validates the controller initialisation.
+     *
      * @throws NotInitializedException is thrown if the controller is not initialized.
      */
     public void validateInitialization() throws NotInitializedException {
@@ -804,6 +780,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * This method validates the controller activation.
+     *
      * @throws InvalidStateException is thrown if the controller is not active.
      */
     public void validateActivation() throws InvalidStateException {
@@ -833,7 +810,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc }
      *
      * @param timestamp {@inheritDoc }
-     *
      * @return {@inheritDoc }
      */
     @Override
@@ -845,7 +821,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -861,14 +836,21 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
     }
 
     /**
-     * @param server
+     * Register methods for RPCs on the internal RSB local server.
+     * <p>
+     * Note:
+     * Methods should not be registered outside this method because the internal server can already be active.
+     * When extending from a class already implementing this method always remember to call the super method
+     * so that all methods are properly registered.
      *
-     * @throws CouldNotPerformException
+     * @param server the local server on which the methods should be registered.
+     * @throws CouldNotPerformException if registering methods fails
      */
     public abstract void registerMethods(final RSBLocalServer server) throws CouldNotPerformException;
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -901,7 +883,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * {@inheritDoc}
      *
      * @throws CouldNotPerformException {@inheritDoc}
-     * @throws InterruptedException {@inheritDoc}
+     * @throws InterruptedException     {@inheritDoc}
      */
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
@@ -913,7 +895,6 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      *
      * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}.
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      * @throws InterruptedException     {@inheritDoc}
      */
@@ -979,6 +960,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
     /**
      * {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override

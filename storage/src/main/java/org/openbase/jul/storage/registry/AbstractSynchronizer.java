@@ -149,7 +149,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
 
     private void internalSync() throws CouldNotPerformException, InterruptedException {
         synchronized (synchronizationLock) {
-            logger.warn("Perform sync...");
+            logger.debug("Perform sync...");
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.start();
 
