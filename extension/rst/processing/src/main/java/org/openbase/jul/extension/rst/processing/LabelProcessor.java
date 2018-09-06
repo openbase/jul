@@ -10,12 +10,12 @@ package org.openbase.jul.extension.rst.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -52,6 +52,7 @@ public class LabelProcessor {
      *
      * @param label       the label type which is checked
      * @param labelString the label string that is tested if it is contained in the label type
+     *
      * @return if the labelString is contained in the label type
      */
     public static boolean contains(final Label label, final String labelString) {
@@ -71,6 +72,7 @@ public class LabelProcessor {
      * languageCode is empty or that it only contains empty string.
      *
      * @param label the label type which is tested
+     *
      * @return if the label type is empty as explained above
      */
     public static boolean isEmpty(final Label label) {
@@ -88,6 +90,7 @@ public class LabelProcessor {
      * Create a new labelBuilder and register label with the default locale.
      *
      * @param label the label to be added
+     *
      * @return the updated label builder
      */
     public static Label.Builder generateLabelBuilder(final String label) {
@@ -99,6 +102,7 @@ public class LabelProcessor {
      *
      * @param locale the locale from which the language code is extracted for which the label is added
      * @param label  the label to be added
+     *
      * @return the updated label builder
      */
     public static Label.Builder generateLabelBuilder(final Locale locale, final String label) {
@@ -109,6 +113,7 @@ public class LabelProcessor {
      * Create a new labelBuilder and register label with the default locale.
      *
      * @param label the label to be added
+     *
      * @return the updated label builder
      */
     public static Label buildLabel(final String label) {
@@ -120,6 +125,7 @@ public class LabelProcessor {
      *
      * @param locale the locale from which the language code is extracted for which the label is added
      * @param label  the label to be added
+     *
      * @return the updated label builder
      */
     public static Label buildLabel(final Locale locale, final String label) {
@@ -134,6 +140,7 @@ public class LabelProcessor {
      * @param labelBuilder the label builder to be updated
      * @param locale       the locale from which the language code is extracted for which the label is added
      * @param label        the label to be added
+     *
      * @return the updated label builder
      */
     public static Label.Builder addLabel(final Label.Builder labelBuilder, final Locale locale, final String label) {
@@ -149,6 +156,7 @@ public class LabelProcessor {
      * @param labelBuilder the label builder to be updated
      * @param languageCode the languageCode for which the label is added
      * @param label        the label to be added
+     *
      * @return the updated label builder
      */
     public static Label.Builder addLabel(final Label.Builder labelBuilder, final String languageCode, final String label) {
@@ -178,7 +186,9 @@ public class LabelProcessor {
      * Get the first label found in the label type. This is independent of the language of the label.
      *
      * @param label the label type which is searched for the first label
+     *
      * @return the first label found
+     *
      * @throws NotAvailableException if now label is contained in the label type.
      */
     public static String getFirstLabel(final LabelOrBuilder label) throws NotAvailableException {
@@ -197,7 +207,9 @@ public class LabelProcessor {
      *
      * @param locale the locale from which a language code is extracted
      * @param label  the label type which is searched for labels in the language
+     *
      * @return the first label from the label type for the locale
+     *
      * @throws NotAvailableException if no label is provided by the {@code label} argument.
      */
     public static String getBestMatch(final Locale locale, final LabelOrBuilder label) throws NotAvailableException {
@@ -221,7 +233,9 @@ public class LabelProcessor {
      * {@link Locale#getDefault()} . If no label matches the languageCode, than the first label of any other provided language is returned.
      *
      * @param label the label type which is searched for labels in the language
+     *
      * @return the first label from the label type for the locale
+     *
      * @throws NotAvailableException if no label is provided by the {@code label} argument.
      */
     public static String getBestMatch(final LabelOrBuilder label) throws NotAvailableException {
@@ -235,6 +249,7 @@ public class LabelProcessor {
      *
      * @param label       the label type which is searched for labels in the language
      * @param alternative an alternative string which is returned in error case.
+     *
      * @return the first label from the label type for the locale or if no label is provided by the {@code label} argument the {@code alternative} is returned.
      */
     public static String getBestMatch(final LabelOrBuilder label, final String alternative) {
@@ -252,7 +267,9 @@ public class LabelProcessor {
      *
      * @param locale the locale from which a language code is extracted
      * @param label  the label type which is searched for labels in the language
+     *
      * @return the first label from the label type for the locale
+     *
      * @throws NotAvailableException if no label list for the locale exists of if the list is empty
      */
     public static String getLabelByLanguage(final Locale locale, final LabelOrBuilder label) throws NotAvailableException {
@@ -266,7 +283,9 @@ public class LabelProcessor {
      *
      * @param languageCode the languageCode which is checked
      * @param label        the label type which is searched for labels in the language
+     *
      * @return the first label from the label type for the language code.
+     *
      * @throws NotAvailableException if no label list for the language code exists or if the list is empty
      */
     public static String getLabelByLanguage(final String languageCode, final LabelOrBuilder label) throws NotAvailableException {
@@ -284,7 +303,9 @@ public class LabelProcessor {
      *
      * @param locale the locale from which the language code is extracted
      * @param label  the label type that is searched for a label list
+     *
      * @return a list of all labels for the locale in the language type
+     *
      * @throws NotAvailableException if no entry for the locale exist in the label type
      */
     public static List<String> getLabelListByLanguage(final Locale locale, final LabelOrBuilder label) throws NotAvailableException {
@@ -298,7 +319,9 @@ public class LabelProcessor {
      *
      * @param languageCode the languageCode which is checked
      * @param label        the label type that is searched for a label list
+     *
      * @return a list of all labels for the languageCode in the language type
+     *
      * @throws NotAvailableException if no entry for the languageCode exist in the label type
      */
     public static List<String> getLabelListByLanguage(final String languageCode, final LabelOrBuilder label) throws NotAvailableException {
@@ -317,6 +340,7 @@ public class LabelProcessor {
      * @param label    the label builder in which label string will be replaced
      * @param oldLabel the label string which is replaced
      * @param newLabel the label string replacement
+     *
      * @return the updated label builder
      */
     public static Label.Builder replace(final Label.Builder label, final String oldLabel, final String newLabel) {
@@ -324,11 +348,29 @@ public class LabelProcessor {
             final List<String> valueList = new ArrayList<>(entryBuilder.getValueList());
             entryBuilder.clearValue();
             for (String value : valueList) {
-                if (value.equalsIgnoreCase(oldLabel)) {
+                if (StringProcessor.removeWhiteSpaces(value).equalsIgnoreCase(StringProcessor.removeWhiteSpaces(oldLabel))) {
                     entryBuilder.addValue(newLabel);
                 } else {
                     entryBuilder.addValue(value);
                 }
+            }
+        }
+        return label;
+    }
+
+    /**
+     * Format the given label by removing duplicated white spaces and camel cases.
+     *
+     * @param label the label to format.
+     *
+     * @return the formatted label.
+     */
+    public static Label.Builder format(final Label.Builder label) {
+        for (final MapFieldEntry.Builder entryBuilder : label.getEntryBuilderList()) {
+            final List<String> valueList = new ArrayList<>(entryBuilder.getValueList());
+            entryBuilder.clearValue();
+            for (String value : valueList) {
+                entryBuilder.addValue(StringProcessor.formatHumanReadable(value));
             }
         }
         return label;
