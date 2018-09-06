@@ -59,7 +59,7 @@ public class LabelProcessor {
         final String withoutWhite = StringProcessor.removeWhiteSpaces(labelString);
         for (final Label.MapFieldEntry entry : label.getEntryList()) {
             for (final String value : entry.getValueList()) {
-                if (StringProcessor.removeDoubleWhiteSpaces(value).equalsIgnoreCase(withoutWhite)) {
+                if (StringProcessor.removeWhiteSpaces(value).equalsIgnoreCase(withoutWhite)) {
                     return true;
                 }
             }
