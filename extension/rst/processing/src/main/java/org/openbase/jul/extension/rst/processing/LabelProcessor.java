@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rst.processing;
  */
 
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.processing.StringProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rst.configuration.LabelType.Label;
@@ -47,16 +48,17 @@ public class LabelProcessor {
     /**
      * Test if a label contains a label string. This test iterates over all languages and all
      * label strings for the language and check if one equals the label string.
-     * The test is done ignoring the case of the label string.
+     * The test is done ignoring the case of the label string and ignoring white spaces.
      *
      * @param label       the label type which is checked
      * @param labelString the label string that is tested if it is contained in the label type
      * @return if the labelString is contained in the label type
      */
     public static boolean contains(final Label label, final String labelString) {
-        for (Label.MapFieldEntry entry : label.getEntryList()) {
-            for (String value : entry.getValueList()) {
-                if (value.equalsIgnoreCase(labelString)) {
+        final String withoutWhite = StringProcessor.removeWhiteSpaces(labelString);
+        for (final Label.MapFieldEntry entry : label.getEntryList()) {
+            for (final String value : entry.getValueList()) {
+                if (StringProcessor.removeDoubleWhiteSpaces(value).equalsIgnoreCase(withoutWhite)) {
                     return true;
                 }
             }
@@ -231,7 +233,7 @@ public class LabelProcessor {
      * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
      * {@link Locale#getDefault()} . If no label matches the languageCode, than the first label of any other provided language is returned.
      *
-     * @param label the label type which is searched for labels in the language
+     * @param label       the label type which is searched for labels in the language
      * @param alternative an alternative string which is returned in error case.
      * @return the first label from the label type for the locale or if no label is provided by the {@code label} argument the {@code alternative} is returned.
      */

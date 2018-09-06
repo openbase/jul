@@ -25,7 +25,6 @@ package org.openbase.jul.processing;
 import java.io.File;
 
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class StringProcessor {
@@ -47,6 +46,16 @@ public class StringProcessor {
 
     public static String removeDoubleWhiteSpaces(String input) {
         return input.replaceAll("\\s+", " ");
+    }
+
+    /**
+     * Remove all white spaces (spaces, tabs, ...) from the input string.
+     *
+     * @param input the string from which white spaces are removed.
+     * @return the input with removed white spaces
+     */
+    public static String removeWhiteSpaces(String input) {
+        return input.replaceAll("\\s+", "");
     }
 
     public static String formatHumanReadable(String input) {
@@ -92,10 +101,10 @@ public class StringProcessor {
 
     /**
      * Method fills the given input string with width-spaces until the given string length is reached.
-     *
+     * <p>
      * Note: The origin input string will aligned to the left.
      *
-     * @param input the original input string
+     * @param input  the original input string
      * @param lenght the requested input string length.
      * @return the extended input string
      */
@@ -105,11 +114,11 @@ public class StringProcessor {
 
     /**
      * Method fills the given input string with width-spaces until the given string length is reached.
-     *
+     * <p>
      * Note: The origin input string will aligned to the left.
      *
-     * @param input the original input string
-     * @param lenght the requested input string length.
+     * @param input         the original input string
+     * @param lenght        the requested input string length.
      * @param textAlignment the alignment of the origin input string.
      * @return the extended input string
      */
@@ -151,6 +160,7 @@ public class StringProcessor {
 
     /**
      * Method normalizes a string into a simple file name by removing duplicated path limiters.
+     *
      * @param filename the file name origin
      * @return the normalized file name.
      */

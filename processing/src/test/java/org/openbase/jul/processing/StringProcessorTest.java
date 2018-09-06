@@ -21,17 +21,14 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.*;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 
+import static org.junit.Assert.assertEquals;
+
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class StringProcessorTest {
@@ -127,7 +124,8 @@ public class StringProcessorTest {
     }
 
     @Test(timeout = 5000)
-    public void testfillWithSpaces() {
+    public void testFillWithSpaces() {
+        System.out.println("testFillWithSpaces");
         assertEquals("MyFarm    ", StringProcessor.fillWithSpaces("MyFarm", 10));
         assertEquals(" 1234 ", StringProcessor.fillWithSpaces(" 1234", 6));
         assertEquals("nospaces", StringProcessor.fillWithSpaces("nospaces", 0));
@@ -136,9 +134,20 @@ public class StringProcessorTest {
 
     @Test
     public void transformToNormalizedFileName() {
+        System.out.println("transformToNormalizedFileName");
         assertEquals("/hi/this/is/a/normal/path", StringProcessor.transformToNormalizedFileName("///hi/this//is/a/normal/path/"));
         assertEquals("filename", StringProcessor.transformToNormalizedFileName("filename"));
         assertEquals("/ho", StringProcessor.transformToNormalizedFileName("/ho"));
         assertEquals("this/is", StringProcessor.transformToNormalizedFileName("this///is"));
+    }
+
+    @Test
+    public void testRemoveWhiteSpaces() {
+        System.out.println("testRemoveWhiteSpaces");
+        final String value = "testString";
+        final String[] whiteSpaces = {" ", "  ", "\t", "\t ", "\n", "\n\t", " \t \n"};
+        for (String whiteSpace : whiteSpaces) {
+            assertEquals(value, StringProcessor.removeWhiteSpaces(value + whiteSpace));
+        }
     }
 }
