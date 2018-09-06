@@ -23,9 +23,7 @@ package org.openbase.jul.visual.javafx.geometry.svg.provider;
  */
 
 import javafx.scene.shape.SVGPath;
-import javafx.scene.shape.SVGPathBuilder;
 import javafx.scene.shape.Shape;
-import org.openbase.jul.visual.javafx.geometry.ShapeProcessor;
 
 public interface SVGPathShapeProvider extends ShapeProvider<SVGPath> {
 

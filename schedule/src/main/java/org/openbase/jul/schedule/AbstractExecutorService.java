@@ -106,13 +106,13 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                 overload = true;
                 logger.warn("Further tasks will be rejected because executor service overload is detected!");
                 if (JPService.verboseMode()) {
-                    StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
+                    StackTracePrinter.printAllStackTraces("pool", logger, LogLevel.INFO);
                 }
             } else if (executorService.getActiveCount() >= ((double) executorService.getMaximumPoolSize() * DEFAULT_WARNING_RATIO)) {
                 overload = true;
                 logger.warn("High Executor service load detected! This can cause system instability issues!");
                 if (JPService.verboseMode()) {
-                    StackTracePrinter.printAllStackTrackes("pool", logger, LogLevel.INFO);
+                    StackTracePrinter.printAllStackTraces("pool", logger, LogLevel.INFO);
                 }
             } else {
                 overload = false;
