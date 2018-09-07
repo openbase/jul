@@ -1,6 +1,6 @@
 package org.openbase.jul.iface;
 
-/*
+/*-
  * #%L
  * JUL Interface
  * %%
@@ -22,17 +22,18 @@ package org.openbase.jul.iface;
  * #L%
  */
 
-import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.CouldNotTransformException;
+import org.openbase.jul.exception.TypeNotSupportedException;
 
 /**
- * Interface is used to process any
+ * Interface for to transform one type of value into another.
  *
- * @param <I> Input type needed for processing.
- * @param <O> Output type defining the process result.
+ * @param <A> the value transformed.
+ * @param <B> the resulting type of the transformation.
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public interface Processable<I, O> {
-    O process(final I input) throws CouldNotPerformException, InterruptedException;
+public interface Transformer<A, B> {
 
+    B transform(final A a) throws CouldNotTransformException, TypeNotSupportedException;
 }

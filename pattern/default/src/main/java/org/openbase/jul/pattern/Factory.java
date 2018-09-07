@@ -42,5 +42,5 @@ public interface Factory<INSTANCE, CONFIG> {
      * @throws org.openbase.jul.exception.InstantiationException if the initialization fails
      * @throws java.lang.InterruptedException if the initialization is interrupted
      */
-    public INSTANCE newInstance(final CONFIG config) throws InstantiationException, InterruptedException;
+    INSTANCE newInstance(final CONFIG config) throws InstantiationException, InterruptedException;
 }
