@@ -59,7 +59,7 @@ public class StringProcessorTest {
         assertEquals("My Farm", StringProcessor.formatHumanReadable("MyFarm"));
         assertEquals("I am on the Way To Hell my god!", StringProcessor.formatHumanReadable("I am on the WayToHell my god!"));
         assertEquals("Hallo my name is nothing to do.", StringProcessor.formatHumanReadable("Hallo my name is nothing to do."));
-        assertEquals("I am on the Way To Hell my god!", StringProcessor.formatHumanReadable("I am on the WayToHell my god!"));
+        assertEquals("I am on the Way To Hell my god!", StringProcessor.formatHumanReadable("I am on_ the WayToHell my god!"));
         assertEquals("final", StringProcessor.formatHumanReadable("final"));
     }
 
@@ -87,6 +87,10 @@ public class StringProcessorTest {
         assertEquals("Hallo my name is nothing to do.", StringProcessor.insertSpaceBetweenCamelCase("Hallo my name is nothing to do."));
         assertEquals("I am on the Way To Hell my god!", StringProcessor.insertSpaceBetweenCamelCase("I am on the WayToHell my god!"));
         assertEquals("final", StringProcessor.insertSpaceBetweenCamelCase("final"));
+        assertEquals("C8I7", StringProcessor.insertSpaceBetweenCamelCase("C8I7"));
+        assertEquals("", StringProcessor.insertSpaceBetweenCamelCase(""));
+        assertEquals("O", StringProcessor.insertSpaceBetweenCamelCase("O"));
+        assertEquals("i", StringProcessor.insertSpaceBetweenCamelCase("i"));
     }
 
     /**

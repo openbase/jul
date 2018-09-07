@@ -10,12 +10,12 @@ package org.openbase.jul.extension.rst.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -359,7 +359,7 @@ public class LabelProcessor {
     }
 
     /**
-     * Format the given label by removing duplicated white spaces and camel cases.
+     * Format the given label by removing duplicated white spaces, underscores and camel cases in all entries.
      *
      * @param label the label to format.
      *
@@ -370,9 +370,34 @@ public class LabelProcessor {
             final List<String> valueList = new ArrayList<>(entryBuilder.getValueList());
             entryBuilder.clearValue();
             for (String value : valueList) {
-                entryBuilder.addValue(StringProcessor.formatHumanReadable(value));
+                entryBuilder.addValue(format(value));
             }
         }
         return label;
+    }
+
+    /**
+     * Format the given label by removing duplicated white spaces, underscores and camel cases.
+     *
+     * @param label the label to format.
+     *
+     * @return the formatted label.
+     */
+    public static String format(String label) {
+        if (label.isEmpty()) {
+            return label;
+        }
+        if(Character.isDigit(label.charAt(label.length()-1))) {
+            for (int i = label.length(); i > 0; i--) {
+                if(!Character.isDigit(label.charAt(i-1))) {
+                    if(!Character.isLowerCase(label.charAt(i-1))) {
+                        break;
+                    }
+                    label = label.substring(0, i) + " " + label.substring(i);
+                    break;
+                }
+            }
+        }
+        return StringProcessor.formatHumanReadable(label);
     }
 }

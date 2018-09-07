@@ -36,10 +36,13 @@ public class StringProcessor {
     }
 
     public static String insertSpaceBetweenCamelCase(String input) {
-        String output = "";
-        String[] split = input.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])");
-        for (int i = 0; i < split.length; i++) {
-            output += (i + 1 < split.length && !split[i].endsWith(" ")) ? split[i] + " " : split[i];
+        String output = (input.isEmpty() ? "": Character.toString(input.charAt(0)));
+        for (int i = 1; i < input.length(); i++) {
+            if (Character.isLowerCase(input.charAt(i-1)) && Character.isUpperCase(input.charAt(i))) {
+                output += " " + input.charAt(i);
+                continue;
+            }
+            output += input.charAt(i);
         }
         return output;
     }
@@ -59,7 +62,7 @@ public class StringProcessor {
     }
 
     public static String formatHumanReadable(String input) {
-        return removeDoubleWhiteSpaces(insertSpaceBetweenCamelCase(input)).trim();
+        return removeDoubleWhiteSpaces(insertSpaceBetweenCamelCase(input).replaceAll("_", " ").replaceAll("-", " ")).trim();
     }
 
     public static String transformUpperCaseToCamelCase(final String input) {

@@ -440,7 +440,7 @@ public class ScopeGenerator {
     }
 
     public static String convertIntoValidScopeComponent(String scopeComponent) {
-        return StringProcessor.transformToIdString(scopeComponent.toLowerCase());
+        return StringProcessor.transformToIdString(scopeComponent.toLowerCase()).replaceAll("_", "");
     }
 
     public static String generateStringRepWithDelimiter(final ScopeType.Scope scope, final String delimiter) throws CouldNotPerformException {
