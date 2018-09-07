@@ -125,8 +125,9 @@ public class ScopeGeneratorTest {
     @Test
     public void testConvertIntoValidScopeComponent() {
         assertEquals("Scope component invalid!", "qijijs", ScopeGenerator.convertIntoValidScopeComponent("qijijs"));
-        assertEquals("Scope component invalid!", "qi_jijs", ScopeGenerator.convertIntoValidScopeComponent("qi__jijs"));
-        assertEquals("Scope component invalid!", "qi_jijs", ScopeGenerator.convertIntoValidScopeComponent("qi_____jijs"));
+        assertEquals("Scope component invalid!", "qijijs", ScopeGenerator.convertIntoValidScopeComponent("qi__jijs"));
+        assertEquals("Scope component invalid!", "qijijs", ScopeGenerator.convertIntoValidScopeComponent("qi_____jijs"));
+        assertEquals("Scope component invalid!", "quejsss", ScopeGenerator.convertIntoValidScopeComponent("qüjßs"));
         assertEquals("Scope component invalid!", "mycomponent", ScopeGenerator.convertIntoValidScopeComponent("_myComponent__"));
 
     }
