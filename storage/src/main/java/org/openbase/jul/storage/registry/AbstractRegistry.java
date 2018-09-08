@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -47,6 +47,7 @@ import org.openbase.jul.storage.registry.plugin.RegistryPluginPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -56,6 +57,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @param <MAP>      RegistryEntryMap
  * @param <REGISTRY> Registry
  * @param <PLUGIN>   RegistryPluginType
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
@@ -66,6 +68,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
 
     private final Random randomJitter;
     private final ReentrantReadWriteLock registryLock = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock dependingRegistryMapLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock consistencyCheckLock = new ReentrantReadWriteLock();
     private final Set<Registry> lockedRegistries = new HashSet<>();
     private final List<ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY>> consistencyHandlerList;
@@ -160,7 +163,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -221,7 +226,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -259,7 +266,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -271,7 +280,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -317,7 +328,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -365,6 +378,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -422,7 +436,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param entry {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -437,7 +453,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @param key {@inheritDoc}
+     *
      * @return {@inheritDoc}
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
@@ -473,6 +491,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Use with care!
      *
      * @param map
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException {
@@ -490,6 +509,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      *
      * @param map
      * @param finishTransaction is true the registry transaction will be verified.
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void replaceInternalMap(final Map<KEY, ENTRY> map, boolean finishTransaction) throws CouldNotPerformException {
@@ -544,7 +564,12 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @return The method returns should return false if at least one depending registry is not consistent!
      */
     protected boolean isDependingOnConsistentRegistries() {
-        return new ArrayList<>(dependingRegistryMap.keySet()).stream().noneMatch((registry) -> (!registry.isConsistent()));
+        dependingRegistryMapLock.readLock().lock();
+        try {
+            return dependingRegistryMap.keySet().stream().noneMatch((registry) -> (!registry.isConsistent()));
+        } finally {
+            dependingRegistryMapLock.readLock().unlock();
+        }
     }
 
     /**
@@ -555,6 +580,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * NOTE: the registered dependencies have to be activated later by calling {@link #activateDependencies()}.
      *
      * @param registry the dependency of these registry.
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void registerDependency(final Registry registry) throws CouldNotPerformException {
@@ -563,11 +589,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         registryLock.writeLock().lock();
         try {
-            // check if already registered
-            if (dependingRegistryMap.containsKey(registry)) {
-                return;
+            dependingRegistryMapLock.writeLock().lock();
+            try {
+                // check if already registered
+                if (dependingRegistryMap.containsKey(registry)) {
+                    return;
+                }
+                dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
+            } finally {
+                dependingRegistryMapLock.writeLock().unlock();
             }
-            dependingRegistryMap.put(registry, new DependencyConsistencyCheckTrigger(registry));
         } finally {
             registryLock.writeLock().unlock();
         }
@@ -580,8 +611,13 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * @throws InterruptedException     if the activation is interrupted
      */
     public void activateDependencies() throws CouldNotPerformException, InterruptedException {
-        for (final DependencyConsistencyCheckTrigger dependencyConsistencyCheckTrigger : dependingRegistryMap.values()) {
-            dependencyConsistencyCheckTrigger.activate();
+        dependingRegistryMapLock.readLock().lock();
+        try {
+            for (final DependencyConsistencyCheckTrigger dependencyConsistencyCheckTrigger : dependingRegistryMap.values()) {
+                dependencyConsistencyCheckTrigger.activate();
+            }
+        } finally {
+            dependingRegistryMapLock.readLock().unlock();
         }
     }
 
@@ -589,6 +625,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * This method allows the removal of a registered registry dependency.
      *
      * @param registry the dependency to remove.
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     public void removeDependency(final Registry registry) throws CouldNotPerformException {
@@ -597,11 +634,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         }
         registryLock.writeLock().lock();
         try {
-            if (!dependingRegistryMap.containsKey(registry)) {
-                logger.warn("Could not remove a dependency which was never registered!");
-                return;
+            dependingRegistryMapLock.writeLock().lock();
+            try {
+                if (!dependingRegistryMap.containsKey(registry)) {
+                    logger.warn("Could not remove a dependency which was never registered!");
+                    return;
+                }
+                dependingRegistryMap.remove(registry).shutdown();
+            } finally {
+                dependingRegistryMapLock.writeLock().unlock();
             }
-            dependingRegistryMap.remove(registry).shutdown();
         } finally {
             registryLock.writeLock().unlock();
         }
@@ -613,11 +655,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public void removeAllDependencies() {
         registryLock.writeLock().lock();
         try {
-            List<Registry> dependingRegistryList = new ArrayList<>(dependingRegistryMap.keySet());
-            Collections.reverse(dependingRegistryList);
-            dependingRegistryList.stream().forEach((registry) -> {
-                dependingRegistryMap.remove(registry).shutdown();
-            });
+            dependingRegistryMapLock.writeLock().lock();
+            try {
+                List<Registry> dependingRegistryList = new ArrayList<>(dependingRegistryMap.keySet());
+                Collections.reverse(dependingRegistryList);
+                dependingRegistryList.stream().forEach((registry) -> {
+                    dependingRegistryMap.remove(registry).shutdown();
+                });
+            } finally {
+                dependingRegistryMapLock.writeLock().unlock();
+            }
         } finally {
             registryLock.writeLock().unlock();
         }
@@ -709,7 +756,18 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public void waitForRemoteDependencies() throws CouldNotPerformException, InterruptedException {
-        for (final Registry dependency : dependingRegistryMap.keySet()) {
+        final ArrayList<Registry> dependingRegistries;
+
+        // copy dep list to avoid locking while wait.
+        dependingRegistryMapLock.readLock().lock();
+        try {
+            dependingRegistries = new ArrayList<>(dependingRegistryMap.keySet());
+        } finally {
+            dependingRegistryMapLock.readLock().unlock();
+        }
+
+        // perform wait
+        for (final Registry dependency : dependingRegistries) {
             if (dependency instanceof RemoteRegistry) {
                 ((RemoteRegistry) dependency).waitUntilReady();
             }
@@ -989,6 +1047,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * registry.
      *
      * @param plugin the plugin to register.
+     *
      * @throws CouldNotPerformException is thrown in case the plugin could not
      *                                  be registered.
      * @throws InterruptedException     is thrown if the thread is externally
@@ -1081,6 +1140,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Info messages of a sandbox instance are redirected to the debug channel.
      *
      * @param message the info message to print as string.
+     *
      * @deprecated please use method {@code log(String message)}.
      */
     @Deprecated
@@ -1212,6 +1272,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws RejectedException {@inheritDoc}
      */
     @Override
@@ -1223,6 +1284,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws RejectedException {@inheritDoc}
      */
     @Override
@@ -1240,19 +1302,26 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             if (registryLock.writeLock().tryLock()) {
                 // the lock has been acquired so add this to the set
                 lockedRegistries.add(this);
-                // iterate over all registries this one depends on and try to lock recursively
-                for (Registry registry : dependingRegistryMap.keySet()) {
-                    // if one recursive try lock returns false then return false as well
-                    if (registry instanceof RemoteRegistry) {
-                        if (!((RemoteRegistry) registry).internalRecursiveTryLockRegistry(lockedRegistries)) {
-                            return false;
-                        }
-                    } else {
-                        if (!registry.recursiveTryLockRegistry(lockedRegistries)) {
-                            return false;
+
+                dependingRegistryMapLock.readLock().lock();
+                try {
+                    // iterate over all registries this one depends on and try to lock recursively
+                    for (Registry registry : dependingRegistryMap.keySet()) {
+                        // if one recursive try lock returns false then return false as well
+                        if (registry instanceof RemoteRegistry) {
+                            if (!((RemoteRegistry) registry).internalRecursiveTryLockRegistry(lockedRegistries)) {
+                                return false;
+                            }
+                        } else {
+                            if (!registry.recursiveTryLockRegistry(lockedRegistries)) {
+                                return false;
+                            }
                         }
                     }
+                } finally {
+                    dependingRegistryMapLock.readLock().unlock();
                 }
+
                 // all registries this one depends on could be locked recursively as well, so return true
                 return true;
             } else {
@@ -1299,6 +1368,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          *
          * @param source {@inheritDoc}
          * @param data   {@inheritDoc}
+         *
          * @throws Exception {@inheritDoc}
          */
         @Override

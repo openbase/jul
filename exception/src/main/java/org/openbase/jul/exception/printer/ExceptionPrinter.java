@@ -340,7 +340,7 @@ public class ExceptionPrinter {
             throwableList.add(throwable);
 
             // do not add further causes of multi exceptions because these ones are already printed as subtree.
-            if (throwable instanceof MultiException) {
+            if (throwable instanceof MultiException && ((MultiException) throwable).getExceptionStack().size() > 1) {
                 return throwableList;
             }
 

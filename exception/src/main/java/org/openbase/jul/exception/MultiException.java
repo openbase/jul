@@ -37,7 +37,7 @@ public class MultiException extends CouldNotPerformException {
 
     public MultiException(final String message, final Throwable cause) {
         super(message, cause);
-        this.exceptionStack = new ExceptionStack(cause);
+        this.exceptionStack = new ExceptionStack();
     }
 
     public MultiException(final String message, final ExceptionStack exceptionStack) {
@@ -90,10 +90,6 @@ public class MultiException extends CouldNotPerformException {
             super(initialCapacity);
         }
 
-        public ExceptionStack(final Throwable initialCause) {
-            add(new SourceExceptionEntry(initialCause));
-        }
-
         public void push(final Object source, final Exception exception) {
             super.add(new SourceExceptionEntry(source, exception));
         }
@@ -104,15 +100,11 @@ public class MultiException extends CouldNotPerformException {
         private final Object source;
         private final Throwable exception;
 
-        public SourceExceptionEntry(final Throwable exception) {
-            this(null, exception);
-        }
         public SourceExceptionEntry(final Object source, final Throwable exception) {
             if(source != null) {
                 this.source = source;
             } else {
-                assert false;
-                this.source = "UNKNOWN";
+                this.source = "";
             }
             if(exception != null) {
                 this.exception = exception;

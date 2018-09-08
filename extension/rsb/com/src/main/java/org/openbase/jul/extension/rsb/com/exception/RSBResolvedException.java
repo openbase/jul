@@ -72,7 +72,11 @@ public class RSBResolvedException extends CouldNotPerformException {
                 if (stacktrace[i].startsWith("Caused by:")) {
                     final String[] causes = stacktrace[i].split(":");
                     final String exceptionClassName = causes[1].substring(1);
-                    final String message = causes.length <= 2 ? "" : causes[causes.length - 1].substring(1).trim();
+
+//                    System.out.println("parse: " + stacktrace[i]);
+//                    System.out.println("match: " + causes.length);
+
+                    final String message = causes.length <= 2 ? "" : stacktrace[i].substring(stacktrace[i].indexOf(exceptionClassName) + exceptionClassName.length() + 2).trim();
 
                     // detect exception class
                     final Class<Exception> exceptionClass;

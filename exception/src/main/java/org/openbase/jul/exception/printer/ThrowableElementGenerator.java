@@ -40,7 +40,7 @@ public class ThrowableElementGenerator implements ElementGenerator<Throwable> {
 
     @Override
     public void printElement(Throwable element, final Printer printer, String rootPrefix, final String childPrefix) {
-        if (element instanceof MultiException) {
+        if (element instanceof MultiException && ((MultiException) element).getExceptionStack().size() > 1) {
             ExceptionPrinter.printHistory(element, printer, rootPrefix, childPrefix + TREE_ELEMENT_SPACER);
         } else {
             printer.print(rootPrefix + LEAF_ENTRY_SPACER_SINGLE + generateRoot(element));
