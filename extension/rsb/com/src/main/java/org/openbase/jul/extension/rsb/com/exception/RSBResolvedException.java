@@ -76,7 +76,7 @@ public class RSBResolvedException extends CouldNotPerformException {
 //                    System.out.println("parse: " + stacktrace[i]);
 //                    System.out.println("match: " + causes.length);
 
-                    final String message = causes.length <= 2 ? "" : stacktrace[i].substring(stacktrace[i].indexOf(exceptionClassName) + exceptionClassName.length() + 2).trim();
+                    final String message = causes.length <= 2 ? "" : stacktrace[i].substring(stacktrace[i].lastIndexOf(exceptionClassName) + exceptionClassName.length() + 2).trim();
 
                     // detect exception class
                     final Class<Exception> exceptionClass;
