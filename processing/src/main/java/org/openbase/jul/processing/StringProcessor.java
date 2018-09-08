@@ -22,7 +22,10 @@ package org.openbase.jul.processing;
  * #L%
  */
 
+import org.openbase.jul.exception.FatalImplementationErrorException;
+
 import java.io.File;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -143,22 +146,27 @@ public class StringProcessor {
     }
 
     public static String transformToIdString(String input) {
-        input = removeDoubleWhiteSpaces(input);
-        input = input.replaceAll("ä", "ae");
-        input = input.replaceAll("ö", "oe");
-        input = input.replaceAll("ü", "ue");
-        input = input.replaceAll("ß", "ss");
-        input = input.replaceAll("[^0-9a-zA-Z-_]+", "_");
+        try {
+            input = removeDoubleWhiteSpaces(input);
+            input = input.replaceAll("ä", "ae");
+            input = input.replaceAll("ö", "oe");
+            input = input.replaceAll("ü", "ue");
+            input = input.replaceAll("ß", "ss");
+            input = input.replaceAll("[^0-9a-zA-Z-_]+", "_");
 
-        // cleanup
-        input = input.replaceAll("[_]+", "_");
-        if (input.startsWith("_")) {
-            input = input.substring(1, input.length());
+            // cleanup
+            input = input.replaceAll("[_]+", "_");
+            if (input.startsWith("_")) {
+                input = input.substring(1, input.length());
+            }
+            if (input.endsWith("_")) {
+                input = input.substring(0, input.length() - 1);
+            }
+            return input;
+        } catch (PatternSyntaxException ex) {
+            new FatalImplementationErrorException("Could not transform ["+input+"] to id string!", StringProcessor.class, ex);
+            return input;
         }
-        if (input.endsWith("_")) {
-            input = input.substring(0, input.length() - 1);
-        }
-        return input;
     }
 
     /**
