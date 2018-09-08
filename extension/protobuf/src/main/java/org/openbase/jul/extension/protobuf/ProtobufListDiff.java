@@ -75,7 +75,7 @@ public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Buil
     /**
      *
      * @param originMap
-     * @deprecated  use replaceOriginalMap instead, will be removed in 3.0
+     * @deprecated use replaceOriginalMap instead, will be removed in 3.0
      */
     @Deprecated
     public void replaceOriginMap(IdentifiableMessageMap<KEY, M, MB> originMap) {

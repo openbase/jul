@@ -28,16 +28,16 @@ package org.openbase.jul.exception.printer;
  */
 public interface ElementGenerator<E> {
 
-    public static final String LEAF_ENTRY_SPACER_SINGLE = "⚀ ";
-    public static final String LEAF_ENTRY_SPACER_MULTI = "⚄ ";
-    public static final String TREE_ELEMENT_SPACER = "   ";
+    String LEAF_ENTRY_SPACER_SINGLE = "⚀ ";
+    String LEAF_ENTRY_SPACER_MULTI = "⚄ ";
+    String TREE_ELEMENT_SPACER = "   ";
 
     /**
      *
      * @param element
      * @return
      */
-    public String generateRoot(final E element);
+    String generateRoot(final E element);
 
     /**
      *
@@ -46,7 +46,7 @@ public interface ElementGenerator<E> {
      * @param rootPrefix
      * @param childPrefix
      */
-    public void printRootElement(final E element, final Printer printer, final String rootPrefix, final String childPrefix);
+    void printRootElement(final E element, final Printer printer, final String rootPrefix, final String childPrefix);
 
     /**
      *
@@ -55,6 +55,6 @@ public interface ElementGenerator<E> {
      * @param rootPrefix
      * @param childPrefix
      */
-    public void printElement(final E element, final Printer printer, final String rootPrefix, final String childPrefix);
+    void printElement(final E element, final Printer printer, final String rootPrefix, final String childPrefix);
 
 }

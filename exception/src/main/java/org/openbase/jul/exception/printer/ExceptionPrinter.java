@@ -22,8 +22,11 @@ package org.openbase.jul.exception.printer;
  * #L%
  */
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPVerbose;
@@ -323,10 +326,11 @@ public class ExceptionPrinter {
         return printer.getMessages();
     }
 
-    static void printHistory(final Throwable th, final Printer printer, String rootPrefix, final String childPrefix) {
+    static void printHistory(Throwable th, final Printer printer, String rootPrefix, final String childPrefix) {
         if (beQuiet) {
             return;
         }
+
         if (th instanceof MultiException) {
             printFlatTree(new SourceExceptionEntry(ExceptionPrinter.class, th), ((MultiException) th).getExceptionStack(), MULTI_EXCEPTION_ELEMENT_GENERATOR, printer, rootPrefix, childPrefix);
         } else {
@@ -337,6 +341,19 @@ public class ExceptionPrinter {
     private static List<Throwable> buildThrowableList(Throwable throwable) {
         final List<Throwable> throwableList = new ArrayList<>();
         while (throwable != null) {
+
+            // Filter ExecutionException to avoid duplicated log entries.
+            if(throwable instanceof ExecutionException && throwable.getCause() != null) {
+                throwable = throwable.getCause();
+                continue;
+            }
+
+            // Filter InvocationTargetException because message is just referring internal cause.
+            if(throwable instanceof InvocationTargetException && throwable.getCause() != null) {
+                throwable = throwable.getCause();
+                continue;
+            }
+
             throwableList.add(throwable);
 
             // do not add further causes of multi exceptions because these ones are already printed as subtree.
