@@ -1753,7 +1753,6 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             }
                         }
                     }
-
                     return applyEventUpdate(event, relatedFuture);
                 } catch (InterruptedException ex) {
                     if (internalFuture != null) {
@@ -1785,6 +1784,5 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
             }
         }
-
     }
 }
