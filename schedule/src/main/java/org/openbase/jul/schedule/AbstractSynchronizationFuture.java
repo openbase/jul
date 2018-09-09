@@ -114,7 +114,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         }
     }
 
-    private boolean checkInitialization() {
+    private boolean isInitialized() {
         try {
             validateInitialization();
         } catch (InvalidStateException ex) {
@@ -126,24 +126,24 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        if (!checkInitialization()) {
-            return false;
+        if (!isInitialized()) {
+            return internalFuture.cancel(mayInterruptIfRunning);
         }
         return synchronisationFuture.cancel(mayInterruptIfRunning) && internalFuture.cancel(mayInterruptIfRunning);
     }
 
     @Override
     public boolean isCancelled() {
-        if (!checkInitialization()) {
-            return true;
+        if (!isInitialized()) {
+            return internalFuture.isCancelled();
         }
         return synchronisationFuture.isCancelled() && internalFuture.isCancelled();
     }
 
     @Override
     public boolean isDone() {
-        if (!checkInitialization()) {
-            return true;
+        if (!isInitialized()) {
+            return internalFuture.isDone();
         }
         return synchronisationFuture.isDone() && internalFuture.isDone();
     }
@@ -152,10 +152,9 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     public T get() throws InterruptedException, ExecutionException {
         // when get returns without an exception the synchronisation is complete
         // and else the exception will be thrown
-        if (checkInitialization()) {
+        if (isInitialized()) {
             synchronisationFuture.get();
         }
-
         return internalFuture.get();
     }
 
@@ -163,10 +162,9 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         // when get returns without an exception the synchronisation is complete
         // and else the exception will be thrown
-        if (checkInitialization()) {
+        if (isInitialized()) {
             synchronisationFuture.get(timeout, unit);
         }
-
         return internalFuture.get(timeout, unit);
     }
 
