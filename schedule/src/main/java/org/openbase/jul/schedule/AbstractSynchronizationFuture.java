@@ -48,7 +48,7 @@ import java.util.concurrent.TimeoutException;
  * @param <T> The return type of the internal future.
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T> {
+public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T>, FutureWrapper<T> {
 
     protected final Logger logger;
 
@@ -124,6 +124,11 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         return true;
     }
 
+    /**
+     * {@inheritDoc}
+     * @param mayInterruptIfRunning {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         if (!isInitialized()) {
@@ -132,6 +137,10 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         return synchronisationFuture.cancel(mayInterruptIfRunning) && internalFuture.cancel(mayInterruptIfRunning);
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isCancelled() {
         if (!isInitialized()) {
@@ -140,6 +149,10 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         return synchronisationFuture.isCancelled() && internalFuture.isCancelled();
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
     @Override
     public boolean isDone() {
         if (!isInitialized()) {
@@ -148,6 +161,12 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         return synchronisationFuture.isDone() && internalFuture.isDone();
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     * @throws ExecutionException {@inheritDoc}
+     */
     @Override
     public T get() throws InterruptedException, ExecutionException {
         // when get returns without an exception the synchronisation is complete
@@ -158,6 +177,15 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         return internalFuture.get();
     }
 
+    /**
+     * {@inheritDoc}
+     * @param timeout {@inheritDoc}
+     * @param unit {@inheritDoc}
+     * @return {@inheritDoc}
+     * @throws InterruptedException {@inheritDoc}
+     * @throws ExecutionException {@inheritDoc}
+     * @throws TimeoutException {@inheritDoc}
+     */
     @Override
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         // when get returns without an exception the synchronisation is complete
@@ -168,6 +196,11 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         return internalFuture.get(timeout, unit);
     }
 
+    /**
+     * {@inheritDoc}
+     * @return {@inheritDoc}
+     */
+    @Override
     public Future<T> getInternalFuture() {
         return internalFuture;
     }
