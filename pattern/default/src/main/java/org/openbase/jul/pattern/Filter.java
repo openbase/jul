@@ -22,6 +22,7 @@ package org.openbase.jul.pattern;
  * #L%
  */
 
+import org.openbase.jul.annotation.Experimental;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
@@ -32,6 +33,10 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Filter<T> {
 
+    // todo release: rename method "filter" into "match" and provide "pass" method?
+    // todo release: true if it should be kept and else false??? does it really make sense? "Do not filter if filter returns true?"
+    // todo release: is the experimental code maybe a solution?
+
     /**
      * Verifies an object of type t.
      *
@@ -39,5 +44,17 @@ public interface Filter<T> {
      * @return true if it should be kept and else false
      * @throws CouldNotPerformException if the verification fails
      */
+    //@Deprecated
     boolean filter(T type) throws CouldNotPerformException;
+
+    @Experimental
+    default boolean pass(T type) throws CouldNotPerformException {
+        return !match(type);
+    }
+
+    @Experimental
+    default boolean match(T type) throws CouldNotPerformException{
+        // This is just an workaround. Should be declared via implementation after filter method has been marked as deprecated.
+        return !filter(type);
+    }
 }
