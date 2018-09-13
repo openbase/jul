@@ -21,45 +21,37 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.GeneratedMessage;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.*;
-
-import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.NotSupportedException;
-import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
-
 import org.openbase.jul.extension.protobuf.IdentifiableMessageMap;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
 
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.*;
+
+import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
+
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <M>
  * @param <MB>
+ *
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB>, DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>> {
 
     /**
      * An optional configurable registryRemote where this remote is than bound to.
      * If configured this registryRemote is used for registry state checks and synchronization issues.
-     *
+     * <p>
      * Note: The message type {@code M} of the RegistryRemote can be different from the message type {@code M} of this class. Thats why it is marked as unknown.
      */
     private RegistryRemote<?> registryRemote;
@@ -173,7 +165,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public boolean recursiveTryLockRegistry(Set<Registry> lockedRegistries) throws RejectedException {
         throw new RejectedException("RemoteRegistry not externally lockable!");
     }
-    
+
     boolean internalRecursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException {
         return super.recursiveTryLockRegistry(lockedRegistries);
     }
@@ -182,7 +174,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     public void unlockRegistry() {
         // because remote registry does not support locks there is no need for any action here.
     }
-    
+
     void internalUnlockRegistry() {
         super.unlockRegistry();
     }
@@ -197,11 +189,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
     /**
      * Method blocks until the referred registry is not handling any tasks and is currently consistent.
-     *
+     * <p>
      * Note: If you have just modified the registry this method can maybe return immediately if the task is not yet received by the registry controller.
      * So you should prefer the futures of the modification methods for synchronization tasks.
      *
-     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     * @throws InterruptedException                                is thrown in case the thread was externally interrupted.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the wait could not be performed.
      */
     public void waitUntilReady() throws InterruptedException, CouldNotPerformException {
@@ -214,7 +206,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
 
     /**
      * Method blocks until the registry is not handling any tasks and is currently consistent.
-     *
+     * <p>
      * Note: If you have just modified the registry this method can maybe return immediately if the task is not yet received by the registry controller.
      * So you should prefer the futures of the modification methods for synchronization tasks.
      *
@@ -227,6 +219,7 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
             return FutureProcessor.canceledFuture(null, ex);
         }
     }
+
     @Override
     public Class<Map<KEY, IdentifiableMessage<KEY, M, MB>>> getDataClass() {
         return getEntryMapClass();
@@ -242,13 +235,14 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         return getValueFuture();
     }
 
+
     @Override
-    public void addDataObserver(final Observer<Map<KEY, IdentifiableMessage<KEY, M, MB>>> observer) {
+    public void addDataObserver(final Observer<DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>>, Map<KEY, IdentifiableMessage<KEY, M, MB>>> observer) {
         addObserver(observer);
     }
 
     @Override
-    public void removeDataObserver(final Observer<Map<KEY, IdentifiableMessage<KEY, M, MB>>> observer) {
+    public void removeDataObserver(final Observer<DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>>, Map<KEY, IdentifiableMessage<KEY, M, MB>>> observer) {
         removeObserver(observer);
     }
 
@@ -282,15 +276,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
         }
     }
 
-    // todo: Protect this method because external manipulation would be really bad.
-    public void setRegistryRemote(final RegistryRemote<?> remote) {
-        this.registryRemote = remote;
-    }
-
     /**
      * Method returns the registry remote where this instance is bound to.
      *
      * @return the registry remote if available.
+     *
      * @throws NotAvailableException Because this bound is optionally this method may throws an {@code  NotAvailableException} in case the remote registry is independent of any registry remote.
      */
     protected RegistryRemote<?> getRegistryRemote() throws NotAvailableException {
@@ -298,6 +288,11 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
             throw new NotAvailableException("RegistryRemote");
         }
         return registryRemote;
+    }
+
+    // todo: Protect this method because external manipulation would be really bad.
+    public void setRegistryRemote(final RegistryRemote<?> remote) {
+        this.registryRemote = remote;
     }
 
     /**
@@ -314,8 +309,8 @@ public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builde
     }
 
     /**
-     *
      * @return
+     *
      * @deprecated please use isDataAvailable() instead
      */
     @Deprecated

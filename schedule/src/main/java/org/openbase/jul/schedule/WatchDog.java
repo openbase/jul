@@ -22,13 +22,9 @@ package org.openbase.jul.schedule;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
@@ -65,13 +61,13 @@ public class WatchDog implements Activatable, Shutdownable {
     private Minder minder;
     private ServiceState serviceState = ServiceState.UNKNWON;
 
-    private final ObservableImpl<ServiceState> serviceStateObserable;
+    private final ObservableImpl<WatchDog, ServiceState> serviceStateObservable;
 
     public WatchDog(final Activatable service, final String serviceName) throws InstantiationException {
         try {
             this.service = service;
             this.serviceName = serviceName;
-            this.serviceStateObserable = new ObservableImpl<>();
+            this.serviceStateObservable = new ObservableImpl<>(this);
             this.EXECUTION_LOCK = new SyncObject(serviceName + " EXECUTION_LOCK");
             this.STATE_LOCK = new SyncObject(serviceName + " STATE_LOCK");
 
@@ -343,7 +339,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 STATE_LOCK.notifyAll();
             }
             logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
-            serviceStateObserable.notifyObservers(serviceState);
+            serviceStateObservable.notifyObservers(serviceState);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify state change to all instances!", ex), logger);
         }
@@ -353,19 +349,19 @@ public class WatchDog implements Activatable, Shutdownable {
         return serviceState;
     }
 
-    public void addObserver(Observer<ServiceState> observer) {
-        serviceStateObserable.addObserver(observer);
+    public void addObserver(Observer<WatchDog, ServiceState> observer) {
+        serviceStateObservable.addObserver(observer);
     }
 
-    public void removeObserver(Observer<ServiceState> observer) {
-        serviceStateObserable.removeObserver(observer);
+    public void removeObserver(Observer<WatchDog, ServiceState> observer) {
+        serviceStateObservable.removeObserver(observer);
     }
 
     @Override
     public void shutdown() {
         try {
-            if (serviceStateObserable != null) {
-                serviceStateObserable.shutdown();
+            if (serviceStateObservable != null) {
+                serviceStateObservable.shutdown();
             }
             deactivate();
         } catch (InterruptedException ex) {

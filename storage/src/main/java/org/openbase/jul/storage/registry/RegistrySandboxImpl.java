@@ -26,6 +26,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.storage.registry.clone.RITSCloner;
 import org.openbase.jul.storage.registry.clone.RegistryCloner;
 import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
@@ -36,19 +37,19 @@ import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
  * @param <KEY>
  * @param <ENTRY>
  * @param <MAP>
- * @param <R>
+ * @param <REGISTRY>
  * @param <P>
  */
-public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, R extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY, R>> extends AbstractRegistry<KEY, ENTRY, MAP, R, P> implements RegistrySandbox<KEY, ENTRY, MAP, R> {
+public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, P extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, REGISTRY, P> implements RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> {
 
     private RegistryCloner<KEY, ENTRY, MAP> cloner;
     private Registry<KEY, ENTRY> originRegistry;
 
-    public RegistrySandboxImpl(final MAP entryMap, final R originRegistry) throws CouldNotPerformException, InterruptedException {
+    public RegistrySandboxImpl(final MAP entryMap, final REGISTRY originRegistry) throws CouldNotPerformException, InterruptedException {
         this(entryMap, new RITSCloner<>(), originRegistry);
     }
 
-    public RegistrySandboxImpl(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner, final R originRegistry) throws CouldNotPerformException, InterruptedException {
+    public RegistrySandboxImpl(final MAP entryMap, final RegistryCloner<KEY, ENTRY, MAP> cloner, final REGISTRY originRegistry) throws CouldNotPerformException, InterruptedException {
         super(cloner.deepCloneRegistryMap(entryMap));
         this.cloner = cloner;
         this.originRegistry = originRegistry;
@@ -85,7 +86,7 @@ public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public void addObserver(Observer<Map<KEY, ENTRY>> observer) {
+    public void addObserver(Observer<DataProvider<Map<KEY, ENTRY>>, Map<KEY, ENTRY>> observer) {
         logger.warn("Observer registration on sandbox instance skiped!");
     }
 

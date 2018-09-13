@@ -34,7 +34,7 @@ public interface Writable {
      *
      * @throws RejectedException
      */
-    public void checkWriteAccess() throws RejectedException;
+    void checkWriteAccess() throws RejectedException;
 
     /**
      * Returns true if instance is writable.
@@ -42,7 +42,7 @@ public interface Writable {
      *
      * @return
      */
-    default public boolean isWritable() {
+    default boolean isWritable() {
         try {
             checkWriteAccess();
         } catch (RejectedException ex) {

@@ -92,7 +92,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                     internalSync();
                 }
             };
-            this.observer = (Observable source, Object data) -> {
+            this.observer = (Object source, Object data) -> {
                 logger.debug("Incoming update...");
                 GlobalCachedExecutorService.submit(() -> {
                     try {

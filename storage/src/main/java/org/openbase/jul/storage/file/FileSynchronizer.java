@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <D> data type
  */
-public class FileSynchronizer<D> extends ObservableImpl<D> {
+public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> {
 
     public enum InitMode {
 

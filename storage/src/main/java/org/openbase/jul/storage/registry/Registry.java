@@ -32,6 +32,7 @@ import org.openbase.jul.iface.Writable;
 import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
  *
@@ -39,7 +40,7 @@ import org.openbase.jul.pattern.Observer;
  * @param <KEY>
  * @param <ENTRY>
  */
-public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<Map<KEY, ENTRY>>, NameProvider {
+public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable, Observable<DataProvider<Map<KEY, ENTRY>>, Map<KEY, ENTRY>>, NameProvider {
 
     /**
      * Method returns the name of this registry.
@@ -48,7 +49,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
      */
     @Override
-    public String getName() throws NotAvailableException;
+    String getName() throws NotAvailableException;
 
     /**
      * Method registers the given entry.
@@ -57,17 +58,17 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * @return the registered entry updated by all consistency checks this registry provides.
      * @throws CouldNotPerformException is thrown if the given entry is not valid, already registered or something else went wrong during the registration.
      */
-    public ENTRY register(final ENTRY entry) throws CouldNotPerformException;
+    ENTRY register(final ENTRY entry) throws CouldNotPerformException;
 
-    public ENTRY update(final ENTRY entry) throws CouldNotPerformException;
+    ENTRY update(final ENTRY entry) throws CouldNotPerformException;
 
-    public ENTRY remove(final KEY key) throws CouldNotPerformException;
+    ENTRY remove(final KEY key) throws CouldNotPerformException;
 
-    public ENTRY remove(final ENTRY entry) throws CouldNotPerformException;
+    ENTRY remove(final ENTRY entry) throws CouldNotPerformException;
 
-    public ENTRY get(final KEY key) throws CouldNotPerformException;
+    ENTRY get(final KEY key) throws CouldNotPerformException;
 
-    default public ENTRY get(final ENTRY entry) throws CouldNotPerformException {
+    default ENTRY get(final ENTRY entry) throws CouldNotPerformException {
         return get(entry.getId());
     }
 
@@ -77,47 +78,47 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * @return a list with all values of the entry map
      * @throws CouldNotPerformException if something fails
      */
-    public List<ENTRY> getEntries() throws CouldNotPerformException;
+    List<ENTRY> getEntries() throws CouldNotPerformException;
 
     /**
      * An unmodifiable map of the current entry map.
      *
      * @return the current entry map of the registry but unmodifiable
      */
-    public Map<KEY, ENTRY> getEntryMap();
+    Map<KEY, ENTRY> getEntryMap();
 
-    public boolean contains(final ENTRY entry) throws CouldNotPerformException;
+    boolean contains(final ENTRY entry) throws CouldNotPerformException;
 
-    public boolean contains(final KEY key) throws CouldNotPerformException;
+    boolean contains(final KEY key) throws CouldNotPerformException;
 
-    public void clear() throws CouldNotPerformException;
+    void clear() throws CouldNotPerformException;
 
     /**
      * Method returns the amount of registry entries.
      *
      * @return the count of entries as integer.
      */
-    public int size();
+    int size();
 
-    public boolean isReadOnly();
+    boolean isReadOnly();
 
-    public boolean isConsistent();
+    boolean isConsistent();
 
-    public boolean isSandbox();
+    boolean isSandbox();
 
     /**
      * This method checks if the registry is not handling any tasks or notification and is currently consistent.
      *
      * @return Returns true if this registry is consistent and not busy.
      */
-    public boolean isReady();
+    boolean isReady();
 
     /**
      * Return true if this registry does not contain any entries.
      *
      * @return is true if the registry is empty.
      */
-    public boolean isEmpty();
+    boolean isEmpty();
 
     /**
      * Return true if this registry does not contain any entries.
@@ -126,7 +127,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * @deprecated since 1.3: removed because of typo. Please use isEmpty() instead!
      */
     @Deprecated
-    default public boolean isEmtpy() {
+    default boolean isEmtpy() {
         return isEmpty();
     }
 
@@ -139,7 +140,7 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * @return If the lock could be acquired.
      * @throws RejectedException If the registry does not support to be locked externally which is for example the case for remote registries.
      */
-    public boolean tryLockRegistry() throws RejectedException;
+    boolean tryLockRegistry() throws RejectedException;
 
     /**
      * Try to acquire the write lock for this registry and the registries it depends
@@ -156,14 +157,14 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * @return If all registries could be locked.
      * @throws RejectedException If the registry does not support to be locked externally which is for example the case for remote registries.
      */
-    public boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException;
+    boolean recursiveTryLockRegistry(final Set<Registry> lockedRegistries) throws RejectedException;
 
     /**
      * Unlock the write lock of the registry.
      */
-    public void unlockRegistry();
+    void unlockRegistry();
 
-    public void addDependencyObserver(final Observer<Map<KEY, ENTRY>> observer);
+    void addDependencyObserver(final Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer);
 
-    public void removeDependencyObserver(final Observer<Map<KEY, ENTRY>> observer);
+    void removeDependencyObserver(final Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer);
 }

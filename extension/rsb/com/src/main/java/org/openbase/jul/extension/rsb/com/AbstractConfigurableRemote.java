@@ -34,7 +34,6 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import static org.openbase.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
 import org.openbase.jul.iface.Configurable;
-import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 import org.openbase.jul.pattern.ConfigurableRemote;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -54,7 +53,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
     private final Class<CONFIG> configClass;
     private CONFIG config;
     private Scope currentScope;
-    private final ObservableImpl<CONFIG> configObservable;
+    private final ObservableImpl<ConfigurableRemote<String, M, CONFIG>, CONFIG> configObservable;
 
     public AbstractConfigurableRemote(final Class<M> dataClass, final Class<CONFIG> configClass) {
         super(dataClass);
@@ -252,7 +251,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
      * @param observer {@inheritDoc}
      */
     @Override
-    public void addConfigObserver(final Observer<CONFIG> observer) {
+    public void addConfigObserver(final Observer<ConfigurableRemote<String, M, CONFIG>, CONFIG> observer) {
         configObservable.addObserver(observer);
     }
 
@@ -262,7 +261,7 @@ public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CON
      * @param observer {@inheritDoc}
      */
     @Override
-    public void removeConfigObserver(final Observer<CONFIG> observer) {
+    public void removeConfigObserver(final Observer<ConfigurableRemote<String, M, CONFIG>, CONFIG> observer) {
         configObservable.removeObserver(observer);
     }
 

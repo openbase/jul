@@ -31,6 +31,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
  *
@@ -149,12 +150,12 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public void addObserver(Observer<Map<KEY, ENTRY>> observer) {
+    public void addObserver(Observer<DataProvider<Map<KEY, ENTRY>>, Map<KEY, ENTRY>> observer) {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 
     @Override
-    public void removeObserver(Observer<Map<KEY, ENTRY>> observer) {
+    public void removeObserver(Observer<DataProvider<Map<KEY, ENTRY>>, Map<KEY, ENTRY>> observer) {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 
@@ -214,13 +215,13 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public void addDependencyObserver(Observer<Map<KEY, ENTRY>> observer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void addDependencyObserver(Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer) {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 
     @Override
-    public void removeDependencyObserver(Observer<Map<KEY, ENTRY>> observer) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void removeDependencyObserver(Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer) {
+        throw new UnsupportedOperationException("Not supported for mock sandbox.");
     }
 
     @Override

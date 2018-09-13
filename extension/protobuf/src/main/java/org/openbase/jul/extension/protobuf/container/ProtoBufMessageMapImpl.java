@@ -55,8 +55,8 @@ public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends Gener
 
     private boolean shudownDetected = false;
     private final BuilderSyncSetup<SIB> builderSetup;
-    private final Observer<IdentifiableMessage<KEY, M, MB>> observer;
-    private final ObservableImpl<IdentifiableMessage<KEY, M, MB>> observable;
+    private final Observer<Object, IdentifiableMessage<KEY, M, MB>> observer;
+    private final ObservableImpl<Object, IdentifiableMessage<KEY, M, MB>> observable;
 
     private final Descriptors.FieldDescriptor fieldDescriptor;
 
@@ -64,13 +64,9 @@ public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends Gener
         this.builderSetup = builderSetup;
         this.fieldDescriptor = fieldDescriptor;
         this.observable = new ObservableImpl<>();
-        this.observer = new Observer<IdentifiableMessage<KEY, M, MB>>() {
-
-            @Override
-            public void update(final Observable<IdentifiableMessage<KEY, M, MB>> source, IdentifiableMessage<KEY, M, MB> data) throws Exception {
-                syncBuilder();
-                observable.notifyObservers(source, data);
-            }
+        this.observer = (source, data) -> {
+            syncBuilder();
+            observable.notifyObservers(source, data);
         };
     }
 
@@ -154,11 +150,11 @@ public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends Gener
         }
     }
 
-    public void addObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
+    public void addObserver(Observer<Object, IdentifiableMessage<KEY, M, MB>> observer) {
         observable.addObserver(observer);
     }
 
-    public void removeObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
+    public void removeObserver(Observer<Object, IdentifiableMessage<KEY, M, MB>> observer) {
         observable.removeObserver(observer);
     }
 

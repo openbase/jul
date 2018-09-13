@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
  * @param <M> the type which is notified by this observable
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class MessageObservable<M extends Message> extends AbstractObservable<M> {
+public class MessageObservable<M extends Message> extends AbstractObservable<DataProvider<M>, M> {
 
     public static final String TIMESTAMP_MESSAGE_NAME = "Timestamp";
     public static final String RESOURCE_ALLOCATION_FIELD = "resource_allocation";
@@ -90,6 +90,7 @@ public class MessageObservable<M extends Message> extends AbstractObservable<M> 
                 //TODO: This is just a hack since states in units now contain action descriptions,
                 //      This line prevents resource allocations to be checked because they contain required fields
                 //      and thus if they are checked calling build on the builder afterwards fails.
+                //      can be removed after switching to protobuf 3 or replacing the resource allocation type
                 if (field.getName().equals(RESOURCE_ALLOCATION_FIELD)) {
                     continue;
                 }

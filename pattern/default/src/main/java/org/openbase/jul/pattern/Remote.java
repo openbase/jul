@@ -29,7 +29,6 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Lockable;
-import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.iface.provider.PingProvider;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -42,7 +41,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
 public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProvider, DataProvider<M> {
 
     // TODO release: Should be moved to rst.
-    public enum ConnectionState {
+    enum ConnectionState {
 
         UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING, REINITIALIZING
     };
@@ -58,7 +57,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @throws CouldNotPerformException if the activation could not be performed
      * @throws InterruptedException if the activation is interrupted
      */
-    public void activate(boolean waitForData) throws CouldNotPerformException, InterruptedException;
+    void activate(boolean waitForData) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Atomic activate which makes sure that the maintainer stays the same.
@@ -68,21 +67,21 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @throws InterruptedException        if activation is interrupted
      * @throws CouldNotPerformException    if activation fails
      */
-    public void activate(final Object maintainer) throws InterruptedException, CouldNotPerformException;
+    void activate(final Object maintainer) throws InterruptedException, CouldNotPerformException;
 
     /**
      * This method allows the registration of connection state observers to get informed about connection state changes.
      *
      * @param observer the observer added
      */
-    public void addConnectionStateObserver(final Observer<ConnectionState> observer);
+    void addConnectionStateObserver(final Observer<Remote, ConnectionState> observer);
 
     /**
      * This method removes already registered connection state observers.
      *
      * @param observer the observer removed
      */
-    public void removeConnectionStateObserver(final Observer<ConnectionState> observer);
+    void removeConnectionStateObserver(final Observer<Remote, ConnectionState> observer);
 
     /**
      * Method returns the class of the data object.
@@ -90,7 +89,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @return the class of the data object
      */
     @Override
-    public Class<M> getDataClass();
+    Class<M> getDataClass();
 
     /**
      * Method returns the data object of this remote which is synchronized with
@@ -103,7 +102,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @throws NotAvailableException is thrown in case the data is not yet synchronized with the main controller instance.
      */
     @Override
-    public M getData() throws NotAvailableException;
+    M getData() throws NotAvailableException;
 
     /**
      * Returns a future of the data object. This method can be useful after
@@ -113,7 +112,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @return a future object delivering the data if available.
      */
     @Override
-    public default CompletableFuture<M> getDataFuture() {
+    default CompletableFuture<M> getDataFuture() {
         try {
             if (!isDataAvailable()) {
                 return requestData();
@@ -134,7 +133,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
     @Override
-    public void waitForData() throws CouldNotPerformException, InterruptedException;
+    void waitForData() throws CouldNotPerformException, InterruptedException;
 
     /**
      * Method blocks until an initial data message was received from the main controller or the given timeout is reached.
@@ -145,21 +144,21 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
     @Override
-    public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
+    void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Checks if a server connection is established.
      *
      * @return is true in case the connection is established.
      */
-    public boolean isConnected();
+    boolean isConnected();
 
     /**
      * Method returns the current connection state between this remote and its main controller.
      *
      * @return the current connection state.
      */
-    public ConnectionState getConnectionState();
+    ConnectionState getConnectionState();
 
     /**
      * Method blocks until the remote reaches the desired connection state. In
@@ -192,7 +191,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @throws CouldNotPerformException In case the sync could not be triggered
      * an CouldNotPerformException will be thrown.
      */
-    public CompletableFuture<M> requestData() throws CouldNotPerformException;
+    CompletableFuture<M> requestData() throws CouldNotPerformException;
 
     /**
      * Method triggers a ping between this remote and its main controller and
@@ -203,7 +202,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @return the connection delay in milliseconds.
      */
     @Override
-    public Future<Long> ping();
+    Future<Long> ping();
 
     /**
      * Method returns the result of the latest connection ping between this
@@ -212,5 +211,5 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @return the latest connection delay in milliseconds.
      */
     @Override
-    public Long getPing();
+    Long getPing();
 }

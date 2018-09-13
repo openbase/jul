@@ -121,7 +121,7 @@ public class MessageObservableTest {
 
         assertEquals("Hashes are not equal even though only the timestamp has changed", messageObservable.removeTimestamps(colorableLightData1.toBuilder()).build().hashCode(), messageObservable.removeTimestamps(colorableLightData2.toBuilder()).build().hashCode());
 
-        messageObservable.addObserver((Observable<ColorableLightData> source, ColorableLightData data) -> {
+        messageObservable.addObserver((DataProvider<ColorableLightData> source, ColorableLightData data) -> {
             assertEquals("Received unexpected update", colorableLightData1, data);
         });
 
@@ -173,11 +173,11 @@ public class MessageObservableTest {
         }
 
         @Override
-        public void addDataObserver(Observer<M> observer) {
+        public void addDataObserver(Observer<DataProvider<M>, M> observer) {
         }
 
         @Override
-        public void removeDataObserver(Observer<M> observer) {
+        public void removeDataObserver(Observer<DataProvider<M>, M> observer) {
         }
 
         @Override

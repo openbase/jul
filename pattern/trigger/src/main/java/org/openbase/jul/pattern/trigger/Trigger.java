@@ -27,16 +27,17 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.pattern.Observer;
 import rst.domotic.state.ActivationStateType;
+import rst.domotic.state.ActivationStateType.ActivationState;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface Trigger extends Activatable {
 
-    void deregisterObserver(final Observer<ActivationStateType.ActivationState> observer);
+    void removeObserver(final Observer<Trigger, ActivationState> observer);
 
     ActivationStateType.ActivationState getActivationState() throws NotAvailableException;
 
-    void registerObserver(final Observer<ActivationStateType.ActivationState> observer);
+    void addObserver(final Observer<Trigger, ActivationState> observer);
 
 }

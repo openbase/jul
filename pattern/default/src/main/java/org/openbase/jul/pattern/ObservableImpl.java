@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * @param <T> the data type on whose changes is notified
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class ObservableImpl<T> extends AbstractObservable<T> {
+public class ObservableImpl<S, T> extends AbstractObservable<S, T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ObservableImpl.class);
 
@@ -62,7 +62,7 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
      *
      * @param source {@inheritDoc}
      */
-    public ObservableImpl(final Object source) {
+    public ObservableImpl(final S source) {
         super(source);
         this.valueFuture = new CompletableFuture<>();
     }
@@ -83,7 +83,7 @@ public class ObservableImpl<T> extends AbstractObservable<T> {
      * @param unchangedValueFilter {@inheritDoc}
      * @param source               {@inheritDoc}
      */
-    public ObservableImpl(final boolean unchangedValueFilter, final Object source) {
+    public ObservableImpl(final boolean unchangedValueFilter, final S source) {
         super(unchangedValueFilter, source);
         this.valueFuture = new CompletableFuture<>();
     }

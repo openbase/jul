@@ -41,6 +41,7 @@ import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.openbase.jul.storage.registry.plugin.RegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.RegistryPluginPool;
@@ -60,7 +61,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
+public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<DataProvider<Map<KEY, ENTRY>>, Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> pluginPool;
@@ -76,7 +77,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      * Map of registries this one depends on.
      */
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
-    private final ObservableImpl<Map<KEY, ENTRY>> dependingRegistryObservable;
+    private final ObservableImpl<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> dependingRegistryObservable;
     protected RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> sandbox;
     protected boolean consistent;
     private String name;
@@ -92,6 +93,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     public AbstractRegistry(final MAP entryMap, final RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> pluginPool) throws InstantiationException {
+        super();
         try {
 
             // validate arguments
@@ -116,7 +118,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.consistencyHandlerList = new ArrayList<>();
             this.dependingRegistryMap = new HashMap<>();
             this.sandbox = new MockRegistrySandbox<>(this);
-            this.dependingRegistryObservable = new ObservableImpl<>();
+            this.dependingRegistryObservable = new ObservableImpl<>(this);
 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
@@ -1344,16 +1346,16 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     }
 
     @Override
-    public void addDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
+    public void addDependencyObserver(final Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer) {
         dependingRegistryObservable.addObserver(observer);
     }
 
     @Override
-    public void removeDependencyObserver(final Observer<Map<KEY, ENTRY>> observer) {
+    public void removeDependencyObserver(final Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer) {
         dependingRegistryObservable.removeObserver(observer);
     }
 
-    private class DependencyConsistencyCheckTrigger implements Observer, Shutdownable, Activatable {
+    private class DependencyConsistencyCheckTrigger implements Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>>, Shutdownable, Activatable {
 
         private final Registry dependency;
         private boolean active;
@@ -1362,6 +1364,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.dependency = dependency;
             this.active = false;
         }
+
 
         /**
          * {@inheritDoc}
@@ -1372,7 +1375,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
          * @throws Exception {@inheritDoc}
          */
         @Override
-        public void update(Observable source, Object data) throws Exception {
+        public void update(Registry<KEY, ENTRY> source, Map<KEY, ENTRY> data) throws Exception {
             //TODO: update on sandbox level should be handled first
             try {
                 if (dependency.isConsistent()) {

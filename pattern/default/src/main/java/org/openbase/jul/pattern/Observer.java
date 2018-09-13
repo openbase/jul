@@ -21,12 +21,16 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+    // todo release: evaluate if public interface Observer<S, T> would be a more generic solution.
+ // @param <S> the source of the data update
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @param <S> the source of the data update
  * @param <T> the observable data type
  */
-public interface Observer<T> {
+public interface Observer<S, T> {
 
     /**
      * This method is called whenever the observed object is changed. An
@@ -38,5 +42,6 @@ public interface Observer<T> {
      * @param data the updated data
      * @throws java.lang.Exception a possibly thrown exception
      */
-    void update(final Observable<T> source, final T data) throws Exception;
+    void update(final S source, final T data) throws Exception;
+    //void update(final S source, final T data) throws Exception;
 }

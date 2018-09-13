@@ -35,11 +35,11 @@ import java.io.File;
  */
 public interface FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> extends Registry<KEY, VALUE> {
 
-    public void loadRegistry() throws CouldNotPerformException;
+    void loadRegistry() throws CouldNotPerformException;
 
-    public void saveRegistry() throws CouldNotPerformException;
+    void saveRegistry() throws CouldNotPerformException;
 
-    public Integer getDBVersion() throws NotAvailableException;
+    Integer getDBVersion() throws NotAvailableException;
 
-    public File getDatabaseDirectory() throws NotAvailableException;
+    File getDatabaseDirectory() throws NotAvailableException;
 }

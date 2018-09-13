@@ -29,7 +29,7 @@ import org.openbase.jul.exception.NotAvailableException;
  */
 public interface NameProvider {
 
-    public final static String TYPE_FIELD_NAME = "name";
+    String TYPE_FIELD_NAME = "name";
 
     /**
      * Method returns the name of this instance.
@@ -37,5 +37,5 @@ public interface NameProvider {
      * @return the name as string.
      * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
      */
-    public String getName() throws NotAvailableException;
+    String getName() throws NotAvailableException;
 }

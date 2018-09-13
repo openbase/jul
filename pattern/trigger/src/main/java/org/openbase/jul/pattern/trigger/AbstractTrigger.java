@@ -38,7 +38,7 @@ import rst.domotic.state.ActivationStateType.ActivationState;
  */
 public abstract class AbstractTrigger implements Shutdownable, Trigger {
 
-    private final ObservableImpl<ActivationState> triggerObservable;
+    private final ObservableImpl<Trigger, ActivationState> triggerObservable;
 
     public AbstractTrigger() throws InstantiationException {
         this.triggerObservable = new ObservableImpl<>(this);
@@ -56,12 +56,12 @@ public abstract class AbstractTrigger implements Shutdownable, Trigger {
     }
 
     @Override
-    public void registerObserver(Observer<ActivationState> observer) {
+    public void addObserver(Observer<Trigger, ActivationState> observer) {
         triggerObservable.addObserver(observer);
     }
 
     @Override
-    public void deregisterObserver(Observer<ActivationState> observer) {
+    public void removeObserver(Observer<Trigger, ActivationState> observer) {
         triggerObservable.removeObserver(observer);
     }
 

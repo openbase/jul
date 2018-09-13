@@ -21,40 +21,43 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Shutdownable;
-import org.openbase.jul.pattern.provider.DataProvider;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
 /**
- *
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ *
+ * @param <S> the type of the data source
  * @param <T> the data type on whose changes is notified
  */
-public interface Observable<T> extends Shutdownable {
+public interface Observable<S, T> extends Shutdownable {
 
     /**
      * Method blocks until the observable is available. In case the given timeout is reached an
      * TimeoutException is thrown.
      *
-     * @param timeout is the timeout related to the given {@link TimeUnit}.
+     * @param timeout  is the timeout related to the given {@link TimeUnit}.
      * @param timeUnit is the unit of the timeout.
-     * @throws InterruptedException is thrown if the current thread was interrupted externally.
+     *
+     * @throws InterruptedException     is thrown if the current thread was interrupted externally.
      * @throws CouldNotPerformException is thrown with a TimeoutException cause if the given timeout
-     * is reached.
+     *                                  is reached.
      */
-    public void waitForValue(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
+    void waitForValue(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 
     /**
      * Method blocks until the observable is available.
      *
      * @throws CouldNotPerformException is thrown if an error occurs before the thread was blocked.
-     * @throws InterruptedException is thrown if the current thread was interrupted externally.
+     * @throws InterruptedException     is thrown if the current thread was interrupted externally.
      */
     default void waitForValue() throws CouldNotPerformException, InterruptedException {
         try {
@@ -70,45 +73,48 @@ public interface Observable<T> extends Shutdownable {
      *
      * @param observer is the observer to register.
      */
-    public void addObserver(Observer<T> observer);
+    void addObserver(Observer<S, T> observer);
 
     /**
      * Method removes the given observer from this observable to finish the observation.
      *
      * @param observer is the observer to remove.
      */
-    public void removeObserver(Observer<T> observer);
+    void removeObserver(Observer<S, T> observer);
 
     /**
      * Method returns the latest observable value.
      *
-     * @return the latest value of the observable. 
+     * @return the latest value of the observable.
+     *
      * @throws NotAvailableException
      */
-    public T getValue() throws NotAvailableException;
+    T getValue() throws NotAvailableException;
 
     /**
      * Method returns a Future object which represents the value availability.
+     *
      * @return a future object providing the value.
      */
-    public Future<T> getValueFuture();
-    
+    Future<T> getValueFuture();
+
     /**
      * Checks if a value was ever notified.
      *
      * @return true if the value is available.
      */
-    public boolean isValueAvailable();
+    boolean isValueAvailable();
 
     /**
      * Method returns the latest observable value.
      *
      * @return
+     *
      * @throws NotAvailableException
      * @deprecated please use {@link #getValue()} instead.
      */
     @Deprecated
-    default public T getLatestValue() throws NotAvailableException {
+    default T getLatestValue() throws NotAvailableException {
         return getValue();
     }
 }

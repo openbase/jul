@@ -58,13 +58,13 @@ public interface SynchronizableRegistry<KEY, ENTRY extends Identifiable<KEY>> ex
      *
      * @param observer the observer that will be added.
      */
-    void addSynchronizationObserver(Observer<Long> observer);
+    void addSynchronizationObserver(Observer<Registry<KEY, ENTRY>, Long> observer);
 
     /**
      * Remove an observer that is notified after a synchronization.
      *
      * @param observer the observer that will be removed.
      */
-    void removeSynchronizationObserver(Observer<Long> observer);
+    void removeSynchronizationObserver(Observer<Registry<KEY, ENTRY>, Long> observer);
 
 }

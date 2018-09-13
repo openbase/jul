@@ -33,6 +33,7 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
 import org.openbase.jul.pattern.Remote.ConnectionState;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
@@ -105,21 +106,17 @@ public class RSBCommunicationServiceTest {
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
         remoteService.init(scope);
-        remoteService.addDataObserver(new Observer<UnitRegistryData>() {
-
-            @Override
-            public void update(final Observable<UnitRegistryData> source, UnitRegistryData data) throws Exception {
-                if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
-                    firstSync = true;
-                    synchronized (waitForDataSync) {
-                        waitForDataSync.notifyAll();
-                    }
+        remoteService.addDataObserver((Observer< DataProvider<UnitRegistryData>, UnitRegistryData>) (source, data) -> {
+            if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
+                firstSync = true;
+                synchronized (waitForDataSync) {
+                    waitForDataSync.notifyAll();
                 }
-                if (data.getLocationUnitConfigCount() == 2 && data.getLocationUnitConfig(0).getId().equals("Location1") && data.getLocationUnitConfig(1).getId().equals("Location2")) {
-                    secondSync = true;
-                    synchronized (waitForDataSync) {
-                        waitForDataSync.notifyAll();
-                    }
+            }
+            if (data.getLocationUnitConfigCount() == 2 && data.getLocationUnitConfig(0).getId().equals("Location1") && data.getLocationUnitConfig(1).getId().equals("Location2")) {
+                secondSync = true;
+                synchronized (waitForDataSync) {
+                    waitForDataSync.notifyAll();
                 }
             }
         });
@@ -181,7 +178,7 @@ public class RSBCommunicationServiceTest {
         System.out.println("testReconnection");
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
-        remoteService.addConnectionStateObserver((Observable source, Object data) -> {
+        remoteService.addConnectionStateObserver((source, data) -> {
             logger.info("New connection state [" + data + "]");
         });
 
@@ -474,14 +471,14 @@ public class RSBCommunicationServiceTest {
 
         public NotificationCallable(RSBCommunicationService communicationService) {
             this.communicationService = communicationService;
-            this.communicationService.informerWatchDog.addObserver((Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+            this.communicationService.informerWatchDog.addObserver((WatchDog source, WatchDog.ServiceState data) -> {
                 synchronized (watchDogUpdateLock) {
                     if (data == WatchDog.ServiceState.RUNNING) {
                         watchDogUpdateLock.notifyAll();
                     }
                 }
             });
-            this.communicationService.serverWatchDog.addObserver((Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+            this.communicationService.serverWatchDog.addObserver((WatchDog source, WatchDog.ServiceState data) -> {
                 synchronized (watchDogUpdateLock) {
                     if (data == WatchDog.ServiceState.RUNNING) {
                         watchDogUpdateLock.notifyAll();

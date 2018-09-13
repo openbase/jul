@@ -31,6 +31,7 @@ import com.google.protobuf.GeneratedMessage;
  */
 public interface MessageContainer<M extends GeneratedMessage> {
 
-    public M getMessage();
+
+    M getMessage();
 
 }

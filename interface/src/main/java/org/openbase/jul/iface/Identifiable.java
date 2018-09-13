@@ -33,7 +33,7 @@ public interface Identifiable<ID> {
     /**
      * The id field identifier used for protobuf type definitions or other conventions.
      */
-    public String TYPE_FIELD_ID = "id";
+    String TYPE_FIELD_ID = "id";
 
     /**
      * Method returns the id of this instance.
@@ -41,5 +41,5 @@ public interface Identifiable<ID> {
      * @return the id.
      * @throws NotAvailableException is thrown if the id could not be detected.
      */
-    public ID getId() throws NotAvailableException;
+    ID getId() throws NotAvailableException;
 }

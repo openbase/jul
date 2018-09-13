@@ -42,6 +42,7 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -91,9 +92,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
     private final SyncObject pingLock = new SyncObject("PingLock");
     private final Class<M> dataClass;
-    private final ObservableImpl<ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
-    private final ObservableImpl<M> internalPriorizedDataObservable = new ObservableImpl<>(this);
-    private final ObservableImpl<M> dataObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<Remote, ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<DataProvider<M>, M> internalPriorizedDataObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<DataProvider<M>, M> dataObservable = new ObservableImpl<>(this);
     private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
     protected Object maintainer;
     protected Scope scope;
@@ -290,7 +291,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
-            this.listenerWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data1) -> {
+            this.listenerWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data1) -> {
                 logger.debug("listener state update: " + data1.name());
                 // Sync data after service start.
                 if (data1 == WatchDog.ServiceState.RUNNING) {
@@ -1458,35 +1459,15 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      *
      * @return The internal priorized data observable.
      */
-    protected Observable<M> getIntenalPriorizedDataObservable() {
+    protected Observable<DataProvider<M>, M> getIntenalPriorizedDataObservable() {
         return internalPriorizedDataObservable;
-    }
-
-    /**
-     * @param observer
-     *
-     * @deprecated use addDataObserver(observer); instead!
-     */
-    @Deprecated
-    public void addObserver(Observer<M> observer) {
-        addDataObserver(observer);
-    }
-
-    /**
-     * @param observer
-     *
-     * @deprecated use removeDataObserver(observer); instead
-     */
-    @Deprecated
-    public void removeObserver(Observer<M> observer) {
-        removeDataObserver(observer);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void addDataObserver(final Observer<M> observer) {
+    public void addDataObserver(final Observer<DataProvider<M>, M> observer) {
         dataObservable.addObserver(observer);
     }
 
@@ -1494,7 +1475,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      */
     @Override
-    public void removeDataObserver(final Observer<M> observer) {
+    public void removeDataObserver(final Observer<DataProvider<M>, M> observer) {
         dataObservable.removeObserver(observer);
     }
 
@@ -1502,7 +1483,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      */
     @Override
-    public void addConnectionStateObserver(final Observer<ConnectionState> observer) {
+    public void addConnectionStateObserver(final Observer<Remote, ConnectionState> observer) {
         connectionStateObservable.addObserver(observer);
     }
 
@@ -1510,7 +1491,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * {@inheritDoc}
      */
     @Override
-    public void removeConnectionStateObserver(final Observer<ConnectionState> observer) {
+    public void removeConnectionStateObserver(final Observer<Remote, ConnectionState> observer) {
         connectionStateObservable.removeObserver(observer);
     }
 

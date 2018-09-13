@@ -41,10 +41,12 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.storage.registry.EntryModification;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
 import org.openbase.jul.storage.registry.Registry;
 import rst.domotic.unit.UnitConfigType.UnitConfig;
+import rst.domotic.unit.UnitConfigType.UnitConfig.Builder;
 import rst.domotic.unit.location.LocationConfigType.LocationConfig;
 import rst.spatial.PlacementConfigType;
 import rst.spatial.PlacementConfigType.PlacementConfig;
@@ -304,13 +306,24 @@ public class TransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public void addObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
+                public void addDependencyObserver(Observer<Registry<String, IdentifiableMessage<String, UnitConfig, Builder>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
-                public void removeObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
+                public void removeDependencyObserver(Observer<Registry<String, IdentifiableMessage<String, UnitConfig, Builder>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
                     throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+
+                @Override
+                public void addObserver(Observer<DataProvider<Map<String, IdentifiableMessage<String, UnitConfig, Builder>>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
+                     throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                @Override
+                public void removeObserver(Observer<DataProvider<Map<String, IdentifiableMessage<String, UnitConfig, Builder>>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
+                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
@@ -341,16 +354,6 @@ public class TransformationFrameConsistencyHandlerTest {
                 @Override
                 public Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntryMap() {
                     throw new UnsupportedOperationException("Not supported yet.");
-                }
-
-                @Override
-                public void addDependencyObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-                }
-
-                @Override
-                public void removeDependencyObserver(Observer<Map<String, IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>>> observer) {
-                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
 
                 @Override

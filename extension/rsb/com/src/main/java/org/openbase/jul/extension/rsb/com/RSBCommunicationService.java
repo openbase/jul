@@ -243,7 +243,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
 
                 serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
-                this.informerWatchDog.addObserver((final Observable<WatchDog.ServiceState> source, WatchDog.ServiceState data) -> {
+                this.informerWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data) -> {
                     if (data == WatchDog.ServiceState.RUNNING) {
 
                         // Sync data after service start.
@@ -909,7 +909,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @param observer {@inheritDoc}
      */
     @Override
-    public void addDataObserver(Observer<M> observer) {
+    public void addDataObserver(Observer<DataProvider<M>, M> observer) {
         dataObserver.addObserver(observer);
     }
 
@@ -919,7 +919,7 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      * @param observer {@inheritDoc}
      */
     @Override
-    public void removeDataObserver(Observer<M> observer) {
+    public void removeDataObserver(Observer<DataProvider<M>, M> observer) {
         dataObserver.removeObserver(observer);
     }
 

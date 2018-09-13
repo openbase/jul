@@ -21,34 +21,32 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.GeneratedMessage;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPDebugMode;
-import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.annotation.Experimental;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotAvailableException.ContextType;
-import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.container.MessageContainer;
 import org.openbase.jul.iface.Identifiable;
-import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * @param <KEY> ID Type
+ * @param <M>   Internal Message
+ * @param <MB>
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <KEY> ID Type
- * @param <M> Internal Message
- * @param <MB>
  */
 public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> implements Identifiable<KEY>, MessageContainer<M> {
 
@@ -65,12 +63,13 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     }
 
     private M internalMessage;
-    private ObservableImpl<IdentifiableMessage<KEY, M, MB>> observable;
+    private ObservableImpl<Object, IdentifiableMessage<KEY, M, MB>> observable;
 
     /**
      * Copy Constructor
      *
      * @param identifiableMessage
+     *
      * @throws InstantiationException
      */
     public IdentifiableMessage(IdentifiableMessage<KEY, M, MB> identifiableMessage) throws InstantiationException {
@@ -88,7 +87,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             }
 
             this.internalMessage = message;
-            this.observable = new ObservableImpl<>();
+            this.observable = new ObservableImpl<>(this);
             this.setupId(idGenerator);
         } catch (CouldNotPerformException ex) {
             throw new org.openbase.jul.exception.InstantiationException(this, ex);
@@ -112,13 +111,6 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
             throw new org.openbase.jul.exception.InstantiationException(this, ex);
         }
     }
-
-
-    @Override
-    public KEY getId() throws NotAvailableException {
-        return getId(internalMessage);
-    }
-
 
     public static <KEY> KEY getId(GeneratedMessage message) throws NotAvailableException {
         try {
@@ -146,6 +138,45 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         }
     }
 
+    /**
+     * Method generates a short string description of the given message. This description is bases on internal message fields like label or id provided by the message itself.
+     * If non of this fields could be detected a ? char is returned.
+     * <p>
+     * //TODO: release: is it okay if this is now an alias, parsing the label is now quite difficult without access to the rst type
+     *
+     * @return a short description of the message as string.
+     */
+    public static String generateMessageDescription(final GeneratedMessage message) {
+//        if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
+//            if (message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
+//                return (String) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
+//            }
+//        }
+
+        try {
+            return getId(message).toString();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not detect id value of internal message!", ex), logger, LogLevel.WARN);
+            return "?";
+        }
+    }
+
+    @Override
+    public KEY getId() throws NotAvailableException {
+        return getId(internalMessage);
+    }
+
+    private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
+        try {
+            if (verifyId()) {
+                throw new InvalidStateException("ID already specified!");
+            }
+            setMessage((M) internalMessage.toBuilder().setField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID), id).build());
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not setup id!", ex);
+        }
+    }
+
     private void setupId(final IdGenerator<KEY, M> generator) throws CouldNotPerformException {
         try {
             if (verifyId()) {
@@ -164,36 +195,62 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         return internalMessage.hasField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID));
     }
 
-    private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
-        try {
-            if (verifyId()) {
-                throw new InvalidStateException("ID already specified!");
-            }
-            setMessage((M) internalMessage.toBuilder().setField(internalMessage.getDescriptorForType().findFieldByName(TYPE_FIELD_ID), id).build());
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not setup id!", ex);
-        }
+    /**
+     * Updates the message of this instance.
+     *
+     * @param builder the message builder delivering the new message.
+     *
+     * @return the updated message is returned.
+     *
+     * @throws CouldNotPerformException in thrown in case something went wrong during message processing.
+     * @deprecated since 2.0 and will be removed in 3.0: please use setMessage(final MB builder, final Object source) instead.
+     */
+    @Deprecated
+    @Experimental
+    public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder) throws CouldNotPerformException {
+        return setMessage((M) builder.build(), this);
     }
 
-    public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder) throws CouldNotPerformException {
+    /**
+     * Updates the message of this instance.
+     *
+     * @param builder the message builder delivering the new message.
+     * @param source  the responsible source of the new message.
+     *
+     * @return the updated message is returned.
+     *
+     * @throws CouldNotPerformException in thrown in case something went wrong during message processing.
+     */
+    @Deprecated
+    public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder, final Object source) throws CouldNotPerformException {
         if (builder == null) {
             throw new NotAvailableException("message");
         }
-        return setMessage((M) builder.build());
+        return setMessage((M) builder.build(), source);
     }
 
-    public IdentifiableMessage<KEY, M, MB> setMessage(final M message) throws CouldNotPerformException {
+    /**
+     * Updates the message of this instance.
+     *
+     * @param message the new message object used as replacement for the old message.
+     * @param source  the responsible source of the new message.
+     *
+     * @return the updated message is returned.
+     *
+     * @throws CouldNotPerformException in thrown in case something went wrong during message processing.
+     */
+    public IdentifiableMessage<KEY, M, MB> setMessage(final M message, final Object source) throws CouldNotPerformException {
         if (message == null) {
             throw new NotAvailableException("message");
         }
         this.internalMessage = message;
-        notifyObservers();
+        notifyObservers(source);
         return this;
     }
 
-    public void notifyObservers() {
+    private void notifyObservers(final Object source) {
         try {
-            observable.notifyObservers(this);
+            observable.notifyObservers(source, this);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
@@ -203,28 +260,34 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
     public M getMessage() {
         return internalMessage;
     }
+    /**
+     * Updates the message of this instance.
+     *
+     * @param message the new message.
+     *
+     * @return the updated message is returned.
+     *
+     * @throws CouldNotPerformException in thrown in case something went wrong during message processing.
+     * @deprecated since 2.0 and will be removed in 3.0: please use setMessage(final M message, final Object source) instead.
+     */
+    public IdentifiableMessage<KEY, M, MB> setMessage(final M message) throws CouldNotPerformException {
+        return setMessage(message, this);
+    }
 
     public String getMessageTypeName() {
         return internalMessage.getClass().getSimpleName();
     }
 
-    public void addObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
+    public void addObserver(Observer<Object, IdentifiableMessage<KEY, M, MB>> observer) {
         observable.addObserver(observer);
     }
 
-    public void removeObserver(Observer<IdentifiableMessage<KEY, M, MB>> observer) {
+    public void removeObserver(Observer<Object, IdentifiableMessage<KEY, M, MB>> observer) {
         observable.removeObserver(observer);
     }
 
     @Override
     public String toString() {
-//            try {
-//                if (JPService.getProperty(JPVerbose.class).getValue()) {
-//                    return getClass().getSimpleName() + "[" + internalMessage + "]";
-//                }
-//            } catch (JPNotAvailableException ex) {
-//                logger.warn("JPVerbose property could not be loaded!");
-//            }
         return getMessageTypeName() + "[" + generateMessageDescription() + "]";
     }
 
@@ -236,28 +299,6 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
      */
     public String generateMessageDescription() {
         return generateMessageDescription(internalMessage);
-    }
-
-    /**
-     * Method generates a short string description of the given message. This description is bases on internal message fields like label or id provided by the message itself.
-     * If non of this fields could be detected a ? char is returned.
-     *
-     * //TODO: release: is it okay if this is now an alias, parsing the label is now quite difficult without access to the rst type
-     * @return a short description of the message as string.
-     */
-    public static String generateMessageDescription(final GeneratedMessage message) {
-//        if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
-//            if (message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
-//                return (String) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
-//            }
-//        }
-
-        try {
-            return getId(message).toString();
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not detect id value of internal message!", ex), logger, LogLevel.WARN);
-            return "?";
-        }
     }
 
     @Override

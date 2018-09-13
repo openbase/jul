@@ -33,14 +33,14 @@ import java.util.concurrent.TimeUnit;
 public class ObservableDataProviderAdapter<D> implements DataProvider<D> {
 
     private final Class<D> dataClass;
-    private final ObservableImpl<D> observable;
+    private final ObservableImpl<DataProvider<D>, D> observable;
 
-    public ObservableDataProviderAdapter(final ObservableImpl<D> observable, final Class<D> dataClass) {
+    public ObservableDataProviderAdapter(final ObservableImpl<DataProvider<D>, D> observable, final Class<D> dataClass) {
         this.observable = observable;
         this.dataClass = dataClass;
     }
 
-    protected ObservableImpl<D> getObservable() {
+    protected ObservableImpl<DataProvider<D>, D> getObservable() {
         return observable;
     }
 
@@ -65,12 +65,12 @@ public class ObservableDataProviderAdapter<D> implements DataProvider<D> {
     }
 
     @Override
-    public void addDataObserver(Observer<D> observer) {
+    public void addDataObserver(Observer<DataProvider<D>, D> observer) {
         observable.addObserver(observer);
     }
 
     @Override
-    public void removeDataObserver(Observer<D> observer) {
+    public void removeDataObserver(Observer<DataProvider<D>, D> observer) {
         observable.removeObserver(observer);
     }
 

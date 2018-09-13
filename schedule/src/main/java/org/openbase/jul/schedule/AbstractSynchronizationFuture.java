@@ -54,7 +54,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
 
     private final SyncObject CHECK_LOCK = new SyncObject("WaitForUpdateLock");
 
-    private final Observer notifyChangeObserver = (Observer) (Observable source, Object data) -> {
+    private final Observer notifyChangeObserver = (Object source, Object data) -> {
         synchronized (CHECK_LOCK) {
             CHECK_LOCK.notifyAll();
         }

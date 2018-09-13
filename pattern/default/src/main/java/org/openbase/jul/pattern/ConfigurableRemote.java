@@ -39,26 +39,26 @@ public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID
      * @return the current configuration
      * @throws NotAvailableException if the configuration is not available
      */
-    public CONFIG getConfig() throws NotAvailableException;
+    CONFIG getConfig() throws NotAvailableException;
 
     /**
      * Method returns the class of the configuration instance.
      *
      * @return the class of the configuration.
      */
-    public Class<CONFIG> getConfigClass();
+    Class<CONFIG> getConfigClass();
 
     /**
      * This method allows the registration of config observers to get informed about config updates.
      *
      * @param observer the observer added
      */
-    public void addConfigObserver(final Observer<CONFIG> observer);
+    void addConfigObserver(final Observer<ConfigurableRemote<ID, M, CONFIG>, CONFIG> observer);
 
     /**
      * This method removes already registered config observers.
      *
      * @param observer the observer removed
      */
-    public void removeConfigObserver(final Observer<CONFIG> observer);
+    void removeConfigObserver(final Observer<ConfigurableRemote<ID, M, CONFIG>, CONFIG> observer);
 }

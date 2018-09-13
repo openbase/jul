@@ -72,14 +72,14 @@ public interface DataProvider<D> {
      *
      * @param observer the observer added
      */
-    void addDataObserver(final Observer<D> observer);
+    void addDataObserver(final Observer<DataProvider<D>, D> observer);
 
     /**
      * This method removes already registered data observers.
      *
      * @param observer the observer removed
      */
-    void removeDataObserver(final Observer<D> observer);
+    void removeDataObserver(final Observer<DataProvider<D>, D> observer);
     
     /**
      * Method blocks until an initial data is available.

@@ -44,7 +44,7 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
     /**
      * Observable notifying when a synchronization is complete.
      */
-    private final ObservableImpl<Long> synchronisationObservable = new ObservableImpl<>();
+    private final ObservableImpl<Registry<KEY, ENTRY>, Long> synchronisationObservable = new ObservableImpl<>(this);
 
     /**
      * Creates a new SynchronizableRegistry with a default {@code HashMap} as internal map.
@@ -104,7 +104,7 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
      * @param observer {@inheritDoc}
      */
     @Override
-    public void addSynchronizationObserver(Observer<Long> observer) {
+    public void addSynchronizationObserver(Observer<Registry<KEY, ENTRY>,Long> observer) {
         synchronisationObservable.addObserver(observer);
     }
 
@@ -114,7 +114,7 @@ public class SynchronizableRegistryImpl<KEY, ENTRY extends Identifiable<KEY>> ex
      * @param observer {@inheritDoc}
      */
     @Override
-    public void removeSynchronizationObserver(Observer<Long> observer) {
+    public void removeSynchronizationObserver(Observer<Registry<KEY, ENTRY>, Long> observer) {
         synchronisationObservable.removeObserver(observer);
     }
 }

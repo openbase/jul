@@ -32,24 +32,23 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 /**
+ * @param <S> the type of the data source
  * @param <T> the data type on whose changes is notified
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public abstract class AbstractObservable<T> implements Observable<T> {
+public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractObservable.class);
 
     private static final boolean DEFAULT_UNCHANGED_VALUE_FILTER = true;
-    private static final Object DEFAULT_SOURCE = null;
 
     protected final boolean unchangedValueFilter;
-    private boolean notificationInProgress = false;
-
+    protected final List<Observer<S, T>> observers;
     private final Object OBSERVER_LOCK = new Object() {
         @Override
         public String toString() {
@@ -69,10 +68,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             return "NotificationProgressLock";
         }
     };
-
-    protected final List<Observer<T>> observers;
     protected int latestValueHash;
-    private Object source;
+    private boolean notificationInProgress = false;
+    private S source;
     private ExecutorService executorService;
     private HashGenerator<T> hashGenerator;
 
@@ -80,7 +78,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * Construct new Observable.
      */
     public AbstractObservable() {
-        this(DEFAULT_UNCHANGED_VALUE_FILTER, DEFAULT_SOURCE);
+        this(DEFAULT_UNCHANGED_VALUE_FILTER, null);
     }
 
     /**
@@ -88,7 +86,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *
      * @param source the responsible source of the value notifications.
      */
-    public AbstractObservable(final Object source) {
+    public AbstractObservable(final S source) {
         this(DEFAULT_UNCHANGED_VALUE_FILTER, source);
     }
 
@@ -99,7 +97,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *                             the same than notified before.
      */
     public AbstractObservable(final boolean unchangedValueFilter) {
-        this(unchangedValueFilter, DEFAULT_SOURCE);
+        this(unchangedValueFilter, null);
     }
 
     /**
@@ -111,12 +109,23 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *                             the same than notified before.
      * @param source               the responsible source of the value notifications.
      */
-    public AbstractObservable(final boolean unchangedValueFilter, final Object source) {
+    public AbstractObservable(final boolean unchangedValueFilter, final S source) {
         this.observers = new ArrayList<>();
         this.unchangedValueFilter = unchangedValueFilter;
-        this.source = source == DEFAULT_SOURCE ? this : source; // use observer itself if source was not explicit defined.
-        this.hashGenerator = new HashGenerator<T>() {
 
+//        S alternativeSoure;
+//        try {
+//            if (this.i instanceof S.class) {
+//
+//            }
+//            alternativeSoure = (S) this;
+//        } catch (ClassCastException ex) {
+//            alternativeSoure = null;
+//        }
+//
+//        this.source = source == null ? alternativeSoure : source; // use observer itself if source was not explicit defined.
+        this.source = source;
+        this.hashGenerator = new HashGenerator<T>() {
             @Override
             public int computeHash(T value) throws CouldNotPerformException {
                 try {
@@ -134,7 +143,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @param observer {@inheritDoc}
      */
     @Override
-    public void addObserver(Observer<T> observer) {
+    public void addObserver(final Observer<S, T> observer) {
         synchronized (OBSERVER_LOCK) {
             if (observers.contains(observer)) {
                 LOGGER.warn("Skip observer registration. Observer[" + observer + "] is already registered!");
@@ -150,7 +159,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * @param observer {@inheritDoc}
      */
     @Override
-    public void removeObserver(Observer<T> observer) {
+    public void removeObserver(final Observer<S, T> observer) {
         synchronized (OBSERVER_LOCK) {
             observers.remove(observer);
         }
@@ -178,12 +187,14 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      * has not changed and false is returned.
      *
      * @param observable the value which is notified
+     *
      * @return true if the observable has changed
+     *
      * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
     public boolean notifyObservers(final T observable) throws MultiException, CouldNotPerformException {
-        return notifyObservers(this, observable);
+        return notifyObservers(source, observable);
     }
 
     /**
@@ -201,11 +212,13 @@ public abstract class AbstractObservable<T> implements Observable<T> {
      *
      * @param source     the source of the notification
      * @param observable the value which is notified
+     *
      * @return true if the observable has changed
+     *
      * @throws MultiException           thrown if the notification to at least one observer fails
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
-    public boolean notifyObservers(final Observable<T> source, final T observable) throws MultiException, CouldNotPerformException {
+    public boolean notifyObservers(final S source, final T observable) throws MultiException, CouldNotPerformException {
         synchronized (NOTIFICATION_MESSAGE_LOCK) {
             long wholeTime = System.currentTimeMillis();
             if (observable == null) {
@@ -214,9 +227,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             }
 
             ExceptionStack exceptionStack = null;
-            final Map<Observer<T>, Future<Void>> notificationFutureList = new HashMap<>();
+            final Map<Observer<S, T>, Future<Void>> notificationFutureList = new HashMap<>();
 
-            final ArrayList<Observer<T>> tempObserverList;
+            final ArrayList<Observer<S, T>> tempObserverList;
 
             try {
                 synchronized (NOTIFICATION_PROGRESS_LOCK) {
@@ -236,7 +249,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                     tempObserverList = new ArrayList<>(observers);
                 }
 
-                for (final Observer<T> observer : tempObserverList) {
+                for (final Observer<S, T> observer : tempObserverList) {
 
                     if (executorService == null) {
 
@@ -262,12 +275,9 @@ public abstract class AbstractObservable<T> implements Observable<T> {
                         }
                     } else {
                         // asynchronous notification
-                        notificationFutureList.put(observer, executorService.submit(new Callable<Void>() {
-                            @Override
-                            public Void call() throws Exception {
-                                observer.update(source, observable);
-                                return null;
-                            }
+                        notificationFutureList.put(observer, executorService.submit(() -> {
+                            observer.update(source, observable);
+                            return null;
                         }));
                     }
                 }
@@ -282,7 +292,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
             //TODO: this check is wrong -> != but when implemented correctly leads bco not starting
             // handle exeception printing for async variant
             if (executorService == null) {
-                for (final Entry<Observer<T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
+                for (final Entry<Observer<S, T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
                     try {
                         notificationFuture.getValue().get();
                     } catch (InterruptedException ex) {
@@ -294,7 +304,7 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
                 }
             }
-            if(exceptionStack != null && !exceptionStack.isEmpty()) {
+            if (exceptionStack != null && !exceptionStack.isEmpty()) {
                 MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
             }
             wholeTime = System.currentTimeMillis() - wholeTime;
@@ -349,6 +359,6 @@ public abstract class AbstractObservable<T> implements Observable<T> {
 
     @Override
     public String toString() {
-        return Observable.class.getSimpleName() + "[" + (source == this ? source.getClass().getSimpleName() : source) + "]";
+        return Observable.class.getSimpleName() + "[" + (source == null || source == this ? "" : source.getClass().getSimpleName() + "]");
     }
 }
