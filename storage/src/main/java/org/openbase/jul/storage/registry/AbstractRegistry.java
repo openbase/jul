@@ -38,7 +38,8 @@ import org.openbase.jul.exception.printer.Printer;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Shutdownable;
-import org.openbase.jul.pattern.Observable;
+import org.openbase.jul.pattern.ChangeHandler;
+import org.openbase.jul.pattern.ChangeListener;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -48,7 +49,6 @@ import org.openbase.jul.storage.registry.plugin.RegistryPluginPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -61,7 +61,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<DataProvider<Map<KEY, ENTRY>>, Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
+public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>> extends ObservableImpl<DataProvider<Map<KEY, ENTRY>>, Map<KEY, ENTRY>> implements Registry<KEY, ENTRY> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final RegistryPluginPool<KEY, ENTRY, PLUGIN, REGISTRY> pluginPool;
@@ -78,6 +78,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
      */
     private final Map<Registry, DependencyConsistencyCheckTrigger> dependingRegistryMap;
     private final ObservableImpl<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> dependingRegistryObservable;
+    private final ChangeHandler transactionPerformedNotifier;
     protected RegistrySandbox<KEY, ENTRY, MAP, REGISTRY> sandbox;
     protected boolean consistent;
     private String name;
@@ -119,6 +120,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             this.dependingRegistryMap = new HashMap<>();
             this.sandbox = new MockRegistrySandbox<>(this);
             this.dependingRegistryObservable = new ObservableImpl<>(this);
+            this.transactionPerformedNotifier = new ChangeHandler();
 
             this.consistencyFeedbackEventFilter = new RecurrenceEventFilter<String>(10000) {
                 @Override
@@ -195,6 +197,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not register " + entry + " in " + this + "!", ex);
         }
+        notifySuccessfulTransaction();
         notifyObservers();
         return get(entry);
     }
@@ -260,6 +263,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
         }
+        notifySuccessfulTransaction();
         notifyObservers();
         return get(entry);
     }
@@ -322,6 +326,7 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not remove " + entry + " in " + this + "!", ex);
         }
+        notifySuccessfulTransaction();
         notifyObservers();
         return oldEntry;
     }
@@ -687,13 +692,19 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
         return false;
     }
 
-    protected final void notifyObservers() {
+    /**
+     * Method triggers a new registry changed notification on all observers.
+     * The notification will be skipped in case the registry is busy. But a final notification is always guaranteed.
+     *
+     * @return true if the notification was performed or false if the notification was skipped.
+     */
+    protected final boolean notifyObservers() {
         try {
             // It is not waited until the write actions are finished because the notification will be triggered after the lock release.
             if (registryLock.isWriteLockedByCurrentThread()) {
                 logger.debug("Notification of registry[" + this + "] change skipped because of running write operations!");
                 notificationSkipped = true;
-                return;
+                return false;
             }
 
             if (super.notifyObservers(entryMap)) {
@@ -708,7 +719,9 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
             notificationSkipped = false;
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all registry observer!", ex), logger, LogLevel.ERROR);
+            return false;
         }
+        return true;
     }
 
     protected KEY verifyID(final ENTRY entry) throws VerificationFailedException {
@@ -1354,6 +1367,36 @@ public class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP extends 
     public void removeDependencyObserver(final Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer) {
         dependingRegistryObservable.removeObserver(observer);
     }
+
+    private void notifySuccessfulTransaction() {
+        try {
+            transactionPerformedNotifier.notifyChange();
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory("Could not notify all transation listeners.", ex, logger);
+        } catch (InterruptedException ex) {
+            // recover interruption
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * Registers the given listener to get informed about performed transactions.
+     *
+     * @param listener the listener to register.
+     */
+    public void addTransactionListener(final ChangeListener listener) {
+        transactionPerformedNotifier.addlistener(listener);
+    }
+
+    /**
+     * Removes an already registered transaction listener.
+     *
+     * @param listener the listener to remove.
+     */
+    public void removeTransactionListener(final ChangeListener listener) {
+        transactionPerformedNotifier.removeListener(listener);
+    }
+
 
     private class DependencyConsistencyCheckTrigger implements Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>>, Shutdownable, Activatable {
 
