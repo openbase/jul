@@ -33,7 +33,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
-import org.openbase.jul.iface.Changeable;
+import org.openbase.jul.pattern.ChangeListener;
 import org.openbase.jul.schedule.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
     protected final Logger logger = LoggerFactory.getLogger(BuilderSyncSetup.class);
 
-    private final Changeable holder;
+    private final ChangeListener holder;
     private final MB builder;
     private final ReentrantReadWriteLock.ReadLock readLock;
     private final ReentrantReadWriteLock.WriteLock writeLock;
@@ -58,7 +58,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     private Object readLockConsumer;
     private Object writeLockConsumer;
 
-    public BuilderSyncSetup(final MB builder, final ReentrantReadWriteLock.ReadLock readLock, final ReentrantReadWriteLock.WriteLock writeLock, final Changeable holder) {
+    public BuilderSyncSetup(final MB builder, final ReentrantReadWriteLock.ReadLock readLock, final ReentrantReadWriteLock.WriteLock writeLock, final ChangeListener holder) {
         this.builder = builder;
         this.readLock = readLock;
         this.writeLock = writeLock;

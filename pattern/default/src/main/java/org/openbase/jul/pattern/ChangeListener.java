@@ -1,4 +1,4 @@
-package org.openbase.jul.iface;
+package org.openbase.jul.pattern;
 
 /*
  * #%L
@@ -25,15 +25,17 @@ package org.openbase.jul.iface;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
- * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ *
+ * Class offers the ChangeListener pattern. Where this interface describes the listener part.
  */
-public interface Changeable {
+public interface ChangeListener {
 
     /**
-     * Informs the {@code Changeable} about an state change.
+     * Informs the {@code ChangeListener} about an state change.
      *
-     * @throws CouldNotPerformException
-     * @throws InterruptedException
+     * @throws CouldNotPerformException can be thrown if the notification did not reach the target.
+     * @throws InterruptedException should only be thrown if the thread was externally interrupted.
      */
     void notifyChange() throws CouldNotPerformException, InterruptedException;
 }

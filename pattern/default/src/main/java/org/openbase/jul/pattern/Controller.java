@@ -2,7 +2,6 @@ package org.openbase.jul.pattern;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Activatable;
-import org.openbase.jul.iface.Changeable;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Requestable;
 import org.openbase.jul.iface.Shutdownable;
@@ -33,30 +32,30 @@ import org.openbase.jul.iface.Shutdownable;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M> Message
  */
-public interface Controller<M> extends Shutdownable, Activatable, Changeable, Pingable, Requestable<M> {
+public interface Controller<M> extends Shutdownable, Activatable, ChangeListener, Pingable, Requestable<M> {
 
     // TODO release mpohling: Should be moved to rst and reimplement for rsb 14.
-    public enum ControllerAvailabilityState {
+    enum ControllerAvailabilityState {
 
         ACTIVATING, ONLINE, DEACTIVATING, OFFLINE
     };
 
     @SuppressWarnings(value = "unchecked")
-    public M getData() throws CouldNotPerformException;
+    M getData() throws CouldNotPerformException;
 
     /**
      * Method returns the class of the internal data object which is used for remote synchronization.
      *
      * @return data class
      */
-    public Class<M> getDataClass();
+    Class<M> getDataClass();
 
     /**
      * Method returns the availability state of this controller.
      *
      * @return OFFLINE / ONLINE
      */
-    public ControllerAvailabilityState getControllerAvailabilityState();
+    ControllerAvailabilityState getControllerAvailabilityState();
 
     /**
      * Wait until the controller reached a given availability state.
@@ -64,7 +63,7 @@ public interface Controller<M> extends Shutdownable, Activatable, Changeable, Pi
      * @param controllerAvailabilityState the state on which is waited
      * @throws InterruptedException if the waiting is interrupted
      */
-    public void waitForAvailabilityState(final ControllerAvailabilityState controllerAvailabilityState) throws InterruptedException;
+    void waitForAvailabilityState(final ControllerAvailabilityState controllerAvailabilityState) throws InterruptedException;
 
     /**
      * Synchronize all registered remote instances about a data change.
@@ -73,6 +72,6 @@ public interface Controller<M> extends Shutdownable, Activatable, Changeable, Pi
      * @throws java.lang.InterruptedException if the notification has been interrupted
      */
     @Override
-    public void notifyChange() throws CouldNotPerformException, InterruptedException;
+     void notifyChange() throws CouldNotPerformException, InterruptedException;
 
 }

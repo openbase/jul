@@ -30,5 +30,5 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @param <UPDATE> The value type to update.
  */
 public interface Updatable<UPDATE>{
-    public UPDATE update(UPDATE update) throws CouldNotPerformException;
+    UPDATE update(UPDATE update) throws CouldNotPerformException;
 }

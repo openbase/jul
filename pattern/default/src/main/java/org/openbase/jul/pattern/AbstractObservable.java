@@ -112,18 +112,6 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
     public AbstractObservable(final boolean unchangedValueFilter, final S source) {
         this.observers = new ArrayList<>();
         this.unchangedValueFilter = unchangedValueFilter;
-
-//        S alternativeSoure;
-//        try {
-//            if (this.i instanceof S.class) {
-//
-//            }
-//            alternativeSoure = (S) this;
-//        } catch (ClassCastException ex) {
-//            alternativeSoure = null;
-//        }
-//
-//        this.source = source == null ? alternativeSoure : source; // use observer itself if source was not explicit defined.
         this.source = source;
         this.hashGenerator = new HashGenerator<T>() {
             @Override
