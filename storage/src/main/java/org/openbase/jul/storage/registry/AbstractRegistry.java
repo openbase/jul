@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -242,6 +242,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             throw new NotAvailableException("entry");
         }
         log("Update " + entry + "...");
+        boolean entryChanged;
         try {
             checkWriteAccess();
             lock();
@@ -250,12 +251,18 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
+                // save old entry
+                ENTRY oldEntry = entryMap.get(entry.getId());
                 // perform update
                 sandbox.update(entry);
                 pluginPool.beforeUpdate(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
                 pluginPool.afterUpdate(entry);
+                // retrieve changed entry after consistency check
+                ENTRY newEntry = entryMap.get(entry.getId());
+                // test if the entry has changed at all by this update method
+                entryChanged = !newEntry.equals(oldEntry);
             } finally {
                 syncSandbox();
                 unlock();
@@ -263,8 +270,11 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
         }
-        notifySuccessfulTransaction();
-        notifyObservers();
+        // only notify if a change occurred
+        if (entryChanged) {
+            notifySuccessfulTransaction();
+            notifyObservers();
+        }
         return get(entry);
     }
 
