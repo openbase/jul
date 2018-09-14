@@ -292,9 +292,8 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
                 }
             }
-            if (exceptionStack != null && !exceptionStack.isEmpty()) {
-                MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
-            }
+            MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
+
             wholeTime = System.currentTimeMillis() - wholeTime;
             if (wholeTime > 500) {
                 LOGGER.warn("Notification on observable[" + observable.getClass().getName() + "] took: " + wholeTime + "ms");
