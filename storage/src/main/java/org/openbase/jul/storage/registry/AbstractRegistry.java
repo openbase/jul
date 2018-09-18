@@ -242,7 +242,6 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             throw new NotAvailableException("entry");
         }
         log("Update " + entry + "...");
-        boolean entryChanged;
         try {
             checkWriteAccess();
             lock();
@@ -252,17 +251,18 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                     throw new InvalidStateException("Entry not registered!");
                 }
                 // save old entry
-                ENTRY oldEntry = entryMap.get(entry.getId());
+//                ENTRY oldEntry = get(entry);
                 // perform update
                 sandbox.update(entry);
+                boolean changed = !isSandbox() && !get(entry).equals(sandbox.get(entry));
                 pluginPool.beforeUpdate(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
                 pluginPool.afterUpdate(entry);
-                // retrieve changed entry after consistency check
-                ENTRY newEntry = entryMap.get(entry.getId());
                 // test if the entry has changed at all by this update method
-                entryChanged = !newEntry.equals(oldEntry);
+                if (changed) {
+                    notifySuccessfulTransaction();
+                }
             } finally {
                 syncSandbox();
                 unlock();
@@ -270,11 +270,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not update " + entry + " in " + this + "!", ex);
         }
-        // only notify if a change occurred
-        if (entryChanged) {
-            notifySuccessfulTransaction();
-            notifyObservers();
-        }
+        notifyObservers();
         return get(entry);
     }
 
