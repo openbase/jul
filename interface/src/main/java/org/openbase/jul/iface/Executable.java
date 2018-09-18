@@ -37,5 +37,5 @@ public interface Executable<T> {
      * @return A future instance is returned which provides information about the execution state.
      * @throws CouldNotPerformException is thrown if the execution could not be started.
      */
-    public Future<T> execute() throws CouldNotPerformException;
+    Future<T> execute() throws CouldNotPerformException;
 }

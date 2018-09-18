@@ -25,6 +25,7 @@ package org.openbase.jul.processing;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.regex.PatternSyntaxException;
 
 /**
@@ -32,16 +33,10 @@ import java.util.regex.PatternSyntaxException;
  */
 public class StringProcessor {
 
-    public enum Alignment {
-        LEFT,
-        CENTER,
-        RIGHT
-    }
-
     public static String insertSpaceBetweenCamelCase(String input) {
-        String output = (input.isEmpty() ? "": Character.toString(input.charAt(0)));
+        String output = (input.isEmpty() ? "" : Character.toString(input.charAt(0)));
         for (int i = 1; i < input.length(); i++) {
-            if (Character.isLowerCase(input.charAt(i-1)) && Character.isUpperCase(input.charAt(i))) {
+            if (Character.isLowerCase(input.charAt(i - 1)) && Character.isUpperCase(input.charAt(i))) {
                 output += " " + input.charAt(i);
                 continue;
             }
@@ -58,6 +53,7 @@ public class StringProcessor {
      * Remove all white spaces (spaces, tabs, ...) from the input string.
      *
      * @param input the string from which white spaces are removed.
+     *
      * @return the input with removed white spaces
      */
     public static String removeWhiteSpaces(String input) {
@@ -112,6 +108,7 @@ public class StringProcessor {
      *
      * @param input  the original input string
      * @param lenght the requested input string length.
+     *
      * @return the extended input string
      */
     public static String fillWithSpaces(String input, int lenght) {
@@ -126,6 +123,7 @@ public class StringProcessor {
      * @param input         the original input string
      * @param lenght        the requested input string length.
      * @param textAlignment the alignment of the origin input string.
+     *
      * @return the extended input string
      */
     public static String fillWithSpaces(String input, int lenght, final Alignment textAlignment) {
@@ -164,7 +162,7 @@ public class StringProcessor {
             }
             return input;
         } catch (PatternSyntaxException ex) {
-            new FatalImplementationErrorException("Could not transform ["+input+"] to id string!", StringProcessor.class, ex);
+            new FatalImplementationErrorException("Could not transform [" + input + "] to id string!", StringProcessor.class, ex);
             return input;
         }
     }
@@ -173,9 +171,48 @@ public class StringProcessor {
      * Method normalizes a string into a simple file name by removing duplicated path limiters.
      *
      * @param filename the file name origin
+     *
      * @return the normalized file name.
      */
     public static String transformToNormalizedFileName(final String filename) {
         return new File(filename).getPath();
+    }
+
+    /**
+     * Method calls toString on each entry of the given collection and builds a string where each entry is separated by the given separator.
+     *
+     * @param collection the collection to repesent as string.
+     * @param separator  the separator between each entry.
+     *
+     * @return the string representation of the collection.
+     */
+    public static String transformCollectionToString(final Collection collection, final String separator) {
+        String stringRepresentation = "";
+        for (Object entry : collection) {
+
+            if (entry == null) {
+                continue;
+            }
+
+            final String entryString = entry.toString();
+
+            if (entryString.isEmpty()) {
+                continue;
+            }
+
+            if (!stringRepresentation.isEmpty()) {
+                stringRepresentation += separator;
+            }
+
+            stringRepresentation += entryString;
+        }
+        return stringRepresentation;
+    }
+
+
+    public enum Alignment {
+        LEFT,
+        CENTER,
+        RIGHT
     }
 }

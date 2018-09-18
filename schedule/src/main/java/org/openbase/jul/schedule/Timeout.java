@@ -164,32 +164,28 @@ public abstract class Timeout {
                 return;
             }
             expired = false;
-            timerTask = GlobalScheduledExecutorService.schedule(new Callable<Void>() {
-
-                @Override
-                public Void call() throws InterruptedException {
-                    synchronized (lock) {
-                        try {
-                            logger.debug("Wait for timeout TimeOut interrupted.");
-                            if (timerTask.isCancelled()) {
-                                logger.debug("TimeOut was canceled.");
-                                return null;
-                            }
-                            logger.debug("Expire...");
-                            expired = true;
-                        } finally {
-                            timerTask = null;
-                        }
-                    }
-
+            timerTask = GlobalScheduledExecutorService.schedule((Callable<Void>) () -> {
+                synchronized (lock) {
                     try {
-                        expired();
-                    } catch (Exception ex) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
+                        logger.debug("Wait for timeout TimeOut interrupted.");
+                        if (timerTask.isCancelled()) {
+                            logger.debug("TimeOut was canceled.");
+                            return null;
+                        }
+                        logger.debug("Expire...");
+                        expired = true;
+                    } finally {
+                        timerTask = null;
                     }
-                    logger.debug("Worker finished.");
-                    return null;
                 }
+
+                try {
+                    expired();
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
+                }
+                logger.debug("Worker finished.");
+                return null;
             }, waitTime, TimeUnit.MILLISECONDS);
         }
     }
@@ -205,8 +201,6 @@ public abstract class Timeout {
             if (timerTask != null) {
                 logger.debug("cancel timer.");
                 timerTask.cancel(false);
-            } else {
-                logger.debug("timer was canceled but never started!");
             }
         }
     }
