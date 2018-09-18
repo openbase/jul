@@ -1505,6 +1505,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         synchronized (pingLock) {
             if (pingTask == null || pingTask.isDone()) {
                 pingTask = GlobalCachedExecutorService.submit(() -> {
+                    final ConnectionState previousConnectionState = connectionState;
                     try {
                         validateMiddleware();
                         Long requestTime = remoteServer.call("ping", System.currentTimeMillis(), JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT);
@@ -1513,7 +1514,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         return connectionPing;
                     } catch (TimeoutException ex) {
                         synchronized (connectionMonitor) {
-                            if (connectionState == CONNECTED) {
+                            /**
+                             * After a ping timeout we should switch back to {@code connectionState == CONNECTING} because the controller is not reachable any longer.
+                             * There is only one edge case when the ping was triggered before the controller was fully started.
+                             * Than we switch to connected when the notification is received after controller startup, but the ping timeout would again result in a reconnect.
+                             * This is avoided by storing and comparing the {@code previousConnectionState} state and by only switching to {@code connectionState == CONNECTING} if the connection was previously established.
+                             */
+                            if (previousConnectionState == CONNECTED && connectionState == CONNECTED) {
                                 logger.warn("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] lost!");
 
                                 // init reconnection
@@ -1523,7 +1530,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         throw ex;
                     } catch (final InvalidStateException ex) {
                         // reinit remote service because middleware connection lost!
-                        switch (connectionState) {
+                        switch (this.connectionState) {
                             // only if the connection was established before and no reconnect is ongoing.
                             case CONNECTING:
                             case CONNECTED:
