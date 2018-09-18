@@ -21,33 +21,38 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.*;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.InvalidStateException;
+import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.extension.rsb.com.RSBCommunicationServiceTest.RSBCommunicationServiceImpl;
+import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import org.openbase.jul.extension.rst.util.TransactionSynchronizationFuture;
 import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
 import org.openbase.jul.pattern.Remote;
 import org.openbase.jul.pattern.Remote.ConnectionState;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rst.domotic.communication.TransactionValueType.TransactionValue;
 import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
+import rst.domotic.state.PowerStateType.PowerState.State;
+import rst.domotic.unit.dal.PowerSwitchDataType.PowerSwitchData;
+import rst.domotic.unit.dal.PowerSwitchDataType.PowerSwitchData.Builder;
+
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertTrue;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RSBRemoteServiceTest {
@@ -171,7 +176,88 @@ public class RSBRemoteServiceTest {
         } catch (java.util.concurrent.TimeoutException ex) {
             // is expected here since no server is started
         }
-        
+
         remoteService.shutdown();
+    }
+
+    private boolean prioritizedObservableFinished = false;
+
+    /**
+     * Test for the synchronization using transaction ids. This tests verifies if the {@link TransactionSynchronizationFuture}
+     * can only return after the internal prioritized observable of the remote service has finished its notification.
+     * <p>
+     * This is needed e.g. for registry remotes because they synchronize their internal remote registries using this
+     * observable. If it is not finished when the future returns following calls can fail.
+     * See issue: <a href="https://github.com/openbase/bco.registry/issues/98">https://github.com/openbase/bco.registry/issues/98</a>
+     *
+     * @throws Exception if an error occurs.
+     */
+    @Test(timeout = 5000)
+    public void testTransactionSynchronization() throws Exception {
+        final String scope = "/test/transaction/sync";
+
+        final TransactionCommunicationService communicationService = new TransactionCommunicationService();
+        communicationService.init(scope);
+        communicationService.activate();
+
+        final TransactionRemoteService remoteService = new TransactionRemoteService();
+        remoteService.init(scope);
+        remoteService.activate();
+        remoteService.waitForData();
+
+        long transactionId = remoteService.getTransactionId();
+        remoteService.getInternalPrioritizedDataObservable().addObserver((source, data) -> {
+            Thread.sleep(100);
+            prioritizedObservableFinished = true;
+        });
+        remoteService.performTransaction().get();
+        assertTrue("Transaction id did not increase after performTransaction call", remoteService.getTransactionId() > transactionId);
+        assertTrue("Prioritized observable is not finished but sync future already returned", prioritizedObservableFinished);
+
+        remoteService.shutdown();
+        communicationService.shutdown();
+    }
+
+    private static class TransactionCommunicationService extends RSBCommunicationService<PowerSwitchData, PowerSwitchData.Builder> {
+
+        /**
+         * Create a communication service.
+         *
+         * @throws InstantiationException if the creation fails
+         */
+        public TransactionCommunicationService() throws InstantiationException {
+            super(PowerSwitchData.newBuilder());
+        }
+
+        @Override
+        public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
+            try {
+                RPCHelper.registerMethod(this.getClass().getMethod("performTransaction"), this, server);
+            } catch (NoSuchMethodException ex) {
+                throw new CouldNotPerformException("Could not register method[performTransaction]", ex);
+            }
+        }
+
+        public TransactionValue performTransaction() throws CouldNotPerformException {
+            // update transaction
+            updateTransactionId();
+            // change data builder to trigger notification
+            try (ClosableDataBuilder<Builder> dataBuilder = getDataBuilder(this)) {
+                dataBuilder.getInternalBuilder().getPowerStateBuilder().setValue(State.ON);
+            }
+            // return transaction value
+            return TransactionValue.newBuilder().setTransactionId(getTransactionId()).build();
+        }
+    }
+
+    private static class TransactionRemoteService extends RSBRemoteService<PowerSwitchData> {
+
+        public TransactionRemoteService() {
+            super(PowerSwitchData.class);
+        }
+
+        public Future<TransactionValue> performTransaction() throws CouldNotPerformException {
+            return new TransactionSynchronizationFuture<>(RPCHelper.callRemoteMethod(this, TransactionValue.class), this);
+        }
     }
 }

@@ -61,6 +61,7 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
      * Verify that the internal future has a transaction id field and that this field is of type long.
      *
      * @param message the returned message from the internal future
+     *
      * @throws CouldNotPerformException if the message does not have a transaction id field
      */
     @Override
@@ -80,7 +81,9 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
      * the given message.
      *
      * @param message the return value of the internal future
+     *
      * @return true if the transaction id of the data provider is greater or equal than the one in the internal message
+     *
      * @throws CouldNotPerformException if the transaction id of the data provider is not available
      */
     @Override
@@ -94,6 +97,7 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
             return true;
         }
 
+//        logger.warn("Check {} - {} of {}", transactionId, dataProvider.getTransactionId(), dataProvider.toString());
         // check that the received transaction id has been reached by the provider
         return dataProvider.getTransactionId() >= transactionId;
     }

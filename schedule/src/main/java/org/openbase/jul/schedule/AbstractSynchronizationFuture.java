@@ -218,8 +218,6 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
                     CHECK_LOCK.wait();
                 }
             }
-            // todo release: remove the sleep after issue openbase/bco.registry#98 has been fixed!
-            Thread.sleep(50);
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not wait for synchronization!", ex);
         }

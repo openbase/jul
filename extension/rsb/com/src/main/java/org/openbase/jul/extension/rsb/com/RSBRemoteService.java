@@ -93,7 +93,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private final SyncObject pingLock = new SyncObject("PingLock");
     private final Class<M> dataClass;
     private final ObservableImpl<Remote, ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
-    private final ObservableImpl<DataProvider<M>, M> internalPriorizedDataObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<DataProvider<M>, M> internalPrioritizedDataObservable = new ObservableImpl<>(this);
     private final ObservableImpl<DataProvider<M>, M> dataObservable = new ObservableImpl<>(this);
     private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
     protected Object maintainer;
@@ -115,6 +115,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private long newestEventTimeNano = 0;
     private boolean connectionFailure = false;
     private Future<Long> pingTask = null;
+    private long transactionId = -1;
 
     public RSBRemoteService(final Class<M> dataClass) {
         this.dataClass = dataClass;
@@ -1141,7 +1142,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
         // Notify data update
         try {
-            internalPriorizedDataObservable.notifyObservers(data);
+            notifyPrioritizedObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
@@ -1150,6 +1151,29 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
+        }
+    }
+
+    /**
+     * Notify all observers registered on the prioritized observable and retrieve the new transaction id.
+     * The transaction id is updated here to guarantee that the prioritized observables have been notified before
+     * transaction sync futures return.
+     *
+     * @param data the data type notified.
+     *
+     * @throws CouldNotPerformException if notification fails or no transaction id could be extracted.
+     */
+    private void notifyPrioritizedObservers(final M data) throws CouldNotPerformException {
+        try {
+            internalPrioritizedDataObservable.notifyObservers(data);
+        } catch (CouldNotPerformException ex) {
+            throw ex;
+        } finally {
+            long newTransactionId = (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME);
+            if (newTransactionId < transactionId) {
+                logger.error("RemoteService {} received a data object with an older transaction id {} than {}", this, newTransactionId, transactionId);
+            }
+            transactionId = newTransactionId;
         }
     }
 
@@ -1440,7 +1464,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
         // Notify data update
         try {
-            internalPriorizedDataObservable.notifyObservers(data);
+            notifyPrioritizedObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
@@ -1457,10 +1481,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
      * It should be used by remote services which need to do some things before
      * external objects are notified.
      *
-     * @return The internal priorized data observable.
+     * @return the internal prioritized data observable.
      */
-    protected Observable<DataProvider<M>, M> getIntenalPriorizedDataObservable() {
-        return internalPriorizedDataObservable;
+    protected Observable<DataProvider<M>, M> getInternalPrioritizedDataObservable() {
+        return internalPrioritizedDataObservable;
     }
 
     /**
@@ -1611,13 +1635,20 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         }
     }
 
+    /**
+     * Get the latest transaction id. It will be updated every time after prioritized observers are notified.
+     *
+     * @return the latest transaction id.
+     *
+     * @throws NotAvailableException if no data has been received yet
+     */
     @Override
     public long getTransactionId() throws NotAvailableException {
-        try {
-            return (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME);
-        } catch (CouldNotPerformException ex) {
-            throw new NotAvailableException("TransactionId not available");
+        if (transactionId == -1) {
+            // no data yet received so no available
+            throw new NotAvailableException("transaction id");
         }
+        return transactionId;
     }
 
     public boolean isSyncRunning() {

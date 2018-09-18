@@ -35,6 +35,11 @@
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
+            <artifactId>jul.extension.rst.util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.extension.rsb.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
