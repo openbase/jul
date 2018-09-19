@@ -1203,6 +1203,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             getDataFuture().get();
             dataObservable.waitForValue();
         } catch (ExecutionException | CancellationException ex) {
+            if(shutdownInitiated) {
+                throw new InterruptedException("Interrupt request because system shutdown was initiated!");
+            }
             throw new CouldNotPerformException("Could not wait for data!", ex);
         }
     }
@@ -1230,6 +1233,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             }
             dataObservable.waitForValue(partialTimeout, TimeUnit.MILLISECONDS);
         } catch (java.util.concurrent.TimeoutException | CouldNotPerformException | ExecutionException | CancellationException ex) {
+            if(shutdownInitiated) {
+                throw new InterruptedException("Interrupt request because system shutdown was initiated!");
+            }
             throw new NotAvailableException("Data is not yet available!", ex);
         }
     }
