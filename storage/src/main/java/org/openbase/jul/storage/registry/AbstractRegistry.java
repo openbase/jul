@@ -250,11 +250,10 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 if (!entryMap.containsKey(entry.getId())) {
                     throw new InvalidStateException("Entry not registered!");
                 }
-                // save old entry
-//                ENTRY oldEntry = get(entry);
                 // perform update
                 sandbox.update(entry);
-                boolean changed = !isSandbox() && !get(entry).equals(sandbox.get(entry));
+                // check if the new message results in an update after consistency checks
+                final boolean changed = !isSandbox() && ((sandbox instanceof MockRegistrySandbox) || !get(entry).equals(sandbox.get(entry)));
                 pluginPool.beforeUpdate(entry);
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();

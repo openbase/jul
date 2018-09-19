@@ -24,14 +24,8 @@ package org.openbase.jul.storage.registry;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Controller;
-import org.openbase.jul.pattern.ObservableImpl;
-import org.openbase.jul.pattern.Observer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
