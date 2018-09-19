@@ -1723,20 +1723,28 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                         }
 
                         try {
+                            //TODO: remove if system is running like this
+//                            try {
+//                                internalFuture = internalRequestStatus();
+//                            } catch (CouldNotPerformException ex) {
+//                                logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
+//                                continue;
+//                            }
+
+                            try {
+                                ping().get(timeout, TimeUnit.MILLISECONDS);
+                            } catch (ExecutionException ex) {
+//                                internalFuture.cancel(true);
+                                continue;
+                            }
+
                             try {
                                 internalFuture = internalRequestStatus();
+                                event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                             } catch (CouldNotPerformException ex) {
                                 logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
                                 continue;
                             }
-                            try {
-                                ping().get(timeout, TimeUnit.MILLISECONDS);
-                            } catch (ExecutionException ex) {
-                                internalFuture.cancel(true);
-                                continue;
-                            }
-
-                            event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");

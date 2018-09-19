@@ -839,6 +839,18 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
      */
     @Override
     public Future<Long> ping(final Long timestamp) {
+        try {
+            validateMiddleware();
+        } catch (InvalidStateException e) {
+            logger.warn("{}: ping called with invalid middleware", this);
+            try {
+                waitForMiddleware(1, TimeUnit.SECONDS);
+            } catch (InterruptedException e1) {
+                Thread.currentThread().interrupt();
+            } catch (CouldNotPerformException e1) {
+                ExceptionPrinter.printHistory("Could not wait for middleware", e1, logger, LogLevel.WARN);
+            }
+        }
         return CompletableFuture.completedFuture(timestamp);
     }
 
