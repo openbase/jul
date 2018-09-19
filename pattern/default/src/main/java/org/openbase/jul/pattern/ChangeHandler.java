@@ -101,7 +101,7 @@ public class ChangeHandler implements ChangeListener {
                     exceptionStack = MultiException.push(listener, ex, exceptionStack);
                 }
             }
-            MultiException.checkAndThrow("Could not notify all listeners about the change!", exceptionStack);
+            MultiException.checkAndThrow(() ->"Could not notify all listeners about the change!", exceptionStack);
         }
     }
 }

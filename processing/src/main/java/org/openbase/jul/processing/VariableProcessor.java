@@ -84,7 +84,7 @@ public final class VariableProcessor {
         }
 
         try {
-            MultiException.checkAndThrow("Could not resolve all variables!", exceptionStack);
+            MultiException.checkAndThrow(() ->"Could not resolve all variables!", exceptionStack);
         } catch (MultiException ex) {
             if (throwOnError) {
                 throw ex;
@@ -114,7 +114,7 @@ public final class VariableProcessor {
                 continue;
             }
         }
-        MultiException.checkAndThrow("Could not resolve Variable[" + variable + "]!", exceptionStack);
+        MultiException.checkAndThrow(() ->"Could not resolve Variable[" + variable + "]!", exceptionStack);
         throw new AssertionError("Fatal error during variable resolving.");
     }
 }

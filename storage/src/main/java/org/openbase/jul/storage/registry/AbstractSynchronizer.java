@@ -212,7 +212,8 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                     } else {
                         counter = 0;
                     }
-                    MultiException.checkAndThrow("Could not remove " + counter + " entries!", removeExceptionStack);
+                    final int internalCounter = counter;
+                    MultiException.checkAndThrow(() ->"Could not remove " + internalCounter + " entries!", removeExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
@@ -222,7 +223,8 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                     } else {
                         counter = 0;
                     }
-                    MultiException.checkAndThrow("Could not update " + counter + " entries!", updateExceptionStack);
+                    final int internalCounter = counter;
+                    MultiException.checkAndThrow(() ->"Could not update " + internalCounter + " entries!", updateExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
@@ -232,11 +234,12 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                     } else {
                         counter = 0;
                     }
-                    MultiException.checkAndThrow("Could not register " + counter + " entries!", registerExceptionStack);
+                    final int internalCounter = counter;
+                    MultiException.checkAndThrow(() ->"Could not register " + internalCounter + " entries!", registerExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
-                MultiException.checkAndThrow("Could not sync all entries!", exceptionStack);
+                MultiException.checkAndThrow(() ->"Could not sync all entries!", exceptionStack);
             } catch (CouldNotPerformException ex) {
                 CouldNotPerformException exx = new CouldNotPerformException("Entry registry sync failed!", ex);
                 if (JPService.testMode()) {

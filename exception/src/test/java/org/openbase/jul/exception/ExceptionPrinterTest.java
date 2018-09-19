@@ -99,7 +99,7 @@ public class ExceptionPrinterTest {
         stack2 = MultiException.push(this, baseException1, stack2);
 
         try {
-            MultiException.checkAndThrow("MultiException 1", stack);
+            MultiException.checkAndThrow(() ->"MultiException 1", stack);
         } catch (MultiException ex) {
             stack2 = MultiException.push(this, ex, stack2);
             ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
@@ -111,7 +111,7 @@ public class ExceptionPrinterTest {
         stack2 = MultiException.push(this, ex4, stack2);
 
         try {
-            MultiException.checkAndThrow("MultiException 2", stack2);
+            MultiException.checkAndThrow(() ->"MultiException 2", stack2);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
             ExceptionPrinter.printHistory(new CouldNotPerformException("BaseException containing MultiException", ex), logger);
@@ -149,7 +149,7 @@ public class ExceptionPrinterTest {
         innerStack = MultiException.push(this, ex7, innerStack);
 
         try {
-            MultiException.checkAndThrow("InnerMultiException", innerStack);
+            MultiException.checkAndThrow(() ->"InnerMultiException", innerStack);
         } catch (MultiException ex) {
             outerStack = MultiException.push(this, new NotAvailableException("first"), outerStack);
             outerStack = MultiException.push(this, ex, outerStack);
@@ -157,7 +157,7 @@ public class ExceptionPrinterTest {
         }
 
         try {
-            MultiException.checkAndThrow("OuterMultiException", outerStack);
+            MultiException.checkAndThrow(() ->"OuterMultiException", outerStack);
         } catch (MultiException ex) {
 //            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
             ExceptionPrinter.printHistory(new CouldNotPerformException("Base 1", ex), logger, LogLevel.ERROR);

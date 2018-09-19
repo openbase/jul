@@ -430,7 +430,8 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                         }
                     }
                     try {
-                        MultiException.checkAndThrow("Multi task processing delayed! "+runningFutures.size()+" are still running while "+failedFutures.size()+" are failed and "+finishedFutures.size()+" are finished after "+iteration+" iterations.", exceptionStack);
+                        final int internalIteration = iteration;
+                        MultiException.checkAndThrow(() -> "Multi task processing delayed! "+runningFutures.size()+" are still running while "+failedFutures.size()+" are failed and "+finishedFutures.size()+" are finished after "+internalIteration+" iterations.", exceptionStack);
                     } catch (CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(ex, LoggerFactory.getLogger(source.getClass()));
                     }
@@ -455,7 +456,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
             });
             throw ex;
         }
-        MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+        MultiException.checkAndThrow(() ->"Could not execute all tasks!", exceptionStack);
     }
 
     public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
@@ -506,7 +507,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                         throw ex;
                     }
                     if (!oneSuccessfullyFinished) {
-                        MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+                        MultiException.checkAndThrow(() ->"Could not execute all tasks!", exceptionStack);
                     }
                     if (resultCallable == null) {
                         throw new NotAvailableException("resultCallable");
@@ -543,7 +544,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                     exceptionStack = MultiException.push(AbstractExecutorService.class, ex, exceptionStack);
                 }
             }
-            MultiException.checkAndThrow("Could not execute all tasks!", exceptionStack);
+            MultiException.checkAndThrow(() ->"Could not execute all tasks!", exceptionStack);
             return futureList;
         } catch (CouldNotPerformException | InterruptedException ex) {
             throw ex;

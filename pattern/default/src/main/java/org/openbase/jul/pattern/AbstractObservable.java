@@ -292,7 +292,8 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
                 }
             }
-            MultiException.checkAndThrow("Could not notify Data[" + observable + "] to all observer!", exceptionStack);
+
+            MultiException.checkAndThrow(() ->"Could not notify Data[" + observable + "] to all observer!", exceptionStack);
 
             wholeTime = System.currentTimeMillis() - wholeTime;
             if (wholeTime > 500) {

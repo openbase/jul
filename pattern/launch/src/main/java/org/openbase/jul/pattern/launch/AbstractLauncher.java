@@ -431,17 +431,17 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         try {
             MultiException.ExceptionStack exceptionStack = null;
             try {
-                MultiException.checkAndThrow("Errors during startup phase!", errorExceptionStack);
+                MultiException.checkAndThrow(() ->"Errors during startup phase!", errorExceptionStack);
             } catch (MultiException ex) {
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
             try {
-                MultiException.checkAndThrow("Verification process not passed!", verificationExceptionStack);
+                MultiException.checkAndThrow(() ->"Verification process not passed!", verificationExceptionStack);
             } catch (MultiException ex) {
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
 
-            MultiException.checkAndThrow(errorMessage, exceptionStack);
+            MultiException.checkAndThrow(() ->errorMessage, exceptionStack);
             logger.info(JPService.getApplicationName() + " successfully started.");
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger);

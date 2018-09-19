@@ -851,7 +851,8 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                         // handle handler interference
                         maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
                         if (iterationCounter > maxConsistencyChecks) {
-                            MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
+                            final int stackSize = MultiException.size(exceptionStack);
+                            MultiException.checkAndThrow(() -> stackSize+ " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
                             throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
@@ -949,7 +950,8 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                                         continue mainLoop;
                                     }
                                 }
-                                MultiException.checkAndThrow(MultiException.size(exceptionStack) + " error" + (MultiException.size(exceptionStack) == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
+                                final int stackSize = MultiException.size(exceptionStack);
+                                MultiException.checkAndThrow(() ->stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
                             }
                             continue;
                         }

@@ -92,7 +92,7 @@ public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServe
                 }
             }
             try {
-                MultiException.checkAndThrow("Could not register all methods!", exceptionStack);
+                MultiException.checkAndThrow(() ->"Could not register all methods!", exceptionStack);
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory(ex, logger);
             }

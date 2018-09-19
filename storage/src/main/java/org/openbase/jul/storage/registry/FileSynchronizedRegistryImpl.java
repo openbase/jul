@@ -272,7 +272,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             logger.info("====== " + size() + (size() == 1 ? " entry" : " entries") + " of " + this + " successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
         }
 
-        MultiException.checkAndThrow("Could not load all registry entries!", exceptionStack);
+        MultiException.checkAndThrow(() ->"Could not load all registry entries!", exceptionStack);
 
         // register and apply db version specific consistency handler
         if (versionControl != null) {
@@ -355,7 +355,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             }
         }
 
-        MultiException.checkAndThrow("Could not save all registry entries!", exceptionStack);
+        MultiException.checkAndThrow(() ->"Could not save all registry entries!", exceptionStack);
     }
 
     @Override
