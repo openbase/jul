@@ -221,7 +221,6 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
      *
      * @throws CouldNotPerformException in thrown in case something went wrong during message processing.
      */
-    @Deprecated
     public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder, final Object source) throws CouldNotPerformException {
         if (builder == null) {
             throw new NotAvailableException("message");
