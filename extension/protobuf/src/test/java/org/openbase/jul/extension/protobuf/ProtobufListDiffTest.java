@@ -95,7 +95,7 @@ public class ProtobufListDiffTest {
     @Test(timeout = 5000)
     public void testGetUpdatedMessages() {
         System.out.println("getUpdatedMessages");
-        UnitConfig updatedUnitConfig = UnitConfig.newBuilder().setId("2").setDescription("updated").build();
+        UnitConfig updatedUnitConfig = UnitConfig.newBuilder().setId("2").addAlias("coolUnit").build();
 
         ProtobufListDiff diff = new ProtobufListDiff(currentContext);
         modContext = new ArrayList<>(currentContext);

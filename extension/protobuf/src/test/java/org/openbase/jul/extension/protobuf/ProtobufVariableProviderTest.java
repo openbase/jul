@@ -77,11 +77,11 @@ public class ProtobufVariableProviderTest {
     @Test(timeout = 10000)
     public void testGetValue() throws Exception {
         UnitConfigType.UnitConfig config = UnitConfig.getDefaultInstance();
-        config = config.toBuilder().setDescription("TestLabel").build();
+        config = config.toBuilder().setUnitHostId("TestHost").build();
         config = config.toBuilder().setId("TestID").build();
         ProtobufVariableProvider instance = new ProtobufVariableProvider(config);
 
-        assertEquals("TestLabel", instance.getValue("DESCRIPTION"));
+        assertEquals("TestHost", instance.getValue("UNIT_HOST_ID"));
         assertEquals("TestID", instance.getValue("ID"));
     }
 

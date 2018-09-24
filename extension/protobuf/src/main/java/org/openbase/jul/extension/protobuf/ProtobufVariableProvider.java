@@ -64,6 +64,7 @@ public class ProtobufVariableProvider implements VariableProvider {
         String key;
         for (Map.Entry<Descriptors.FieldDescriptor, Object> fieldEntry : message.getAllFields().entrySet()) {
             key = StringProcessor.transformToUpperCase(fieldEntry.getKey().getName());
+            System.out.println("key: "+key);
             if (key.equals(variable) || (StringProcessor.transformToUpperCase(message.getClass().getSimpleName()) + "/" + key).equals(variable)) {
                 if (!fieldEntry.getValue().toString().isEmpty()) {
                     return fieldEntry.getValue().toString();

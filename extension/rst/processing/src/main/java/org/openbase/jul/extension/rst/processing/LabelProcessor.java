@@ -26,17 +26,17 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rst.configuration.LabelType.Label;
-import rst.configuration.LabelType.Label.Builder;
-import rst.configuration.LabelType.Label.MapFieldEntry;
-import rst.configuration.LabelType.LabelOrBuilder;
+import rst.language.LabelType.Label;
+import rst.language.LabelType.Label.Builder;
+import rst.language.LabelType.Label.MapFieldEntry;
+import rst.language.LabelType.LabelOrBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * The LabelProcessor is a helper class which makes dealing with {@link rst.configuration.LabelType.Label}
+ * The LabelProcessor is a helper class which makes dealing with {@link rst.language.LabelType.Label}
  * easier.
  *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
