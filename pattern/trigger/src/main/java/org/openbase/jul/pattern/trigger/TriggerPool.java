@@ -38,14 +38,14 @@ import rst.domotic.state.ActivationStateType.ActivationState;
  */
 public class TriggerPool extends AbstractTrigger {
 
-    public static enum TriggerOperation {
+    public static enum TriggerAggregation {
         AND, OR
     }
 
     private boolean active;
 
-    private final List<AbstractTrigger> triggerListAND;
-    private final List<AbstractTrigger> triggerListOR;
+    private final List<Trigger> triggerListAND;
+    private final List<Trigger> triggerListOR;
     private final Observer<Trigger, ActivationState> triggerAndObserver;
     private final Observer<Trigger, ActivationState> triggerOrObserver;
 
@@ -73,14 +73,14 @@ public class TriggerPool extends AbstractTrigger {
         }
     }
 
-    public void addTrigger(AbstractTrigger trigger, TriggerOperation triggerOperation) throws CouldNotPerformException {
-        if (triggerOperation == TriggerOperation.AND) {
+    public void addTrigger(Trigger trigger, TriggerAggregation triggerAggregation) throws CouldNotPerformException {
+        if (triggerAggregation == TriggerAggregation.AND) {
             triggerListAND.add(trigger);
         } else {
             triggerListOR.add(trigger);
         }
         if (active) {
-            if (triggerOperation == TriggerOperation.AND) {
+            if (triggerAggregation == TriggerAggregation.AND) {
                 trigger.addObserver(triggerAndObserver);
             } else {
                 trigger.addObserver(triggerOrObserver);
@@ -122,8 +122,8 @@ public class TriggerPool extends AbstractTrigger {
     }
 
     private boolean verifyAndCondition() throws CouldNotPerformException {
-        for (AbstractTrigger abstractTrigger : triggerListAND) {
-            if (!abstractTrigger.getActivationState().getValue().equals(ActivationState.State.ACTIVE) && !abstractTrigger.getActivationState().getValue().equals(ActivationState.State.UNKNOWN)) {
+        for (Trigger trigger : triggerListAND) {
+            if (!trigger.getActivationState().getValue().equals(ActivationState.State.ACTIVE) && !trigger.getActivationState().getValue().equals(ActivationState.State.UNKNOWN)) {
                 return false;
             }
         }
@@ -131,8 +131,8 @@ public class TriggerPool extends AbstractTrigger {
     }
 
     private boolean verifyOrCondition() throws CouldNotPerformException {
-        for (AbstractTrigger abstractTrigger : triggerListOR) {
-            if (abstractTrigger.getActivationState().getValue().equals(ActivationState.State.ACTIVE)) {
+        for (Trigger trigger : triggerListOR) {
+            if (trigger.getActivationState().getValue().equals(ActivationState.State.ACTIVE)) {
                 return true;
             }
         }
@@ -141,13 +141,13 @@ public class TriggerPool extends AbstractTrigger {
 
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
-        for (AbstractTrigger abstractTrigger : triggerListAND) {
-            abstractTrigger.addObserver(triggerAndObserver);
-            abstractTrigger.activate();
+        for (Trigger trigger : triggerListAND) {
+            trigger.addObserver(triggerAndObserver);
+            trigger.activate();
         }
-        for (AbstractTrigger abstractTrigger : triggerListOR) {
-            abstractTrigger.addObserver(triggerOrObserver);
-            abstractTrigger.activate();
+        for (Trigger trigger : triggerListOR) {
+            trigger.addObserver(triggerOrObserver);
+            trigger.activate();
         }
         verifyCondition();
         active = true;
@@ -155,13 +155,13 @@ public class TriggerPool extends AbstractTrigger {
 
     @Override
     public void deactivate() throws CouldNotPerformException, InterruptedException {
-        for (AbstractTrigger abstractTrigger : triggerListAND) {
-            abstractTrigger.removeObserver(triggerAndObserver);
-            abstractTrigger.deactivate();
+        for (Trigger trigger : triggerListAND) {
+            trigger.removeObserver(triggerAndObserver);
+            trigger.deactivate();
         }
-        for (AbstractTrigger abstractTrigger : triggerListOR) {
-            abstractTrigger.removeObserver(triggerOrObserver);
-            abstractTrigger.deactivate();
+        for (Trigger trigger : triggerListOR) {
+            trigger.removeObserver(triggerOrObserver);
+            trigger.deactivate();
         }
         notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.UNKNOWN).build()));
         active = false;

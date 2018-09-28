@@ -390,7 +390,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             // print a summary containing the exceptions
             printSummary(application, logger, JPService.getApplicationName() + " caught shutdown signal during startup phase!");
 
-            //TODO: remove after fixing https://github.com/openbase/bco.registry/issues/84
+//            TODO: remove after fixing https://github.com/openbase/bco.registry/issues/84
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException exx) {
@@ -442,7 +442,12 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             }
 
             MultiException.checkAndThrow(() ->errorMessage, exceptionStack);
-            logger.info(JPService.getApplicationName() + " successfully started.");
+
+            if (Thread.currentThread().isInterrupted()) {
+                logger.info(JPService.getApplicationName() + " was interrupted.");
+            } else {
+                logger.info(JPService.getApplicationName() + " successfully started.");
+            }
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }

@@ -39,6 +39,7 @@ public abstract class AbstractJPLocalDatabaseDirectory extends AbstractJPDatabas
 
     public AbstractJPLocalDatabaseDirectory(final String[] commandIdentifier) {
         super(commandIdentifier);
+        setAutoCreateMode(AutoMode.On);
     }
 
     @Override
