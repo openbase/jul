@@ -172,7 +172,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             } catch (InterruptedException exx) {
                 throw exx;
             } catch (Exception exx) {
-                ExceptionPrinter.printHistory("Could not deactivate listener which was triggert because activation has been failed.", exx, logger, LogLevel.WARN);
+                ExceptionPrinter.printHistory("Could not deactivate listener which was triggered because activation has failed.", exx, logger, LogLevel.WARN);
             }
             /**
              * Catching specific exceptions here is not possible because not all thrown exceptions are predictable *

@@ -103,6 +103,11 @@ public class RSBDefaultConfig {
         init = true;
     }
 
+    public static synchronized void reload() {
+        init = false;
+        load();
+    }
+
     public static ParticipantConfig getDefaultParticipantConfig() {
         if (!init) {
             load();

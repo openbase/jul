@@ -34,7 +34,10 @@ public class RSBSharedConnectionConfig {
 
     private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RSBSharedConnectionConfig.class);
 
+    private static final String KEY_IN_PUSH_FACTORY = "shareIfPossible";
+
     private static boolean init = false;
+    private static boolean initFactory = false;
     private static ParticipantConfig participantConfig;
 
     public synchronized static void load() {
@@ -43,21 +46,29 @@ public class RSBSharedConnectionConfig {
         }
         participantConfig = RSBDefaultConfig.getDefaultParticipantConfig();
 
-        final String inPushFactoryKey = "shareIfPossible";
-        // register a (spread-specifc) factory to create the appropriate in push    
-        // connectors. In this case the factory tries to share all connections
-        // except the converters differ. You can implement other strategies to
-        // better match your needs.
-        InPushConnectorFactoryRegistry.getInstance().registerFactory(inPushFactoryKey, new SharedInPushConnectorFactory());
+        initInPusConnectorFactory();
 
         // instruct the spread transport to use your newly registered factory
         // for creating in push connector instances
         participantConfig.getOrCreateTransport("spread")
                 .getOptions()
-                .setProperty("transport.spread.java.infactory", inPushFactoryKey);
+                .setProperty("transport.spread.java.infactory", KEY_IN_PUSH_FACTORY);
         
         init = true;
+    }
 
+    private static void initInPusConnectorFactory() {
+        if(initFactory) {
+            return;
+        }
+
+        // register a (spread-specifc) factory to create the appropriate in push
+        // connectors. In this case the factory tries to share all connections
+        // except the converters differ. You can implement other strategies to
+        // better match your needs.
+        InPushConnectorFactoryRegistry.getInstance().registerFactory(KEY_IN_PUSH_FACTORY, new SharedInPushConnectorFactory());
+
+        initFactory = true;
     }
 
     public static ParticipantConfig getParticipantConfig() {
@@ -65,5 +76,10 @@ public class RSBSharedConnectionConfig {
             load();
         }
         return participantConfig.copy();
+    }
+
+    public static synchronized void reload() {
+        init = false;
+        load();
     }
 }
