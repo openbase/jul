@@ -88,7 +88,7 @@ public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServe
                 try {
                     localServer.addMethod(entry.getKey(), entry.getValue());
                 } catch (RSBException ex) {
-                    exceptionStack = MultiException.push(this, new RSBResolvedException(ex), exceptionStack);
+                    exceptionStack = MultiException.push(this, new RSBResolvedException("Method registration failed!", ex), exceptionStack);
                 }
             }
             try {

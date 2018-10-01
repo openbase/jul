@@ -925,7 +925,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                 }
                             } catch (ExecutionException ex) {
                                 if (ex.getCause() instanceof RSBException) {
-                                    throw new RSBResolvedException((RSBException) ex.getCause());
+                                    throw new RSBResolvedException("Remote call failed!", (RSBException) ex.getCause());
                                 }
                                 throw ex;
                             } catch (InterruptedException ex) {

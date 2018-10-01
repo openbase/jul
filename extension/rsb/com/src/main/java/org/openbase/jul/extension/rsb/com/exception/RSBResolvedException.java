@@ -10,12 +10,12 @@ package org.openbase.jul.extension.rsb.com.exception;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -41,6 +41,16 @@ public class RSBResolvedException extends CouldNotPerformException {
 
     final RSBException rsbException;
 
+    /**
+     * Constructor creates a new RSBResolvedException which is than representing the given {@code rsbException} while the message is reconstructed as exception cause chain.
+     *
+     * @param message      an error description.
+     * @param rsbException the RSBException to resolve.
+     */
+    public RSBResolvedException(final String message, final RSBException rsbException) {
+        super(message, resolveRSBException(rsbException));
+        this.rsbException = rsbException;
+    }
 
     /**
      * Constructor creates a new RSBResolvedException which is than representing the given {@code rsbException} while the message is reconstructed as exception cause chain.
@@ -48,8 +58,7 @@ public class RSBResolvedException extends CouldNotPerformException {
      * @param rsbException the RSBException to resolve.
      */
     public RSBResolvedException(final RSBException rsbException) {
-        super(resolveRSBException(rsbException));
-        this.rsbException = rsbException;
+        this("", rsbException);
     }
 
     /**
@@ -73,8 +82,8 @@ public class RSBResolvedException extends CouldNotPerformException {
                     final String[] causes = stacktrace[i].split(":");
                     final String exceptionClassName = causes[1].substring(1);
 
-//                    System.out.println("parse: " + stacktrace[i]);
-//                    System.out.println("match: " + causes.length);
+                    // System.out.println("parse: " + stacktrace[i]);
+                    // System.out.println("match: " + causes.length);
 
                     final String message = causes.length <= 2 ? "" : stacktrace[i].substring(stacktrace[i].lastIndexOf(exceptionClassName) + exceptionClassName.length() + 2).trim();
 
@@ -103,6 +112,7 @@ public class RSBResolvedException extends CouldNotPerformException {
                                 throw new CouldNotPerformException("No compatible constructor found!", exx);
                             }
                         }
+                        //System.out.println("create "+ exception.getClass().getSimpleName() + ":" + exception.getMessage());
                     } catch (ClassNotFoundException | ClassCastException | CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Exception[" + exceptionClassName + "] could not be recovered because no compatible Constructor(String, Throwable) was available!", ex), LOGGER, LogLevel.WARN);
 

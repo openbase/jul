@@ -96,7 +96,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
             } catch (IllegalStateException | NullPointerException ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Fatal error occured!", ex), logger);
             } catch (RSBException ex) {
-                throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", new RSBResolvedException(ex));
+                throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", new RSBResolvedException("Publication failed!", ex));
             } catch (CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Could not publish Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]!", ex);
             }
@@ -122,7 +122,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
             } catch (CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Could not publish Data[" + data + "]!", ex);
             } catch (RSBException ex) {
-                throw new CouldNotPerformException("Could not publish Data[" + data + "]!", new RSBResolvedException(ex));
+                throw new CouldNotPerformException("Could not publish Data[" + data + "]!", new RSBResolvedException("Publication failed!", ex));
             }
         }
     }

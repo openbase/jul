@@ -76,7 +76,7 @@ public class RSBFutureImpl<V> implements RSBFuture<V> {
             return internalFuture.get(timeout, unit);
         } catch (final ExecutionException ex) {
             if (ex.getCause() instanceof RSBException) {
-                throw new ExecutionException(new RSBResolvedException((RSBException) ex.getCause()));
+                throw new ExecutionException(new RSBResolvedException("Remote task failed!", (RSBException) ex.getCause()));
             }
             throw ex;
         }
