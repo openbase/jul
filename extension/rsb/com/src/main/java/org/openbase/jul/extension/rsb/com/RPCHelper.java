@@ -10,12 +10,12 @@ package org.openbase.jul.extension.rsb.com;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -181,22 +181,27 @@ public class RPCHelper {
         }
     }
 
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static Future<Object> callRemoteMethod(final RSBRemote remote) throws CouldNotPerformException {
         return internalCallRemoteMethod(null, remote, Object.class);
     }
 
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static Future<Object> callRemoteMethod(final Object argument, final RSBRemote remote) throws CouldNotPerformException {
         return internalCallRemoteMethod(argument, remote, Object.class);
     }
 
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static <RETURN> Future<RETURN> callRemoteMethod(final RSBRemote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         return internalCallRemoteMethod(null, remote, returnClass);
     }
 
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static <RETURN> Future<RETURN> callRemoteMethod(final Object argument, final RSBRemote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         return internalCallRemoteMethod(argument, remote, returnClass);
     }
 
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RSBRemote remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
 
         String methodName = "?";
@@ -224,22 +229,24 @@ public class RPCHelper {
         }
     }
 
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static Future<Object> callRemoteServerMethod(final RSBRemoteServer remote) throws CouldNotPerformException {
         return internalCallRemoteMethod(null, remote, Object.class);
     }
 
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static Future<Object> callRemoteServerMethod(final Object argument, final RSBRemoteServer remote) throws CouldNotPerformException {
         return internalCallRemoteMethod(argument, remote, Object.class);
     }
-
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static <RETURN> Future<RETURN> callRemoteServerMethod(final RSBRemoteServer remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         return internalCallRemoteMethod(null, remote, returnClass);
     }
-
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     public static <RETURN> Future<RETURN> callRemoteServerMethod(final Object argument, final RSBRemoteServer remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
         return internalCallRemoteMethod(argument, remote, returnClass);
     }
-
+    // todo release: remove throws CouldNotPerformException because return type is a future which can be canceled.
     private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RSBRemoteServer remote, final Class<? extends RETURN> returnClass) throws CouldNotPerformException {
 
         String methodName = "?";
