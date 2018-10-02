@@ -30,8 +30,8 @@ import org.openbase.jul.exception.NotAvailableException;
  */
 public interface VariableProvider {
 
-    public final static String VARIABLE_INITIATOR = "${";
-    public final static String VARIABLE_TERMINATOR = "}";
+    String VARIABLE_INITIATOR = "${";
+    String VARIABLE_TERMINATOR = "}";
 
     /**
      * Method return the name of this provider.
@@ -39,7 +39,7 @@ public interface VariableProvider {
      *
      * @return the name as string.
      */
-    public String getName();
+    String getName();
 
     /**
      * 
@@ -47,7 +47,7 @@ public interface VariableProvider {
      * @return the value of the variable.
      * @throws NotAvailableException is thrown in case the variable could not be resolved.
      */
-    public String getValue(final String variable) throws NotAvailableException;
+    String getValue(final String variable) throws NotAvailableException;
 
     /**
      * Method resolves all variables whose name contains the given identifier.
@@ -57,6 +57,6 @@ public interface VariableProvider {
      * @throws NotAvailableException is thrown in case no variable name matches the given identifier.
      */
     // release todo: removed Notavailable exception for "getValues" method. and just return empty list if variable key is not available.
-    public Map<String, String> getValues(final String variableContains) throws NotAvailableException;
+    Map<String, String> getValues(final String variableContains) throws NotAvailableException;
     
 }

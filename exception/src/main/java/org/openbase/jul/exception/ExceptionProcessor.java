@@ -63,6 +63,7 @@ public class ExceptionProcessor {
      * @throws NotAvailableException if the given {@code throwable} is null.
      */
     public static Throwable getInitialCause(final Throwable throwable) throws NotAvailableException {
+        // todo release remove NotAvailableException and replace with non thrown FatalImplEx or handle.
         if (throwable == null) {
             throw new NotAvailableException("cause");
         }

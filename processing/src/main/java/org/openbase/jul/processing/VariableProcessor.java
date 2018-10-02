@@ -66,7 +66,7 @@ public final class VariableProcessor {
                     if (variableValue == null) {
                         continue;
                     }
-                    logger.debug("Variable[" + variableIdentifier + "] = Value[" + variableValue + "] resolved by Provider[" + provider.getName() + "].");
+                    logger.debug("Variable[{}] = Value[{}] resolved by Provider[{}].", variableIdentifier, variableValue, provider.getName());
                     break;
                 } catch (NotAvailableException ex) {
                     continue;
