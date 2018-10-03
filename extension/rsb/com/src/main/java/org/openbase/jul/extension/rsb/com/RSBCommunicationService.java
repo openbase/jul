@@ -43,6 +43,7 @@ import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.iface.Requestable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -388,16 +389,17 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
             // clear init flag
             initialized = false;
 
+            if (serverWatchDog != null) {
+                serverWatchDog.shutdown();
+                serverWatchDog = null;
+                server = new NotInitializedRSBLocalServer();
+            }
+
             // clear existing instances.        
             if (informerWatchDog != null) {
                 informerWatchDog.shutdown();
                 informerWatchDog = null;
                 informer = new NotInitializedRSBInformer<>();
-            }
-            if (serverWatchDog != null) {
-                serverWatchDog.shutdown();
-                serverWatchDog = null;
-                server = new NotInitializedRSBLocalServer();
             }
         }
     }
@@ -842,13 +844,14 @@ public abstract class RSBCommunicationService<M extends GeneratedMessage, MB ext
         try {
             validateMiddleware();
         } catch (InvalidStateException e) {
-            logger.warn("{}: ping called with invalid middleware", this);
             try {
                 waitForMiddleware(1, TimeUnit.SECONDS);
-            } catch (InterruptedException e1) {
+            } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-            } catch (CouldNotPerformException e1) {
-                ExceptionPrinter.printHistory("Could not wait for middleware", e1, logger, LogLevel.WARN);
+                FutureProcessor.canceledFuture(ex);
+            } catch (CouldNotPerformException ex) {
+                // controller not ready to respond.
+                FutureProcessor.canceledFuture(ex);
             }
         }
         return CompletableFuture.completedFuture(timestamp);
