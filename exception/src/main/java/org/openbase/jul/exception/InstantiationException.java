@@ -27,6 +27,16 @@ package org.openbase.jul.exception;
  */
 public class InstantiationException extends CouldNotPerformException {
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param message {@inheritDoc}
+     * @param cause   {@inheritDoc}
+     */
+    public InstantiationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public InstantiationException(final Class clazz, final Throwable cause) {
         super("Could not instantiate " + clazz.getSimpleName() + "!", cause);
     }
