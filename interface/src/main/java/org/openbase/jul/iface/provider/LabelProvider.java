@@ -30,7 +30,15 @@ import org.openbase.jul.exception.NotAvailableException;
  */
 public interface LabelProvider {
 
-    public final static String TYPE_FIELD_LABEL = "label";
+    String TYPE_FIELD_LABEL = "label";
 
-    public String getLabel() throws NotAvailableException;
+    String getLabel() throws NotAvailableException;
+
+    default String getLabel(final String alternative) {
+        try {
+            return getLabel();
+        } catch (NotAvailableException e) {
+            return alternative;
+        }
+    }
 }
