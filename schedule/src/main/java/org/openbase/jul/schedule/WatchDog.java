@@ -307,7 +307,7 @@ public class WatchDog implements Activatable, Shutdownable {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Could not deactivate Service[" + serviceName + "]!", ex), logger);
                     }
                 } catch (InterruptedException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not terminate Service[" + serviceName + "] because termination was externaly interrupted.", ex), logger, LogLevel.WARN);
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not terminate Service[" + serviceName + "] because termination was externally interrupted.", ex), logger, LogLevel.WARN);
                     setServiceState(ServiceState.INTERRUPTED);
                 }
             }
