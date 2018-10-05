@@ -36,7 +36,7 @@ import java.util.List;
  *
  * * @author DivineThreepwood
  */
-public class BuilderProcessor {
+public class ProtoBufBuilderProcessor {
 
     public static List<Message.Builder> extractRepeatedFieldBuilderList(final int repeatedFieldNumber, final Message.Builder builder) throws CouldNotPerformException {
         return extractRepeatedFieldBuilderList(builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber), builder);

@@ -37,6 +37,7 @@ import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.provider.LabelProvider;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -46,6 +47,8 @@ import java.util.TreeMap;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ProtoBufFieldProcessor {
+
+    //TODO release: Create ProtoBufFieldProcessor and move some methods to there and to ProtoBufBuilderProcessor
 
     //TODO: write java doc for all methods
     public static Descriptors.FieldDescriptor getFieldDescriptor(final MessageOrBuilder builder, final int fieldNumber) {
@@ -215,66 +218,6 @@ public class ProtoBufFieldProcessor {
         SOME_REQUIRED_FIELDS_SET;
     }
 
-    //    public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
-//        return checkBuilderInitialization(builder) == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-//    }
-//
-//    /**
-//     * Recursively check the initialization of a builder.
-//     *
-//     * @param builder the builder which is checked
-//     * @return the initialization status of the builder
-//     */
-//    public static BuilderInitializationStatus checkBuilderInitialization(final Message.Builder builder) {
-//        if (builder.isInitialized()) {
-//            // all required fields are set, thus no problem
-//            return BuilderInitializationStatus.ALL_REQUIRED_FIELDS_SET;
-//        }
-//
-//        BuilderInitializationStatus status = null, tmp;
-//        for (Descriptors.FieldDescriptor field : builder.getDescriptorForType().getFields()) {
-//            // check if the field is set or a repeated field that does not contain further messages, if not continue
-//            if (!field.isRepeated() && !builder.hasField(field)) {
-//                continue;
-//            }
-//            if (field.isRepeated() && field.getType() != Descriptors.FieldDescriptor.Type.MESSAGE) {
-//                continue;
-//            }
-//
-//            // recursively check for all sub-messages
-//            if (field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
-//                if (field.isRepeated()) {
-//                    for (int i = 0; i < builder.getRepeatedFieldCount(field); ++i) {
-//                        tmp = checkBuilderInitialization(((Message) builder.getRepeatedField(field, i)).toBuilder());
-//                        if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
-//                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-//                        } else {
-//                            if (status == null) {
-//                                status = tmp;
-//                            } else if (tmp != status) {
-//                                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    tmp = checkBuilderInitialization(builder.getFieldBuilder(field));
-//                    if (tmp == BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET) {
-//                        return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-//                    } else {
-//                        if (status == null) {
-//                            status = tmp;
-//                        } else if (tmp != status) {
-//                            return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-//                        }
-//                    }
-//                }
-//            } else if (field.isRequired()) {
-//                // field is no message but still required
-//                return BuilderInitializationStatus.SOME_REQUIRED_FIELDS_SET;
-//            }
-//        }
-//        return BuilderInitializationStatus.NO_REQUIRED_FIELDS_SET;
-//    }
     public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
         if (builder.isInitialized()) {
             // all required fields are set, thus no problem
@@ -416,5 +359,30 @@ public class ProtoBufFieldProcessor {
         } catch (Exception ex) {
             throw new NotAvailableException("Entry of Key", key, ex);
         }
+    }
+
+    /**
+     * Extracts the repeated field values out of the given message or builder instance.
+     * @param repeatedFieldName the name of the repeated field.
+     * @param repeatedFieldProvider the message holding the repeated field.
+     * @return a list of values of the repeated field.
+     */
+    public static ArrayList getRepeatedFieldList(final String repeatedFieldName, MessageOrBuilder repeatedFieldProvider) {
+        return getRepeatedFieldList(ProtoBufFieldProcessor.getFieldDescriptor(repeatedFieldProvider, repeatedFieldName), repeatedFieldProvider);
+    }
+
+    /**
+     * Extracts the repeated field values out of the given message or builder instance.
+     * @param repeatedFieldDescriptor the descriptor of the repeated field.
+     * @param repeatedFieldProvider the message holding the repeated field.
+     * @return a list of values of the repeated field.
+     */
+    public static ArrayList getRepeatedFieldList(final FieldDescriptor repeatedFieldDescriptor, MessageOrBuilder repeatedFieldProvider) {
+        final int repeatedFieldCount = repeatedFieldProvider.getRepeatedFieldCount(repeatedFieldDescriptor);
+        final ArrayList list = new ArrayList(repeatedFieldCount);
+        for (int i = 0; i < repeatedFieldCount; i++) {
+            list.set(i, repeatedFieldProvider.getRepeatedField(repeatedFieldDescriptor, i));
+        }
+        return list;
     }
 }
