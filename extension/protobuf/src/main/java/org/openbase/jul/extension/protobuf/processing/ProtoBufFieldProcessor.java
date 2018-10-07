@@ -381,7 +381,8 @@ public class ProtoBufFieldProcessor {
         final int repeatedFieldCount = repeatedFieldProvider.getRepeatedFieldCount(repeatedFieldDescriptor);
         final ArrayList list = new ArrayList(repeatedFieldCount);
         for (int i = 0; i < repeatedFieldCount; i++) {
-            list.set(i, repeatedFieldProvider.getRepeatedField(repeatedFieldDescriptor, i));
+            final Object repeatedField = repeatedFieldProvider.getRepeatedField(repeatedFieldDescriptor, i);
+            list.add(repeatedField);
         }
         return list;
     }
