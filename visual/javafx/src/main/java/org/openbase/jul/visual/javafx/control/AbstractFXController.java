@@ -43,6 +43,7 @@ public abstract class AbstractFXController implements Initializable, DynamicPane
     public void initialize(final URL url, final ResourceBundle rb) {
         try {
             initContent();
+            updateDynamicContent();
         } catch(Exception ex) {
             AbstractFXApplication.exit(10, new InitializationException(this, ex));
         }
