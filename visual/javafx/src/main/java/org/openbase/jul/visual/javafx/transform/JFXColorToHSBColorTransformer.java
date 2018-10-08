@@ -38,7 +38,7 @@ public class JFXColorToHSBColorTransformer {
         }
     }
 
-    public static HSBColor transform(final Color color) throws CouldNotTransformException {
+    public static HSBColor transform(final Color color) {
         return HSBColor.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation() * 100).setBrightness(color.getBrightness() * 100).build();
     }
 }
