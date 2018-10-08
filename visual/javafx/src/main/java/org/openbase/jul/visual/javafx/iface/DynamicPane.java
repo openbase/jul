@@ -40,6 +40,11 @@ package org.openbase.jul.visual.javafx.iface;
  * #L%
  */
 
+import javafx.application.Platform;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.LoggerFactory;
+
 /**
  * Interface can be used for non static panes to provide a unique interface for updating the content.
  * 
@@ -48,7 +53,33 @@ package org.openbase.jul.visual.javafx.iface;
 public interface DynamicPane extends StaticPane {
 
     /**
-     * Update dynamic pane content.
+     * Updates dynamic pane content.
+     *
+     * Note: Can be called from any thread.
      */
-    void updateDynamicContent();
+    default void update() {
+        if (Platform.isFxApplicationThread()) {
+            try {
+                updateDynamicContent();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update all dynamic components!", ex), LoggerFactory.getLogger(getClass()));
+            }
+            return;
+        }
+        Platform.runLater(() -> {
+            try {
+                updateDynamicContent();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not update all dynamic components!", ex), LoggerFactory.getLogger(getClass()));
+            }
+        });
+    }
+
+
+    /**
+     * Update dynamic pane content.
+     *
+     * Note: Should only be called via the gui thread!
+     */
+    void updateDynamicContent() throws CouldNotPerformException;
 }

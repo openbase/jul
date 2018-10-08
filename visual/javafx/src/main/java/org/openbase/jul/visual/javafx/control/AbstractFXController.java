@@ -35,6 +35,7 @@ public abstract class AbstractFXController implements Initializable, DynamicPane
 
     /**
      * Initializes the controller class.
+     * Additionally the dynamic content is loaded as well.
      *
      * @param url
      * @param rb
