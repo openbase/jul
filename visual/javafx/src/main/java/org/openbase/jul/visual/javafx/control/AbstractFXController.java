@@ -22,6 +22,7 @@ package org.openbase.jul.visual.javafx.control;
  * #L%
  */
 
+import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
@@ -42,6 +43,11 @@ public abstract class AbstractFXController implements Initializable, DynamicPane
      */
     @Override
     public void initialize(final URL url, final ResourceBundle rb) {
+        initialize();
+    }
+
+    @FXML
+    public void initialize() {
         try {
             initContent();
             updateDynamicContent();
