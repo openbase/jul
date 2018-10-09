@@ -46,9 +46,9 @@ public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Co
     @Override
     public ENTRY update(final CONFIG_M config) throws CouldNotPerformException, InterruptedException {
         ENTRY entry = super.update(config);
-        if (activationCondition(config)) {
+        if (activationCondition(config) && !entry.isActive()) {
             entry.activate();
-        } else {
+        } else if (!activationCondition(config) && entry.isActive()) {
             entry.deactivate();
         }
         return entry;
@@ -83,7 +83,9 @@ public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Co
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
         for (ENTRY entry : localRegistry.getEntries()) {
-            entry.activate();
+            if (activationCondition(entry.getConfig())) {
+                entry.activate();
+            }
         }
         super.activate();
     }

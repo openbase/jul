@@ -27,6 +27,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Configurable;
 import org.openbase.jul.iface.Enableable;
+import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Factory;
 
 /**
@@ -67,15 +68,6 @@ public abstract class EnableableEntryRegistrySynchronizer<KEY, ENTRY extends Con
         ENTRY entry = super.remove(config);
         entry.disable();
         return entry;
-    }
-
-    @Override
-    public void deactivate() throws CouldNotPerformException, InterruptedException {
-        super.deactivate();
-
-        for (ENTRY entry : localRegistry.getEntries()) {
-            entry.disable();
-        }
     }
 
     public abstract boolean enablingCondition(final CONFIG_M config);
