@@ -26,7 +26,7 @@ import org.openbase.jul.exception.NotAvailableException;
 
 /**
  * Simple holder interface which holds an value instance and provides getter, setter and checks to handle the internal value field.
- * Holder can be used to pass an value instance from inside of a lamda expression to the outer method scope.
+ * Holder can be used to filter an value instance from inside of a lamda expression to the outer method scope.
  *
  * @param <V> the type of the internal value.
  */

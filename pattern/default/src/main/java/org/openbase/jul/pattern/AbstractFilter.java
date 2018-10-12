@@ -40,19 +40,11 @@ public abstract class AbstractFilter<T> implements ListFilter<T> {
      * @return a filtered list
      * @throws CouldNotPerformException if an error occurs while filtering
      *
-     * @deprecated ATTENTION: is not really deprecated just for compatibility reasons, will be not deprecated in release 2.0
      */
     @Override
     public List<T> filter(final List<T> list) throws CouldNotPerformException {
         beforeFilter();
-
-        for (int i = 0; i < list.size(); i++) {
-            if (!filter(list.get(i))) {
-                list.remove(i);
-                i--;
-            }
-        }
-        return list;
+        return ListFilter.super.filter(list);
     }
 
     /**
@@ -67,7 +59,7 @@ public abstract class AbstractFilter<T> implements ListFilter<T> {
      * A filter can depend on some other processes. To be notified
      * when the filter will change an observer can be registered.
      * 
-     * @param observer An observer which is notified when the filter changes. 
+     * @param observer An observer which is notified when the filter changes.
      */
     public abstract void addObserver(Observer observer);
     

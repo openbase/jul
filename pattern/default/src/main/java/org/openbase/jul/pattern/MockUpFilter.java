@@ -23,7 +23,7 @@ package org.openbase.jul.pattern;
  */
 
 /**
- * Default filter which does not filter at all.
+ * Default filter which does not pass at all.
  *
  * @author <a href="mailto:thuxohl@techfak.uni-bielefeld.de">Tamino Huxohl</a>
  * @param <T> The type of value which is filtered.
@@ -39,15 +39,15 @@ public class MockUpFilter<T> extends AbstractFilter<T>{
     }
 
     /**
-     * Accept all values.
+     * Matches no values.
      * 
-     * @param type The message which is verified.
+     * @param type The message which is checked.
      * @return True for all messages.
      */
     @Override
-    public boolean filter(T type) {
+    public boolean match(T type) {
         // every value is fine
-        return true;
+        return false;
     }
 
     /**

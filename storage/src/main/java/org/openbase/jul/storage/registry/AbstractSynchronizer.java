@@ -33,7 +33,6 @@ import org.openbase.jul.extension.protobuf.ListDiffImpl;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Shutdownable;
-import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
@@ -169,7 +168,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 MultiException.ExceptionStack updateExceptionStack = null;
                 for (ENTRY entry : listDiff.getUpdatedValueMap().values()) {
                     try {
-                        if (verifyEntry(entry)) {
+                        if (isSupported(entry)) {
                             updateInternal(entry);
                         } else {
                             removeInternal(entry);
@@ -183,7 +182,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 MultiException.ExceptionStack registerExceptionStack = null;
                 for (ENTRY entry : listDiff.getNewValueMap().values()) {
                     try {
-                        if (verifyEntry(entry)) {
+                        if (isSupported(entry)) {
                             registerInternal(entry);
                         } else {
                             skippedChanges++;
@@ -253,7 +252,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
             }
 
             long time = stopwatch.stop();
-            if (time > 500) {
+            if (time > 1000) {
                 logger.warn("Internal sync of synchronizer took: " + time + "ms");
             }
         }
@@ -283,15 +282,16 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     public abstract List<ENTRY> getEntries() throws CouldNotPerformException;
 
     /**
-     * Method should return true if the given entry is valid, otherwise
+     * Method should return true if the given entry is supported, otherwise
      * false. This default implementation accepts all entries. To
      * implement a custom verification just overwrite this method.
      *
      * @param entry the entry which is tested
-     * @return if the entry should be synchronized
-     * @throws org.openbase.jul.exception.VerificationFailedException if verifying the entry fails
+     * @return true if the entry should be synchronized
      */
-    public abstract boolean verifyEntry(final ENTRY entry) throws VerificationFailedException;
+    public boolean isSupported(final ENTRY entry) {
+        return true;
+    }
 
     protected void afterInternalSync() {
     }

@@ -24,12 +24,12 @@ package org.openbase.jul.storage.registry;
 
 import com.google.protobuf.GeneratedMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.extension.protobuf.ProtobufListDiff;
 import org.openbase.jul.iface.Configurable;
 import org.openbase.jul.pattern.Factory;
+import org.openbase.jul.pattern.Filter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
@@ -46,12 +46,15 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
     protected final SynchronizableRegistry<KEY, ENTRY> localRegistry;
     private final Factory<ENTRY, CONFIG_M> factory;
     protected final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry;
+    private final List<Filter<CONFIG_M>> filterList;
 
-    public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> registry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final RegistryRemote registryRemote, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
+
+    public RegistrySynchronizer(final SynchronizableRegistry<KEY, ENTRY> localRegistry, final RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final RegistryRemote registryRemote, final Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         super(registryRemote);
-        this.localRegistry = registry;
+        this.localRegistry = localRegistry;
         this.remoteRegistry = remoteRegistry;
         this.factory = factory;
+        this.filterList = new ArrayList<>();
     }
 
     @Override
@@ -107,26 +110,26 @@ public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>
         return remoteRegistry.getEntries();
     }
 
-    /**
-     * Method should return true if the given configurations is valid, otherwise
-     * false. This default implementation accepts all configurations. To
-     * implement a custom verification just overwrite this method.
-     *
-     * @param config
-     * @return
-     * @throws org.openbase.jul.exception.VerificationFailedException
-     */
-    public boolean verifyConfig(final CONFIG_M config) throws VerificationFailedException {
-        return true;
-    }
-
     @Override
-    public boolean verifyEntry(IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB> identifiableMessage) throws VerificationFailedException {
-        return verifyConfig(identifiableMessage.getMessage());
+    public boolean isSupported(IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB> identifiableMessage) {
+        for (Filter<CONFIG_M> filter : filterList) {
+            if (filter.match(identifiableMessage.getMessage())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
     protected void afterInternalSync() {
         localRegistry.notifySynchronization();
+    }
+
+    public boolean addFilter(final Filter<CONFIG_M> filter) {
+        return filterList.add(filter);
+    }
+
+    public boolean removeFilter(final Filter<CONFIG_M> filter) {
+        return filterList.remove(filter);
     }
 }

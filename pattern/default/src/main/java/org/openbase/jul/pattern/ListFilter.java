@@ -37,7 +37,7 @@ public interface ListFilter<T> extends Filter<T> {
      */
     default List<T> filter(List<T> list) throws CouldNotPerformException {
         for (int i = 0; i < list.size(); i++) {
-            if (!filter(list.get(i))) {
+            if (match(list.get(i))) {
                 list.remove(i);
                 i--;
             }
