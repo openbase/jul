@@ -22,6 +22,7 @@ package org.openbase.jul.visual.javafx.geometry.svg;
  * #L%
  */
 
+
 import javafx.scene.shape.SVGPath;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
