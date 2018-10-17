@@ -339,6 +339,44 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     /**
      * {@inheritDoc}
      *
+     * @param entries {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     *
+     * @throws MultiException {@inheritDoc}
+     * @throws InvalidStateException {@inheritDoc}
+     */
+    @Override
+    public List<ENTRY> removeAll(Collection<ENTRY> entries) throws MultiException, InvalidStateException {
+        final List<ENTRY> removedEntries = new ArrayList<>();
+        ExceptionStack exceptionStack = null;
+        registryLock.writeLock().lock();
+        try {
+            for (ENTRY entry : entries) {
+
+                // shutdown check is needed because this is not a atomic transaction.
+                if(shutdownInitiated) {
+                    throw new InvalidStateException("Entry removal canceled because registry is shutting down!");
+                }
+
+                try {
+                    if (contains(entry)) {
+                        removedEntries.add(remove(entry));
+                    }
+                } catch (CouldNotPerformException ex) {
+                    exceptionStack = MultiException.push(this, ex, exceptionStack);
+                }
+            }
+            MultiException.checkAndThrow(() -> "Could not remove all entries!", exceptionStack);
+        } finally {
+            registryLock.writeLock().unlock();
+        }
+        return removedEntries;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @param key {@inheritDoc}
      *
      * @return {@inheritDoc}
@@ -852,7 +890,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                         maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
                         if (iterationCounter > maxConsistencyChecks) {
                             final int stackSize = MultiException.size(exceptionStack);
-                            MultiException.checkAndThrow(() -> stackSize+ " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
+                            MultiException.checkAndThrow(() -> stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
                             throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                         }
 
@@ -951,7 +989,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                                     }
                                 }
                                 final int stackSize = MultiException.size(exceptionStack);
-                                MultiException.checkAndThrow(() ->stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
+                                MultiException.checkAndThrow(() -> stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
                             }
                             continue;
                         }
@@ -1404,6 +1442,14 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         transactionPerformedNotifier.removeListener(listener);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
+    public boolean isShutdownInitiated() {
+        return shutdownInitiated;
+    }
 
     private class DependencyConsistencyCheckTrigger implements Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>>, Shutdownable, Activatable {
 

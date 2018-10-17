@@ -74,6 +74,8 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
     private ExecutorService executorService;
     private HashGenerator<T> hashGenerator;
 
+    private boolean shutdownInitiated = false;
+
     /**
      * Construct new Observable.
      */
@@ -155,6 +157,8 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
     /**
      * {@inheritDoc}
+     *
+     * Note: Ongoing notifications are skipped during shutdown.
      */
     @Override
     public void shutdown() {
@@ -239,12 +243,13 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
                 for (final Observer<S, T> observer : tempObserverList) {
 
-                    if (executorService == null) {
+                    // skip ongoing notifications if shutdown was initiated or the thread was interrupted.
+                    if(shutdownInitiated && Thread.currentThread().isInterrupted()) {
+                        latestValueHash = lastHashValue;
+                        return false;
+                    }
 
-                        if (Thread.currentThread().isInterrupted()) {
-                            latestValueHash = lastHashValue;
-                            return false;
-                        }
+                    if (executorService == null) {
 
                         // synchronous notification
                         long time = System.currentTimeMillis();
