@@ -10,12 +10,12 @@ package org.openbase.jul.pattern.launch;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -56,6 +56,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * @param <L> the launchable to launch by this launcher.
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<ActivationState, ActivationState.Builder> implements Launcher, VoidInitializable, NameProvider {
@@ -81,6 +82,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      *
      * @param launchableClass  the class to be launched.
      * @param applicationClass the class representing this application. Those is used for scope generation if the getName() method is not overwritten.
+     *
      * @throws org.openbase.jul.exception.InstantiationException
      */
     public AbstractLauncher(final Class applicationClass, final Class<L> launchableClass) throws InstantiationException {
@@ -128,6 +130,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      * By default the application name is the name of the given application class name.
      *
      * @return the name as string.
+     *
      * @throws NotAvailableException
      */
     @Override
@@ -139,6 +142,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      * Method creates a launchable instance without any arguments.. In case the launchable needs arguments you can overwrite this method and instantiate the launchable by ourself.
      *
      * @return the new instantiated launchable.
+     *
      * @throws CouldNotPerformException is thrown in case the launchable could not properly be instantiated.
      */
     protected L instantiateLaunchable() throws CouldNotPerformException {
@@ -339,9 +343,18 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             final Future waitingTask = GlobalCachedExecutorService.submit(() -> {
                 while (!Thread.interrupted()) {
                     try {
-                        launcherEntry.getValue().get(LAUNCHER_TIMEOUT, TimeUnit.MILLISECONDS);
-                        if (!launcherEntry.getKey().getValue().isVerified()) {
-                            pushToVerificationExceptionStack(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getKey().getSimpleName() + "!", launcherEntry.getKey().getValue().getVerificationFailedCause()));
+                        try {
+                            launcherEntry.getValue().get(LAUNCHER_TIMEOUT, TimeUnit.MILLISECONDS);
+                            if (!launcherEntry.getKey().getValue().isVerified()) {
+                                pushToVerificationExceptionStack(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getKey().getSimpleName() + "!", launcherEntry.getKey().getValue().getVerificationFailedCause()));
+                            }
+                        } catch (ExecutionException ex) {
+                            // recover Interrupted exception to avoid error printing during system shutdown
+                            Throwable initialCause = ExceptionProcessor.getInitialCause(ex);
+                            if(initialCause instanceof InterruptedException) {
+                                throw (InterruptedException) initialCause;
+                            }
+                            throw ex;
                         }
                         break;
                     } catch (InterruptedException ex) {
@@ -431,23 +444,24 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         try {
             MultiException.ExceptionStack exceptionStack = null;
             try {
-                MultiException.checkAndThrow(() ->"Errors during startup phase!", errorExceptionStack);
+                MultiException.checkAndThrow(() -> "Errors during startup phase!", errorExceptionStack);
             } catch (MultiException ex) {
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
             try {
-                MultiException.checkAndThrow(() ->"Verification process not passed!", verificationExceptionStack);
+                MultiException.checkAndThrow(() -> "Verification process not passed!", verificationExceptionStack);
             } catch (MultiException ex) {
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
 
-            MultiException.checkAndThrow(() ->errorMessage, exceptionStack);
-
             if (Thread.currentThread().isInterrupted()) {
                 logger.info(JPService.getApplicationName() + " was interrupted.");
-            } else {
-                logger.info(JPService.getApplicationName() + " successfully started.");
+                return;
             }
+
+            MultiException.checkAndThrow(() -> errorMessage, exceptionStack);
+            logger.info(JPService.getApplicationName() + " successfully started.");
+
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
