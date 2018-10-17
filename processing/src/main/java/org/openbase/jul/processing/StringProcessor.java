@@ -22,7 +22,12 @@ package org.openbase.jul.processing;
  * #L%
  */
 
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.iface.Transformer;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Collection;
@@ -195,6 +200,44 @@ public class StringProcessor {
             }
 
             final String entryString = entry.toString();
+
+            if (entryString.isEmpty()) {
+                continue;
+            }
+
+            if (!stringRepresentation.isEmpty()) {
+                stringRepresentation += separator;
+            }
+
+            stringRepresentation += entryString;
+        }
+        return stringRepresentation;
+    }
+
+    /**
+     * Method calls toString on each entry of the given collection and builds a string where each entry is separated by the given separator.
+     *
+     * @param collection the collection providing entries to print.
+     * @param separator  the separator between each entry to use.
+     * @param transformer provides a transformation from an entry to the string representation.
+     *
+     * @return the string representation of the collection.
+     */
+    public static <ENTRY> String transformCollectionToString(final Collection<ENTRY> collection, final String separator, final Transformer<ENTRY, String> transformer) {
+        String stringRepresentation = "";
+        for (ENTRY entry : collection) {
+
+            if (entry == null) {
+                continue;
+            }
+
+            final String entryString;
+            try {
+                entryString = transformer.transform(entry);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Skip Entry["+entry+"]!", ex, LoggerFactory.getLogger(StringProcessor.class), LogLevel.WARN);
+                continue;
+            }
 
             if (entryString.isEmpty()) {
                 continue;
