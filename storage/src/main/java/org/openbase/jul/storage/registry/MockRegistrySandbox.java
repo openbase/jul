@@ -21,12 +21,14 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
@@ -81,6 +83,11 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
 
     @Override
     public ENTRY remove(ENTRY entry) throws CouldNotPerformException {
+        return null;
+    }
+
+    @Override
+    public List<ENTRY> removeAll(Collection<ENTRY> entries) throws MultiException {
         return null;
     }
 
@@ -222,6 +229,11 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     @Override
     public void removeDependencyObserver(Observer<Registry<KEY, ENTRY>, Map<KEY, ENTRY>> observer) {
         throw new UnsupportedOperationException("Not supported for mock sandbox.");
+    }
+
+    @Override
+    public boolean isShutdownInitiated() {
+        return false;
     }
 
     @Override

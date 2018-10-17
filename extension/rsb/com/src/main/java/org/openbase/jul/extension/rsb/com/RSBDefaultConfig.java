@@ -32,12 +32,13 @@ import org.openbase.jul.extension.rsb.com.jp.JPRSBIntrospection;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBPort;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBThreadPooling;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBTransport;
+import org.openbase.jul.extension.rsb.com.strategy.ThreadPoolUnorderedEventReceivingStrategyFactory;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Factory;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
-//import rsb.eventprocessing.ExecutorEventReceivingStrategyFactory;
 
 /**
  *
@@ -91,9 +92,7 @@ public class RSBDefaultConfig {
 
         try {
             if (JPService.getProperty(JPRSBThreadPooling.class).getValue()) {
-                // todo reenable if pushed to official rsb version
-                LOGGER.warn("RSB thread pooling not supported in this release!");
-//                participantConfig.setReceivingStrategy(new ExecutorEventReceivingStrategyFactory(GlobalCachedExecutorService.getInstance().getExecutorService()));
+                participantConfig.setReceivingStrategy(new ThreadPoolUnorderedEventReceivingStrategyFactory(GlobalCachedExecutorService.getInstance().getExecutorService()));
             }
         } catch (JPNotAvailableException ex) {
             ExceptionPrinter.printHistory("Could not check if thread pooling was enabled!", ex, LOGGER, LogLevel.WARN);

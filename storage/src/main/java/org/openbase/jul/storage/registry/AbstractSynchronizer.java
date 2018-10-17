@@ -240,6 +240,13 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 }
                 MultiException.checkAndThrow(() ->"Could not sync all entries!", exceptionStack);
             } catch (CouldNotPerformException ex) {
+
+                if(!isActive) {
+                    // sync was canceled because of a system shutdown.
+                    // no need for printing any exceptions
+                    return;
+                }
+
                 CouldNotPerformException exx = new CouldNotPerformException("Entry registry sync failed!", ex);
                 if (JPService.testMode()) {
                     ExceptionPrinter.printHistory(exx, logger);

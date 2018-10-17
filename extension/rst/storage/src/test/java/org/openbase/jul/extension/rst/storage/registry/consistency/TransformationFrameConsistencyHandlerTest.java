@@ -22,6 +22,7 @@ package org.openbase.jul.extension.rst.storage.registry.consistency;
  * #L%
  */
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,7 @@ import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
@@ -296,6 +298,11 @@ public class TransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
+                public List<IdentifiableMessage<String, UnitConfig, Builder>> removeAll(Collection<IdentifiableMessage<String, UnitConfig, Builder>> identifiableMessages) throws MultiException {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                @Override
                 public List<IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntries() throws CouldNotPerformException {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
@@ -315,6 +322,10 @@ public class TransformationFrameConsistencyHandlerTest {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 
+                @Override
+                public boolean isShutdownInitiated() {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
 
                 @Override
                 public void addObserver(Observer<DataProvider<Map<String, IdentifiableMessage<String, UnitConfig, Builder>>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
