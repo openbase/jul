@@ -106,8 +106,8 @@ public class ScopeGeneratorTest {
     @Test(timeout = 5000)
     public void testGenerateScope() throws CouldNotPerformException {
         System.out.println("testGenerateScope");
-        ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
-        ScopeType.Scope result = ScopeGenerator.generateScope("/paradise/room/device/test");
+        ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("preset").build();
+        ScopeType.Scope result = ScopeGenerator.generateScope("/paradise/room/device/preset");
         assertEquals("Scope not fully generated!", expected, result);
     }
 
@@ -115,11 +115,11 @@ public class ScopeGeneratorTest {
     public void testScopeTransfromationChain() throws CouldNotPerformException {
         System.out.println("testGenerateScope");
 
-        ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
+        ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("preset").build();
         ScopeType.Scope result_1 = ScopeGenerator.generateScope(ScopeGenerator.generateStringRep(expected));
         assertEquals("Scope not fully generated!", expected, result_1);
         String result_2 = ScopeGenerator.generateStringRep(result_1);
-        assertEquals("Scope not fully generated!", "/paradise/room/device/test/", result_2);
+        assertEquals("Scope not fully generated!", "/paradise/room/device/preset/", result_2);
     }
 
     @Test

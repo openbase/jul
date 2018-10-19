@@ -77,7 +77,7 @@ public abstract class NotInitializedRSBParticipant implements RSBParticipant {
 
     @Override
     public void setObserverManager(Factory.ParticipantObserverManager observerManager) throws CouldNotPerformException {
-        throw new CouldNotPerformException("Could not register observer manager!", new InvalidStateException("Participant not initialized!"));
+        throw new CouldNotPerformException("Could not register observer test!", new InvalidStateException("Participant not initialized!"));
     }
 
     @Override

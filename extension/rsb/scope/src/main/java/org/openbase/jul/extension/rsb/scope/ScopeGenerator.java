@@ -405,8 +405,8 @@ public class ScopeGenerator {
             throw new NotAvailableException("Field userConfig.userName isEmpty");
         }
 
-        // add manager
-        ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
+        // add test
+        ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("test"));
 
         // add unit type
         scope.addComponent(convertIntoValidScopeComponent(userUnitConfig.getUnitType().name()));
@@ -427,8 +427,8 @@ public class ScopeGenerator {
             throw new NotAvailableException("authorizationGroupConfig.label");
         }
 
-        // add manager
-        ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("manager"));
+        // add test
+        ScopeType.Scope.Builder scope = ScopeType.Scope.newBuilder().addComponent(convertIntoValidScopeComponent("test"));
         // add user
         scope.addComponent(convertIntoValidScopeComponent("authorization"));
         // add group

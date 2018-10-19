@@ -80,7 +80,7 @@ public class RPCHelper {
         }
     }
 
-//    private static int test = 1;
+//    private static int preset = 1;
 //
 //    private static void printMap() {
 //        int sum = 0;
@@ -107,8 +107,8 @@ public class RPCHelper {
 //                sum += value;
 //            }
 //
-//            if (sum > (500 * test)) {
-//                test++;
+//            if (sum > (500 * preset)) {
+//                preset++;
 //                printMap();
 //            }
 //

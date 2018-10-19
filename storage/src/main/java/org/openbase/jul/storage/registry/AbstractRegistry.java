@@ -258,7 +258,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 entryMap.put(entry.getId(), entry);
                 finishTransaction();
                 pluginPool.afterUpdate(entry);
-                // test if the entry has changed at all by this update method
+                // preset if the entry has changed at all by this update method
                 if (changed) {
                     notifySuccessfulTransaction();
                 }

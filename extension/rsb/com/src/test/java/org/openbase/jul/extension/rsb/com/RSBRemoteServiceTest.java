@@ -89,7 +89,7 @@ public class RSBRemoteServiceTest {
     public void testWaitForConnectionState() throws InterruptedException, CouldNotPerformException {
         System.out.println("waitForConnectionState");
         RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
-        instance.init("/test/waitForConnectionState");
+        instance.init("/preset/waitForConnectionState");
 
         // Test Timeout
         instance.activate();
@@ -126,11 +126,11 @@ public class RSBRemoteServiceTest {
         System.out.println("testDeactivation");
 
         RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
-        instance.init("/test/testDeactivation");
+        instance.init("/preset/testDeactivation");
         instance.activate();
 
         RSBCommunicationServiceTest.RSBCommunicationServiceImpl communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.newBuilder());
-        communicationService.init("/test/testDeactivation");
+        communicationService.init("/preset/testDeactivation");
         communicationService.activate();
         communicationService.waitForAvailabilityState(ControllerAvailabilityState.ONLINE);
         instance.waitForConnectionState(ConnectionState.CONNECTED);
@@ -155,7 +155,7 @@ public class RSBRemoteServiceTest {
         System.out.println("testReinit");
 
         final RSBRemoteService remoteService = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
-        remoteService.init("/test/testReinit");
+        remoteService.init("/preset/testReinit");
         remoteService.activate();
 
         GlobalCachedExecutorService.submit(() -> {
@@ -194,7 +194,7 @@ public class RSBRemoteServiceTest {
      */
     @Test(timeout = 5000)
     public void testTransactionSynchronization() throws Exception {
-        final String scope = "/test/transaction/sync";
+        final String scope = "/preset/transaction/sync";
 
         final TransactionCommunicationService communicationService = new TransactionCommunicationService();
         communicationService.init(scope);

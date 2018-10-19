@@ -259,7 +259,7 @@ public class ExceptionPrinter {
 
     private static void exit(final int errorCode) {
         if (JPService.testMode()) {
-            throw new RuntimeException("System exit called in test mode!");
+            throw new RuntimeException("System exit called in preset mode!");
         }
         System.exit(errorCode);
     }

@@ -46,9 +46,9 @@ public class LabelProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(LabelProcessor.class);
 
     /**
-     * Test if a label contains a label string. This test iterates over all languages and all
+     * Test if a label contains a label string. This preset iterates over all languages and all
      * label strings for the language and check if one equals the label string.
-     * The test is done ignoring the case of the label string and ignoring white spaces.
+     * The preset is done ignoring the case of the label string and ignoring white spaces.
      *
      * @param label       the label type which is checked
      * @param labelString the label string that is tested if it is contained in the label type

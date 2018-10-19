@@ -42,7 +42,7 @@ public abstract class AbstractGlobalDBVersionConverter extends AbstractDBVersion
     protected void removeFromGlobalDBSnapshot(final JsonObject remove, final String databaseKey,
                                            final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots)
             throws CouldNotPerformException {
-        // test if database key is valid
+        // preset if database key is valid
         if (!globalDbSnapshots.containsKey(databaseKey)) {
             String keys = "";
             for (Iterator<String> keyIterator = globalDbSnapshots.keySet().iterator(); keyIterator.hasNext(); ) {

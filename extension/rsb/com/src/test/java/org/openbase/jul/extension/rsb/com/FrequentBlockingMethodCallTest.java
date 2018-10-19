@@ -50,14 +50,14 @@ public class FrequentBlockingMethodCallTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(FrequentBlockingMethodCallTest.class);
 
     /**
-     * Deactivated because its a system test which does not really perform any unit tests but tests the capacity of
+     * Deactivated because its a system preset which does not really perform any unit tests but tests the capacity of
      * the executor service by repeatedly calling blocking rpc calls.
      * @throws Exception
      */
 //    @Test
     public void testFrequentBlockingMethodCall() throws Exception {
         JPService.setupJUnitTestMode();
-        final String scope = "/test/blocking";
+        final String scope = "/preset/blocking";
 
         BlockingRSBCommunicationServiceImpl communicationService = new BlockingRSBCommunicationServiceImpl(UnitRegistryData.newBuilder());
         communicationService.init(scope);

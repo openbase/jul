@@ -117,7 +117,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 getParticipant().setObserverManager(observerManager);
             }
         } catch (IllegalStateException | NullPointerException ex) {
-            throw new CouldNotPerformException("Could not register observer manager " + observerManager + "!", ex);
+            throw new CouldNotPerformException("Could not register observer test " + observerManager + "!", ex);
         }
     }
 
