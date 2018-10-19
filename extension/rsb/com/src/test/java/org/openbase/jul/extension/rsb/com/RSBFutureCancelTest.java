@@ -88,7 +88,7 @@ public class RSBFutureCancelTest implements Requestable<Object> {
     }
 
     /**
-     * This preset shows that the method executed by the local server does not
+     * This test shows that the method executed by the local server does not
      * get interrupted through canceling the future.
      *
      * @throws Exception
@@ -97,7 +97,7 @@ public class RSBFutureCancelTest implements Requestable<Object> {
     public void testFutureCancellation() throws Exception {
         System.out.println("TestFutureCancellation");
 
-        Scope scope = new Scope("/preset/futureCancel");
+        Scope scope = new Scope("/test/futureCancel");
         ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig();
 
         localServer = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(scope, participantConfig);

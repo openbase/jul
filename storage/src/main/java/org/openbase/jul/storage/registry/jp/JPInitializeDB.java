@@ -41,7 +41,7 @@ public class JPInitializeDB extends AbstractJPBoolean {
     }
 
     /**
-     * returns true if JPS is in preset mode or JPResetDB is enabled.
+     * returns true if JPS is in test mode or JPResetDB is enabled.
      * @return
      */
     @Override

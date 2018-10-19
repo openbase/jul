@@ -153,10 +153,10 @@ public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Bui
 
     private void commitAllChanges() throws CouldNotPerformException {
 
-        // Avoid commit in preset mode.
+        // Avoid commit in test mode.
         try {
             if (JPService.getProperty(JPTestMode.class).getValue()) {
-                logger.warn("Skip commit because preset mode is enabled!");
+                logger.warn("Skip commit because test mode is enabled!");
                 return;
             }
         } catch (JPServiceException ex) {

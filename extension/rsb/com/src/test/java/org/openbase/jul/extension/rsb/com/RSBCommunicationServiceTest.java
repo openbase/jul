@@ -96,7 +96,7 @@ public class RSBCommunicationServiceTest {
     public void testInitialSync() throws Exception {
         System.out.println("testInitialSync");
 
-        String scope = "/preset/synchronization";
+        String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         UnitConfig unit1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(unit1);
@@ -174,7 +174,7 @@ public class RSBCommunicationServiceTest {
      */
     @Test(timeout = 20000)
     public void testReconnection() throws Exception {
-        // todo: this preset takes to much time! Even more after increasing the deactivation timeout in the RSBSynchronizedParticipant class. There seems to be an issue that rsb takes to many time during deactivation.
+        // todo: this test takes to much time! Even more after increasing the deactivation timeout in the RSBSynchronizedParticipant class. There seems to be an issue that rsb takes to many time during deactivation.
         System.out.println("testReconnection");
 
         RSBRemoteService remoteService = new RSBRemoteServiceImpl();
@@ -185,7 +185,7 @@ public class RSBCommunicationServiceTest {
         Stopwatch stopWatch = new Stopwatch();
         stopWatch.start();
 
-        String scope = "/preset/reconnection";
+        String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
         communicationService = new RSBCommunicationServiceImpl(testData);
@@ -254,7 +254,7 @@ public class RSBCommunicationServiceTest {
     public void testWaitForData() throws Exception {
         System.out.println("testWaitForData");
 
-        String scope = "/preset/waitfordata";
+        String scope = "/test/waitfordata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
@@ -284,7 +284,7 @@ public class RSBCommunicationServiceTest {
     public void testRequestData() throws Exception {
         System.out.println("testRequestData");
 
-        String scope = "/preset/requestdata";
+        String scope = "/test/requestdata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
@@ -314,7 +314,7 @@ public class RSBCommunicationServiceTest {
     public void testRemoteInterference() throws Exception {
         System.out.println("testRemoteInterference");
 
-        String scope = "/preset/interference";
+        String scope = "/test/interference";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
@@ -362,7 +362,7 @@ public class RSBCommunicationServiceTest {
     public void testNotification() throws Exception {
         System.out.println("testNotification");
 
-        String scope = "/preset/notification";
+        String scope = "/test/notification";
         UnitConfig location = UnitConfig.newBuilder().setId("id").build();
         communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
         communicationService.init(scope);
@@ -394,7 +394,7 @@ public class RSBCommunicationServiceTest {
 //
 //        final int TEST_PARALLEL_REINIT_TASKS = 5;
 //
-//        String scope = "/preset/notification";
+//        String scope = "/test/notification";
 //        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
 //        communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
 //        communicationService.init(scope);

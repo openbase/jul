@@ -79,7 +79,7 @@ public class RSBDefaultConfig {
         }
 
         // Setup introspection
-        // Force disabling rsb introspection for preset mode because the communication is done via socked transport which is not suitable for unit tests.
+        // Force disabling rsb introspection for test mode because the communication is done via socked transport which is not suitable for unit tests.
         if (JPService.testMode()) {
             participantConfig.setIntrospectionEnabled(false);
         } else {

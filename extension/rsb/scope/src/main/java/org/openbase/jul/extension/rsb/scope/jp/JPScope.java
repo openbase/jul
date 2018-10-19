@@ -48,7 +48,7 @@ public class JPScope extends AbstractJavaProperty<Scope> {
     protected Scope getPropertyDefaultValue() {
         if(JPService.testMode()) {
             String user = ScopeGenerator.convertIntoValidScopeComponent(System.getProperty("user.name"));
-            return new Scope("/preset/"+user);
+            return new Scope("/test/"+user);
         }
         return new Scope("/");
     }
