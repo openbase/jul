@@ -257,7 +257,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                             observer.update(source, observable);
                             time = System.currentTimeMillis() - time;
                             if (time > 500) {
-                                LOGGER.warn("Notification to observer[" + observer + "] took: " + time + "ms");
+                                LOGGER.debug("Notification to observer[{}] took: {}ms", observer, time);
                             }
                         } catch (InterruptedException ex) {
                             latestValueHash = lastHashValue;
