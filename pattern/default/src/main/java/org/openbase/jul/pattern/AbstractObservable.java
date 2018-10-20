@@ -308,7 +308,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
             wholeTime = System.currentTimeMillis() - wholeTime;
             if (wholeTime > 500) {
-                LOGGER.warn("Notification on observable[" + observable.getClass().getName() + "] took: " + wholeTime + "ms");
+                LOGGER.debug("Notification on observable[{}] took: {}ms", observable.getClass().getName(), wholeTime);
             }
             return true;
         }
