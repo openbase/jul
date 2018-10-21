@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rsb.com.jp;
  * #L%
  */
 
+import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.AbstractJPBoolean;
 
 /**
@@ -35,7 +36,12 @@ public class JPRSBThreadPooling extends AbstractJPBoolean {
     public JPRSBThreadPooling() {
         super(COMMAND_IDENTIFIERS);
     }
-    
+
+    @Override
+    public Boolean getDefaultValue() throws JPNotAvailableException {
+        return true;
+    }
+
     @Override
     public String getDescription() {
         return "Forces rsb to use the global executor thread pool which will extremly minimize the usage of thread. Use this feature if you get in trouble with your os thread limitations.";
