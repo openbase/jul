@@ -29,7 +29,6 @@
     </build>
 
     <modules>
-        <module>openhab</module>
         <module>protobuf</module>
         <module>rsb</module>
         <module>rst</module>

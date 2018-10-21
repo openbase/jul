@@ -257,7 +257,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                             observer.update(source, observable);
                             time = System.currentTimeMillis() - time;
                             if (time > 500) {
-                                LOGGER.warn("Notification to observer[" + observer + "] took: " + time + "ms");
+                                LOGGER.debug("Notification to observer[{}] took: {}ms", observer, time);
                             }
                         } catch (InterruptedException ex) {
                             latestValueHash = lastHashValue;
@@ -308,7 +308,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
             wholeTime = System.currentTimeMillis() - wholeTime;
             if (wholeTime > 500) {
-                LOGGER.warn("Notification on observable[" + observable.getClass().getName() + "] took: " + wholeTime + "ms");
+                LOGGER.debug("Notification on observable[{}] took: {}ms", observable.getClass().getName(), wholeTime);
             }
             return true;
         }

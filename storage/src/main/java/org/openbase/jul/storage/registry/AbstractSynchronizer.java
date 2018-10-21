@@ -260,7 +260,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
 
             long time = stopwatch.stop();
             if (time > 1000) {
-                logger.warn("Internal sync of synchronizer took: " + time + "ms");
+                logger.debug("Internal sync of synchronizer took: {}ms",time);
             }
         }
     }
