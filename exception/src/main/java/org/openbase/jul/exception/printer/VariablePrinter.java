@@ -64,12 +64,9 @@ public class VariablePrinter implements Printer {
 
     @Override
     public boolean isDebugEnabled() {
-        try {
-            return JPService.getProperty(JPVerbose.class).getValue();
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-            return true;
-        }
+        return (JPService.debugMode() &&
+                JPService.testMode() &&
+                JPService.verboseMode());
     }
 
     public String getMessages() {

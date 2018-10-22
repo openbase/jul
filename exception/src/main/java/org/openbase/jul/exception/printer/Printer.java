@@ -29,11 +29,11 @@ import org.slf4j.Logger;
  */
 public interface Printer {
 
-    public void print(String message);
+    void print(String message);
 
-    public void print(String message, Throwable throwable);
+    void print(String message, Throwable throwable);
 
-    public boolean isDebugEnabled();
+    boolean isDebugEnabled();
 
     /**
      * Method prints the given {@code message} on the given {@code logger} with the given {@code logLevel}.
@@ -42,7 +42,7 @@ public interface Printer {
      * @param logLevel the level to log the message.
      * @param logger the message logger.
      */
-    public static void print(final String message, final LogLevel logLevel, final Logger logger) {
+    static void print(final String message, final LogLevel logLevel, final Logger logger) {
         print(message, null, logLevel, logger);
     }
 
@@ -54,7 +54,7 @@ public interface Printer {
      * @param logLevel the level to log the message.
      * @param logger the message logger.
      */
-    public static void print(final String message, final Throwable throwable, final LogLevel logLevel, final Logger logger) {
+    static void print(final String message, final Throwable throwable, final LogLevel logLevel, final Logger logger) {
         if (throwable == null) {
             switch (logLevel) {
                 case TRACE:
