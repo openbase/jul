@@ -63,7 +63,7 @@ public class ProtoBufJSonProcessor {
      *                                                          <p>
      *                                                          TODO: release: change parameter type to message since java primitives cannot be de-/serialized anymore anyway
      */
-    public String serialize(final Object serviceAttribute) throws InvalidStateException, CouldNotPerformException {
+    public String   serialize(final Object serviceAttribute) throws InvalidStateException, CouldNotPerformException {
         String jsonStringRep;
         if (serviceAttribute instanceof Message) {
             try {
@@ -128,15 +128,15 @@ public class ProtoBufJSonProcessor {
         try {
 
             if (!serviceAttributeType.startsWith("rst")) {
-                throw new NotSupportedException(serviceAttributeType, this, "Service arguments must be a protobuf message!");
+                throw new NotSupportedException(serviceAttributeType, this, "Service arguments must be a protobuf message but detected type is ["+serviceAttributeType+"]!");
             }
 
             try {
-                Class attibuteClass = Class.forName(serviceAttributeType);
-                if (attibuteClass.isEnum()) {
+                Class attributeClass = Class.forName(serviceAttributeType);
+                if (attributeClass.isEnum()) {
                     throw new NotSupportedException(serviceAttributeType, this, "Service attribute type must be a protobuf message!");
                 }
-                Message.Builder builder = (Message.Builder) attibuteClass.getMethod("newBuilder").invoke(null);
+                Message.Builder builder = (Message.Builder) attributeClass.getMethod("newBuilder").invoke(null);
                 jsonFormat.merge(new ByteArrayInputStream(jsonStringRep.getBytes(Charset.forName(UTF8))), builder);
                 return builder.build();
             } catch (ClassNotFoundException ex) {
@@ -144,7 +144,7 @@ public class ProtoBufJSonProcessor {
             } catch (IOException ex) {
                 throw new CouldNotPerformException("Could not merge [" + jsonStringRep + "] into builder", ex);
             } catch (NoSuchMethodException | SecurityException ex) {
-                throw new CouldNotPerformException("Could not find or acces newBuilder method for rst type [" + serviceAttributeType + "]", ex);
+                throw new CouldNotPerformException("Could not find or access newBuilder method for rst type [" + serviceAttributeType + "]", ex);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 throw new CouldNotPerformException("Could not invoke newBuilder method for rst type [" + serviceAttributeType + "]", ex);
             }
