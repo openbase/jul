@@ -64,8 +64,8 @@ public class VariablePrinter implements Printer {
 
     @Override
     public boolean isDebugEnabled() {
-        return (JPService.debugMode() &&
-                JPService.testMode() &&
+        return (JPService.debugMode() ||
+                JPService.testMode()  ||
                 JPService.verboseMode());
     }
 
