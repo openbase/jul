@@ -27,6 +27,15 @@ package org.openbase.jul.exception;
  */
 public class NotSupportedException extends CouldNotPerformException {
 
+    /**
+     * Default constructor.
+     * @param message the reason as string.
+     * @param cause the cause as throwable.
+     */
+    public NotSupportedException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     public NotSupportedException(Object context, Class source) {
         this(context, source.getSimpleName());
     }
