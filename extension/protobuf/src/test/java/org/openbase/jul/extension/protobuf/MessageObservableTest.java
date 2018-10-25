@@ -117,7 +117,7 @@ public class MessageObservableTest {
         final ColorableLightData colorableLightData1 = ColorableLightData.newBuilder().setPowerState(powerState1).build();
         final ColorableLightData colorableLightData2 = ColorableLightData.newBuilder().setPowerState(powerState2).build();
 
-        final MessageObservable<ColorableLightData> messageObservable = new MessageObservableImpl<>(ColorableLightData.class);
+        final MessageObservable<DataProvider<ColorableLightData>, ColorableLightData> messageObservable = new MessageObservableImpl<>(ColorableLightData.class);
 
         assertEquals("Hashes are not equal even though only the timestamp has changed", messageObservable.removeTimestamps(colorableLightData1.toBuilder()).build().hashCode(), messageObservable.removeTimestamps(colorableLightData2.toBuilder()).build().hashCode());
 
@@ -137,7 +137,7 @@ public class MessageObservableTest {
         System.out.println("Computing 1000 hashes took " + stopwatch.getTime() + "ms");
     }
 
-    public class MessageObservableImpl<M extends Message> extends MessageObservable<M> {
+    public class MessageObservableImpl<M extends Message> extends MessageObservable<DataProvider<M>, M> {
 
         public MessageObservableImpl(final Class<M> dataClass) {
             super(new DataProviderImpl<>(dataClass));

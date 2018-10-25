@@ -28,6 +28,8 @@ import com.google.protobuf.Message.Builder;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.AbstractObservable;
+import org.openbase.jul.pattern.Observable;
+import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.provider.DataProvider;
 
 import java.util.concurrent.Future;
@@ -39,41 +41,42 @@ import java.util.concurrent.TimeUnit;
  * Currently for efficiency reasons the timestamp of messages in repeated fields is still considered.
  *
  * @param <M> the type which is notified by this observable
+ * @param <S> the source type of this observable
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class MessageObservable<M extends Message> extends AbstractObservable<DataProvider<M>, M> {
+public class MessageObservable<S, M extends Message> extends ObservableImpl<S, M> {
 
     public static final String TIMESTAMP_MESSAGE_NAME = "Timestamp";
     public static final String RESOURCE_ALLOCATION_FIELD = "resource_allocation";
 
-    private final DataProvider<M> dataProvider;
+//    private final DataProvider<M> dataProvider;
 
-    public MessageObservable(final DataProvider<M> source) {
+    public MessageObservable(final S source) {
         super(source);
 
-        this.dataProvider = source;
+//        this.dataProvider = source;
         this.setHashGenerator((M value) -> removeTimestamps(value.toBuilder()).build().hashCode());
     }
 
-    @Override
-    public void waitForValue(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
-        dataProvider.waitForData();
-    }
-
-    @Override
-    public M getValue() throws NotAvailableException {
-        return dataProvider.getData();
-    }
-
-    @Override
-    public boolean isValueAvailable() {
-        return dataProvider.isDataAvailable();
-    }
-
-    @Override
-    public Future<M> getValueFuture() {
-        return dataProvider.getDataFuture();
-    }
+//    @Override
+//    public void waitForValue(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
+//        dataProvider.waitForData();
+//    }
+//
+//    @Override
+//    public M getValue() throws NotAvailableException {
+//        return dataProvider.getData();
+//    }
+//
+//    @Override
+//    public boolean isValueAvailable() {
+//        return dataProvider.isDataAvailable();
+//    }
+//
+//    @Override
+//    public Future<M> getValueFuture() {
+//        return dataProvider.getDataFuture();
+//    }
 
     /**
      * Recursively clear timestamp messages from a builder. For efficiency repeated fields are ignored.
