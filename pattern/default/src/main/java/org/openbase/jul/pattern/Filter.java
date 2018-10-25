@@ -22,9 +22,6 @@ package org.openbase.jul.pattern;
  * #L%
  */
 
-import org.openbase.jul.annotation.Experimental;
-import org.openbase.jul.exception.CouldNotPerformException;
-
 /**
  * Filter which decides for a list of objects which to keep and which to filter out.
  *
