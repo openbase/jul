@@ -27,6 +27,7 @@ import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Transformer;
+import org.openbase.jul.pattern.Filter;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -188,15 +189,22 @@ public class StringProcessor {
      *
      * @param collection the collection to repesent as string.
      * @param separator  the separator between each entry.
+     * @param filters a set of filters to skip specific entries.
      *
      * @return the string representation of the collection.
      */
-    public static String transformCollectionToString(final Collection collection, final String separator) {
+    public static <ENTRY>  String transformCollectionToString(final Collection<ENTRY> collection, final String separator, final Filter<ENTRY> ... filters) {
         String stringRepresentation = "";
-        for (Object entry : collection) {
+        for (ENTRY entry : collection) {
 
             if (entry == null) {
                 continue;
+            }
+
+            for (Filter<ENTRY> filter : filters) {
+                if(filter.match(entry)) {
+                    continue;
+                }
             }
 
             final String entryString = entry.toString();
@@ -218,17 +226,24 @@ public class StringProcessor {
      * Method calls toString on each entry of the given collection and builds a string where each entry is separated by the given separator.
      *
      * @param collection the collection providing entries to print.
-     * @param separator  the separator between each entry to use.
      * @param transformer provides a transformation from an entry to the string representation.
+     * @param separator  the separator between each entry to use.
+     * @param filters a set of filters to skip specific entries.
      *
      * @return the string representation of the collection.
      */
-    public static <ENTRY> String transformCollectionToString(final Collection<ENTRY> collection, final String separator, final Transformer<ENTRY, String> transformer) {
+    public static <ENTRY> String transformCollectionToString(final Collection<ENTRY> collection, final Transformer<ENTRY, String> transformer, final String separator, final Filter<ENTRY> ... filters) {
         String stringRepresentation = "";
-        for (ENTRY entry : collection) {
+        outer: for (ENTRY entry : collection) {
 
             if (entry == null) {
                 continue;
+            }
+
+            for (Filter<ENTRY> filter : filters) {
+                if(filter.match(entry)) {
+                    continue outer;
+                }
             }
 
             final String entryString;
@@ -251,7 +266,6 @@ public class StringProcessor {
         }
         return stringRepresentation;
     }
-
 
     public enum Alignment {
         LEFT,
