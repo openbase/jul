@@ -21,11 +21,8 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
@@ -51,11 +48,27 @@ public class GlobalCachedExecutorService extends AbstractExecutorService<ThreadP
      */
     public static final int DEFAULT_CORE_POOL_SIZE = 100;
 
+//    private static GlobalCachedExecutorService instance;
+//
+//    private static ForkJoinPool executor = new ForkJoinPool
+//            (200,
+//                    ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+//                    null, true);
+//
+//    GlobalCachedExecutorService() throws CouldNotPerformException {
+//        super(executor, () -> executor.getQueuedSubmissionCount(), () -> 1000, () -> executor.getActiveThreadCount());
+
     private static GlobalCachedExecutorService instance;
 
-    GlobalCachedExecutorService() throws CouldNotPerformException {
-        super((ThreadPoolExecutor) Executors.newCachedThreadPool());
+    private static ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newCachedThreadPool();
 
+    GlobalCachedExecutorService() throws CouldNotPerformException {
+        super(executor, () -> executor.getActiveCount(), () -> executor.getMaximumPoolSize(), () -> executor.getPoolSize());
+
+//    GlobalCachedExecutorService() throws CouldNotPerformException {
+//        super(new ThreadPoolExecutor(0, DEFAULT_MAX_POOL_SIZE,
+//                DEFAULT_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS,
+//                ForkJoinPool.defaultForkJoinWorkerThreadFactory));
         // configure executor service
         executorService.setKeepAliveTime(DEFAULT_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS);
         executorService.setMaximumPoolSize(DEFAULT_MAX_POOL_SIZE);

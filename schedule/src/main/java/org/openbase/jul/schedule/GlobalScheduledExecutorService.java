@@ -21,13 +21,8 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -56,8 +51,11 @@ public class GlobalScheduledExecutorService extends AbstractExecutorService<Sche
 
     private static GlobalScheduledExecutorService instance;
 
+
+    private static ScheduledThreadPoolExecutor executor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(DEFAULT_CORE_POOL_SIZE);
+
     GlobalScheduledExecutorService() throws CouldNotPerformException {
-        super((ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(DEFAULT_CORE_POOL_SIZE));
+        super(executor, () -> executor.getActiveCount(), () -> executor.getMaximumPoolSize(), () -> executor.getPoolSize());
 
         // configure executor service
         executorService.setKeepAliveTime(DEFAULT_KEEP_ALIVE_TIME, TimeUnit.MILLISECONDS);

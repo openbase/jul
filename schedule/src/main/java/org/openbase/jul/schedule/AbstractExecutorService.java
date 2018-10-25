@@ -28,6 +28,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.Shutdownable;
+import org.openbase.jul.pattern.provider.StableProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +43,7 @@ import static org.openbase.jul.schedule.GlobalScheduledExecutorService.getInstan
  * @param <ES> The internal execution service.
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> implements Shutdownable {
+public abstract class AbstractExecutorService<ES extends java.util.concurrent.AbstractExecutorService> implements Shutdownable {
 
     /**
      * Default shutdown delay in milliseconds.
@@ -93,8 +94,15 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
         });
     }
 
-    public AbstractExecutorService(final ES executorService) throws CouldNotPerformException {
+    final StableProvider<Integer> currentTaskCountProvider;
+    final StableProvider<Integer> currentThreadCountProvider;
+    final StableProvider<Integer> maxTaskCountProvider;
+
+    public AbstractExecutorService(final ES executorService, StableProvider<Integer> currentTaskCountProvider, StableProvider<Integer> maxTaskCountProvider, StableProvider<Integer> currentThreadCountProvider) throws CouldNotPerformException {
         this.executorService = executorService;
+        this.currentTaskCountProvider = currentTaskCountProvider;
+        this.maxTaskCountProvider = maxTaskCountProvider;
+        this.currentThreadCountProvider = currentThreadCountProvider;
         this.initReportService();
         Shutdownable.registerShutdownHook(this, DEFAULT_SHUTDOWN_DELAY);
     }
@@ -102,13 +110,13 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     private Runnable initReportService() {
         final Runnable reportService = () -> {
             final boolean overload;
-            if (executorService.getActiveCount() == executorService.getMaximumPoolSize()) {
+            if (currentTaskCountProvider.get() >= maxTaskCountProvider.get()) {
                 overload = true;
                 logger.warn("Further tasks will be rejected because executor service overload is detected!");
                 if (JPService.verboseMode()) {
                     StackTracePrinter.printAllStackTraces("pool", logger, LogLevel.INFO);
                 }
-            } else if (executorService.getActiveCount() >= ((double) executorService.getMaximumPoolSize() * DEFAULT_WARNING_RATIO)) {
+            } else if (currentTaskCountProvider.get() >= ((double) maxTaskCountProvider.get() * DEFAULT_WARNING_RATIO)) {
                 overload = true;
                 logger.warn("High Executor service load detected! This can cause system instability issues!");
                 if (JPService.verboseMode()) {
@@ -119,7 +127,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
             }
 
             if (JPService.debugMode() || overload) {
-                logger.info("Executor load " + getExecutorLoad() + "% [" + executorService.getActiveCount() + " of " + executorService.getMaximumPoolSize() + " threads processing " + (executorService.getTaskCount() - executorService.getCompletedTaskCount()) + " tasks] in total " + executorService.getCompletedTaskCount() + " are completed.");
+                logger.info("Executor load " + getExecutorLoad() + "% [" + currentTaskCountProvider  + " tasks are processed by " + currentThreadCountProvider.get() + " threads].");
             }
         };
         final ScheduledExecutorService scheduledExecutorService;
@@ -129,14 +137,14 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     }
 
     public int getExecutorLoad() {
-        if (executorService.getMaximumPoolSize() == 0) {
-            if (executorService.getActiveCount() == 0) {
+        if (maxTaskCountProvider.get() == 0) {
+            if (currentTaskCountProvider.get() == 0) {
                 return 0;
             } else {
                 return 100;
             }
         }
-        return ((int) (((double) executorService.getActiveCount() / (double) executorService.getMaximumPoolSize()) * 100));
+        return ((int) (((double) currentTaskCountProvider.get() / (double) maxTaskCountProvider.get()) * 100));
     }
 
     public <T> Future<T> internalSubmit(Callable<T> task) {
@@ -163,12 +171,12 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     public void smartShutdown() {
         long timeout = SMART_SHUTDOWN_TIMEOUT;
         int lastTaskCount = Integer.MAX_VALUE;
-        while (getExecutorService().getActiveCount() != 0) {
+        while (currentTaskCountProvider.get() != 0) {
 
-            if (getExecutorService().getActiveCount() >= lastTaskCount) {
+            if (currentTaskCountProvider.get() >= lastTaskCount) {
                 timeout -= SMART_SHUTDOWN_STATUS_PRINT_RATE;
             } else {
-                logger.info("Waiting for " + getExecutorService().getActiveCount() + " tasks to continue the shutdown.");
+                logger.info("Waiting for " + currentTaskCountProvider.get() + " tasks to continue the shutdown.");
             }
 
             if (timeout <= 0) {
@@ -180,7 +188,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
                 break;
             }
 
-            lastTaskCount = getExecutorService().getActiveCount();
+            lastTaskCount = currentTaskCountProvider.get();
             try {
                 Thread.sleep(SMART_SHUTDOWN_STATUS_PRINT_RATE);
             } catch (InterruptedException ex) {
@@ -194,7 +202,7 @@ public abstract class AbstractExecutorService<ES extends ThreadPoolExecutor> imp
     public void shutdown(final long shutdownTimeout, final TimeUnit timeUnit) {
         logger.debug("Shutdown global executor service...");
 
-        final int activeCount = getExecutorService().getActiveCount();
+        final int activeCount = currentTaskCountProvider.get();
         if (activeCount != 0) {
             logger.info("Global executor shutdown forced: " + activeCount + " tasks will be skipped...");
         }
