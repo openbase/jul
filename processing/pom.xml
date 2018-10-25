@@ -46,7 +46,7 @@
         <!-- Json protobuf processor-->
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.interface</artifactId>
+            <artifactId>jul.pattern</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
