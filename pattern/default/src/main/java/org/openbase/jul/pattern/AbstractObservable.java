@@ -157,7 +157,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * Note: Ongoing notifications are skipped during shutdown.
      */
     @Override
@@ -244,7 +244,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                 for (final Observer<S, T> observer : tempObserverList) {
 
                     // skip ongoing notifications if shutdown was initiated or the thread was interrupted.
-                    if(shutdownInitiated && Thread.currentThread().isInterrupted()) {
+                    if (shutdownInitiated && Thread.currentThread().isInterrupted()) {
                         latestValueHash = lastHashValue;
                         return false;
                     }
@@ -264,6 +264,10 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                             Thread.currentThread().interrupt();
                             return false;
                         } catch (Exception ex) {
+                            //TODO I do not know if this is useful generally, but it helps debugging if invalid service state observers are registered on a unit
+                            if (ex instanceof ClassCastException) {
+                                LOGGER.error("Probably defect observer [{}] registered on observable [{}]", observer, this);
+                            }
                             exceptionStack = MultiException.push(observer, ex, exceptionStack);
                         }
                     } else {
