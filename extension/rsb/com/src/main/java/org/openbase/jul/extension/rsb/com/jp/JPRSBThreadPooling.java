@@ -37,8 +37,9 @@ public class JPRSBThreadPooling extends AbstractJPBoolean {
         super(COMMAND_IDENTIFIERS);
     }
 
+
     @Override
-    public Boolean getDefaultValue() throws JPNotAvailableException {
+    protected Boolean getPropertyDefaultValue() throws JPNotAvailableException {
         return true;
     }
 
