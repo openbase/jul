@@ -206,7 +206,6 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
      * @deprecated since 2.0 and will be removed in 3.0: please use setMessage(final MB builder, final Object source) instead.
      */
     @Deprecated
-    @Experimental
     public IdentifiableMessage<KEY, M, MB> setMessage(final MB builder) throws CouldNotPerformException {
         return setMessage((M) builder.build(), this);
     }
