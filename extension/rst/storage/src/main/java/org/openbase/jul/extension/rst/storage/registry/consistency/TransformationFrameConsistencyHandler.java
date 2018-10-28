@@ -108,7 +108,7 @@ public class TransformationFrameConsistencyHandler extends AbstractProtoBufRegis
         PlacementConfig placementConfig = verifyAndUpdatePlacement(unitConfig.getAlias(0), unitConfig.getPlacementConfig());
 
         if (placementConfig != null) {
-            entry.setMessage(unitConfig.toBuilder().setPlacementConfig(placementConfig));
+            entry.setMessage(unitConfig.toBuilder().setPlacementConfig(placementConfig), this);
             throw new EntryModification(entry, this);
         }
     }
