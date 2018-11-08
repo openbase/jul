@@ -1064,6 +1064,9 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                 // only print message if not already gone to connecting
                 ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
+
+                // reset transaction id because controller will start at 0 again after reconnect.
+                transactionId = 0;
                 setConnectionState(CONNECTING);
 
                 return dataUpdate;
@@ -1170,8 +1173,10 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             throw ex;
         } finally {
             long newTransactionId = (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME);
-            if (newTransactionId < transactionId) {
-                logger.error("RemoteService {} received a data object with an older transaction id {} than {}", this, newTransactionId, transactionId);
+
+            // warn if the transaction id is outdated, additionally the 0 transaction is accepted which is broadcast during the controller startup after.
+            if (newTransactionId < transactionId && transactionId != 0) {
+                logger.warn("RemoteService {} received a data object with an older transaction id {} than {}", this, newTransactionId, transactionId);
             }
             transactionId = newTransactionId;
         }
@@ -1697,6 +1702,13 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
 
                     long timeout = METHOD_CALL_START_TIMEOUT;
                     while (true) {
+
+                        if (Thread.interrupted()) {
+                            throw new InterruptedException();
+                        }
+
+                        Thread.yield();
+
                         // if reconnecting wait until activated again
                         if (getConnectionState() == ConnectionState.RECONNECTING) {
                             waitForConnectionState(ConnectionState.CONNECTING);
@@ -1748,7 +1760,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                                 internalFuture = internalRequestStatus();
                                 event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                             } catch (CouldNotPerformException ex) {
-                                logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
+                                ExceptionPrinter.printHistory("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex, logger, LogLevel.WARN);
                                 continue;
                             }
 
