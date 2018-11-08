@@ -40,7 +40,7 @@ public interface Activatable {
      * @throws InterruptedException is thrown in case the thread is externally
      * interrupted.
      */
-    public void activate() throws CouldNotPerformException, InterruptedException;
+    void activate() throws CouldNotPerformException, InterruptedException;
 
     /**
      * This method deactivates this instance.
@@ -53,12 +53,12 @@ public interface Activatable {
      * @throws InterruptedException is thrown in case the thread is externally
      * interrupted.
      */
-    public void deactivate() throws CouldNotPerformException, InterruptedException;
+    void deactivate() throws CouldNotPerformException, InterruptedException;
 
     /**
      * Method return if this instance is currently activate.
      *
      * @return is true if the instance is active and false if not.
      */
-    public boolean isActive();
+    boolean isActive();
 }
