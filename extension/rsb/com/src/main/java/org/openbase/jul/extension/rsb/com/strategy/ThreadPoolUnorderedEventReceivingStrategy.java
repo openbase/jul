@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import rsb.Event;
 import rsb.Handler;
@@ -45,22 +46,25 @@ import rsb.filter.Filter;
 public class ThreadPoolUnorderedEventReceivingStrategy
         extends AbstractEventReceivingStrategy {
 
-    private Map<Future, DispatchTask> eventTaskMap;
+    private final Map<Future, DispatchTask> eventTaskMap;
+
+    private final ReentrantReadWriteLock activationLock = new ReentrantReadWriteLock();
+    private final ReentrantReadWriteLock modificationLock = new ReentrantReadWriteLock();
 
     private final ExecutorService executorService;
+
+    private volatile boolean active = false;
 
     /**
      * A list of all registered filters for this {@link AbstractEventReceivingStrategy}.
      */
-    private final Set<Filter> filters = Collections
-            .synchronizedSet(new HashSet<Filter>());
+    private final Set<Filter> filters = new HashSet<Filter>();
 
     /**
      * A list of all registered handlers
      * for this {@link AbstractEventReceivingStrategy}.
      */
-    private final Set<Handler> handlers = Collections
-            .synchronizedSet(new HashSet<Handler>());
+    private final Set<Handler> handlers = new HashSet<Handler>();
 
     /**
      * Create a new {@link ThreadPoolUnorderedEventReceivingStrategy}.
@@ -70,52 +74,84 @@ public class ThreadPoolUnorderedEventReceivingStrategy
     public ThreadPoolUnorderedEventReceivingStrategy(
             final ExecutorService executorService) {
         this.executorService = executorService;
+        this.eventTaskMap = new HashMap();
     }
 
     @Override
     public void addFilter(final Filter filter) {
-        this.filters.add(filter);
+        modificationLock.writeLock().lock();
+        try {
+            this.filters.add(filter);
+        } finally {
+            modificationLock.writeLock().unlock();
+        }
     }
 
     @Override
     public void removeFilter(final Filter filter) {
-        this.filters.remove(filter);
+        modificationLock.writeLock().lock();
+        try {
+            this.filters.remove(filter);
+        } finally {
+            modificationLock.writeLock().unlock();
+        }
     }
 
     @Override
     public void addHandler(final Handler handler, final boolean wait) {
-        this.handlers.add(handler);
+        modificationLock.writeLock().lock();
+        try {
+            this.handlers.add(handler);
+        } finally {
+            modificationLock.writeLock().unlock();
+        }
     }
 
     @Override
     public void removeHandler(final Handler handler, final boolean wait) {
-        this.handlers.remove(handler);
+        modificationLock.writeLock().lock();
+        try {
+            this.handlers.remove(handler);
+        } finally {
+            modificationLock.writeLock().unlock();
+        }
     }
 
     /**
      * Returns a list of all registered filters
      * for this {@link AbstractEventReceivingStrategy}.
+     *
      * @return the filter list.
      */
     public Set<Filter> getFilters() {
-        return filters;
+        modificationLock.readLock().lock();
+        try {
+            return new HashSet<>(filters);
+        } finally {
+            modificationLock.readLock().unlock();
+        }
     }
 
     /**
      * Returns a list of all registered handlers
      * for this {@link AbstractEventReceivingStrategy}.
+     *
      * @return the handler list.
      */
     public Set<Handler> getHandlers() {
-        return handlers;
+        modificationLock.readLock().lock();
+        try {
+            return new HashSet<>(handlers);
+        } finally {
+            modificationLock.readLock().unlock();
+        }
     }
 
     /**
      * A thread that matches events and dispatches them to all
      * handlers that are registered in his internal set of handlers.
      *
-     *
-     * @author jwienke
+     * @author divine
      */
     private class DispatchTask implements Callable<Void> {
 
@@ -128,83 +164,85 @@ public class ThreadPoolUnorderedEventReceivingStrategy
         @Override
         public Void call() {
 
-            // match
-            // TODO blocks filter potentially a long time
-            synchronized (getFilters()) {
-                // CHECKSTYLE.OFF: LineLength - no way to convince
-                // eclipse to wrap this
+            modificationLock.readLock().lock();
+            try {
+                // match
                 for (final Filter filter : getFilters()) {
                     if (!filter.match(eventToDispatch)) {
                         return null;
                     }
                 }
-                // CHECKSTYLE.ON: LineLength
-            }
 
-            // dispatch
-            // TODO suboptimal locking. blocks handlers a very long time
-            synchronized (getHandlers()) {
-                // CHECKSTYLE.OFF: LineLength - no way to convince
-                // eclipse to wrap this
+                // dispatch
                 for (final Handler handler : getHandlers()) {
                     handler.internalNotify(eventToDispatch);
                 }
-                // CHECKSTYLE.ON: LineLength
+            } finally {
+                modificationLock.readLock().unlock();
             }
             return null;
         }
-
     }
 
     @Override
     public void handle(final Event event) {
 
-        if (eventTaskMap == null) {
-            // not active so event will be ignored.
-            return;
-        }
-
-        final DispatchTask dispatchTask = new DispatchTask(event);
-        final Future<Void> future = executorService.submit(dispatchTask);
-
+        activationLock.readLock().lock();
         try {
-        eventTaskMap.put(future, dispatchTask);
-        } catch (NullPointerException ex) {
-            // because we do not want to synchronize this method out
-            // of performance reasons, the eventTaskMap can already be null again
-            // if deactivate was called by another thread. In this case the
-            // dispatched task need to be canceled as well.
-            future.cancel(true);
+
+            if (!active) {
+                // not active so event will be ignored.
+                return;
+            }
+
+            final DispatchTask dispatchTask = new DispatchTask(event);
+            final Future<Void> future = executorService.submit(dispatchTask);
+
+              eventTaskMap.put(future, dispatchTask);
+        } finally {
+            activationLock.readLock().unlock();
         }
     }
 
     @Override
     public void activate() {
-        synchronized (this) {
-            if (this.eventTaskMap != null) {
+        activationLock.writeLock().lock();
+        try {
+            if (active) {
                 throw new IllegalStateException("Already activated.");
             }
-            eventTaskMap = new HashMap<Future, DispatchTask>();
+            active = true;
+        } finally {
+            activationLock.writeLock().unlock();
         }
     }
 
     @Override
     public void deactivate() throws InterruptedException {
-        synchronized (this) {
-            if (this.eventTaskMap == null) {
+        activationLock.writeLock().lock();
+        try {
+            if (!active) {
                 throw new IllegalStateException("Already deactivated.");
             }
+            active = false;
+
             for (final Future future : this.eventTaskMap.keySet()) {
                 future.cancel(true);
             }
             this.eventTaskMap.clear();
-            this.eventTaskMap = null;
+
+        } finally {
+            activationLock.writeLock().unlock();
         }
     }
 
     @Override
     public boolean isActive() {
-        return this.eventTaskMap != null;
+        activationLock.readLock().lock();
+        try {
+            return active;
+        } finally {
+            activationLock.readLock().unlock();
+        }
     }
-
 }
