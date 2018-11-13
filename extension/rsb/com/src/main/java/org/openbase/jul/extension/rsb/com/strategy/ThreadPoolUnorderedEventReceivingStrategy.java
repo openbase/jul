@@ -22,16 +22,17 @@ package org.openbase.jul.extension.rsb.com.strategy;
  * #L%
  */
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
 import rsb.eventprocessing.AbstractEventReceivingStrategy;
@@ -46,7 +47,9 @@ import rsb.filter.Filter;
 public class ThreadPoolUnorderedEventReceivingStrategy
         extends AbstractEventReceivingStrategy {
 
-    private final Map<Future, DispatchTask> eventTaskMap;
+    private Logger LOGGER = LoggerFactory.getLogger(ThreadPoolUnorderedEventReceivingStrategy.class);
+
+    private final Map<DispatchTask, Future> eventTaskMap;
 
     private final ReentrantReadWriteLock activationLock = new ReentrantReadWriteLock();
     private final ReentrantReadWriteLock modificationLock = new ReentrantReadWriteLock();
@@ -58,13 +61,13 @@ public class ThreadPoolUnorderedEventReceivingStrategy
     /**
      * A list of all registered filters for this {@link AbstractEventReceivingStrategy}.
      */
-    private final Set<Filter> filters = new HashSet<Filter>();
+    private final Set<Filter> filters = new HashSet<>();
 
     /**
      * A list of all registered handlers
      * for this {@link AbstractEventReceivingStrategy}.
      */
-    private final Set<Handler> handlers = new HashSet<Handler>();
+    private final Set<Handler> handlers = new HashSet<>();
 
     /**
      * Create a new {@link ThreadPoolUnorderedEventReceivingStrategy}.
@@ -74,7 +77,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy
     public ThreadPoolUnorderedEventReceivingStrategy(
             final ExecutorService executorService) {
         this.executorService = executorService;
-        this.eventTaskMap = new HashMap();
+        this.eventTaskMap = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -175,10 +178,33 @@ public class ThreadPoolUnorderedEventReceivingStrategy
 
                 // dispatch
                 for (final Handler handler : getHandlers()) {
+
+                    // skip if task was interrupted.
+                    if(Thread.interrupted()) {
+                        return null;
+                    }
+                    // notify handler about new task
                     handler.internalNotify(eventToDispatch);
                 }
             } finally {
+
+                // unlock modification lock
                 modificationLock.readLock().unlock();
+
+                // deregister task
+                if (!eventTaskMap.containsKey(this)) {
+
+                    // task execution was faster than registration, so wait for registration.
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ex) {
+                        // shutdown initiated so task will be removed anyway.
+                        return null;
+                    }
+                }
+                if(eventTaskMap.remove(this) == null) {
+                    LOGGER.warn("Unknown task detected!");
+                }
             }
             return null;
         }
@@ -186,7 +212,6 @@ public class ThreadPoolUnorderedEventReceivingStrategy
 
     @Override
     public void handle(final Event event) {
-
         activationLock.readLock().lock();
         try {
 
@@ -198,9 +223,14 @@ public class ThreadPoolUnorderedEventReceivingStrategy
             final DispatchTask dispatchTask = new DispatchTask(event);
             final Future<Void> future = executorService.submit(dispatchTask);
 
-              eventTaskMap.put(future, dispatchTask);
+            eventTaskMap.put(dispatchTask, future);
         } finally {
             activationLock.readLock().unlock();
+        }
+
+        final int taskCounter = eventTaskMap.size();
+        if(taskCounter > 50) {
+            LOGGER.warn("Participant["+event.getScope() + "/" + event.getMethod()+"] overload detected! Processing "+taskCounter+" tasks at once probably affects the application performance.");
         }
     }
 
@@ -226,8 +256,10 @@ public class ThreadPoolUnorderedEventReceivingStrategy
             }
             active = false;
 
-            for (final Future future : this.eventTaskMap.keySet()) {
-                future.cancel(true);
+            for (final Future future : this.eventTaskMap.values()) {
+                if(!future.isDone()) {
+                    future.cancel(true);
+                }
             }
             this.eventTaskMap.clear();
 
