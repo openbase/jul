@@ -29,6 +29,8 @@ import org.openbase.jul.iface.Initializable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.storage.registry.Registry;
 
+import java.io.File;
+
 /**
  *
  * * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
@@ -36,6 +38,8 @@ import org.openbase.jul.storage.registry.Registry;
  * @param <ENTRY>
  */
 public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends Registry<KEY, ENTRY>> extends Initializable<REGISTRY>, Shutdownable {
+
+    void prepareRegistry(final File registyDirectory) throws CouldNotPerformException;
 
     void beforeRegister(final ENTRY entry) throws RejectedException;
 

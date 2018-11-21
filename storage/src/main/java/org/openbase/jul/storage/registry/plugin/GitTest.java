@@ -68,7 +68,7 @@ public class GitTest {
     }
 
     private static Ref getHead(final Repository repository) throws IOException {
-        return repository.getRef(Constants.HEAD);
+        return repository.findRef(Constants.HEAD);
     }
 
     private static boolean isTag(final Ref ref) {

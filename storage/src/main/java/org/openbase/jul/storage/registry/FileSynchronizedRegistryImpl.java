@@ -22,26 +22,15 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPReadOnly;
 import org.openbase.jps.preset.JPShareDirectory;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
@@ -54,33 +43,32 @@ import org.openbase.jul.storage.registry.plugin.FileRegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.FileRegistryPluginPool;
 import org.openbase.jul.storage.registry.version.DBVersionControl;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 /**
  * @param <KEY>
  * @param <ENTRY>
  * @param <MAP>
  * @param <REGISTRY>
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, REGISTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
 
-    public enum DatabaseState {
-
-        UNKNOWN,
-        OUTDATED,
-        LATEST;
-    }
-
     private final File databaseDirectory;
     private final Map<KEY, FileSynchronizer<ENTRY>> fileSynchronizerMap;
     private final FileProcessor<ENTRY> fileProcessor;
-
     private final FileProvider<Identifiable<KEY>> fileProvider;
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY> filePluginPool;
     private final String databaseName;
     private boolean readOnlyFlag = false;
     private DBVersionControl versionControl;
     private DatabaseState databaseState;
-
     public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
         this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
     }
@@ -135,6 +123,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
      * @param entryType
      * @param converterPackage the package containing all converter which
      *                         provides db entry updates from the first to the latest db version.
+     *
      * @throws CouldNotPerformException in case of an invalid converter pipeline
      *                                  or initialization issues.
      */
@@ -204,6 +193,8 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
 
+
+
         // check db version
         if (versionControl != null) {
             try {
@@ -272,7 +263,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             logger.info("====== " + size() + (size() == 1 ? " entry" : " entries") + " of " + this + " successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
         }
 
-        MultiException.checkAndThrow(() ->"Could not load all registry entries!", exceptionStack);
+        MultiException.checkAndThrow(() -> "Could not load all registry entries!", exceptionStack);
 
         // register and apply db version specific consistency handler
         if (versionControl != null) {
@@ -355,7 +346,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             }
         }
 
-        MultiException.checkAndThrow(() ->"Could not save all registry entries!", exceptionStack);
+        MultiException.checkAndThrow(() -> "Could not save all registry entries!", exceptionStack);
     }
 
     @Override
@@ -404,6 +395,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         fileSynchronizerMap.clear();
         super.shutdown();
     }
+
     @Override
     public File getDatabaseDirectory() {
         return databaseDirectory;
@@ -425,5 +417,11 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
     public DatabaseState getDatabaseState() {
         return databaseState;
+    }
+
+    public enum DatabaseState {
+        UNKNOWN,
+        OUTDATED,
+        LATEST
     }
 }

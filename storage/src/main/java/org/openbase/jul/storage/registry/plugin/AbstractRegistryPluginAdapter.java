@@ -29,6 +29,7 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.registry.Registry;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,6 +57,11 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
 
     public REGISTRY getRegistry() {
         return registry;
+    }
+
+
+    @Override
+    public void prepareRegistry(final File registyDirectory) throws CouldNotPerformException {
     }
 
     @Override

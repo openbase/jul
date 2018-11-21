@@ -27,7 +27,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -41,37 +40,76 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.storage.file.FileSynchronizer;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.openbase.jul.storage.registry.jp.JPGitRegistryPluginRemoteURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @param <KEY>
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> //
  */
-public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M, MB> {
+public class GitAutoVersionControlRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M, MB> {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(GitAutoVersionControlRegistryPlugin.class);
 
-    private final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> registry;
-    private final Git git;
     private boolean detached;
+    private final String repositoryURL;
 
-    public GitRegistryPlugin(final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> registry) throws org.openbase.jul.exception.InstantiationException {
+    public GitAutoVersionControlRegistryPlugin(final String repositoryURL) throws InstantiationException {
         try {
             this.detached = false;
-            this.registry = registry;
-            this.git = detectGitRepository(registry.getDatabaseDirectory());
-            this.initialSync();
+            this.repositoryURL = repositoryURL;
         } catch (Exception ex) {
-            shutdown();
-            throw new org.openbase.jul.exception.InstantiationException(this, ex);
+            throw new InstantiationException(this, ex);
+        }
+    }
+
+    @Override
+    public void prepareRegistry(final File registyDirectory)  throws CouldNotPerformException {
+        final Git git = detectGitRepository(registyDirectory);
+
+        this.initialSync();
+    }
+
+    private String getVersion() {
+            String version = null;
+
+            // try to load from maven properties first
+            try {
+                Properties p = new Properties();
+                InputStream is = getClass().getResourceAsStream("/META-INF/maven/com.my.group/my-artefact/pom.properties");
+                if (is != null) {
+                    p.load(is);
+                    version = p.getProperty("version", "");
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+
+            // fallback to using Java API
+            if (version == null) {
+                Package aPackage = getClass().getPackage();
+                if (aPackage != null) {
+                    version = aPackage.getImplementationVersion();
+                    if (version == null) {
+                        version = aPackage.getSpecificationVersion();
+                    }
+                }
+            }
+
+            if (version == null) {
+                // we could not compute the version so use a blank
+                version = "";
+            }
+
+            return version;
         }
     }
 

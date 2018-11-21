@@ -30,6 +30,7 @@ import org.openbase.jul.storage.registry.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -82,6 +83,28 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
             pluginList.add(plugin);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not add Plugin[" + plugin.getClass().getName() + "] to Registry[" + registry.getClass().getSimpleName() + "]", ex);
+        }
+    }
+
+    @Override
+    public void prepareRegistry(final File registryDirectory) throws RejectedException {
+        if (pluginList.isEmpty() || lock.isWriteLockedByCurrentThread()) {
+            return;
+        }
+
+        lock.writeLock().lock();
+        try {
+            for (PLUGIN plugin : pluginList) {
+                try {
+                    plugin.prepareRegistry(registryDirectory);
+                } catch (RejectedException ex) {
+                    throw ex;
+                } catch (Exception ex) {
+                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not prepare RegistryDirectory[" + registryDirectory + "] via RegistryPlugin[" + plugin + "]   registration!", plugin, ex), logger, LogLevel.ERROR);
+                }
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
