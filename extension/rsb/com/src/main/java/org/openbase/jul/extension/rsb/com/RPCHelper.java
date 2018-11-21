@@ -53,7 +53,7 @@ public class RPCHelper {
 
     private static final Map<String, Integer> methodCountMap = new HashMap<>();
 
-    public static final long RPC_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
+    public static final long RPC_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
 
     public static final String USER_TIME_KEY = "USER_NANO_TIME";
     public static final long USER_TIME_VALUE_INVALID = -1;
