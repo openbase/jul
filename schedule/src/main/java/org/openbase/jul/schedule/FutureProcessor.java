@@ -29,8 +29,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ *
+ * A collection of useful methods to generate and process future objects.
  */
 public class FutureProcessor {
 
@@ -92,6 +93,79 @@ public class FutureProcessor {
             }
         };
     }
+
+    /**
+     * Generates an already completed future instance.
+     * @param value the value used for the completion.
+     * @param <VALUE> the value type of the future.
+     * @return the future object completed with the given {@code value}.
+     */
+    public static <VALUE> Future<VALUE> completedFuture(final VALUE value) {
+        return new Future<VALUE>() {
+            @Override
+            public boolean cancel(boolean mayInterruptIfRunning) {
+                return false;
+            }
+
+            @Override
+            public boolean isCancelled() {
+                return false;
+            }
+
+            @Override
+            public boolean isDone() {
+                return true;
+            }
+
+            @Override
+            public VALUE get() {
+                return value;
+            }
+
+            @Override
+            public VALUE get(long timeout, TimeUnit unit) {
+                return value;
+            }
+        };
+    }
+
+    /**
+     * A Void future prototype.
+     */
+    private static final Future<Void> COMPLETED_VOID_FUTURE_PROTOTYPE = new Future<Void>() {
+        @Override
+        public boolean cancel(boolean mayInterruptIfRunning) {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            return false;
+        }
+
+        @Override
+        public boolean isDone() {
+            return true;
+        }
+
+        @Override
+        public Void get() {
+            return null;
+        }
+
+        @Override
+        public Void get(long timeout, TimeUnit unit) {
+            return null;
+        }
+    };
+
+    /**
+     * Returns an already completed future instance.
+     * @return the future object completed with the a null value.
+     */
+    public static Future<Void> completedFuture() {
+        return COMPLETED_VOID_FUTURE_PROTOTYPE;
+    }
     
     /**
      * Method returns a future which is already canceled by the given cause.
@@ -127,5 +201,4 @@ public class FutureProcessor {
             }
         };
     }
-
 }
