@@ -233,6 +233,9 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
         }
     }
 
+
+    // todo release: All methods below should be moved to the FutureProcessor service class.
+
     /**
      * This method applies an error handler to the given future object.
      * In case the given timeout is expired or the future processing fails the error processor is processed with the occurred exception as argument.
@@ -259,7 +262,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
 
     /**
      * This method applies an error handler to the given future object.
-     * In case the given timeout is expired or the future processing fails the error processor is processed with the occured exception as argument.
+     * In case the given timeout is expired or the future processing fails the error processor is processed with the occurred exception as argument.
      * The receive a future should be submitted to any execution service or handled externally.
      *
      * @param future         the future on which is the error processor is registered.
@@ -353,6 +356,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
      * @return the outer future.
      */
     public static <R> Future<R> allOf(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+        // todo: can be optimized by providing a new future implementation which aggregates the futureCollection. This would reduce one thread usage of each call.
         return executorService.submit(new Callable<R>() {
             @Override
             public R call() throws Exception {
