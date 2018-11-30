@@ -31,10 +31,15 @@ import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.provider.LabelProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -47,6 +52,9 @@ import java.util.TreeMap;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ProtoBufFieldProcessor {
+
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProtoBufFieldProcessor.class);
 
     //TODO release: Create ProtoBufFieldProcessor and move some methods to there and to ProtoBufBuilderProcessor
 
@@ -76,8 +84,12 @@ public class ProtoBufFieldProcessor {
         }
     }
 
-    public static Descriptors.FieldDescriptor getFieldDescriptor(final MessageOrBuilder msg, final String fieldName) {
-        return msg.getDescriptorForType().findFieldByName(fieldName);
+    public static Descriptors.FieldDescriptor getFieldDescriptor(final MessageOrBuilder msg, final String fieldName) throws NotAvailableException {
+        final FieldDescriptor descriptor = msg.getDescriptorForType().findFieldByName(fieldName);
+        if(descriptor == null) {
+            throw new NotAvailableException("Field", fieldName);
+        }
+        return descriptor;
     }
 
     public static String getId(final Message msg) throws CouldNotPerformException {
@@ -143,30 +155,38 @@ public class ProtoBufFieldProcessor {
 
         String[] fields = fieldPath.split("\\.");
         for (int i = 0; i < fields.length - 1; ++i) {
-            if (fields[i].endsWith("]")) {
-                String fieldName = fields[i].split("\\[")[0];
-                int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fieldName);
+            try{
+                if (fields[i].endsWith("]")) {
+                    String fieldName = fields[i].split("\\[")[0];
+                    int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
+                    fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fieldName);
 
-                Message.Builder subBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
-                String subPath = fields[i + 1];
-                for (int j = i + 2; j < fields.length; ++j) {
-                    subPath += "." + fields[j];
+                    Message.Builder subBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
+                    String subPath = fields[i + 1];
+                    for (int j = i + 2; j < fields.length; ++j) {
+                        subPath += "." + fields[j];
+                    }
+                    tmpBuilder.setRepeatedField(fieldDescriptor, number, initFieldWithDefault(subBuilder, subPath).buildPartial());
+                    return builder;
+                } else {
+                    fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
+                    tmpBuilder = tmpBuilder.getFieldBuilder(fieldDescriptor);
                 }
-                tmpBuilder.setRepeatedField(fieldDescriptor, number, initFieldWithDefault(subBuilder, subPath).buildPartial());
-                return builder;
-            } else {
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
-                tmpBuilder = tmpBuilder.getFieldBuilder(fieldDescriptor);
+            } catch (NotAvailableException ex) {
+                ExceptionPrinter.printHistory("Could not init field!", ex, LOGGER, LogLevel.WARN);
             }
         }
-        fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 1]);
-        Object field = tmpBuilder.getField(fieldDescriptor);
-        //Todo: remove with protobuf 3
-        if (fieldDescriptor.getName().equals("qw")) {
-            field = 1.0;
+        try {
+            fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 1]);
+            Object field = tmpBuilder.getField(fieldDescriptor);
+            //Todo: remove with protobuf 3
+            if (fieldDescriptor.getName().equals("qw")) {
+                field = 1.0;
+            }
+            tmpBuilder.setField(fieldDescriptor, field);
+        } catch (NotAvailableException ex) {
+            ExceptionPrinter.printHistory("Could not init field!", ex, LOGGER, LogLevel.WARN);
         }
-        tmpBuilder.setField(fieldDescriptor, field);
         return builder;
     }
 
@@ -183,30 +203,38 @@ public class ProtoBufFieldProcessor {
         String[] fields = fieldPath.split("\\.");
         boolean alreadyRemoved = false;
         for (int i = 0; i < fields.length - 2; ++i) {
-            if (fields[i].endsWith("]")) {
-                String fieldName = fields[i].split("\\[")[0];
-                int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fieldName);
+            try {
+                if (fields[i].endsWith("]")) {
+                    String fieldName = fields[i].split("\\[")[0];
+                    int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
+                    fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fieldName);
 
-                Message.Builder subBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
-                String subPath = fields[i + 1];
-                for (int j = i + 2; j < fields.length; ++j) {
-                    subPath += "." + fields[j];
+                    Message.Builder subBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
+                    String subPath = fields[i + 1];
+                    for (int j = i + 2; j < fields.length; ++j) {
+                        subPath += "." + fields[j];
+                    }
+                    tmpBuilder.setRepeatedField(fieldDescriptor, number, clearRequiredField(subBuilder, subPath).buildPartial());
+                    return builder;
+                } else {
+                    fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
+                    if (!tmpBuilder.hasField(fieldDescriptor)) {
+                        alreadyRemoved = true;
+                        continue;
+                    }
+                    tmpBuilder = tmpBuilder.getFieldBuilder(fieldDescriptor);
                 }
-                tmpBuilder.setRepeatedField(fieldDescriptor, number, clearRequiredField(subBuilder, subPath).buildPartial());
-                return builder;
-            } else {
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
-                if (!tmpBuilder.hasField(fieldDescriptor)) {
-                    alreadyRemoved = true;
-                    continue;
-                }
-                tmpBuilder = tmpBuilder.getFieldBuilder(fieldDescriptor);
+            } catch (NotAvailableException ex) {
+                ExceptionPrinter.printHistory("Could not clear field!", ex, LOGGER, LogLevel.WARN);
             }
         }
         if (!alreadyRemoved) {
-            fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 2]);
-            tmpBuilder.clearField(fieldDescriptor);
+            try {
+                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 2]);
+                tmpBuilder.clearField(fieldDescriptor);
+            } catch (NotAvailableException ex) {
+                ExceptionPrinter.printHistory("Could not clear field!", ex, LOGGER, LogLevel.WARN);
+            }
         }
         return builder;
     }
@@ -366,8 +394,9 @@ public class ProtoBufFieldProcessor {
      * @param repeatedFieldName the name of the repeated field.
      * @param repeatedFieldProvider the message holding the repeated field.
      * @return a list of values of the repeated field.
+     * @throws NotAvailableException is thrown if the repeated field is not available.
      */
-    public static ArrayList getRepeatedFieldList(final String repeatedFieldName, MessageOrBuilder repeatedFieldProvider) {
+    public static ArrayList getRepeatedFieldList(final String repeatedFieldName, MessageOrBuilder repeatedFieldProvider) throws NotAvailableException {
         return getRepeatedFieldList(ProtoBufFieldProcessor.getFieldDescriptor(repeatedFieldProvider, repeatedFieldName), repeatedFieldProvider);
     }
 
