@@ -433,7 +433,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
                             future.get(30, TimeUnit.SECONDS);
                             finishedFutures.add(future);
                             runningFutures.remove(future);
-                        } catch (ExecutionException ex) {
+                        } catch (ExecutionException | CancellationException ex) {
                             failedFutures.add(future);
                             runningFutures.remove(future);
                             exceptionStack = MultiException.push(source, ex, exceptionStack);
@@ -454,7 +454,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
                 for (final Future future : futureCollection) {
                     try {
                         future.get();
-                    } catch (ExecutionException ex) {
+                    } catch (ExecutionException | CancellationException ex) {
                         exceptionStack = MultiException.push(source, ex, exceptionStack);
                     }
                 }
