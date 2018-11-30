@@ -102,7 +102,9 @@ public class ProtoBufFieldProcessor {
 
     /**
      * @param msg
+     *
      * @return
+     *
      * @throws CouldNotPerformException
      * @deprecated cannot be used in its current form because the label is now an RST type and not a string
      */
@@ -126,6 +128,7 @@ public class ProtoBufFieldProcessor {
      * Tests if a message is empty. If a message is empty none of its fields are set.
      *
      * @param messageOrBuilder the message or builder which is tested
+     *
      * @return true if none of the fields is set, else false
      */
     public static boolean isMessageEmpty(final MessageOrBuilder messageOrBuilder) {
@@ -171,43 +174,56 @@ public class ProtoBufFieldProcessor {
     }
 
     public static void clearRequiredFields(final Message.Builder builder) {
-        builder.findInitializationErrors().stream().forEach((initError) -> {
-            clearRequiredField(builder, initError);
-        });
+        builder.findInitializationErrors().forEach((initError) -> clearRequiredField(builder, initError));
     }
 
     public static Message.Builder clearRequiredField(final Message.Builder builder, final String fieldPath) {
-        Descriptors.FieldDescriptor fieldDescriptor;
+        Descriptors.FieldDescriptor fieldDescriptor = null;
+        Message.Builder lastBuilder = builder;
         Message.Builder tmpBuilder = builder;
 
-        String[] fields = fieldPath.split("\\.");
-        boolean alreadyRemoved = false;
-        for (int i = 0; i < fields.length - 2; ++i) {
+        final String[] fields = fieldPath.split("\\.");
+        for (int i = 0; i < fields.length; ++i) {
             if (fields[i].endsWith("]")) {
-                String fieldName = fields[i].split("\\[")[0];
+                // handle repeated field
+                final String fieldName = fields[i].split("\\[")[0];
+                // extract position
                 int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
+                // get field descriptor
                 fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fieldName);
 
-                Message.Builder subBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
-                String subPath = fields[i + 1];
+                // extract builder at the given position
+                final Message.Builder repeatedBuilder = ((Message) tmpBuilder.getRepeatedField(fieldDescriptor, number)).toBuilder();
+                // create field path to uninitialized field relative to extracted builder
+                final StringBuilder subPath = new StringBuilder(fields[i + 1]);
                 for (int j = i + 2; j < fields.length; ++j) {
-                    subPath += "." + fields[j];
+                    subPath.append(".").append(fields[j]);
                 }
-                tmpBuilder.setRepeatedField(fieldDescriptor, number, clearRequiredField(subBuilder, subPath).buildPartial());
+                // clear required field in extracted builder and place it at its old position
+                tmpBuilder.setRepeatedField(fieldDescriptor, number, clearRequiredField(repeatedBuilder, subPath.toString()).buildPartial());
+                // return now cleared builder
                 return builder;
             } else {
-                fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
-                if (!tmpBuilder.hasField(fieldDescriptor)) {
-                    alreadyRemoved = true;
-                    continue;
+                // extract next field
+                final FieldDescriptor tmpFieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[i]);
+                if (tmpFieldDescriptor.isRequired()) {
+                    // if it is required clear the last optional field
+                    if (i == 0) {
+                        lastBuilder.clearField(tmpFieldDescriptor);
+                    } else {
+                        // clear last optional field and return
+                        lastBuilder.clearField(fieldDescriptor);
+                        return builder;
+                    }
+                    break;
+                } else {
+                    fieldDescriptor = tmpFieldDescriptor;
+                    lastBuilder = tmpBuilder;
+                    tmpBuilder = tmpBuilder.getFieldBuilder(fieldDescriptor);
                 }
-                tmpBuilder = tmpBuilder.getFieldBuilder(fieldDescriptor);
             }
         }
-        if (!alreadyRemoved) {
-            fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 2]);
-            tmpBuilder.clearField(fieldDescriptor);
-        }
+
         return builder;
     }
 
@@ -215,7 +231,7 @@ public class ProtoBufFieldProcessor {
 
         ALL_REQUIRED_FIELDS_SET,
         NO_REQUIRED_FIELDS_SET,
-        SOME_REQUIRED_FIELDS_SET;
+        SOME_REQUIRED_FIELDS_SET
     }
 
     public static boolean checkIfSomeButNotAllRequiredFieldsAreSet(final Message.Builder builder) {
@@ -262,6 +278,7 @@ public class ProtoBufFieldProcessor {
      * @param entryMessage       the entry to put into the map.
      * @param mapFieldDescriptor the descriptor which refers the map field of the {@code mapHolder}.
      * @param mapHolder          the message builder providing the map field.
+     *
      * @throws CouldNotPerformException is thrown if something went wrong during the reflection process which mostly means the data types are not compatible.
      */
     public static void putMapEntry(final Message entryMessage, FieldDescriptor mapFieldDescriptor, Message.Builder mapHolder) throws CouldNotPerformException {
@@ -323,7 +340,9 @@ public class ProtoBufFieldProcessor {
      * @param key                the key to identify the value within the map.
      * @param mapFieldDescriptor the descriptor which refers the map field of the {@code mapHolder}.
      * @param mapHolder          the message builder providing the map field.
+     *
      * @return the resolved entry related to the given {@code key}
+     *
      * @throws NotAvailableException is thrown if the entry could not be resolved.
      */
     public static Object getMapEntry(final Object key, FieldDescriptor mapFieldDescriptor, MessageOrBuilder mapHolder) throws NotAvailableException {
@@ -363,8 +382,10 @@ public class ProtoBufFieldProcessor {
 
     /**
      * Extracts the repeated field values out of the given message or builder instance.
-     * @param repeatedFieldName the name of the repeated field.
+     *
+     * @param repeatedFieldName     the name of the repeated field.
      * @param repeatedFieldProvider the message holding the repeated field.
+     *
      * @return a list of values of the repeated field.
      */
     public static ArrayList getRepeatedFieldList(final String repeatedFieldName, MessageOrBuilder repeatedFieldProvider) {
@@ -373,8 +394,10 @@ public class ProtoBufFieldProcessor {
 
     /**
      * Extracts the repeated field values out of the given message or builder instance.
+     *
      * @param repeatedFieldDescriptor the descriptor of the repeated field.
-     * @param repeatedFieldProvider the message holding the repeated field.
+     * @param repeatedFieldProvider   the message holding the repeated field.
+     *
      * @return a list of values of the repeated field.
      */
     public static ArrayList getRepeatedFieldList(final FieldDescriptor repeatedFieldDescriptor, MessageOrBuilder repeatedFieldProvider) {
