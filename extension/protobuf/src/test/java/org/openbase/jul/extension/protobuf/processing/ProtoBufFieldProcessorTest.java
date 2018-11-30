@@ -22,36 +22,34 @@ package org.openbase.jul.extension.protobuf.processing;
  * #L%
  */
 
-import org.junit.After;
-import org.junit.AfterClass;
+import org.junit.*;
+import rst.geometry.PoseType.Pose.Builder;
+import rst.geometry.RotationType.Rotation;
+import rst.spatial.PlacementConfigType.PlacementConfig;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import rst.geometry.RotationType.Rotation;
 
 /**
- *
  * @author <a href="mailto:pLeminoq@openbase.org">Tamino Huxohl</a>
  */
 public class ProtoBufFieldProcessorTest {
-    
+
     public ProtoBufFieldProcessorTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
@@ -62,12 +60,29 @@ public class ProtoBufFieldProcessorTest {
     @Test
     public void testInitFieldWithDefault() {
         System.out.println("initFieldWithDefault");
-        
+
         Rotation.Builder rotation = Rotation.newBuilder().setQx(0.0).setQy(0.0).setQz(0.0);
         assertTrue("Rotation is initialized even though Qw is missing", !rotation.isInitialized());
         ProtoBufFieldProcessor.initFieldWithDefault(rotation, rotation.getInitializationErrorString());
-        
+
         assertTrue("Rotation is not initialized", rotation.isInitialized());
         assertEquals("Qw has not been initialized with its default value", 1.0, rotation.getQw(), 0.01);
+    }
+
+    /**
+     * Test of testClearRequiredFields method, of class ProtoBufFieldProcessor.
+     */
+    @Test
+    public void testClearRequiredFields() {
+        System.out.println("testClearRequiredFields");
+
+        PlacementConfig.Builder placement = PlacementConfig.newBuilder();
+        Builder positionBuilder = placement.getPositionBuilder();
+        positionBuilder.getRotationBuilder();
+        positionBuilder.getTranslationBuilder();
+
+        assertTrue("Placement is initialized", !placement.isInitialized());
+        ProtoBufFieldProcessor.clearRequiredFields(placement);
+        assertTrue("Placement is not initialized", placement.isInitialized());
     }
 }
