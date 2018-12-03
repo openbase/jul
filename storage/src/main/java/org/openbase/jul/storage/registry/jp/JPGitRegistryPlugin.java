@@ -45,7 +45,7 @@ public class JPGitRegistryPlugin extends AbstractJPBoolean {
 
     @Override
     public Boolean getPropertyDefaultValue() throws JPNotAvailableException {
-        return !JPService.getProperty(JPGitRegistryPluginRemoteURL.class).getValue().isEmpty() || super.getDefaultValue();
+        return !JPService.getProperty(JPGitRegistryPluginRemoteURL.class).getValue().isEmpty() || super.getPropertyDefaultValue();
     }
 
 }
