@@ -71,7 +71,7 @@ public class RSBResolvedException extends CouldNotPerformException {
     public static Exception resolveRSBException(final RSBException rsbException) {
         Exception exception = null;
 
-        // build stacktrace array where each line is stored as entry. entry is extract each line istacktrace into arr
+        // build stacktrace array where each line is stored as entry. entry is extract each line stacktrace into arr
         final String[] stacktrace = ("Caused by: " + rsbException.getMessage()).split("\n");
 
         // iterate in reverse order to build exception chain.

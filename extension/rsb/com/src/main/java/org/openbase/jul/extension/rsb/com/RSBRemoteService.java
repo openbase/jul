@@ -1696,6 +1696,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             Future<Event> internalFuture = null;
             Event event;
             boolean active = isActive();
+            ExecutionException lastException = null;
             try {
                 try {
                     logger.debug("call request");
@@ -1787,6 +1788,21 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
                             }
 
                             timeout = generateTimeout(timeout);
+
+                            // prevent rapid looping over the same exception
+                            if(ex instanceof ExecutionException) {
+                                if(lastException == null) {
+                                    lastException = (ExecutionException) ex;
+                                } else {
+                                    if (ExceptionProcessor.getInitialCauseMessage(ex).equals(ExceptionProcessor.getInitialCauseMessage(lastException))) {
+                                        new FatalImplementationErrorException("Sync task failed twice for the same reason", this, ex);
+                                        // for production mode wait, else the fatal implementation error will exit the process
+                                        Thread.sleep(timeout);
+                                    } else {
+                                        lastException = (ExecutionException) ex;
+                                    }
+                                }
+                            }
 
                             // only print warning if timeout is too long.
                             if (timeout > 15000) {
