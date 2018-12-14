@@ -49,9 +49,9 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>rsb</groupId>
-            <artifactId>${dependency.rst.stable.artifact}</artifactId>
-            <version>${dependency.rst.stable.version}</version>
+            <groupId>org.openbase</groupId>
+            <artifactId>type</artifactId>
+            <version>${dependency.openbase.type.version}</version>
         </dependency>
     </dependencies>
 </project>

@@ -57,16 +57,9 @@
             <version>2.6.2</version>
         </dependency>
         <dependency>
-            <groupId>rsb</groupId>
-            <artifactId>${dependency.rst.experimental.artifact}</artifactId>
-            <version>${dependency.rst.experimental.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>rsb</groupId>
-            <artifactId>${dependency.rst.sandbox.artifact}</artifactId>
-            <version>${dependency.rst.sandbox.version}</version>
-            <scope>test</scope>
+            <groupId>org.openbase</groupId>
+            <artifactId>type</artifactId>
+            <version>${dependency.openbase.type.version}</version>
         </dependency>
     </dependencies>
 </project>
