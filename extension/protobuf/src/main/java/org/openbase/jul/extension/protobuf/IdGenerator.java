@@ -22,7 +22,7 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
@@ -31,6 +31,6 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @param <KEY>
  * @param <M>
  */
-public interface IdGenerator<KEY, M extends GeneratedMessage> {
+public interface IdGenerator<KEY, M extends Message> {
     public KEY generateId(M message) throws CouldNotPerformException;
 }

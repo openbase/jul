@@ -21,7 +21,7 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage.Builder;
+import com.google.protobuf.AbstractMessage.Builder;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**

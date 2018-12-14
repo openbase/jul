@@ -22,7 +22,8 @@ package org.openbase.jul.storage.registry.plugin;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
@@ -36,5 +37,5 @@ import org.openbase.jul.storage.registry.ProtoBufRegistry;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  */
-public abstract class ProtobufRegistryPluginAdapter<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileRegistryPluginAdapter<KEY, IdentifiableMessage<KEY,M,MB>, ProtoBufRegistry<KEY, M, MB>> {
+public abstract class ProtobufRegistryPluginAdapter<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends FileRegistryPluginAdapter<KEY, IdentifiableMessage<KEY,M,MB>, ProtoBufRegistry<KEY, M, MB>> {
 }

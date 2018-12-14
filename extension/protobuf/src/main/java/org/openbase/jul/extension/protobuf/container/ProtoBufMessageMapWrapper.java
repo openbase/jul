@@ -22,7 +22,8 @@ package org.openbase.jul.extension.protobuf.container;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,7 +38,7 @@ import org.openbase.jul.extension.protobuf.IdentifiableMessage;
  * @param <MB>
  * @param <SIB>
  */
-public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends HashMap<KEY, IdentifiableMessage<KEY, M, MB>> implements ProtoBufMessageMap<KEY, M, MB> {
+public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>, SIB extends AbstractMessage.Builder<SIB>> extends HashMap<KEY, IdentifiableMessage<KEY, M, MB>> implements ProtoBufMessageMap<KEY, M, MB> {
 
     public ProtoBufMessageMapWrapper() {
     }

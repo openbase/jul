@@ -21,8 +21,9 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InstantiationException;
@@ -39,7 +40,7 @@ import rst.rsb.ScopeType.Scope;
  * @param <MB> builder of the message M
  * @param <CONFIG> the configuration data type
  */
-public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
+public abstract class AbstractConfigurableController<M extends AbstractMessage, MB extends M.Builder<MB>, CONFIG extends Message> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
 
     public static final String FIELD_SCOPE = "scope";
 

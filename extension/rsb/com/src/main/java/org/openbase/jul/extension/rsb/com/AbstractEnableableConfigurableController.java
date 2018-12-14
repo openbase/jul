@@ -21,7 +21,8 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Enableable;
@@ -34,7 +35,7 @@ import org.openbase.jul.schedule.SyncObject;
  * @param <MB>
  * @param <CONFIG>
  */
-public abstract class AbstractEnableableConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractConfigurableController<M, MB, CONFIG> implements Enableable {
+public abstract class AbstractEnableableConfigurableController<M extends AbstractMessage, MB extends M.Builder<MB>, CONFIG extends Message> extends AbstractConfigurableController<M, MB, CONFIG> implements Enableable {
 
     private boolean enabled;
     private final SyncObject enablingLock = new SyncObject(AbstractEnableableConfigurableController.class);

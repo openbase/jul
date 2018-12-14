@@ -22,7 +22,7 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -36,7 +36,7 @@ import org.openbase.jul.pattern.IdentifiableRemote;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
-public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {
+public abstract class AbstractIdentifiableRemote<M extends Message> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {
 
     public AbstractIdentifiableRemote(final Class<M> dataClass) {
         super(dataClass);

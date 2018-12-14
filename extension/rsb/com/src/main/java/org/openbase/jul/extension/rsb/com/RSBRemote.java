@@ -22,7 +22,7 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -40,7 +40,7 @@ import java.util.concurrent.Future;
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface RSBRemote<M extends GeneratedMessage> extends Remote<M> {
+public interface RSBRemote<M extends Message> extends Remote<M> {
 
     /**
      * Initialize the remote on the given scope.

@@ -22,7 +22,8 @@ package org.openbase.jul.storage.registry.plugin;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -54,7 +55,7 @@ import java.util.Map;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> //
  */
-public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M, MB> {
+public class GitRegistryPlugin<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M, MB> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

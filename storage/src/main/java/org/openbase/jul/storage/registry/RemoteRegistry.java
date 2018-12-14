@@ -22,7 +22,8 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -46,7 +47,7 @@ import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class RemoteRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB>, DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>> {
+public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractRegistry<KEY, IdentifiableMessage<KEY, M, MB>, Map<KEY, IdentifiableMessage<KEY, M, MB>>, ProtoBufRegistry<KEY, M, MB>, RemoteRegistryPlugin<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>>> implements ProtoBufRegistry<KEY, M, MB>, DataProvider<Map<KEY, IdentifiableMessage<KEY, M, MB>>> {
 
     /**
      * An optional configurable registryRemote where this remote is than bound to.

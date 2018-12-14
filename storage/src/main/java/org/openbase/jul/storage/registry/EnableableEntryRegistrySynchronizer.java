@@ -22,7 +22,8 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Configurable;
@@ -37,7 +38,7 @@ import org.openbase.jul.pattern.Factory;
  * @param <CONFIG_MB>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public abstract class EnableableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Enableable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
+public abstract class EnableableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Enableable, CONFIG_M extends AbstractMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
 
     public EnableableEntryRegistrySynchronizer(SynchronizableRegistry<KEY, ENTRY> registry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final RegistryRemote registryRemote, Factory<ENTRY, CONFIG_M> factory) throws InstantiationException {
         super(registry, remoteRegistry, registryRemote, factory);

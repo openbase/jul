@@ -22,7 +22,8 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -36,7 +37,7 @@ import java.util.List;
  * @param <MB>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractListDiff<KEY, IdentifiableMessage<KEY, M, MB>, IdentifiableMessageMap<KEY, M, MB>> {
+public class ProtobufListDiff<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractListDiff<KEY, IdentifiableMessage<KEY, M, MB>, IdentifiableMessageMap<KEY, M, MB>> {
 
     public ProtobufListDiff(final List<M> originalMessages) {
         this();

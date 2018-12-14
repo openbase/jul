@@ -22,7 +22,8 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 
@@ -38,7 +39,7 @@ import java.util.Set;
  * @param <M>
  * @param <MB>
  */
-public class IdentifiableMessageMap<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends IdentifiableValueMap<KEY, IdentifiableMessage<KEY, M, MB>> {
+public class IdentifiableMessageMap<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends IdentifiableValueMap<KEY, IdentifiableMessage<KEY, M, MB>> {
 
     public IdentifiableMessageMap(final Collection<M> messageList) {
         if (messageList == null) {

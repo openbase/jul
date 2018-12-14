@@ -21,7 +21,8 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -34,7 +35,7 @@ import org.openbase.jul.pattern.IdentifiableController;
  * @param <M>
  * @param <MB>
  */
-public abstract class AbstractIdentifiableController<M extends GeneratedMessage, MB extends M.Builder<MB>> extends RSBCommunicationService<M, MB> implements IdentifiableController<String, M> {
+public abstract class AbstractIdentifiableController<M extends AbstractMessage, MB extends M.Builder<MB>> extends RSBCommunicationService<M, MB> implements IdentifiableController<String, M> {
 
     public AbstractIdentifiableController(MB builder) throws InstantiationException {
         super(builder);

@@ -22,14 +22,14 @@ package org.openbase.jul.extension.protobuf.container;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
-public interface MessageContainer<M extends GeneratedMessage> {
+public interface MessageContainer<M extends Message> {
 
 
     M getMessage();

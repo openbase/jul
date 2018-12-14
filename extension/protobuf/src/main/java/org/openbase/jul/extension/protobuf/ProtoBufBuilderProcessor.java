@@ -22,8 +22,7 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.*;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -160,20 +159,20 @@ public class ProtoBufBuilderProcessor {
         }
     }
 
-    //TODO: all methods below are copies using GeneratedMessage instead of message, I think they can be removed as soon as the new registry editor is usable
+    //TODO: all methods below are copies using AbstractMessage instead of message, I think they can be removed as soon as the new registry editor is usable
 
-    public static List<GeneratedMessage.Builder> extractRepeatedFieldBuilderList(final int repeatedFieldNumber, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static List<AbstractMessage.Builder> extractRepeatedFieldBuilderList(final int repeatedFieldNumber, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         return extractRepeatedFieldBuilderList(builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber), builder);
     }
 
-    public static List<GeneratedMessage.Builder> extractRepeatedFieldBuilderList(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static List<AbstractMessage.Builder> extractRepeatedFieldBuilderList(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         if (repeatedFieldDescriptor == null) {
             throw new NotAvailableException("repeatedFieldDescriptor");
         }
         return extractRepeatedFieldBuilderList(repeatedFieldDescriptor.getName(), builder);
     }
 
-    public static List<GeneratedMessage.Builder> extractRepeatedFieldBuilderList(final String repeatedFieldName, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static List<AbstractMessage.Builder> extractRepeatedFieldBuilderList(final String repeatedFieldName, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         try {
             Class builderClass = builder.getClass();
             Method method;
@@ -185,7 +184,7 @@ public class ProtoBufBuilderProcessor {
             }
 
             try {
-                return (List<GeneratedMessage.Builder>) method.invoke(builder);
+                return (List<AbstractMessage.Builder>) method.invoke(builder);
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not extract builder list!", ex);
             }
@@ -195,18 +194,18 @@ public class ProtoBufBuilderProcessor {
         }
     }
 
-    public static GeneratedMessage.Builder addMessageToRepeatedField(final int repeatedFieldNumber, final GeneratedMessage.Builder messageBuilder, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static AbstractMessage.Builder addMessageToRepeatedField(final int repeatedFieldNumber, final AbstractMessage.Builder messageBuilder, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         return addMessageToRepeatedField(builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber), messageBuilder, builder);
     }
 
-    public static GeneratedMessage.Builder addMessageToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final GeneratedMessage.Builder messageBuilder, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static AbstractMessage.Builder addMessageToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final AbstractMessage.Builder messageBuilder, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         if (repeatedFieldDescriptor == null) {
             throw new NotAvailableException("repeatedFieldDescriptor");
         }
         return addMessageToRepeatedField(repeatedFieldDescriptor.getName(), messageBuilder, builder);
     }
 
-    public static GeneratedMessage.Builder addMessageToRepeatedField(final String repeatedFieldName, final GeneratedMessage.Builder messageBuilder, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static AbstractMessage.Builder addMessageToRepeatedField(final String repeatedFieldName, final AbstractMessage.Builder messageBuilder, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         try {
             Class builderClass = builder.getClass();
             Method method;
@@ -237,7 +236,7 @@ public class ProtoBufBuilderProcessor {
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
-    public static GeneratedMessage.Builder addDefaultInstanceToRepeatedField(final int repeatedFieldNumber, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static AbstractMessage.Builder addDefaultInstanceToRepeatedField(final int repeatedFieldNumber, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         return addDefaultInstanceToRepeatedField(builder.getDescriptorForType().findFieldByNumber(repeatedFieldNumber), builder);
     }
 
@@ -248,7 +247,7 @@ public class ProtoBufBuilderProcessor {
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
-    public static GeneratedMessage.Builder addDefaultInstanceToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static AbstractMessage.Builder addDefaultInstanceToRepeatedField(final Descriptors.FieldDescriptor repeatedFieldDescriptor, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         if (repeatedFieldDescriptor == null) {
             throw new NotAvailableException("repeatedFieldDescriptor");
         }
@@ -262,7 +261,7 @@ public class ProtoBufBuilderProcessor {
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
-    public static GeneratedMessage.Builder addDefaultInstanceToRepeatedField(final String repeatedFieldName, final GeneratedMessage.Builder builder) throws CouldNotPerformException {
+    public static AbstractMessage.Builder addDefaultInstanceToRepeatedField(final String repeatedFieldName, final AbstractMessage.Builder builder) throws CouldNotPerformException {
         try {
             Class builderClass = builder.getClass();
             Method method;
@@ -274,7 +273,7 @@ public class ProtoBufBuilderProcessor {
             }
 
             try {
-                return (GeneratedMessage.Builder) method.invoke(builder);
+                return (AbstractMessage.Builder) method.invoke(builder);
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not add default message builder to repeated field!", ex);
             }

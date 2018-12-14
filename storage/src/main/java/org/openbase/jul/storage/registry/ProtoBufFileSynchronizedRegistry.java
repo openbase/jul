@@ -22,8 +22,9 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
+import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 
 import java.io.File;
 
@@ -51,7 +52,7 @@ import org.openbase.jul.storage.registry.plugin.GitRegistryPlugin;
  * @param <SIB> Synchronized internal builder
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends GeneratedMessage.Builder<SIB>> extends FileSynchronizedRegistryImpl<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistry<KEY, M, MB> {
+public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>, SIB extends AbstractMessage.Builder<SIB>> extends FileSynchronizedRegistryImpl<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistry<KEY, M, MB> {
 
     private final ProtoBufMessageMapImpl<KEY, M, MB, SIB> protobufMessageMap;
     private final IdGenerator<KEY, M> idGenerator;

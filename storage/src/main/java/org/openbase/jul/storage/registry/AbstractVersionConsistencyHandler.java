@@ -21,7 +21,8 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
@@ -36,7 +37,7 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
  * @deprecated because version consistency handler is not rst independent which does not allow a stable converter pipeline. Please use the global db version converter for this purpose.
  */
 @Deprecated
-public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
+public abstract class AbstractVersionConsistencyHandler<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractProtoBufRegistryConsistencyHandler<KEY, M, MB> {
 
     protected final DBVersionControl versionControl;
     protected final FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> registry;

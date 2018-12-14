@@ -22,8 +22,9 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
+import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -69,7 +70,7 @@ import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 
-public abstract class RSBCommunicationService<M extends GeneratedMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable, TransactionIdProvider {
+public abstract class RSBCommunicationService<M extends AbstractMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable, TransactionIdProvider {
 
     // todo release: refactor class name into AbstractControllerService and document in jul changelog
 

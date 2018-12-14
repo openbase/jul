@@ -23,7 +23,7 @@ package org.openbase.jul.extension.rsb.com;
  */
 
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
@@ -68,7 +68,7 @@ import static org.openbase.jul.pattern.Remote.ConnectionState.*;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 //
-public abstract class RSBRemoteService<M extends GeneratedMessage> implements RSBRemote<M>, TransactionIdProvider {
+public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M>, TransactionIdProvider {
 
     // todo release: refactor class name into AbstractControllerRemoteService and document in jul changelog
 
@@ -108,7 +108,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
     private Future<M> syncTask;
     private M data;
     private boolean initialized;
-    private MessageProcessor<GeneratedMessage, M> messageProcessor;
+    private MessageProcessor<Message, M> messageProcessor;
     private Set<StackTraceElement[]> reinitStackTraces = new HashSet<>();
     private boolean shutdownInitiated;
     private long newestEventTime = 0;
@@ -135,7 +135,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
         return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (JITTER_RANDOM.nextDouble() * 1000)));
     }
 
-    public void setMessageProcessor(MessageProcessor<GeneratedMessage, M> messageProcessor) {
+    public void setMessageProcessor(MessageProcessor<Message, M> messageProcessor) {
         this.messageProcessor = messageProcessor;
     }
 
@@ -1073,7 +1073,7 @@ public abstract class RSBRemoteService<M extends GeneratedMessage> implements RS
             } else {
                 // received correct data
                 try {
-                    dataUpdate = messageProcessor.process((GeneratedMessage) event.getData());
+                    dataUpdate = messageProcessor.process((Message) event.getData());
                 } catch (CouldNotPerformException ex) {
                     throw new CouldNotPerformException("Could not process message", ex);
                 }

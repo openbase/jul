@@ -21,7 +21,8 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Activatable;
@@ -37,7 +38,7 @@ import org.openbase.jul.pattern.Factory;
  * @param <CONFIG_M>
  * @param <CONFIG_MB>
  */
-public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Activatable & Shutdownable, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
+public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M> & Activatable & Shutdownable, CONFIG_M extends AbstractMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends RegistrySynchronizer<KEY, ENTRY, CONFIG_M, CONFIG_MB> {
 
     public ActivatableEntryRegistrySynchronizer(SynchronizableRegistry<KEY, ENTRY> localRegistry, RemoteRegistry<KEY, CONFIG_M, CONFIG_MB> remoteRegistry, final RegistryRemote registryRemote, Factory<ENTRY, CONFIG_M> factory) throws org.openbase.jul.exception.InstantiationException {
         super(localRegistry, remoteRegistry, registryRemote, factory);

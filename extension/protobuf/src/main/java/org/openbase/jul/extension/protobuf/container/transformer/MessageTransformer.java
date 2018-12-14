@@ -22,8 +22,9 @@ package org.openbase.jul.extension.protobuf.container.transformer;
  * #L%
  */
 
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
@@ -37,7 +38,7 @@ import java.lang.reflect.InvocationTargetException;
  * @param <M>
  * @param <MB>
  */
-public abstract class MessageTransformer<T extends MessageContainer<M>, M extends GeneratedMessage, MB extends M.Builder<MB>> implements ProtoBufFileProcessor.TypeToMessageTransformer<T, M, MB> {
+public abstract class MessageTransformer<T extends MessageContainer<M>, M extends AbstractMessage, MB extends M.Builder<MB>> implements ProtoBufFileProcessor.TypeToMessageTransformer<T, M, MB> {
 
     private final Class<M> messageClass;
     

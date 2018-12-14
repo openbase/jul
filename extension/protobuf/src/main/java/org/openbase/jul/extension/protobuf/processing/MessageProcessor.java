@@ -22,13 +22,13 @@ package org.openbase.jul.extension.protobuf.processing;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.iface.Processable;
 
 /**
  *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public interface MessageProcessor<SOURCE_M extends GeneratedMessage, TARGET_M extends GeneratedMessage> extends Processable<SOURCE_M, TARGET_M> {
+public interface MessageProcessor<SOURCE_M extends Message, TARGET_M extends Message> extends Processable<SOURCE_M, TARGET_M> {
 
 }

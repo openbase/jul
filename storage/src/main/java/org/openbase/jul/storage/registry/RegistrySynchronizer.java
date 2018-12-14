@@ -22,7 +22,8 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.iface.Configurable;
@@ -41,7 +42,7 @@ import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
  * @param <CONFIG_MB>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends GeneratedMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends AbstractSynchronizer<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>> {
+public class RegistrySynchronizer<KEY, ENTRY extends Configurable<KEY, CONFIG_M>, CONFIG_M extends AbstractMessage, CONFIG_MB extends CONFIG_M.Builder<CONFIG_MB>> extends AbstractSynchronizer<KEY, IdentifiableMessage<KEY, CONFIG_M, CONFIG_MB>> {
 
     protected final SynchronizableRegistry<KEY, ENTRY> localRegistry;
     private final Factory<ENTRY, CONFIG_M> factory;

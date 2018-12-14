@@ -21,7 +21,8 @@ package org.openbase.jul.storage.registry.clone;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import java.util.HashMap;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -36,7 +37,7 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMapWrapper;
  * @param <M>
  * @param <MB>
  */
-public class ProtoBufCloner<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> implements RegistryCloner<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>> {
+public class ProtoBufCloner<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>> implements RegistryCloner<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>> {
 
     @Override
     public Map<KEY, IdentifiableMessage<KEY, M, MB>> deepCloneMap(Map<KEY, IdentifiableMessage<KEY, M, MB>> map) throws CouldNotPerformException {

@@ -21,7 +21,8 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
  * @param <M>
  * @param <MB>
  */
-public interface ProtoBufRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> {
+public interface ProtoBufRegistry<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> {
 
     M register(final M entry) throws CouldNotPerformException;
 

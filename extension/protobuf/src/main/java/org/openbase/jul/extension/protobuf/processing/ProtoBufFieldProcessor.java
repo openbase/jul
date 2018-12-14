@@ -26,7 +26,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
@@ -63,10 +63,10 @@ public class ProtoBufFieldProcessor {
         return builder.getDescriptorForType().findFieldByNumber(fieldNumber);
     }
 
-    public static FieldDescriptor[] getFieldDescriptors(final Class<? extends GeneratedMessage> messageClass, final int... fieldNumbers) throws CouldNotPerformException {
+    public static FieldDescriptor[] getFieldDescriptors(final Class<? extends Message> messageClass, final int... fieldNumbers) throws CouldNotPerformException {
         try {
             FieldDescriptor[] fieldDescriptors = new FieldDescriptor[fieldNumbers.length];
-            GeneratedMessage defaultMessage = (GeneratedMessage) messageClass.getMethod("getDefaultInstance").invoke(null);
+            Message defaultMessage = (Message) messageClass.getMethod("getDefaultInstance").invoke(null);
             for (int i = 0; i < fieldNumbers.length; i++) {
                 fieldDescriptors[i] = getFieldDescriptor(defaultMessage, fieldNumbers[i]);
             }
@@ -76,9 +76,9 @@ public class ProtoBufFieldProcessor {
         }
     }
 
-    public static FieldDescriptor getFieldDescriptor(final Class<? extends GeneratedMessage> messageClass, final int fieldNumber) throws CouldNotPerformException {
+    public static FieldDescriptor getFieldDescriptor(final Class<? extends Message> messageClass, final int fieldNumber) throws CouldNotPerformException {
         try {
-            return getFieldDescriptor((GeneratedMessage) messageClass.getMethod("getDefaultInstance").invoke(null), fieldNumber);
+            return getFieldDescriptor((Message) messageClass.getMethod("getDefaultInstance").invoke(null), fieldNumber);
         } catch (NoSuchMethodException | SecurityException | IllegalArgumentException | IllegalAccessException | InvocationTargetException ex) {
             throw new CouldNotPerformException("Could not detect field descriptor!", ex);
         }

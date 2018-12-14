@@ -21,7 +21,7 @@ package org.openbase.jul.extension.protobuf.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 
@@ -31,7 +31,7 @@ import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
  * @param <M> Message
  * @param <MB> Builder
  */
-public interface DataBuilderProvider<M extends GeneratedMessage, MB extends M.Builder<MB>> {
+public interface DataBuilderProvider<M extends AbstractMessage, MB extends M.Builder<MB>> {
 
     public MB cloneDataBuilder();
 

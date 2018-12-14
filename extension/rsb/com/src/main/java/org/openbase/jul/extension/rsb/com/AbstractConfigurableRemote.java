@@ -22,7 +22,7 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.preset.JPTestMode;
@@ -46,7 +46,7 @@ import rst.rsb.ScopeType.Scope;
  * @param <M>
  * @param <CONFIG>
  */
-public abstract class AbstractConfigurableRemote<M extends GeneratedMessage, CONFIG extends GeneratedMessage> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG>, Configurable<String, CONFIG> {
+public abstract class AbstractConfigurableRemote<M extends Message, CONFIG extends Message> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG>, Configurable<String, CONFIG> {
 
     private final SyncObject CONFIG_LOCK = new SyncObject("ConfigLock");
 

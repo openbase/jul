@@ -22,8 +22,9 @@ package org.openbase.jul.extension.protobuf.container;
  * #L%
  */
 
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ import java.util.Map;
  * @param <M>
  * @param <MB>
  */
-public interface ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends Map<KEY, IdentifiableMessage<KEY, M, MB>> {
+public interface ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>> extends Map<KEY, IdentifiableMessage<KEY, M, MB>> {
     
     public IdentifiableMessage<KEY, M, MB> put(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException;
     

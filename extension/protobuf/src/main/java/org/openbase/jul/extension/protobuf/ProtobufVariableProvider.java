@@ -22,7 +22,7 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import java.util.HashMap;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
@@ -36,9 +36,9 @@ import java.util.Map;
 public class ProtobufVariableProvider implements VariableProvider {
 
     public static final String NAME_SUFIX = "VariableProvider";
-    private final GeneratedMessage message;
+    private final Message message;
 
-    public ProtobufVariableProvider(final GeneratedMessage message) {
+    public ProtobufVariableProvider(final Message message) {
         this.message = message;
     }
 

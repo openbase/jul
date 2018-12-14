@@ -22,10 +22,10 @@ package org.openbase.jul.extension.protobuf.container;
  * #L%
  */
 
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
-import com.google.protobuf.GeneratedMessage.Builder;
+import com.google.protobuf.AbstractMessage.Builder;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.pattern.Observable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * @param <SIB> synchronized internal builder
 
  */
-public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>, SIB extends Builder<SIB>> extends HashMap<KEY, IdentifiableMessage<KEY, M, MB>> implements ProtoBufMessageMap<KEY, M, MB> {
+public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>, SIB extends Builder<SIB>> extends HashMap<KEY, IdentifiableMessage<KEY, M, MB>> implements ProtoBufMessageMap<KEY, M, MB> {
 
     protected final Logger logger = LoggerFactory.getLogger(ProtoBufMessageMapImpl.class);
 

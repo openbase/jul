@@ -21,7 +21,8 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.extension.protobuf.iface.DataBuilderProvider;
 import org.openbase.jul.pattern.Controller;
 
@@ -31,6 +32,6 @@ import org.openbase.jul.pattern.Controller;
  * @param <M> Message
  * @param <MB> Builder
  */
-public interface MessageController<M extends GeneratedMessage, MB extends M.Builder<MB>> extends Controller<M>, DataBuilderProvider<M, MB> {
+public interface MessageController<M extends AbstractMessage, MB extends M.Builder<MB>> extends Controller<M>, DataBuilderProvider<M, MB> {
 
 }
