@@ -184,7 +184,11 @@ public class ThreadPoolUnorderedEventReceivingStrategy
                         return null;
                     }
                     // notify handler about new task
-                    handler.internalNotify(eventToDispatch);
+                    try {
+                        handler.internalNotify(eventToDispatch);
+                    } catch (InterruptedException e) {
+                        return null;
+                    }
                 }
             } finally {
 
