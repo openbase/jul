@@ -135,7 +135,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
         return Math.min(METHOD_CALL_MAX_TIMEOUT, (long) (currentTimeout * METHOD_CALL_TIMEOUT_MULTIPLIER + (JITTER_RANDOM.nextDouble() * 1000)));
     }
 
-    public void setMessageProcessor(MessageProcessor<Message, M> messageProcessor) {
+    protected void setMessageProcessor(MessageProcessor<Message, M> messageProcessor) {
         this.messageProcessor = messageProcessor;
     }
 
