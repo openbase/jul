@@ -46,7 +46,7 @@
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rst.interface</artifactId>
+            <artifactId>jul.extension.type.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

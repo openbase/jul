@@ -37,7 +37,7 @@ import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
-import org.openbase.jul.extension.rst.iface.TransactionIdProvider;
+import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;

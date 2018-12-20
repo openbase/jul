@@ -24,7 +24,6 @@ package org.openbase.jul.extension.rsb.com;
 
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -37,8 +36,8 @@ import org.openbase.jul.extension.rsb.iface.RSBInformer;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
-import org.openbase.jul.extension.rst.iface.ScopeProvider;
-import org.openbase.jul.extension.rst.iface.TransactionIdProvider;
+import org.openbase.jul.extension.type.iface.ScopeProvider;
+import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.iface.Requestable;

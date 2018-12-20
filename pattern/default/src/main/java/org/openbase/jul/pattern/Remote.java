@@ -40,7 +40,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
  */
 public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProvider, DataProvider<M> {
 
-    // TODO release: Should be moved to rst.
+    // TODO release: Should be moved to org.openbase.type.
     enum ConnectionState {
 
         UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING, REINITIALIZING

@@ -25,7 +25,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.extension.rst.processing.TimestampProcessor;
+import org.openbase.jul.extension.type.processing.TimestampProcessor;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
