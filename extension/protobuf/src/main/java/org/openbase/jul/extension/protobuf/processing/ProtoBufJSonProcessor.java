@@ -89,7 +89,7 @@ public class ProtoBufJSonProcessor {
      * @throws CouldNotPerformException
      */
     public String getServiceAttributeType(final Object serviceAttribute) throws CouldNotPerformException {
-        if (serviceAttribute.getClass().getName().startsWith("rst")) {
+        if (serviceAttribute.getClass().getName().startsWith("org.openbase.type")) {
             return serviceAttribute.getClass().getName();
         }
 
@@ -127,7 +127,7 @@ public class ProtoBufJSonProcessor {
     public Message deserialize(String jsonStringRep, String serviceAttributeType) throws CouldNotPerformException {
         try {
 
-            if (!serviceAttributeType.startsWith("rst")) {
+            if (!serviceAttributeType.startsWith("org.openbase.type")) {
                 throw new NotSupportedException(serviceAttributeType, this, "Service arguments must be a protobuf message but detected type is ["+serviceAttributeType+"]!");
             }
 

@@ -34,7 +34,7 @@ import org.openbase.jul.iface.Shutdownable;
  */
 public interface Controller<M> extends Shutdownable, Activatable, ChangeListener, Pingable, Requestable<M> {
 
-    // TODO release mpohling: Should be moved to rst and reimplement for rsb 14.
+    // TODO release mpohling: Should be moved to org.openbase.type and reimplement for rsb 14.
     enum ControllerAvailabilityState {
 
         ACTIVATING, ONLINE, DEACTIVATING, OFFLINE
