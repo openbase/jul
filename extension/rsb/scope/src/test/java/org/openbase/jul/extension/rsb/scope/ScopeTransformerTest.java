@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import rsb.Scope;
-import rst.rsb.ScopeType;
+import org.openbase.type.com.ScopeType;
 
 /**
  *

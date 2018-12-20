@@ -32,7 +32,6 @@
         <module>protobuf</module>
         <module>rsb</module>
         <module>rst</module>
-        <module>rct</module>
         <module>xml</module>
         <module>tcp</module>
     </modules>

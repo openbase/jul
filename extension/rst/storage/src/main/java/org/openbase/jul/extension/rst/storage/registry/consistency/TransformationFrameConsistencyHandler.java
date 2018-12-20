@@ -30,10 +30,10 @@ import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.storage.registry.AbstractProtoBufRegistryConsistencyHandler;
 import org.openbase.jul.storage.registry.EntryModification;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
-import rst.domotic.unit.UnitConfigType;
-import rst.domotic.unit.UnitConfigType.UnitConfig;
-import rst.domotic.unit.UnitConfigType.UnitConfig.Builder;
-import rst.spatial.PlacementConfigType.PlacementConfig;
+import org.openbase.type.domotic.unit.UnitConfigType;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig.Builder;
+import org.openbase.type.spatial.PlacementConfigType.PlacementConfig;
 
 import java.util.ArrayList;
 import java.util.List;

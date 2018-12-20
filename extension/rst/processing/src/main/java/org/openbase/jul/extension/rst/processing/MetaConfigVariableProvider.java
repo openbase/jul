@@ -24,7 +24,7 @@ package org.openbase.jul.extension.rst.processing;
 import java.util.Map;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.VariableProvider;
-import rst.configuration.MetaConfigType.MetaConfig;
+import org.openbase.type.configuration.MetaConfigType.MetaConfig;
 
 /**
  *

@@ -33,7 +33,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import rsb.Scope;
-import rst.rsb.ScopeType;
+import org.openbase.type.com.ScopeType;
 
 /**
  *

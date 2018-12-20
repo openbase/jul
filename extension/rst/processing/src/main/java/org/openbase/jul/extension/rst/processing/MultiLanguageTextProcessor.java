@@ -26,10 +26,10 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rst.language.MultiLanguageTextType.MultiLanguageText;
-import rst.language.MultiLanguageTextType.MultiLanguageText.Builder;
-import rst.language.MultiLanguageTextType.MultiLanguageText.MapFieldEntry;
-import rst.language.MultiLanguageTextType.MultiLanguageTextOrBuilder;
+import org.openbase.type.language.MultiLanguageTextType.MultiLanguageText;
+import org.openbase.type.language.MultiLanguageTextType.MultiLanguageText.Builder;
+import org.openbase.type.language.MultiLanguageTextType.MultiLanguageText.MapFieldEntry;
+import org.openbase.type.language.MultiLanguageTextType.MultiLanguageTextOrBuilder;
 
 import java.util.Locale;
 

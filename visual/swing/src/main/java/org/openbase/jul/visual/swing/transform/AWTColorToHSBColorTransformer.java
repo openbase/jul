@@ -25,7 +25,7 @@ package org.openbase.jul.visual.swing.transform;
 import java.awt.Color;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.TypeNotSupportedException;
-import rst.vision.HSBColorType.HSBColor;
+import org.openbase.type.vision.HSBColorType.HSBColor;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rst.util;
+package org.openbase.jul.extension.type.util;
 
 /*-
  * #%L

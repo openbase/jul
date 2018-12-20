@@ -38,7 +38,7 @@ import org.openbase.jul.pattern.ConfigurableRemote;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.schedule.SyncObject;
-import rst.rsb.ScopeType.Scope;
+import org.openbase.type.com.ScopeType.Scope;
 
 /**
  *

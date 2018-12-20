@@ -59,21 +59,21 @@ import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.Stopwatch;
-import rst.domotic.state.BrightnessStateType.BrightnessState;
-import rst.domotic.state.ColorStateType.ColorState;
-import rst.domotic.state.ContactStateType.ContactState;
-import rst.domotic.state.MotionStateType.MotionState;
-import rst.domotic.state.PowerStateType.PowerState;
-import rst.domotic.state.PresenceStateType.PresenceState;
-import rst.domotic.state.PresenceStateType.PresenceState.MapFieldEntry;
-import rst.domotic.state.PresenceStateType.PresenceState.State;
-import rst.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
-import rst.domotic.unit.location.LocationDataType.LocationData;
-import rst.timing.TimestampType.Timestamp;
-import rst.timing.TimestampType.Timestamp.Builder;
-import rst.timing.TimestampType.TimestampOrBuilder;
-import rst.vision.ColorType.Color;
-import rst.vision.HSBColorType.HSBColor;
+import org.openbase.type.domotic.state.BrightnessStateType.BrightnessState;
+import org.openbase.type.domotic.state.ColorStateType.ColorState;
+import org.openbase.type.domotic.state.ContactStateType.ContactState;
+import org.openbase.type.domotic.state.MotionStateType.MotionState;
+import org.openbase.type.domotic.state.PowerStateType.PowerState;
+import org.openbase.type.domotic.state.PresenceStateType.PresenceState;
+import org.openbase.type.domotic.state.PresenceStateType.PresenceState.MapFieldEntry;
+import org.openbase.type.domotic.state.PresenceStateType.PresenceState.State;
+import org.openbase.type.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
+import org.openbase.type.domotic.unit.location.LocationDataType.LocationData;
+import org.openbase.type.timing.TimestampType.Timestamp;
+import org.openbase.type.timing.TimestampType.Timestamp.Builder;
+import org.openbase.type.timing.TimestampType.TimestampOrBuilder;
+import org.openbase.type.vision.ColorType.Color;
+import org.openbase.type.vision.HSBColorType.HSBColor;
 
 /**
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>

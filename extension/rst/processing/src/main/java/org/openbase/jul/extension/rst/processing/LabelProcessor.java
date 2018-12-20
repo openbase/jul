@@ -26,10 +26,10 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rst.language.LabelType.Label;
-import rst.language.LabelType.Label.Builder;
-import rst.language.LabelType.Label.MapFieldEntry;
-import rst.language.LabelType.LabelOrBuilder;
+import org.openbase.type.language.LabelType.Label;
+import org.openbase.type.language.LabelType.Label.Builder;
+import org.openbase.type.language.LabelType.Label.MapFieldEntry;
+import org.openbase.type.language.LabelType.LabelOrBuilder;
 
 import java.util.ArrayList;
 import java.util.List;

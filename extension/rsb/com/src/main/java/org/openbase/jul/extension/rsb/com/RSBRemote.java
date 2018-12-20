@@ -30,7 +30,7 @@ import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.pattern.Remote;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
-import rst.rsb.ScopeType;
+import org.openbase.type.com.ScopeType;
 
 import java.util.concurrent.Future;
 

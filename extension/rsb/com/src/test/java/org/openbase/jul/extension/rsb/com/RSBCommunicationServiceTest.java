@@ -42,8 +42,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
-import rst.domotic.unit.UnitConfigType.UnitConfig;
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 
 import java.util.concurrent.*;
 

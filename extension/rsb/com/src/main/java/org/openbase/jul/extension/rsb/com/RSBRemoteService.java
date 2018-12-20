@@ -52,7 +52,7 @@ import rsb.Event;
 import rsb.Handler;
 import rsb.RSBException;
 import rsb.config.ParticipantConfig;
-import rst.rsb.ScopeType.Scope;
+import org.openbase.type.com.ScopeType.Scope;
 
 import java.util.HashSet;
 import java.util.Random;

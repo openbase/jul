@@ -30,7 +30,7 @@ import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.slf4j.LoggerFactory;
-import rst.domotic.state.ActivationStateType.ActivationState;
+import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
 /**
  *

@@ -28,11 +28,11 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import rst.domotic.state.ColorStateType.ColorState;
-import rst.domotic.state.PowerStateType.PowerState;
-import rst.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
-import rst.domotic.unit.dal.LightDataType.LightData;
-import rst.vision.ColorType;
+import org.openbase.type.domotic.state.ColorStateType.ColorState;
+import org.openbase.type.domotic.state.PowerStateType.PowerState;
+import org.openbase.type.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
+import org.openbase.type.domotic.unit.dal.LightDataType.LightData;
+import org.openbase.type.vision.ColorType;
 
 /**
  *

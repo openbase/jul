@@ -23,7 +23,7 @@ package org.openbase.jul.extension.rst.iface;
  */
 
 import org.openbase.jul.exception.NotAvailableException;
-import rst.rsb.ScopeType.Scope;
+import org.openbase.type.com.ScopeType.Scope;
 
 /**
  *

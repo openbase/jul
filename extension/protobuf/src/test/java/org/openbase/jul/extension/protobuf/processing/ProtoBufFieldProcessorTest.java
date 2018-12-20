@@ -23,9 +23,9 @@ package org.openbase.jul.extension.protobuf.processing;
  */
 
 import org.junit.*;
-import rst.geometry.PoseType.Pose.Builder;
-import rst.geometry.RotationType.Rotation;
-import rst.spatial.PlacementConfigType.PlacementConfig;
+import org.openbase.type.geometry.PoseType.Pose.Builder;
+import org.openbase.type.geometry.RotationType.Rotation;
+import org.openbase.type.spatial.PlacementConfigType.PlacementConfig;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

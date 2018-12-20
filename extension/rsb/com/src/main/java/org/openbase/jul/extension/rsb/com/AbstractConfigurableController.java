@@ -31,7 +31,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 import org.openbase.jul.pattern.ConfigurableController;
 import org.openbase.jul.schedule.SyncObject;
-import rst.rsb.ScopeType.Scope;
+import org.openbase.type.com.ScopeType.Scope;
 
 /**
  *

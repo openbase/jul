@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 
 import java.util.ArrayList;
 import java.util.List;

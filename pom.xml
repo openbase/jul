@@ -213,9 +213,6 @@
         <dependency.rsb.artifact>rsb</dependency.rsb.artifact>
         <dependency.rsb.version>${dependency.rsx.version}</dependency.rsb.version>
 
-        <!--<dependency.rct.version>[1.0,1.1-alpha)</dependency.rct.version>-->
-        <dependency.rct.version>1.3-SNAPSHOT</dependency.rct.version>
-
         <!-- jul.visual.javafx -->
         <dependency.org.controlsfx.version>[9.0,9.1-alpha)</dependency.org.controlsfx.version>
         <dependency.de.jensd.fontawesomefx.version>[8.9,8.10-alpha)</dependency.de.jensd.fontawesomefx.version>

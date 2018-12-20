@@ -22,8 +22,8 @@ package org.openbase.jul.extension.rst.transform;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotTransformException;
-import rst.vision.HSBColorType.HSBColor;
-import rst.vision.RGBColorType.RGBColor;
+import org.openbase.type.vision.HSBColorType.HSBColor;
+import org.openbase.type.vision.RGBColorType.RGBColor;
 
 /**
  *

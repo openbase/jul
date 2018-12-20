@@ -23,7 +23,7 @@ package org.openbase.jul.visual.javafx.transform;
  */
 import javafx.scene.paint.Color;
 import org.openbase.jul.exception.CouldNotTransformException;
-import rst.vision.HSBColorType.HSBColor;
+import org.openbase.type.vision.HSBColorType.HSBColor;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

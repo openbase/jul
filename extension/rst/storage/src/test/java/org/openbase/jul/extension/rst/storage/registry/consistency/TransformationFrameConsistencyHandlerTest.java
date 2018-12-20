@@ -47,11 +47,11 @@ import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.storage.registry.EntryModification;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
 import org.openbase.jul.storage.registry.Registry;
-import rst.domotic.unit.UnitConfigType.UnitConfig;
-import rst.domotic.unit.UnitConfigType.UnitConfig.Builder;
-import rst.domotic.unit.location.LocationConfigType.LocationConfig;
-import rst.spatial.PlacementConfigType;
-import rst.spatial.PlacementConfigType.PlacementConfig;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig.Builder;
+import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig;
+import org.openbase.type.spatial.PlacementConfigType;
+import org.openbase.type.spatial.PlacementConfigType.PlacementConfig;
 
 /**
  *

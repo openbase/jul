@@ -28,10 +28,10 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 import org.openbase.jul.extension.rst.processing.LabelProcessor;
 import org.openbase.jul.processing.StringProcessor;
 import rsb.Scope;
-import rst.domotic.unit.UnitConfigType.UnitConfig;
-import rst.domotic.unit.agent.AgentClassType.AgentClass;
-import rst.domotic.unit.app.AppClassType.AppClass;
-import rst.rsb.ScopeType;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
+import org.openbase.type.domotic.unit.agent.AgentClassType.AgentClass;
+import org.openbase.type.domotic.unit.app.AppClassType.AppClass;
+import org.openbase.type.com.ScopeType;
 
 import java.util.Collection;
 import java.util.Locale;

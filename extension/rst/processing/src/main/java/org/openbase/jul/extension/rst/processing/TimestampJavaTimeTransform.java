@@ -22,8 +22,8 @@ package org.openbase.jul.extension.rst.processing;
  * #L%
  */
 
-import rst.timing.TimestampType.Timestamp;
-import rst.timing.TimestampType.TimestampOrBuilder;
+import org.openbase.type.timing.TimestampType.Timestamp;
+import org.openbase.type.timing.TimestampType.TimestampOrBuilder;
 
 /**
  * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>

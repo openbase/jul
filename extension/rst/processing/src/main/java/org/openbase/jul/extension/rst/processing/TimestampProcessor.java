@@ -30,7 +30,7 @@ import org.openbase.jul.exception.NotSupportedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor;
 import org.slf4j.Logger;
-import rst.timing.TimestampType.Timestamp;
+import org.openbase.type.timing.TimestampType.Timestamp;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.TimeUnit;

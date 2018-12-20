@@ -44,7 +44,7 @@ import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Scope;
-import rst.domotic.state.ActivationStateType.ActivationState;
+import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
 import java.util.ArrayList;
 import java.util.HashMap;

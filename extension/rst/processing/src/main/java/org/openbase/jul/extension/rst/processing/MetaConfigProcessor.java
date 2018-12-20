@@ -25,9 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import rst.configuration.EntryType;
-import rst.configuration.EntryType.Entry;
-import rst.configuration.MetaConfigType.MetaConfig;
+import org.openbase.type.configuration.EntryType;
+import org.openbase.type.configuration.EntryType.Entry;
+import org.openbase.type.configuration.MetaConfigType.MetaConfig;
 
 /**
  *

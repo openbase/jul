@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import rst.domotic.state.PowerStateType;
+import org.openbase.type.domotic.state.PowerStateType;
 
 import java.util.Locale;
 
