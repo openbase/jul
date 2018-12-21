@@ -118,7 +118,7 @@ public class ProtoBufFieldProcessor {
      * @return
      *
      * @throws CouldNotPerformException
-     * @deprecated cannot be used in its current form because the label is now an RST type and not a string
+     * @deprecated cannot be used in its current form because the label is now an openbase type and not a string
      */
     @Deprecated
     public static String getLabel(final Message.Builder msg) throws CouldNotPerformException {
