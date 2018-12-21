@@ -31,5 +31,5 @@ import org.openbase.type.com.ScopeType.Scope;
  */
 public interface ScopeProvider {
 
-    public Scope getScope() throws NotAvailableException;
+    Scope getScope() throws NotAvailableException;
 }
