@@ -179,17 +179,6 @@ public class ProtoBufFieldProcessor {
                 ExceptionPrinter.printHistory("Could not init field!", ex, LOGGER, LogLevel.WARN);
             }
         }
-        try {
-            fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(tmpBuilder, fields[fields.length - 1]);
-            Object field = tmpBuilder.getField(fieldDescriptor);
-            //Todo: remove with protobuf 3
-            if (fieldDescriptor.getName().equals("qw")) {
-                field = 1.0;
-            }
-            tmpBuilder.setField(fieldDescriptor, field);
-        } catch (NotAvailableException ex) {
-            ExceptionPrinter.printHistory("Could not init field!", ex, LOGGER, LogLevel.WARN);
-        }
         return builder;
     }
 
