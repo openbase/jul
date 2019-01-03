@@ -22,22 +22,9 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.pattern.AbstractObservable;
-import org.openbase.jul.pattern.Observable;
-import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
-import org.openbase.jul.schedule.GlobalScheduledExecutorService;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractScheduledSynchronizer<KEY, ENTRY extends Identifiable<KEY>> extends AbstractSynchronizer<KEY, ENTRY> {
     public AbstractScheduledSynchronizer(DataProvider observable) throws InstantiationException {

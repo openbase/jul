@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  */
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;

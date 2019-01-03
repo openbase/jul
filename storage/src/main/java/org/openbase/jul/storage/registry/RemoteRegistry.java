@@ -23,7 +23,6 @@ package org.openbase.jul.storage.registry;
  */
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;

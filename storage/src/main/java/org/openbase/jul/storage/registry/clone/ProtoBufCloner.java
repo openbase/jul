@@ -22,7 +22,7 @@ package org.openbase.jul.storage.registry.clone;
  * #L%
  */
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;

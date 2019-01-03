@@ -28,8 +28,6 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-
 public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP extends IdentifiableValueMap<KEY, VALUE>>  {
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(getClass());

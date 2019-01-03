@@ -23,7 +23,6 @@ package org.openbase.jul.extension.tcp;
  */
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

@@ -22,7 +22,6 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Activatable;

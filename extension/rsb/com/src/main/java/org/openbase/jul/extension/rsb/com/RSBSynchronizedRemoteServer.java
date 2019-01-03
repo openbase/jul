@@ -37,7 +37,6 @@ import rsb.config.ParticipantConfig;
 import rsb.patterns.RemoteServer;
 
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 /**

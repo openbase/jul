@@ -23,13 +23,10 @@ package org.openbase.jul.extension.rsb.com;
  */
 
 import rsb.*;
-import rsb.patterns.Callback;
-import rsb.patterns.LocalServer;
 import rsb.patterns.RemoteServer;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public class RSBTest {
     public static void main(String[] args) {

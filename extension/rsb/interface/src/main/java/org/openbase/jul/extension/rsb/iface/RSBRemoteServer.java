@@ -24,7 +24,6 @@ package org.openbase.jul.extension.rsb.iface;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.TimeoutException;
 import rsb.Event;
 
 /**

@@ -23,7 +23,6 @@ package org.openbase.jul.iface;
  */
 
 import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *

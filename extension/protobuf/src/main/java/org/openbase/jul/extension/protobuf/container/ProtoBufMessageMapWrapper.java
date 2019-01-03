@@ -23,7 +23,7 @@ package org.openbase.jul.extension.protobuf.container;
  */
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

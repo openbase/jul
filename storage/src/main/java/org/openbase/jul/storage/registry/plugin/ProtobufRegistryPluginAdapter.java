@@ -23,13 +23,7 @@ package org.openbase.jul.storage.registry.plugin;
  */
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.storage.file.FileSynchronizer;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
 
 /**

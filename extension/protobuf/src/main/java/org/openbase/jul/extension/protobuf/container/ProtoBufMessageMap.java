@@ -24,7 +24,6 @@ package org.openbase.jul.extension.protobuf.container;
 
 import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import java.util.List;
 import java.util.Map;

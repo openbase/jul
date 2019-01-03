@@ -23,7 +23,6 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.Message;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;

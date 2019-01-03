@@ -24,7 +24,6 @@ package org.openbase.jul.pattern.provider;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 
 import java.util.concurrent.CompletableFuture;

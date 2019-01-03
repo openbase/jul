@@ -25,7 +25,6 @@ package org.openbase.jul.extension.rsb.com;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
-import java.util.concurrent.Future;
 
 import org.openbase.jul.extension.rsb.iface.RSBFuture;
 import rsb.Event;

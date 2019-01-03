@@ -23,7 +23,6 @@ package org.openbase.jul.extension.protobuf.container.transformer;
  */
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;

@@ -22,58 +22,27 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.Descriptors.Descriptor;
-import com.google.protobuf.Descriptors.EnumDescriptor;
-import com.google.protobuf.Descriptors.EnumValueDescriptor;
-import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
-import com.google.protobuf.Message;
 import com.google.protobuf.Message;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.sql.Time;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-import com.google.protobuf.MessageOrBuilder;
-import com.google.protobuf.ProtocolMessageEnum;
 import org.junit.After;
 import org.junit.AfterClass;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor;
-import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.Stopwatch;
-import org.openbase.type.domotic.state.BrightnessStateType.BrightnessState;
-import org.openbase.type.domotic.state.ColorStateType.ColorState;
-import org.openbase.type.domotic.state.ContactStateType.ContactState;
-import org.openbase.type.domotic.state.MotionStateType.MotionState;
 import org.openbase.type.domotic.state.PowerStateType.PowerState;
-import org.openbase.type.domotic.state.PresenceStateType.PresenceState;
-import org.openbase.type.domotic.state.PresenceStateType.PresenceState.MapFieldEntry;
-import org.openbase.type.domotic.state.PresenceStateType.PresenceState.State;
 import org.openbase.type.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
-import org.openbase.type.domotic.unit.location.LocationDataType.LocationData;
 import org.openbase.type.timing.TimestampType.Timestamp;
-import org.openbase.type.timing.TimestampType.Timestamp.Builder;
-import org.openbase.type.timing.TimestampType.TimestampOrBuilder;
-import org.openbase.type.vision.ColorType.Color;
-import org.openbase.type.vision.HSBColorType.HSBColor;
 
 /**
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>

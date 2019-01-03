@@ -22,14 +22,12 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
  *

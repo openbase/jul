@@ -22,7 +22,6 @@ package org.openbase.jul.pattern.launch.jp;
  * #L%
  */
 
-import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.AbstractJPListString;
 
 /**

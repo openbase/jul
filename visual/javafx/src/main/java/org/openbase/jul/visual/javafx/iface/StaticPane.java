@@ -41,7 +41,6 @@ package org.openbase.jul.visual.javafx.iface;
  */
 
 import javafx.application.Platform;
-import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.pattern.ThrowableValueHolderImpl;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.iface.DefaultInitializable;

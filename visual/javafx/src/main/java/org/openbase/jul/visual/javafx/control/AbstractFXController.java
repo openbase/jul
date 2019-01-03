@@ -24,7 +24,6 @@ package org.openbase.jul.visual.javafx.control;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.visual.javafx.iface.DynamicPane;
 import org.openbase.jul.visual.javafx.launch.AbstractFXApplication;

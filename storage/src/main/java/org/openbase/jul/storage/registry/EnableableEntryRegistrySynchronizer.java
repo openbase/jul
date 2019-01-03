@@ -23,12 +23,10 @@ package org.openbase.jul.storage.registry;
  */
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Configurable;
 import org.openbase.jul.iface.Enableable;
-import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Factory;
 
 /**

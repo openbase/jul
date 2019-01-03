@@ -31,8 +31,6 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.pattern.controller.Controller;
-import org.openbase.type.domotic.state.ConnectionStateType;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;

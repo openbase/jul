@@ -25,15 +25,7 @@ package org.openbase.jul.extension.protobuf;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.pattern.AbstractObservable;
-import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
-import org.openbase.jul.pattern.provider.DataProvider;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class computes the hashCode to check if the observed value has changed invariant of

@@ -23,7 +23,6 @@ package org.openbase.jul.iface;
  */
 
 import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

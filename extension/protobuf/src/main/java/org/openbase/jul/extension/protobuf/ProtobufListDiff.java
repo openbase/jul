@@ -23,11 +23,6 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.exception.printer.LogLevel;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 

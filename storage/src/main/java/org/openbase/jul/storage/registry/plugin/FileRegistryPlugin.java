@@ -26,7 +26,6 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileSynchronizer;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
-import org.openbase.jul.storage.registry.Registry;
 
 /**
  *

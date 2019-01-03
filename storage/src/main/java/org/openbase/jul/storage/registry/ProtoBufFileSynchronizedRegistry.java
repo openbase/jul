@@ -24,7 +24,6 @@ package org.openbase.jul.storage.registry;
 
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.Message;
 
 import java.io.File;
 

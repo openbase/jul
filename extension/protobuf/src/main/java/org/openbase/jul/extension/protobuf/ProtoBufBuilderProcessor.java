@@ -23,8 +23,6 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.*;
-import com.google.protobuf.Message;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;

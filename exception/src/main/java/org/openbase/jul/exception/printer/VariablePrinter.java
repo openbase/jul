@@ -23,8 +23,6 @@ package org.openbase.jul.exception.printer;
  */
 
 import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import java.io.IOException;
 import java.io.PrintWriter;

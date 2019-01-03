@@ -34,7 +34,6 @@ import org.openbase.jul.extension.rsb.com.jp.JPRSBLegacyMode;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -43,7 +42,6 @@ import rsb.patterns.Callback.UserCodeException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.*;
 
 /**

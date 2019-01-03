@@ -1,7 +1,6 @@
 package org.openbase.jul.iface;
 
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.iface.provider.NameProvider;
 
 /*
  * #%L
