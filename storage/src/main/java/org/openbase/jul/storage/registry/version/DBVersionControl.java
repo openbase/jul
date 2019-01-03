@@ -31,9 +31,7 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Writable;
 import org.openbase.jul.storage.file.FileProvider;
-import org.openbase.jul.storage.registry.AbstractVersionConsistencyHandler;
 import org.openbase.jul.storage.registry.ConsistencyHandler;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -455,48 +453,6 @@ public class DBVersionControl {
             return converterList;
         } catch (java.lang.InstantiationException | IllegalAccessException ex) {
             throw new CouldNotPerformException("Could not load converter db pipeline of Package[" + converterPackage.getName() + "]!", ex);
-        }
-    }
-
-    /**
-     * Loads a consistency handler list which is used for consistency reconstruction after a db upgrade.
-     *
-     * @param registry
-     * @return the consistency handler list.
-     * @throws CouldNotPerformException
-     */
-    public List<ConsistencyHandler> loadDBVersionConsistencyHandlers(final FileSynchronizedRegistry registry) throws CouldNotPerformException {
-        List<ConsistencyHandler> consistencyHandlerList = new ArrayList<>();
-        String consistencyHandlerPackage = converterPackage.getName() + ".consistency";
-
-        Set<String> executedHandlerList = detectExecutedVersionConsistencyHandler();
-
-        String consistencyHandlerName = null;
-        Class<? extends AbstractVersionConsistencyHandler> consistencyHandlerClass;
-        Constructor<? extends ConsistencyHandler> constructor;
-        try {
-            for (int version = versionOnStart; version <= latestDBVersion; version++) {
-                try {
-                    consistencyHandlerName = entryType + "_" + version + "_VersionConsistencyHandler";
-
-                    // filter already applied handler
-                    if (executedHandlerList.contains(consistencyHandlerName)) {
-                        continue;
-                    }
-
-                    // load handler
-                    consistencyHandlerClass = (Class<? extends AbstractVersionConsistencyHandler>) Class.forName(consistencyHandlerPackage + "." + consistencyHandlerName);
-                } catch (ClassNotFoundException ex) {
-                    logger.debug("No ConsistencyHandler[" + consistencyHandlerName + "] implemented for Version[" + version + "].", ex);
-                    continue;
-                }
-                constructor = consistencyHandlerClass.getConstructor(getClass(), FileSynchronizedRegistry.class);
-                ConsistencyHandler newInstance = constructor.newInstance(this, registry);
-                consistencyHandlerList.add(newInstance);
-            }
-            return consistencyHandlerList;
-        } catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException | java.lang.InstantiationException | IllegalArgumentException ex) {
-            throw new CouldNotPerformException("Could not load consistencyHandler of Package[" + consistencyHandlerPackage + "]!", ex);
         }
     }
 
