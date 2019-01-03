@@ -1,8 +1,8 @@
-package org.openbase.jul.iface;
+package org.openbase.jul.pattern.controller;
 
-/*
+/*-
  * #%L
- * JUL Interface
+ * JUL Pattern Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -21,18 +21,15 @@ package org.openbase.jul.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
+import com.google.protobuf.AbstractMessage;
+import org.openbase.jul.extension.protobuf.iface.DataBuilderProvider;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <T> the type of the snapshot
+ * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * @param <M> Message
+ * @param <MB> Builder
  */
-public interface Snapshotable<T> {
+public interface MessageController<M extends AbstractMessage, MB extends M.Builder<MB>> extends Controller<M>, DataBuilderProvider<M, MB> {
 
-    Future<T> recordSnapshot();
-
-    Future<Void> restoreSnapshot(final T snapshot);
 }

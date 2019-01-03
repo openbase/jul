@@ -26,10 +26,9 @@ import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
-import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
-import org.openbase.jul.pattern.IdentifiableRemote;
+import org.openbase.jul.pattern.controller.IdentifiableRemote;
 
 /**
  *

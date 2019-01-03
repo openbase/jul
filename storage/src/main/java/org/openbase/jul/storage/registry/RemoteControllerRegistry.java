@@ -25,7 +25,7 @@ import java.util.HashMap;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.pattern.controller.Remote;
 
 /**
  *

@@ -29,7 +29,7 @@ import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
-import org.openbase.jul.pattern.ConfigurableController;
+import org.openbase.jul.pattern.controller.ConfigurableController;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.type.com.ScopeType.Scope;
 

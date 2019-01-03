@@ -34,7 +34,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import static org.openbase.jul.extension.rsb.com.AbstractConfigurableController.FIELD_SCOPE;
 import org.openbase.jul.iface.Configurable;
-import org.openbase.jul.pattern.ConfigurableRemote;
+import org.openbase.jul.pattern.controller.ConfigurableRemote;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.schedule.SyncObject;

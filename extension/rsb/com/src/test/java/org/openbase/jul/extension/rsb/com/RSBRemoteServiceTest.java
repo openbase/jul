@@ -33,9 +33,6 @@ import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.extension.rsb.com.RSBCommunicationServiceTest.RSBCommunicationServiceImpl;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.type.util.TransactionSynchronizationFuture;
-import org.openbase.jul.pattern.Controller.ControllerAvailabilityState;
-import org.openbase.jul.pattern.Remote;
-import org.openbase.jul.pattern.Remote.ConnectionState;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +48,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+
+import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -95,7 +95,7 @@ public class RSBRemoteServiceTest {
         instance.activate();
 
         try {
-            instance.waitForConnectionState(Remote.ConnectionState.CONNECTED, 10);
+            instance.waitForConnectionState(CONNECTED, 10);
             Assert.fail("No exception thrown.");
         } catch (TimeoutException ex) {
             // should be thrown...
@@ -109,7 +109,7 @@ public class RSBRemoteServiceTest {
                 System.out.println("Thread is running");
                 assertTrue("Instance is not active while waiting", instance.isActive());
                 System.out.println("Wait for ConnectionState");
-                instance.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+                instance.waitForConnectionState(CONNECTED);
             } catch (CouldNotPerformException | InterruptedException ex) {
 //                    ExceptionPrinter.printHistoryAndReturnThrowable(ex, logger);
             }
@@ -132,8 +132,8 @@ public class RSBRemoteServiceTest {
         RSBCommunicationServiceTest.RSBCommunicationServiceImpl communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.newBuilder());
         communicationService.init("/test/testDeactivation");
         communicationService.activate();
-        communicationService.waitForAvailabilityState(ControllerAvailabilityState.ONLINE);
-        instance.waitForConnectionState(ConnectionState.CONNECTED);
+        communicationService.waitForAvailabilityState(ONLINE);
+        instance.waitForConnectionState(CONNECTED);
         instance.waitForData();
         System.out.println("shutdown...");
         System.out.println("main thread name: " + Thread.currentThread().getName());

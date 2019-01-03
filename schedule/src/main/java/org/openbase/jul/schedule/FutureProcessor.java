@@ -83,12 +83,12 @@ public class FutureProcessor {
             }
 
             @Override
-            public T get() throws InterruptedException, ExecutionException {
+            public T get() throws ExecutionException {
                 throw new ExecutionException(cause);
             }
 
             @Override
-            public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            public T get(long timeout, TimeUnit unit) throws ExecutionException{
                 throw new ExecutionException(cause);
             }
         };

@@ -1,8 +1,8 @@
-package org.openbase.jul.pattern;
+package org.openbase.jul.pattern.controller;
 
 /*
  * #%L
- * JUL Pattern Default
+ * JUL Pattern Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -21,16 +21,14 @@ package org.openbase.jul.pattern;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.iface.Configurable;
-import org.openbase.jul.iface.Manageable;
+import org.openbase.jul.iface.Identifiable;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <ID> the identifier type
- * @param <M> the data type
- * @param <CONFIG> the configuration type
+ * @param <ID> the id type of the controller
+ * @param <M> the data type of the controller
  */
-public interface ConfigurableController<ID, M, CONFIG> extends IdentifiableController<ID, M>, Manageable<CONFIG>, Configurable<ID, CONFIG> {
+public interface IdentifiableController<ID, M> extends Identifiable<ID>, Controller<M> {
 
 }

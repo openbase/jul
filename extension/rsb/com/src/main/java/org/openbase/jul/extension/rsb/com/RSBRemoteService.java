@@ -26,6 +26,35 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.*;
+import org.openbase.jul.exception.TimeoutException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
+import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
+import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
+import org.openbase.jul.extension.rsb.iface.RSBListener;
+import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
+import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
+import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
+import org.openbase.jul.extension.type.iface.TransactionIdProvider;
+import org.openbase.jul.pattern.Observable;
+import org.openbase.jul.pattern.ObservableImpl;
+import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import org.openbase.jul.schedule.SyncObject;
+import org.openbase.jul.schedule.WatchDog;
+import org.openbase.jul.exception.InstantiationException;
+import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
+import rsb.RSBException;
+import rsb.config.ParticipantConfig;
+
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.*;
+
+import org.openbase.jps.core.JPService;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -41,11 +70,12 @@ import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
-import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.pattern.controller.Remote;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
+import org.openbase.type.domotic.state.ConnectionStateType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -60,7 +90,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
-import static org.openbase.jul.pattern.Remote.ConnectionState.*;
+import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
 
 /**
  * @param <M>
@@ -92,7 +122,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
     private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
     private final SyncObject pingLock = new SyncObject("PingLock");
     private final Class<M> dataClass;
-    private final ObservableImpl<Remote, ConnectionState> connectionStateObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<Remote, ConnectionState.State> connectionStateObservable = new ObservableImpl<>(this);
     private final ObservableImpl<DataProvider<M>, M> internalPrioritizedDataObservable = new ObservableImpl<>(this);
     private final ObservableImpl<DataProvider<M>, M> dataObservable = new ObservableImpl<>(this);
     private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
@@ -101,7 +131,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
     private RSBListener listener;
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private RSBRemoteServer remoteServer;
-    private Remote.ConnectionState connectionState;
+    private ConnectionState.State connectionState;
     private long connectionPing;
     private long lastPingReceived;
     private CompletableFuture<M> syncFuture;
@@ -233,9 +263,9 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
                 // only set to reconnecting when already active, this way init can be used when not active
                 // to update the config and when active the sync task still does not get cancelled
                 if (isActive()) {
-                    setConnectionState(ConnectionState.RECONNECTING);
+                    setConnectionState(RECONNECTING);
                 } else {
-                    setConnectionState(ConnectionState.REINITIALIZING);
+                    setConnectionState(REINITIALIZING);
                 }
 
                 ParticipantConfig internalParticipantConfig = participantConfig;
@@ -270,7 +300,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
                         activate();
                         break;
                     case REINITIALIZING:
-                        setConnectionState(ConnectionState.DISCONNECTED);
+                        setConnectionState(DISCONNECTED);
                         break;
                 }
             } catch (CouldNotPerformException ex) {
@@ -493,7 +523,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
                 // was never initialized!
                 return;
             }
-            if (connectionState != ConnectionState.RECONNECTING) {
+            if (connectionState != RECONNECTING) {
                 skipSyncTasks();
                 setConnectionState(DISCONNECTED);
                 if (pingTask != null && !pingTask.isDone()) {
@@ -653,13 +683,13 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
      * {@inheritDoc}
      */
     @Override
-    public ConnectionState getConnectionState() {
+    public ConnectionState.State getConnectionState() {
         return connectionState;
     }
 
-    private void setConnectionState(final ConnectionState connectionState) {
+    private void setConnectionState(final ConnectionState.State connectionState) {
         synchronized (connectionMonitor) {
-            if (this.connectionState == ConnectionState.RECONNECTING && connectionState == CONNECTED) {
+            if (this.connectionState == RECONNECTING && connectionState == CONNECTED) {
                 // while reconnecting and not yet deactivated a data update can cause switching to connected which causes
                 // a second re-init because the resulting ping fails, skip setting to connected to prevent the ping while
                 // still applying the data update
@@ -673,7 +703,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
             }
 
             // update state and notify
-            final ConnectionState oldConnectionState = this.connectionState;
+            final ConnectionState.State oldConnectionState = this.connectionState;
             this.connectionState = connectionState;
 
             // handle state related actions
@@ -912,7 +942,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
                                 // validate connection
                                 try {
                                     // if reconnecting do not start a ping but just wait for connecting again
-                                    if (getConnectionState() != ConnectionState.RECONNECTING) {
+                                    if (getConnectionState() != RECONNECTING) {
                                         ping().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                                     } else {
                                         waitForConnectionState(CONNECTING);
@@ -1058,7 +1088,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
 
                 // do not set to connecting while reconnecting because when timed wrong this can cause
                 // reinit to cancel sync tasks and reinit while switch to connecting anyway when finished
-                if (getConnectionState() == ConnectionState.RECONNECTING) {
+                if (getConnectionState() == RECONNECTING) {
                     return dataUpdate;
                 }
 
@@ -1345,7 +1375,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
      *                                                             has been initialized
      */
     @Override
-    public void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException {
+    public void waitForConnectionState(final ConnectionState.State connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException {
         synchronized (connectionMonitor) {
             boolean delayDetected = false;
             while (!Thread.currentThread().isInterrupted()) {
@@ -1403,9 +1433,9 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
      * @throws InterruptedException                                is thrown in case the thread is externally
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
-     *                                                             the remote is not active and the waiting condition is based on ConnectionState CONNECTED or CONNECTING.
+     *                                                             the remote is not active and the waiting condition is based on  ConnectionState.State CONNECTED or CONNECTING.
      */
-    public void waitForConnectionState(final ConnectionState connectionState) throws InterruptedException, CouldNotPerformException {
+    public void waitForConnectionState(final ConnectionState.State connectionState) throws InterruptedException, CouldNotPerformException {
         try {
             waitForConnectionState(connectionState, 0);
         } catch (TimeoutException ex) {
@@ -1518,7 +1548,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
      * {@inheritDoc}
      */
     @Override
-    public void addConnectionStateObserver(final Observer<Remote, ConnectionState> observer) {
+    public void addConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer) {
         connectionStateObservable.addObserver(observer);
     }
 
@@ -1526,7 +1556,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
      * {@inheritDoc}
      */
     @Override
-    public void removeConnectionStateObserver(final Observer<Remote, ConnectionState> observer) {
+    public void removeConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer) {
         connectionStateObservable.removeObserver(observer);
     }
 
@@ -1540,7 +1570,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
         synchronized (pingLock) {
             if (pingTask == null || pingTask.isDone()) {
                 pingTask = GlobalCachedExecutorService.submit(() -> {
-                    final ConnectionState previousConnectionState = connectionState;
+                    final ConnectionState.State previousConnectionState = connectionState;
                     try {
                         validateMiddleware();
                         Long requestTime = remoteServer.call("ping", System.currentTimeMillis(), JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT);
@@ -1711,8 +1741,8 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
                         Thread.yield();
 
                         // if reconnecting wait until activated again
-                        if (getConnectionState() == ConnectionState.RECONNECTING) {
-                            waitForConnectionState(ConnectionState.CONNECTING);
+                        if (getConnectionState() == RECONNECTING) {
+                            waitForConnectionState(CONNECTING);
                             waitForMiddleware();
                         }
 

@@ -25,7 +25,7 @@ package org.openbase.jul.storage.registry;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.pattern.Controller;
+import org.openbase.jul.pattern.controller.Controller;
 
 import java.util.HashMap;
 

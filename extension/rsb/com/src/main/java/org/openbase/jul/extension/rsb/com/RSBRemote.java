@@ -27,7 +27,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
-import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.pattern.controller.Remote;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import org.openbase.type.com.ScopeType;

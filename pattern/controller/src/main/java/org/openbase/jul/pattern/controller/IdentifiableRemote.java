@@ -1,8 +1,8 @@
-package org.openbase.jul.pattern;
+package org.openbase.jul.pattern.controller;
 
 /*
  * #%L
- * JUL Pattern Default
+ * JUL Pattern Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -26,9 +26,9 @@ import org.openbase.jul.iface.Identifiable;
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <ID> the id type of the controller
- * @param <M> the data type of the controller
+ * @param <ID> the id type of the remote
+ * @param <M> the data type of the remote
  */
-public interface IdentifiableController<ID, M> extends Identifiable<ID>, Controller<M> {
+public interface IdentifiableRemote<ID, M> extends Identifiable<ID>, Remote<M> {
 
 }

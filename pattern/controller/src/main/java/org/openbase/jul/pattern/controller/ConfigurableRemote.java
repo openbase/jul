@@ -1,8 +1,8 @@
-package org.openbase.jul.pattern;
+package org.openbase.jul.pattern.controller;
 
 /*
  * #%L
- * JUL Pattern Default
+ * JUL Pattern Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -23,6 +23,7 @@ package org.openbase.jul.pattern;
  */
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Manageable;
+import org.openbase.jul.pattern.Observer;
 
 /**
  *

@@ -1,8 +1,8 @@
-package org.openbase.jul.extension.protobuf;
+package org.openbase.jul.pattern.controller;
 
-/*-
+/*
  * #%L
- * JUL Extension Protobuf
+ * JUL Pattern Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -21,17 +21,16 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
-import org.openbase.jul.extension.protobuf.iface.DataBuilderProvider;
-import org.openbase.jul.pattern.Controller;
+import org.openbase.jul.iface.Configurable;
+import org.openbase.jul.iface.Manageable;
 
 /**
  *
- * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
- * @param <M> Message
- * @param <MB> Builder
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @param <ID> the identifier type
+ * @param <M> the data type
+ * @param <CONFIG> the configuration type
  */
-public interface MessageController<M extends AbstractMessage, MB extends M.Builder<MB>> extends Controller<M>, DataBuilderProvider<M, MB> {
+public interface ConfigurableController<ID, M, CONFIG> extends IdentifiableController<ID, M>, Manageable<CONFIG>, Configurable<ID, CONFIG> {
 
 }

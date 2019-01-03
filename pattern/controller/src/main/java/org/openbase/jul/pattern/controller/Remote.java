@@ -1,8 +1,8 @@
-package org.openbase.jul.pattern;
+package org.openbase.jul.pattern.controller;
 
 /*
  * #%L
- * JUL Pattern Default
+ * JUL Pattern Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -24,6 +24,8 @@ package org.openbase.jul.pattern;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+
+import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.TimeoutException;
@@ -32,6 +34,7 @@ import org.openbase.jul.iface.Lockable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.iface.provider.PingProvider;
 import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 
 /**
  *
@@ -39,12 +42,6 @@ import org.openbase.jul.pattern.provider.DataProvider;
  * @param <M> the data type of the remote
  */
 public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProvider, DataProvider<M> {
-
-    // TODO release: Should be moved to org.openbase.type.
-    enum ConnectionState {
-
-        UNKNOWN, CONNECTING, CONNECTED, DISCONNECTED, RECONNECTING, REINITIALIZING
-    };
 
     /**
      * Method activates the remote instance and blocks until the first data synchronization is done.
@@ -74,14 +71,14 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      *
      * @param observer the observer added
      */
-    void addConnectionStateObserver(final Observer<Remote, ConnectionState> observer);
+    void addConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer);
 
     /**
      * This method removes already registered connection state observers.
      *
      * @param observer the observer removed
      */
-    void removeConnectionStateObserver(final Observer<Remote, ConnectionState> observer);
+    void removeConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer);
 
     /**
      * Method returns the class of the data object.
@@ -158,7 +155,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      *
      * @return the current connection state.
      */
-    ConnectionState getConnectionState();
+    ConnectionState.State getConnectionState();
 
     /**
      * Method blocks until the remote reaches the desired connection state. In
@@ -174,7 +171,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the connection state does not match and the shutdown of this remote
      *                                                             has been initialized
      */
-    void waitForConnectionState(final ConnectionState connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException;
+    void waitForConnectionState(final ConnectionState.State connectionState, long timeout) throws InterruptedException, TimeoutException, CouldNotPerformException;
 
     /**
      * This method synchronizes this remote instance with the main controller

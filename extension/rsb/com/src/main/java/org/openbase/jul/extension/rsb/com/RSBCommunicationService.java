@@ -30,7 +30,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
-import org.openbase.jul.extension.protobuf.MessageController;
+import org.openbase.jul.pattern.controller.MessageController;
 import org.openbase.jul.extension.protobuf.MessageObservable;
 import org.openbase.jul.extension.rsb.iface.RSBInformer;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
@@ -47,6 +47,7 @@ import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
+import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -61,6 +62,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
+
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
 
 /**
  * @param <M>  the message type of the communication service
@@ -102,7 +105,7 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
     protected Scope scope;
 
     private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
-    private ControllerAvailabilityState controllerAvailabilityState;
+    private AvailabilityState.State availabilityState;
     private boolean initialized, destroyed;
 
     private final MessageObservable dataObserver;
@@ -127,7 +130,7 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
                 throw new NotAvailableException("builder");
             }
 
-            this.controllerAvailabilityState = ControllerAvailabilityState.OFFLINE;
+            this.availabilityState = AvailabilityState.State.OFFLINE;
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
@@ -266,7 +269,7 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
                                 serverWatchDog.waitForServiceActivation();
 
                                 // mark controller as online.
-                                setControllerAvailabilityState(ControllerAvailabilityState.ONLINE);
+                                setAvailabilityState(ONLINE);
 
                                 logger.debug("trigger initial sync");
                                 notifyChange();
@@ -338,7 +341,7 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
         synchronized (manageableLock) {
             validateInitialization();
             logger.debug("Activate RSBCommunicationService for: " + this);
-            setControllerAvailabilityState(ControllerAvailabilityState.ACTIVATING);
+            setAvailabilityState(ACTIVATING);
             assert serverWatchDog != null;
             assert informerWatchDog != null;
             serverWatchDog.activate();
@@ -368,18 +371,18 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
             }
 
             logger.debug("Deactivate RSBCommunicationService for: " + this);
-            // The order is important: The informer publishes a zero event when the controllerAvailabilityState is set to deactivating which leads remotes to disconnect
+            // The order is important: The informer publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
             // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
             // and the remotes will think that the server is still there..
             if (serverWatchDog != null) {
                 serverWatchDog.deactivate();
             }
             // inform remotes about deactivation
-            setControllerAvailabilityState(ControllerAvailabilityState.DEACTIVATING);
+            setAvailabilityState(DEACTIVATING);
             if (informerWatchDog != null) {
                 informerWatchDog.deactivate();
             }
-            setControllerAvailabilityState(ControllerAvailabilityState.OFFLINE);
+            setAvailabilityState(OFFLINE);
         }
     }
 
@@ -475,21 +478,21 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
      *
      * @throws InterruptedException
      */
-    private void setControllerAvailabilityState(final ControllerAvailabilityState controllerAvailability) throws InterruptedException {
+    private void setAvailabilityState(final AvailabilityState.State controllerAvailability) throws InterruptedException {
         synchronized (controllerAvailabilityMonitor) {
 
             // filter unchanged events
-            if (this.controllerAvailabilityState.equals(controllerAvailability)) {
+            if (this.availabilityState.equals(controllerAvailability)) {
                 return;
             }
 
             // update state and notify
-            this.controllerAvailabilityState = controllerAvailability;
+            this.availabilityState = controllerAvailability;
             logger.debug(this + " is now " + controllerAvailability.name());
 
             try {
                 // notify remotes about controller shutdown
-                if (controllerAvailabilityState.equals(ControllerAvailabilityState.DEACTIVATING)) {
+                if (availabilityState.equals(DEACTIVATING)) {
                     try {
                         logger.debug("Notify data change of " + this);
                         validateInitialization();
@@ -521,10 +524,10 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
      * @throws InterruptedException {@inheritDoc}
      */
     @Override
-    public void waitForAvailabilityState(final ControllerAvailabilityState controllerAvailabilityState) throws InterruptedException {
+    public void waitForAvailabilityState(final AvailabilityState.State availabilityState) throws InterruptedException {
         synchronized (controllerAvailabilityMonitor) {
             while (!Thread.currentThread().isInterrupted()) {
-                if (this.controllerAvailabilityState.equals(controllerAvailabilityState)) {
+                if (this.availabilityState.equals(availabilityState)) {
                     return;
                 }
                 controllerAvailabilityMonitor.wait();
@@ -786,8 +789,8 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
      * @return {@inheritDoc}
      */
     @Override
-    public ControllerAvailabilityState getControllerAvailabilityState() {
-        return controllerAvailabilityState;
+    public AvailabilityState.State getAvailabilityState() {
+        return availabilityState;
     }
 
 

@@ -23,7 +23,7 @@ package org.openbase.jul.storage.registry;
  */
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.iface.DefaultInitializable;
-import org.openbase.jul.pattern.Controller;
+import org.openbase.jul.pattern.controller.Controller;
 
 /**
  *

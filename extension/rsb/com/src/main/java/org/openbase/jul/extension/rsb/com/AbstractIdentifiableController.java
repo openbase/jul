@@ -22,12 +22,11 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.pattern.IdentifiableController;
+import org.openbase.jul.pattern.controller.IdentifiableController;
 
 /**
  *

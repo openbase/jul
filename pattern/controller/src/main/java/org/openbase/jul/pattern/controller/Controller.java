@@ -1,5 +1,8 @@
-package org.openbase.jul.pattern;
+package org.openbase.jul.pattern.controller;
 
+
+import org.openbase.jul.pattern.ChangeListener;
+import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.iface.Pingable;
@@ -8,7 +11,7 @@ import org.openbase.jul.iface.Shutdownable;
 
 /*
  * #%L
- * JUL Pattern Default
+ * JUL Pattern Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -34,12 +37,6 @@ import org.openbase.jul.iface.Shutdownable;
  */
 public interface Controller<M> extends Shutdownable, Activatable, ChangeListener, Pingable, Requestable<M> {
 
-    // TODO release mpohling: Should be moved to org.openbase.type and reimplement for rsb 14.
-    enum ControllerAvailabilityState {
-
-        ACTIVATING, ONLINE, DEACTIVATING, OFFLINE
-    };
-
     @SuppressWarnings(value = "unchecked")
     M getData() throws CouldNotPerformException;
 
@@ -55,15 +52,15 @@ public interface Controller<M> extends Shutdownable, Activatable, ChangeListener
      *
      * @return OFFLINE / ONLINE
      */
-    ControllerAvailabilityState getControllerAvailabilityState();
+    AvailabilityState.State getAvailabilityState();
 
     /**
      * Wait until the controller reached a given availability state.
      *
-     * @param controllerAvailabilityState the state on which is waited
+     * @param availabilityState the state on which is waited
      * @throws InterruptedException if the waiting is interrupted
      */
-    void waitForAvailabilityState(final ControllerAvailabilityState controllerAvailabilityState) throws InterruptedException;
+    void waitForAvailabilityState(final AvailabilityState.State availabilityState) throws InterruptedException;
 
     /**
      * Synchronize all registered remote instances about a data change.
