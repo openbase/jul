@@ -72,9 +72,7 @@ import static org.openbase.type.domotic.state.AvailabilityStateType.Availability
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 
-public abstract class RSBCommunicationService<M extends AbstractMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable, TransactionIdProvider {
-
-    // todo release: refactor class name into AbstractControllerService and document in jul changelog
+public abstract class AbstractControllerServer<M extends AbstractMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable, TransactionIdProvider {
 
     public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
     public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
@@ -121,8 +119,8 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
      *
      * @throws InstantiationException if the creation fails
      */
-    public RSBCommunicationService(final MB builder) throws InstantiationException {
-        logger.debug("Create RSBCommunicationService for component " + getClass().getSimpleName() + ".");
+    public AbstractControllerServer(final MB builder) throws InstantiationException {
+        logger.debug("Create AbstractControllerServer for component " + getClass().getSimpleName() + ".");
         this.dataBuilder = builder;
 
         try {
@@ -240,7 +238,7 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
                 rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
 
                 // init new instances.
-                logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + internalScope + ".");
+                logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + internalScope + ".");
                 informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
                 informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
@@ -340,7 +338,7 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
     public void activate() throws InterruptedException, CouldNotPerformException {
         synchronized (manageableLock) {
             validateInitialization();
-            logger.debug("Activate RSBCommunicationService for: " + this);
+            logger.debug("Activate AbstractControllerServer for: " + this);
             setAvailabilityState(ACTIVATING);
             assert serverWatchDog != null;
             assert informerWatchDog != null;
@@ -370,7 +368,7 @@ public abstract class RSBCommunicationService<M extends AbstractMessage, MB exte
                 initialDataSyncFuture.cancel(true);
             }
 
-            logger.debug("Deactivate RSBCommunicationService for: " + this);
+            logger.debug("Deactivate AbstractControllerServer for: " + this);
             // The order is important: The informer publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
             // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
             // and the remotes will think that the server is still there..

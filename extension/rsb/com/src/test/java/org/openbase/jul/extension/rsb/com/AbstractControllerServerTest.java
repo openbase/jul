@@ -34,6 +34,7 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.converter.DefaultConverterRepository;
@@ -51,7 +52,7 @@ import static org.openbase.type.domotic.state.AvailabilityStateType.Availability
 /**
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class RSBCommunicationServiceTest {
+public class AbstractControllerServerTest {
 
     static {
         DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
@@ -60,7 +61,7 @@ public class RSBCommunicationServiceTest {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public RSBCommunicationServiceTest() {
+    public AbstractControllerServerTest() {
     }
 
     @BeforeClass
@@ -82,7 +83,7 @@ public class RSBCommunicationServiceTest {
 
     private boolean firstSync = false;
     private boolean secondSync = false;
-    private RSBCommunicationService communicationService;
+    private AbstractControllerServer communicationService;
 
     /**
      * Test if the initial sync that happens if a communication service starts
@@ -98,11 +99,11 @@ public class RSBCommunicationServiceTest {
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         UnitConfig unit1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(unit1);
-        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
 
-        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
         remoteService.addDataObserver((Observer< DataProvider<UnitRegistryData>, UnitRegistryData>) (source, data) -> {
             if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
@@ -130,7 +131,7 @@ public class RSBCommunicationServiceTest {
         communicationService.shutdown();
         UnitConfig location2 = UnitConfig.newBuilder().setId("Location2").build();
         testData.addLocationUnitConfig(location2);
-        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
 
         synchronized (waitForDataSync) {
@@ -175,7 +176,7 @@ public class RSBCommunicationServiceTest {
         // todo: this test takes to much time! Even more after increasing the deactivation timeout in the RSBSynchronizedParticipant class. There seems to be an issue that rsb takes to many time during deactivation.
         System.out.println("testReconnection");
 
-        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.addConnectionStateObserver((source, data) -> {
             logger.info("New connection state [" + data + "]");
         });
@@ -186,7 +187,7 @@ public class RSBCommunicationServiceTest {
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
-        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
 
@@ -256,9 +257,9 @@ public class RSBCommunicationServiceTest {
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
-        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
-        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
 
         remoteService.activate();
@@ -286,9 +287,9 @@ public class RSBCommunicationServiceTest {
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
-        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
-        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
 
         remoteService.activate();
@@ -316,11 +317,11 @@ public class RSBCommunicationServiceTest {
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
-        RSBRemoteService remoteService1 = new RSBRemoteServiceImpl();
-        RSBRemoteService remoteService2 = new RSBRemoteServiceImpl();
+        AbstractRemoteClient remoteService1 = new AbstractRemoteClientImpl();
+        AbstractRemoteClient remoteService2 = new AbstractRemoteClientImpl();
         remoteService1.init(scope);
         remoteService2.init(scope);
-        communicationService = new RSBCommunicationServiceImpl(testData);
+        communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
 
@@ -362,10 +363,10 @@ public class RSBCommunicationServiceTest {
 
         String scope = "/test/notification";
         UnitConfig location = UnitConfig.newBuilder().setId("id").build();
-        communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
+        communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
         communicationService.init(scope);
 
-        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
         remoteService.activate();
 
@@ -394,11 +395,11 @@ public class RSBCommunicationServiceTest {
 //
 //        String scope = "/test/notification";
 //        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
-//        communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
+//        communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
 //        communicationService.init(scope);
 //        communicationService.activate();
 //
-//        RSBRemoteService remoteService = new RSBRemoteServiceImpl();
+//        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
 //        remoteService.init(scope);
 //        remoteService.activate();
 //
@@ -436,13 +437,13 @@ public class RSBCommunicationServiceTest {
 //        remoteService.reinit();
 //    }
 
-    public static class RSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> {
+    public static class AbstractControllerServerImpl extends AbstractControllerServer<UnitRegistryData, Builder> {
 
         static {
             DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
         }
 
-        public RSBCommunicationServiceImpl(UnitRegistryData.Builder builder) throws InstantiationException {
+        public AbstractControllerServerImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
 
@@ -451,23 +452,23 @@ public class RSBCommunicationServiceTest {
         }
     }
 
-    public static class RSBRemoteServiceImpl extends RSBRemoteService<UnitRegistryData> {
+    public static class AbstractRemoteClientImpl extends AbstractRemoteClient<UnitRegistryData> {
 
         static {
             DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
         }
 
-        public RSBRemoteServiceImpl() {
+        public AbstractRemoteClientImpl() {
             super(UnitRegistryData.class);
         }
     }
 
     public class NotificationCallable implements Callable<Void> {
 
-        private final RSBCommunicationService communicationService;
+        private final AbstractControllerServer communicationService;
         private final Object watchDogUpdateLock = new Object();
 
-        public NotificationCallable(RSBCommunicationService communicationService) {
+        public NotificationCallable(AbstractControllerServer communicationService) {
             this.communicationService = communicationService;
             this.communicationService.informerWatchDog.addObserver((WatchDog source, WatchDog.ServiceState data) -> {
                 synchronized (watchDogUpdateLock) {

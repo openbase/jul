@@ -30,7 +30,8 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
-import org.openbase.jul.extension.rsb.com.RSBCommunicationServiceTest.RSBCommunicationServiceImpl;
+import org.openbase.jul.extension.rsb.com.AbstractControllerServerTest.AbstractControllerServerImpl;
+import org.openbase.jul.extension.rsb.com.AbstractControllerServerTest.AbstractRemoteClientImpl;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.type.util.TransactionSynchronizationFuture;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
@@ -55,11 +56,11 @@ import static org.openbase.type.domotic.state.AvailabilityStateType.Availability
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class RSBRemoteServiceTest {
+public class AbstractRemoteClientTest {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public RSBRemoteServiceTest() {
+    public AbstractRemoteClientTest() {
     }
 
     @BeforeClass
@@ -80,7 +81,7 @@ public class RSBRemoteServiceTest {
     }
 
     /**
-     * Test of waitForConnectionState method, of class RSBRemoteService.
+     * Test of waitForConnectionState method, of class AbstractRemoteClient.
      *
      * @throws java.lang.InterruptedException
      * @throws org.openbase.jul.exception.CouldNotPerformException
@@ -88,7 +89,7 @@ public class RSBRemoteServiceTest {
     @Test(timeout = 10000)
     public void testWaitForConnectionState() throws InterruptedException, CouldNotPerformException {
         System.out.println("waitForConnectionState");
-        RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
+        AbstractRemoteClient instance = new AbstractRemoteClientImpl();
         instance.init("/test/waitForConnectionState");
 
         // Test Timeout
@@ -125,11 +126,11 @@ public class RSBRemoteServiceTest {
     public void testDeactivation() throws InterruptedException, CouldNotPerformException {
         System.out.println("testDeactivation");
 
-        RSBRemoteService instance = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
+        AbstractRemoteClient instance = new AbstractRemoteClientImpl();
         instance.init("/test/testDeactivation");
         instance.activate();
 
-        RSBCommunicationServiceTest.RSBCommunicationServiceImpl communicationService = new RSBCommunicationServiceImpl(UnitRegistryData.newBuilder());
+        AbstractControllerServerImpl communicationService = new AbstractControllerServerImpl(UnitRegistryData.newBuilder());
         communicationService.init("/test/testDeactivation");
         communicationService.activate();
         communicationService.waitForAvailabilityState(ONLINE);
@@ -154,7 +155,7 @@ public class RSBRemoteServiceTest {
     public void testReinit() throws Exception {
         System.out.println("testReinit");
 
-        final RSBRemoteService remoteService = new RSBCommunicationServiceTest.RSBRemoteServiceImpl();
+        final AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.init("/test/testReinit");
         remoteService.activate();
 
@@ -196,11 +197,11 @@ public class RSBRemoteServiceTest {
     public void testTransactionSynchronization() throws Exception {
         final String scope = "/test/transaction/sync";
 
-        final TransactionCommunicationService communicationService = new TransactionCommunicationService();
+        final TransactionControllerServer communicationService = new TransactionControllerServer();
         communicationService.init(scope);
         communicationService.activate();
 
-        final TransactionRemoteService remoteService = new TransactionRemoteService();
+        final TransactionRemoteClient remoteService = new TransactionRemoteClient();
         remoteService.init(scope);
         remoteService.activate();
         remoteService.waitForData();
@@ -218,14 +219,14 @@ public class RSBRemoteServiceTest {
         communicationService.shutdown();
     }
 
-    private static class TransactionCommunicationService extends RSBCommunicationService<PowerSwitchData, PowerSwitchData.Builder> {
+    private static class TransactionControllerServer extends AbstractControllerServer<PowerSwitchData, Builder> {
 
         /**
          * Create a communication service.
          *
          * @throws InstantiationException if the creation fails
          */
-        public TransactionCommunicationService() throws InstantiationException {
+        public TransactionControllerServer() throws InstantiationException {
             super(PowerSwitchData.newBuilder());
         }
 
@@ -250,9 +251,9 @@ public class RSBRemoteServiceTest {
         }
     }
 
-    private static class TransactionRemoteService extends RSBRemoteService<PowerSwitchData> {
+    private static class TransactionRemoteClient extends AbstractRemoteClient<PowerSwitchData> {
 
-        public TransactionRemoteService() {
+        public TransactionRemoteClient() {
             super(PowerSwitchData.class);
         }
 

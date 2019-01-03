@@ -61,7 +61,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.openbase.jul.extension.rsb.com.RSBCommunicationService.RPC_REQUEST_STATUS;
+import static org.openbase.jul.extension.rsb.com.AbstractControllerServer.RPC_REQUEST_STATUS;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
 
 /**
@@ -70,9 +70,7 @@ import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionStat
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 //
-public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M>, TransactionIdProvider {
-
-    // todo release: refactor class name into AbstractControllerRemoteService and document in jul changelog
+public abstract class AbstractRemoteClient<M extends Message> implements RSBRemote<M>, TransactionIdProvider {
 
     public static final long REQUEST_TIMEOUT = 15000;
     /**
@@ -119,7 +117,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
     private Future<Long> pingTask = null;
     private long transactionId = -1;
 
-    public RSBRemoteService(final Class<M> dataClass) {
+    public AbstractRemoteClient(final Class<M> dataClass) {
         this.dataClass = dataClass;
         this.mainHandler = generateHandler();
         this.initialized = false;
@@ -255,7 +253,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
                 this.scope = scope;
 
                 rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
-                logger.debug("Init RSBCommunicationService for component " + getClass().getSimpleName() + " on " + this.scope + ".");
+                logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + this.scope + ".");
 
                 initListener(internalScope, internalParticipantConfig);
                 initRemoteServer(internalScope, internalParticipantConfig);
@@ -283,8 +281,8 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
 
     private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
-            this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS), participantConfig);
-            this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_STATUS) + "]");
+            this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(AbstractControllerServer.SCOPE_SUFFIX_STATUS), participantConfig);
+            this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(AbstractControllerServer.SCOPE_SUFFIX_STATUS) + "]");
         } catch (InstantiationException ex) {
             throw new CouldNotPerformException("Could not create Listener on scope [" + scope + "]!", ex);
         }
@@ -292,8 +290,8 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
 
     private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
         try {
-            this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL), participantConfig);
-            this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(RSBCommunicationService.SCOPE_SUFFIX_CONTROL) + "]");
+            this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(AbstractControllerServer.SCOPE_SUFFIX_CONTROL), participantConfig);
+            this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(AbstractControllerServer.SCOPE_SUFFIX_CONTROL) + "]");
             this.listenerWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data1) -> {
                 logger.debug("listener state update: " + data1.name());
                 // Sync data after service start.

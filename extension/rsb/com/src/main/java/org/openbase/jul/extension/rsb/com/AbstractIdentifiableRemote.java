@@ -35,7 +35,7 @@ import org.openbase.jul.pattern.controller.IdentifiableRemote;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
-public abstract class AbstractIdentifiableRemote<M extends Message> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {
+public abstract class AbstractIdentifiableRemote<M extends Message> extends AbstractRemoteClient<M> implements IdentifiableRemote<String, M> {
 
     public AbstractIdentifiableRemote(final Class<M> dataClass) {
         super(dataClass);

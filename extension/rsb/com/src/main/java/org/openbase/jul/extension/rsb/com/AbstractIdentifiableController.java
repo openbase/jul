@@ -34,7 +34,7 @@ import org.openbase.jul.pattern.controller.IdentifiableController;
  * @param <M>
  * @param <MB>
  */
-public abstract class AbstractIdentifiableController<M extends AbstractMessage, MB extends M.Builder<MB>> extends RSBCommunicationService<M, MB> implements IdentifiableController<String, M> {
+public abstract class AbstractIdentifiableController<M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractControllerServer<M, MB> implements IdentifiableController<String, M> {
 
     public AbstractIdentifiableController(MB builder) throws InstantiationException {
         super(builder);
