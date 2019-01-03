@@ -65,10 +65,9 @@ public class MetaConfigVariableProvider implements VariableProvider {
      *
      * @param variableContains {@inheritDoc}
      * @return {@inheritDoc}
-     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
-    public Map<String, String> getValues(String variableContains) throws NotAvailableException {
+    public Map<String, String> getValues(String variableContains) {
         return MetaConfigProcessor.getValues(metaConfig, variableContains);
     }
 

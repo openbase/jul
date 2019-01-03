@@ -78,10 +78,9 @@ public class ProtobufVariableProvider implements VariableProvider {
      *
      * @param variableContains {@inheritDoc}
      * @return {@inheritDoc}
-     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
-    public Map<String, String> getValues(String variableContains) throws NotAvailableException {
+    public Map<String, String> getValues(String variableContains) {
         final Map<String, String> variableSelection = new HashMap<>();
         String key;
         for (Map.Entry<Descriptors.FieldDescriptor, Object> fieldEntry : message.getAllFields().entrySet()) {

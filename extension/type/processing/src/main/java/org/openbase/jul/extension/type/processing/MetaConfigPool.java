@@ -75,11 +75,9 @@ public class MetaConfigPool implements VariableProvider {
      * @param variableContains {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
-     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
-    public Map<String, String> getValues(final String variableContains) throws NotAvailableException {
+    public Map<String, String> getValues(final String variableContains) {
         final Map<String, String> valueMap = new HashMap<>();
         for (final VariableProvider variableProvider : variableProviderPool) {
             valueMap.putAll(variableProvider.getValues(variableContains));

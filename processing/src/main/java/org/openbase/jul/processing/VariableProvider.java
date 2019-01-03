@@ -54,9 +54,7 @@ public interface VariableProvider {
      *
      * @param variableContains the identifier to select the variables.
      * @return a map of the variable name and its current value.
-     * @throws NotAvailableException is thrown in case no variable name matches the given identifier.
      */
-    // release todo: removed Notavailable exception for "getValues" method. and just return empty list if variable key is not available.
-    Map<String, String> getValues(final String variableContains) throws NotAvailableException;
+    Map<String, String> getValues(final String variableContains);
     
 }
