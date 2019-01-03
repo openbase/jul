@@ -26,6 +26,8 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import rsb.Event;
 
+import java.util.concurrent.Future;
+
 /**
  *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -34,11 +36,11 @@ public interface RSBRemoteServer extends RSBServer {
 
     double getTimeout() throws NotAvailableException;
 
-    RSBFuture<Event> callAsync(String name, Event event) throws CouldNotPerformException;
+    Future<Event> callAsync(String name, Event event);
 
-    RSBFuture<Event> callAsync(String name) throws CouldNotPerformException;
+    Future<Event> callAsync(String name);
 
-    <ReplyType extends Object, RequestType extends Object> RSBFuture<ReplyType> callAsync(String name, RequestType data) throws CouldNotPerformException;
+    <ReplyType extends Object, RequestType extends Object> Future<ReplyType> callAsync(String name, RequestType data);
 
     Event call(String name, Event event) throws CouldNotPerformException, InterruptedException;
 

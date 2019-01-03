@@ -23,7 +23,6 @@ package org.openbase.jul.extension.rsb.com;
  */
 
 import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
-import org.openbase.jul.extension.rsb.iface.RSBFuture;
 import rsb.RSBException;
 
 import java.util.concurrent.ExecutionException;
@@ -34,7 +33,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * @param <V> The result type returned by this Future's {@code get} method
  */
-public class RSBFutureImpl<V> implements RSBFuture<V> {
+public class RSBFutureImpl<V> implements Future<V> {
 
     final Future<V> internalFuture;
 

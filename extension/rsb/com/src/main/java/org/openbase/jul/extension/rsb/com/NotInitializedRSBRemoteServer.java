@@ -26,10 +26,12 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 
-import org.openbase.jul.extension.rsb.iface.RSBFuture;
+import org.openbase.jul.schedule.FutureProcessor;
 import rsb.Event;
 import rsb.Scope;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
+
+import java.util.concurrent.Future;
 
 /**
  *
@@ -50,18 +52,18 @@ public class NotInitializedRSBRemoteServer extends NotInitializedRSBServer imple
     }
 
     @Override
-    public RSBFuture<Event> callAsync(String name, Event event) throws CouldNotPerformException {
-        throw new CouldNotPerformException("Could not call Method["+name+"]!", new InvalidStateException("RemoteServer not initialized!"));
+    public Future<Event> callAsync(String name, Event event) {
+        return FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method["+name+"]!", new InvalidStateException("RemoteServer not initialized!")));
     }
 
     @Override
-    public RSBFuture<Event> callAsync(String name) throws CouldNotPerformException {
-        throw new CouldNotPerformException("Could not call Method["+name+"]!", new InvalidStateException("RemoteServer not initialized!"));
+    public Future<Event> callAsync(String name) {
+        return FutureProcessor.canceledFuture(Event.class, new CouldNotPerformException("Could not call Method["+name+"]!", new InvalidStateException("RemoteServer not initialized!")));
     }
 
     @Override
-    public <ReplyType, RequestType> RSBFuture<ReplyType> callAsync(String name, RequestType data) throws CouldNotPerformException {
-        throw new CouldNotPerformException("Could not call Method["+name+"]!", new InvalidStateException("RemoteServer not initialized!"));
+    public <ReplyType, RequestType> Future<ReplyType> callAsync(String name, RequestType data) {
+        return (Future<ReplyType>) FutureProcessor.canceledFuture(new CouldNotPerformException("Could not call Method["+name+"]!", new InvalidStateException("RemoteServer not initialized!")));
     }
 
     @Override
