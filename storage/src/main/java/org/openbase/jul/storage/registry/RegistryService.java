@@ -35,12 +35,12 @@ public interface RegistryService {
     /**
      * This method checks if the registry is not handling any tasks and is currently consistent.
      *
-     * @throws InterruptedException exception will be removed within next release.
-     * @return Returns true if this registry is consistent and not busy.
+     * Note: Because this check is fully synchronized with the controller instance, high repeating remote checks should be avoided.
+     *
+     * @return Returns and future object which delivers true if this registry is consistent and not busy.
      */
     @RPCMethod
-    Boolean isReady() throws InterruptedException;
-    // todo release: "is" method should not block and return an InterruptedException
+    Boolean isReady();
 
     /**
      * Method blocks until the registry is not handling any tasks and is currently consistent.

@@ -129,11 +129,7 @@ public class FrequentBlockingMethodCallTest {
 
         @Override
         public Void blockForever() {
-            try {
-                futureList.add(RPCHelper.callRemoteMethod(this));
-            } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not block forever", ex), LOGGER);
-            }
+             futureList.add(RPCHelper.callRemoteMethod(this));
             return null;
         }
 
