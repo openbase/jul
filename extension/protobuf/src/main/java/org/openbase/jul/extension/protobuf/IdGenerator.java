@@ -32,5 +32,5 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @param <M>
  */
 public interface IdGenerator<KEY, M extends Message> {
-    public KEY generateId(M message) throws CouldNotPerformException;
+    KEY generateId(M message) throws CouldNotPerformException;
 }

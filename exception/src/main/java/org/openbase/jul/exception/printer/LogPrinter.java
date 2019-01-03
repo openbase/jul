@@ -61,4 +61,4 @@ public class LogPrinter implements Printer {
     public LogLevel getLogLevel() {
         return logLevel;
     }
-};
+}

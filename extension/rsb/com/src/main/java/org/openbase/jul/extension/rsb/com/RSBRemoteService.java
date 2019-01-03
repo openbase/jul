@@ -811,7 +811,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
      * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
-    public <R> R callMethod(String methodName, long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
+    public <R> R callMethod(String methodName, long timeout) throws CouldNotPerformException, InterruptedException {
         return callMethod(methodName, null, timeout);
     }
 
@@ -822,7 +822,7 @@ public abstract class RSBRemoteService<M extends Message> implements RSBRemote<M
      * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
-    public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, TimeoutException, InterruptedException {
+    public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, InterruptedException {
 
         final String shortArgument = RPCHelper.argumentToString(argument);
         validateMiddleware();

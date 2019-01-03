@@ -29,5 +29,5 @@ import org.openbase.jul.exception.RejectedException;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface Accessable {
-    public void checkAccess() throws RejectedException, InterruptedException;
+    void checkAccess() throws RejectedException, InterruptedException;
 }

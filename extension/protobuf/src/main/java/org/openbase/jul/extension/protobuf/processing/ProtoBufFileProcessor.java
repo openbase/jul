@@ -119,13 +119,13 @@ public class ProtoBufFileProcessor<DT, M extends AbstractMessage, MB extends M.B
         }
     }
 
-    public static interface TypeToMessageTransformer<T, M extends AbstractMessage, MB extends Builder> {
+    public interface TypeToMessageTransformer<T, M extends AbstractMessage, MB extends Builder> {
 
-        public Message transform(T type);
+        Message transform(T type);
 
-        public T transform(M message) throws CouldNotTransformException;
+        T transform(M message) throws CouldNotTransformException;
 
-        public MB newBuilderForType() throws CouldNotPerformException;
+        MB newBuilderForType() throws CouldNotPerformException;
     }
 
     public static class SimpleMessageTransformer<M extends AbstractMessage, MB extends M.Builder> implements TypeToMessageTransformer<M, M, MB> {

@@ -36,5 +36,5 @@ public interface DefaultInitializable {
      * @throws InitializationException is thrown in case the default initialization could not performed.
      * @throws InterruptedException is thrown in case the thread is externally interrupted.
      */
-    public void init() throws InitializationException, InterruptedException;
+    void init() throws InitializationException, InterruptedException;
 }

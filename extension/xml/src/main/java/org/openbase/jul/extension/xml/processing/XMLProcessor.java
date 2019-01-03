@@ -49,7 +49,7 @@ public class XMLProcessor {
     public enum NumberOfNodes {
 
         ARBITRARY, AT_LEAST_ONE, AT_MOST_ONE, EXACT_ONE
-    };
+    }
 
     /**
      *
@@ -483,7 +483,7 @@ public class XMLProcessor {
         }
     }
 
-    public static int parseIntegerAttributeValue(final String attributeName, final Element sourceElement) throws MissingAttributeException, XMLParsingException {
+    public static int parseIntegerAttributeValue(final String attributeName, final Element sourceElement) throws XMLParsingException {
         try {
             return Integer.parseInt(parseAttributeValue(attributeName, sourceElement));
         } catch (NumberFormatException ex) {
@@ -491,7 +491,7 @@ public class XMLProcessor {
         }
     }
 
-    public static <T extends Enum<T>> T parseEnumAttributeValue(final String attributeName, final Element sourceElement, final Class<T> enumType) throws MissingAttributeException, XMLParsingException {
+    public static <T extends Enum<T>> T parseEnumAttributeValue(final String attributeName, final Element sourceElement, final Class<T> enumType) throws XMLParsingException {
         String attributeValue = parseAttributeValue(attributeName, sourceElement);
         try {
             return Enum.valueOf(enumType, attributeValue);

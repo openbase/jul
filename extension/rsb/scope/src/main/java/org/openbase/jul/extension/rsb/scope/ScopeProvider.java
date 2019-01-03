@@ -31,7 +31,7 @@ import rsb.Scope;
  */
 public interface ScopeProvider {
     
-    public final static String TYPE_FIELD_SCOPE = "scope";
+    String TYPE_FIELD_SCOPE = "scope";
 
-    public Scope getScope() throws CouldNotPerformException;
+    Scope getScope() throws CouldNotPerformException;
 }

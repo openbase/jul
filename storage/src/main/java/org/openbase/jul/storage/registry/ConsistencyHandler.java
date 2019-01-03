@@ -49,7 +49,7 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP ex
      * @throws CouldNotPerformException thrown to handle errors.
      * @throws org.openbase.jul.storage.registry.EntryModification in case of entry modification during consistency process.
      */
-    public void processData(final KEY id, final VALUE entry, final MAP entryMap, final R registry) throws CouldNotPerformException, EntryModification;
+    void processData(final KEY id, final VALUE entry, final MAP entryMap, final R registry) throws CouldNotPerformException, EntryModification;
 
     /**
      * Method can be internally used to clear any temporally maps or other caches which are only used for one consistency check iteration.
@@ -59,5 +59,5 @@ public interface ConsistencyHandler<KEY, VALUE extends Identifiable<KEY>, MAP ex
      * To make sure these maps do not interfere between different consistency check iterations this method can be used to clear these kind of caches.
      *
      */
-    public void reset();
+    void reset();
 }

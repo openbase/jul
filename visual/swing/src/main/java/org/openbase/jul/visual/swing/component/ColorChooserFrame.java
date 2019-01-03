@@ -40,7 +40,7 @@ public class ColorChooserFrame extends javax.swing.JFrame {
     public enum UserFeedback {
 
         Ok, Cancel
-    };
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ColorChooserFrame.class);
     private final Object WAITER_LOCK = new Object();

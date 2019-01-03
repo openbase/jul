@@ -38,7 +38,7 @@ public class TCPSocketConfig {
         this.port = port;
     }
 
-    public Socket getSocket() throws UnknownHostException, IOException {
+    public Socket getSocket() throws IOException {
         return new Socket(host, port);
     }
 

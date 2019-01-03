@@ -30,5 +30,5 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface HashGenerator<T> {
 
-    public int computeHash(T value) throws CouldNotPerformException;
+    int computeHash(T value) throws CouldNotPerformException;
 }

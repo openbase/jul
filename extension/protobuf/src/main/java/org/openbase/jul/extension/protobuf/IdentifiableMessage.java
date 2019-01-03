@@ -167,7 +167,7 @@ public class IdentifiableMessage<KEY, M extends AbstractMessage, MB extends M.Bu
         return getId(internalMessage);
     }
 
-    private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
+    private void setId(final KEY id) throws CouldNotPerformException {
         try {
             if (verifyId()) {
                 throw new InvalidStateException("ID already specified!");

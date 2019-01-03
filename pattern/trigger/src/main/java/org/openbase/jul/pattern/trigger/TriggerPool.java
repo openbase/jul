@@ -38,7 +38,7 @@ import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
  */
 public class TriggerPool extends AbstractTrigger {
 
-    public static enum TriggerAggregation {
+    public enum TriggerAggregation {
         AND, OR
     }
 

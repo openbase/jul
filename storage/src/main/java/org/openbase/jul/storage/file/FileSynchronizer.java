@@ -49,7 +49,7 @@ public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> 
     public enum InitMode {
 
         AUTO, CREATE, LOAD, REPLACE
-    };
+    }
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

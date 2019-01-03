@@ -67,7 +67,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
         UNKNOWN,
         OUTDATED,
-        LATEST;
+        LATEST
     }
 
     private final File databaseDirectory;

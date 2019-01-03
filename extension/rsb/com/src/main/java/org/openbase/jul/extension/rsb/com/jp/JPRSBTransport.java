@@ -42,7 +42,7 @@ public class JPRSBTransport extends AbstractJPEnum<JPRSBTransport.TransportType>
         DEFAULT,
         SPREAD,
         SOCKET,
-        INPROCESS;
+        INPROCESS
     }
 
     @Override

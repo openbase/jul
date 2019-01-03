@@ -80,7 +80,7 @@ public abstract class CommandExecuterThread {
         }
     }
 
-    public abstract void execute(AbstractCommand command) throws ClassNotFoundException, InvalidStateException, Exception;
+    public abstract void execute(AbstractCommand command) throws Exception;
 
     @Override
     public String toString() {

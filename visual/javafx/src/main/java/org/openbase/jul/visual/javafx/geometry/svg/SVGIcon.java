@@ -701,7 +701,7 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
 
     public enum Layer {
         FOREGROUND,
-        BACKGROUND;
+        BACKGROUND
     }
 
     private class IconState {

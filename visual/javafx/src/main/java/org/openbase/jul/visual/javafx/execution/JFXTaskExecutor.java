@@ -41,7 +41,7 @@ public class JFXTaskExecutor {
 
     public enum TargetThread {
         GUI_THREAD,
-        NON_GUI_THREAD;
+        NON_GUI_THREAD
     }
 
     /**

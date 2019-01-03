@@ -30,5 +30,5 @@ import org.openbase.jul.exception.InitializationException;
  * @param <CONFIG>
  */
 public interface Initializable<CONFIG> {
-    public void init(final CONFIG config) throws InitializationException, InterruptedException;
+    void init(final CONFIG config) throws InitializationException, InterruptedException;
 }

@@ -40,5 +40,5 @@ public interface Pingable {
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
     @RPCMethod
-    public Future<Long> ping(final Long timestemp) throws CouldNotPerformException;
+    Future<Long> ping(final Long timestemp) throws CouldNotPerformException;
 }

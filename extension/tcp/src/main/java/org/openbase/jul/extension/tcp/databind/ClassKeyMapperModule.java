@@ -45,7 +45,7 @@ public class ClassKeyMapperModule extends SimpleModule {
     public class ClassKeySerializer extends JsonSerializer<Class> {
 
         @Override
-        public void serialize(Class value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        public void serialize(Class value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeFieldName(value.getName());
         }
     }
@@ -56,7 +56,7 @@ public class ClassKeyMapperModule extends SimpleModule {
         }
 
         @Override
-        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public Object deserializeKey(String key, DeserializationContext ctxt) throws IOException {
             try {
                 return Class.forName(key);
             } catch (ClassNotFoundException ex) {

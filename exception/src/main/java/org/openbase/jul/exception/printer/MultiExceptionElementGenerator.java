@@ -43,4 +43,4 @@ public class MultiExceptionElementGenerator implements ElementGenerator<MultiExc
     public void printElement(final MultiException.SourceExceptionEntry element, final Printer printer, final String rootPrefix, final String childPrefix) {
         ExceptionPrinter.printHistory(element.getException(), printer, rootPrefix, childPrefix);
     }
-};
+}

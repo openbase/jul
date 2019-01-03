@@ -60,7 +60,8 @@ public abstract class TCPConnection implements Runnable {
     public enum ConnectionSourceType {
 
         Server, Client
-    };
+    }
+
     public final static int HEARD_BEAT_FREQ = 30000; // Millisecunds
     public final static int COMMUNICATION_FREQUENZEPORT = 20; // Millisecunds
     public final static int RECONNECTION_TIME = 10000; // Millisecunds

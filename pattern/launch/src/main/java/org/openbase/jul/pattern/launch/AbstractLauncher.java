@@ -260,7 +260,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     private static final List<Future> waitingTaskList = new ArrayList<>();
 
-    public static void main(final String args[], final Class application, final Class<? extends AbstractLauncher>... launchers) {
+    public static void main(final String[] args, final Class application, final Class<? extends AbstractLauncher>... launchers) {
         final Logger logger = LoggerFactory.getLogger(Launcher.class);
         JPService.setApplicationName(application);
 
@@ -295,7 +295,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                     System.exit(255);
                 }
                 System.out.println("Available launcher:");
-                System.out.println("");
+                System.out.println();
                 int maxLauncherNameSize = 0;
                 for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
                     maxLauncherNameSize = Math.max(maxLauncherNameSize, launcherEntry.getKey().getSimpleName().length());
@@ -303,7 +303,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
                     System.out.println("\t• " + StringProcessor.fillWithSpaces(launcherEntry.getKey().getSimpleName(), maxLauncherNameSize) + "  ⊳  " + launcherEntry.getKey().getName());
                 }
-                System.out.println("");
+                System.out.println();
                 System.exit(0);
             }
         } catch (JPNotAvailableException ex) {

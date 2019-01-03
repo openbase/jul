@@ -31,6 +31,6 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @param <B>
  */
 public interface Processor<A, B>{
-    public A deserialize(final B b, final A a) throws CouldNotPerformException;
-    public B serialize(final A a, final B b) throws CouldNotPerformException;
+    A deserialize(final B b, final A a) throws CouldNotPerformException;
+    B serialize(final A a, final B b) throws CouldNotPerformException;
 }

@@ -37,7 +37,7 @@ public interface Launcher<L extends Launchable> {
      * @throws CouldNotPerformException
      * @throws java.lang.InterruptedException
      */
-    public void launch() throws CouldNotPerformException, InterruptedException;
+    void launch() throws CouldNotPerformException, InterruptedException;
 
     /**
      * Restarts the launchable.
@@ -45,32 +45,32 @@ public interface Launcher<L extends Launchable> {
      * @throws CouldNotPerformException
      * @throws java.lang.InterruptedException
      */
-    public void relaunch() throws CouldNotPerformException, InterruptedException;
+    void relaunch() throws CouldNotPerformException, InterruptedException;
 
     /**
      * Stops the launchable.
      */
-    public void stop();
+    void stop();
     
     /**
      * Get the uptime of the launchable.
      *
      * @return time in milliseconds.,
      */
-    public long getUpTime();
+    long getUpTime();
     
     /**
      * Get the uptime of the launchable.
      *
      * @return time in milliseconds.,
      */
-    public long getLaunchTime();
+    long getLaunchTime();
     
     /**
      * Flag is set if the application was successfully verified after launching.
      * In case the verification has failed, may some application functions are restricted.
      * @return Returns true if the application verification was successful after launching.
      */
-    public boolean isVerified();
+    boolean isVerified();
 
 }

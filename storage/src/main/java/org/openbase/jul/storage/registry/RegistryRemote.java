@@ -40,7 +40,7 @@ public interface RegistryRemote<M> extends Remote<M>, RegistryService {
      * @throws InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
-    public void init() throws InitializationException, InterruptedException;
+    void init() throws InitializationException, InterruptedException;
     
     /**
      * Reinitialize the remote with the default registry connection scope.
@@ -51,9 +51,9 @@ public interface RegistryRemote<M> extends Remote<M>, RegistryService {
      * @throws CouldNotPerformException thrown if the process could not be performed
      * @throws VerificationFailedException thrown if the given maintainer is incorrect
      */
-    public void reinit(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException;
+    void reinit(final Object maintainer) throws InterruptedException, CouldNotPerformException, VerificationFailedException;
 
-    default public String getName() throws NotAvailableException {
+    default String getName() throws NotAvailableException {
         return getClass().getSimpleName().replace(Remote.class.getSimpleName(), "");
     }
 }

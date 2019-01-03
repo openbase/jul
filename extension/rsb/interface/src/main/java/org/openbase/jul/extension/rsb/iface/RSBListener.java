@@ -35,17 +35,17 @@ import rsb.filter.Filter;
  */
 public interface RSBListener extends RSBParticipant {
 
-    public List<Filter> getFilters() throws NotAvailableException;
+    List<Filter> getFilters() throws NotAvailableException;
 
-    public Iterator<Filter> getFilterIterator() throws NotAvailableException;
+    Iterator<Filter> getFilterIterator() throws NotAvailableException;
 
-    public void addFilter(Filter filter) throws CouldNotPerformException;
+    void addFilter(Filter filter) throws CouldNotPerformException;
 
-    public List<Handler> getHandlers() throws NotAvailableException;
+    List<Handler> getHandlers() throws NotAvailableException;
 
-    public Iterator<Handler> getHandlerIterator() throws CouldNotPerformException;
+    Iterator<Handler> getHandlerIterator() throws CouldNotPerformException;
 
-    public void addHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
+    void addHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
 
-    public void removeHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
+    void removeHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
 }

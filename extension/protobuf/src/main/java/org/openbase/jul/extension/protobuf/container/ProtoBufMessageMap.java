@@ -38,13 +38,13 @@ import java.util.Map;
  */
 public interface ProtoBufMessageMap<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>> extends Map<KEY, IdentifiableMessage<KEY, M, MB>> {
     
-    public IdentifiableMessage<KEY, M, MB> put(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException;
+    IdentifiableMessage<KEY, M, MB> put(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException;
     
-    public IdentifiableMessage<KEY, M, MB> get(final KEY key) throws CouldNotPerformException;
+    IdentifiableMessage<KEY, M, MB> get(final KEY key) throws CouldNotPerformException;
     
-    public IdentifiableMessage<KEY, M, MB> get(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException;
+    IdentifiableMessage<KEY, M, MB> get(final IdentifiableMessage<KEY, M, MB> value) throws CouldNotPerformException;
 
-    public List<M> getMessages() throws CouldNotPerformException;
+    List<M> getMessages() throws CouldNotPerformException;
     
-    public M getMessage(KEY key) throws CouldNotPerformException;
+    M getMessage(KEY key) throws CouldNotPerformException;
 }

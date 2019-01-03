@@ -30,5 +30,5 @@ import org.openbase.jul.exception.NotAvailableException;
  */
 public interface DefaultConfigProvider<CONFIG> {
 
-    public CONFIG getDefaultConfig() throws NotAvailableException;
+    CONFIG getDefaultConfig() throws NotAvailableException;
 }

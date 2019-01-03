@@ -53,12 +53,13 @@ public class ScreenModeController {
     public enum ScreenMode {
 
         Fullscreen, Normal
-    };
+    }
 
     public enum OnTopMode {
 
         Always, OnlyInFullscreen, Never
-    };
+    }
+
     private final ComponentAdapter screenModeAdapter = new ComponentAdapter() {
         /**
          * Invoked when the component's size changes.

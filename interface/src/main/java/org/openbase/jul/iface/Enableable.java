@@ -30,9 +30,9 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Enableable {
 
-    public void enable() throws CouldNotPerformException, InterruptedException;
+    void enable() throws CouldNotPerformException, InterruptedException;
 
-    public void disable() throws CouldNotPerformException, InterruptedException;
+    void disable() throws CouldNotPerformException, InterruptedException;
 
-    public boolean isEnabled();
+    boolean isEnabled();
 }

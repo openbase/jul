@@ -40,7 +40,7 @@ public interface Launchable<CONFIG> extends Manageable<CONFIG>, DefaultInitializ
      * @throws CouldNotPerformException Is thrown in case any error occurs during the startup phase.
      * @throws InterruptedException is thrown in case the thread was externally interrupted.
      */
-    public default boolean launch() throws CouldNotPerformException, InterruptedException {
+    default boolean launch() throws CouldNotPerformException, InterruptedException {
         try {
             init();
             activate();

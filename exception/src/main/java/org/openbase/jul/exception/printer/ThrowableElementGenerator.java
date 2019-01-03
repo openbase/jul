@@ -46,4 +46,4 @@ public class ThrowableElementGenerator implements ElementGenerator<Throwable> {
             printer.print(rootPrefix + LEAF_ENTRY_SPACER_SINGLE + generateRoot(element));
         }
     }
-};
+}

@@ -30,5 +30,5 @@ import java.io.File;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface FileProcessor<A> extends Processor<A, File> {
-    public A deserialize(File file) throws CouldNotPerformException;
+    A deserialize(File file) throws CouldNotPerformException;
 }

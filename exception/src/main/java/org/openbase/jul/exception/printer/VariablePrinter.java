@@ -72,4 +72,4 @@ public class VariablePrinter implements Printer {
     public String getMessages() {
         return messages;
     }
-};
+}

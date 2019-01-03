@@ -30,5 +30,5 @@ import org.openbase.jul.exception.NotAvailableException;
  * @param <CONFIG>
  */
 public interface ConfigProvider<CONFIG> {
-    public CONFIG getConfig() throws NotAvailableException;
+    CONFIG getConfig() throws NotAvailableException;
 }

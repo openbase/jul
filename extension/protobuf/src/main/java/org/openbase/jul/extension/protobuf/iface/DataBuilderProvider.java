@@ -33,9 +33,9 @@ import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
  */
 public interface DataBuilderProvider<M extends AbstractMessage, MB extends M.Builder<MB>> {
 
-    public MB cloneDataBuilder();
+    MB cloneDataBuilder();
 
-    public BuilderSyncSetup<MB> getBuilderSetup();
+    BuilderSyncSetup<MB> getBuilderSetup();
 
     /**
      * This method generates a closable data builder wrapper including the
@@ -61,7 +61,7 @@ public interface DataBuilderProvider<M extends AbstractMessage, MB extends M.Bui
      * @param consumer
      * @return a new builder wrapper with a locked builder instance.
      */
-    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
+    ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
 
     /**
      * This method generates a closable data builder wrapper including the
@@ -88,5 +88,5 @@ public interface DataBuilderProvider<M extends AbstractMessage, MB extends M.Bui
      * @param notifyChange this flag defines if notifyChange is done after unlocking.
      * @return a new builder wrapper with a locked builder instance.
      */
-    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange);
+    ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange);
 }

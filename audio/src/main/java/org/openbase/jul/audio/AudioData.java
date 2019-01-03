@@ -29,9 +29,9 @@ import javax.sound.sampled.AudioFormat;
  */
 public interface AudioData extends AudioSource {
 
-    public byte[] getData();
+    byte[] getData();
 
-    public AudioFormat getFormat();
+    AudioFormat getFormat();
 
-    public long getDataLenght();
+    long getDataLenght();
 }

@@ -32,9 +32,9 @@ import java.io.FileFilter;
  */
 public interface FileProvider<C> {
     
-    public String getFileName(final C context) throws CouldNotPerformException ;
+    String getFileName(final C context) throws CouldNotPerformException ;
     
-    public String getFileType();
+    String getFileType();
     
-    public FileFilter getFileFilter();
+    FileFilter getFileFilter();
 }
