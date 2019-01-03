@@ -40,18 +40,13 @@ public class ExceptionProcessor {
      * @param throwable the throwable to detect the message.
      *
      * @return the message as string.
-     * @throws NotAvailableException if the cause message could not be detected.
      */
-    public static String getInitialCauseMessage(final Throwable throwable) throws NotAvailableException {
-        try {
-            final Throwable cause = getInitialCause(throwable);
-            if (cause.getLocalizedMessage() == null) {
-                return cause.getClass().getSimpleName();
-            }
-            return cause.getLocalizedMessage();
-        } catch (CouldNotPerformException ex){
-            throw new NotAvailableException("cause message");
+    public static String getInitialCauseMessage(final Throwable throwable) {
+        final Throwable cause = getInitialCause(throwable);
+        if (cause.getLocalizedMessage() == null) {
+            return cause.getClass().getSimpleName();
         }
+        return cause.getLocalizedMessage();
     }
 
     /**
@@ -60,12 +55,10 @@ public class ExceptionProcessor {
      * @param throwable the throwable to detect the message.
      *
      * @return the cause as throwable.
-     * @throws NotAvailableException if the given {@code throwable} is null.
      */
-    public static Throwable getInitialCause(final Throwable throwable) throws NotAvailableException {
-        // todo release remove NotAvailableException and replace with non thrown FatalImplEx or handle.
+    public static Throwable getInitialCause(final Throwable throwable) {
         if (throwable == null) {
-            throw new NotAvailableException("cause");
+            new FatalImplementationErrorException(ExceptionProcessor.class, new NotAvailableException("cause"));
         }
 
         Throwable cause = throwable;
