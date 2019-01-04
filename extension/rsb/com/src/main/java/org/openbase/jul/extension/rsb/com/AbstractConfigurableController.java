@@ -21,6 +21,7 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
@@ -28,17 +29,18 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
-import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 import org.openbase.jul.pattern.controller.ConfigurableController;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.type.com.ScopeType.Scope;
 
+import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
+
 /**
+ * @param <M>      the message type
+ * @param <MB>     builder of the message M
+ * @param <CONFIG> the configuration data type
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <M> the message type
- * @param <MB> builder of the message M
- * @param <CONFIG> the configuration data type
  */
 public abstract class AbstractConfigurableController<M extends AbstractMessage, MB extends M.Builder<MB>, CONFIG extends Message> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
 
@@ -58,7 +60,8 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
      * Initialize the controller with a configuration.
      *
      * @param config the configuration
-     * @throws InitializationException if the initialization fails
+     *
+     * @throws InitializationException        if the initialization fails
      * @throws java.lang.InterruptedException if the initialization is interrupted
      */
     @Override
@@ -81,9 +84,11 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
      * Apply an update to the configuration of this controller.
      *
      * @param config the updated configuration
+     *
      * @return the updated configuration
+     *
      * @throws CouldNotPerformException if the update could not be performed
-     * @throws InterruptedException if the update has been interrupted
+     * @throws InterruptedException     if the update has been interrupted
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
@@ -180,6 +185,13 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
                 throw new NotAvailableException("config");
             }
             return config;
+        }
+    }
+
+    @Override
+    public void notifyChange() throws CouldNotPerformException, InterruptedException {
+        synchronized (CONFIG_LOCK) {
+            super.notifyChange();
         }
     }
 }
