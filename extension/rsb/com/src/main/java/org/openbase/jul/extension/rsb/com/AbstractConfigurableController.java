@@ -66,17 +66,17 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
      */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
-        synchronized (CONFIG_LOCK) {
-            try {
+        try {
+            synchronized (CONFIG_LOCK) {
                 if (config == null) {
                     throw new NotAvailableException("config");
                 }
                 currentScope = detectScope(config);
                 applyConfigUpdate(config);
-                super.init(currentScope);
-            } catch (CouldNotPerformException ex) {
-                throw new InitializationException(this, ex);
             }
+            super.init(currentScope);
+        } catch (CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
         }
     }
 
@@ -92,8 +92,9 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        synchronized (CONFIG_LOCK) {
-            try {
+        try {
+            boolean scopeChanged;
+            synchronized (CONFIG_LOCK) {
                 this.config = config;
 
                 if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
@@ -104,20 +105,23 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
                     setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
                 }
 
-                // detect scope change if instance is already active and reinit if needed.
-                try {
-                    if (isActive() && !currentScope.equals(detectScope(config))) {
-                        currentScope = detectScope();
-                        super.init(currentScope);
-                    }
-                } catch (CouldNotPerformException ex) {
-                    throw new CouldNotPerformException("Could not verify scope changes!", ex);
-                }
-
-                return this.config;
-            } catch (CouldNotPerformException ex) {
-                throw new CouldNotPerformException("Could not apply config update!", ex);
+                scopeChanged = !currentScope.equals(detectScope(config));
+                currentScope = detectScope();
             }
+
+            // detect scope change if instance is already active and reinit if needed.
+            // this needs to be done without holding the config lock to avoid a deadlock with the server manageable lock.
+            try {
+                if (isActive() && scopeChanged) {
+                    super.init(currentScope);
+                }
+            } catch (CouldNotPerformException ex) {
+                throw new CouldNotPerformException("Could not verify scope changes!", ex);
+            }
+
+            return this.config;
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not apply config update!", ex);
         }
     }
 
