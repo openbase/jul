@@ -187,11 +187,4 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
             return config;
         }
     }
-
-    @Override
-    public void notifyChange() throws CouldNotPerformException, InterruptedException {
-        synchronized (CONFIG_LOCK) {
-            super.notifyChange();
-        }
-    }
 }
