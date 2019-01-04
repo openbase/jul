@@ -63,7 +63,7 @@ public class TimestampProcessor {
      *
      * @return the updated message
      *
-     * @throws CouldNotPerformException
+     * @throws CouldNotPerformException is thrown in case the copy could not be performed e.g. because of a missing timestamp field.
      */
     public static <M extends MessageOrBuilder> M updateTimestampWithCurrentTime(final M messageOrBuilder) throws CouldNotPerformException {
         return updateTimestamp(System.currentTimeMillis(), messageOrBuilder);
@@ -78,7 +78,7 @@ public class TimestampProcessor {
      *
      * @return the updated message
      *
-     * @throws CouldNotPerformException
+     * @throws CouldNotPerformException is thrown in case the copy could not be performed e.g. because of a missing timestamp field.
      */
     public static <M extends MessageOrBuilder> M updateTimestamp(final long milliseconds, final M messageOrBuilder) throws CouldNotPerformException {
         return updateTimestamp(milliseconds, messageOrBuilder, TimeUnit.MILLISECONDS);
@@ -94,7 +94,7 @@ public class TimestampProcessor {
      *
      * @return the updated message
      *
-     * @throws CouldNotPerformException
+     * @throws CouldNotPerformException is thrown in case the copy could not be performed e.g. because of a missing timestamp field.
      */
     public static <M extends MessageOrBuilder> M updateTimestamp(final long time, final M messageOrBuilder, final TimeUnit timeUnit) throws CouldNotPerformException {
         long milliseconds = TimeUnit.MILLISECONDS.convert(time, timeUnit);
@@ -184,6 +184,42 @@ public class TimestampProcessor {
     }
 
     /**
+     * Method copies the timestamp field of the source message into the target message.
+     * In case of an error the original message is returned.
+     *
+     * @param <M>              the message type of the message to update.
+     * @param sourceMessageOrBuilder the message providing a timestamp.
+     * @param targetMessageOrBuilder the message offering a timestamp field to update.
+     * @param logger           the logger which is used for printing the exception stack in case something went wrong.
+     *
+     * @return the updated message or the original one in case of errors.
+     */
+    public static <M extends MessageOrBuilder> M copyTimestamp(final M sourceMessageOrBuilder, final M targetMessageOrBuilder, final Logger logger) {
+        try {
+            return TimestampProcessor.copyTimestamp(sourceMessageOrBuilder, targetMessageOrBuilder);
+        } catch (CouldNotPerformException ex) {
+            ExceptionPrinter.printHistory(ex, logger);
+            return targetMessageOrBuilder;
+        }
+    }
+
+    /**
+     * Method copies the timestamp field of the source message into the target message.
+     * In case of an error the original message is returned.
+     *
+     * @param <M>              the message type of the message to update.
+     * @param sourceMessageOrBuilder the message providing a timestamp.
+     * @param targetMessageOrBuilder the message offering a timestamp field to update.
+     *
+     * @return the updated message or the original one in case of errors.
+     *
+     * @throws CouldNotPerformException is thrown in case the copy could not be performed e.g. because of a missing timestamp field.
+     */
+    public static <M extends MessageOrBuilder> M copyTimestamp(final M sourceMessageOrBuilder, final M targetMessageOrBuilder) throws CouldNotPerformException {
+        return TimestampProcessor.updateTimestamp(TimestampProcessor.getTimestamp(sourceMessageOrBuilder, TimeUnit.MICROSECONDS), targetMessageOrBuilder , TimeUnit.MICROSECONDS);
+    }
+
+    /**
      * Method updates the timestamp field of the given message with the current time.
      * In case of an error the original message is returned.
      *
@@ -202,6 +238,11 @@ public class TimestampProcessor {
         }
     }
 
+    /**
+     * Method return true if the given message contains a timestamp field.
+     * @param messageOrBuilder the message to analyze
+     * @return true if the timestamp field is provided, otherwise false.
+     */
     public static boolean hasTimestamp(final MessageOrBuilder messageOrBuilder) {
         try {
             final FieldDescriptor fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(messageOrBuilder, TIMESTEMP_FIELD_NAME);
