@@ -274,20 +274,6 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
         MultiException.checkAndThrow(() ->"Could not load all registry entries!", exceptionStack);
 
-        // register and apply db version specific consistency handler
-        if (versionControl != null) {
-
-            List<ConsistencyHandler> versionConsistencyHandlers = versionControl.loadDBVersionConsistencyHandlers(this);
-
-            for (ConsistencyHandler handler : versionConsistencyHandlers) {
-                try {
-                    registerConsistencyHandler(handler);
-                } catch (CouldNotPerformException ex) {
-                    throw new FatalImplementationErrorException("During VersionConsistencyHandler[" + handler.getClass().getSimpleName() + "] execution!", this, ex);
-                }
-            }
-        }
-
         notifyObservers();
 
         if (isReadOnly()) {
