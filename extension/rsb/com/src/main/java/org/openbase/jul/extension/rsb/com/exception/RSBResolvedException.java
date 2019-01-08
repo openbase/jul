@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.com.exception;
  * #%L
  * JUL Extension RSB Communication
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -71,7 +71,7 @@ public class RSBResolvedException extends CouldNotPerformException {
     public static Exception resolveRSBException(final RSBException rsbException) {
         Exception exception = null;
 
-        // build stacktrace array where each line is stored as entry. entry is extract each line istacktrace into arr
+        // build stacktrace array where each line is stored as entry. entry is extract each line stacktrace into arr
         final String[] stacktrace = ("Caused by: " + rsbException.getMessage()).split("\n");
 
         // iterate in reverse order to build exception chain.

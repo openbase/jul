@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry.clone;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -35,9 +35,9 @@ import java.util.Map;
  */
 public interface RegistryCloner<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>> {
 
-    public MAP deepCloneRegistryMap(final MAP map) throws CouldNotPerformException;
+    MAP deepCloneRegistryMap(final MAP map) throws CouldNotPerformException;
 
-    public Map<KEY, ENTRY> deepCloneMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException;
+    Map<KEY, ENTRY> deepCloneMap(final Map<KEY, ENTRY> map) throws CouldNotPerformException;
 
-    public ENTRY deepCloneEntry(final ENTRY entry) throws CouldNotPerformException;
+    ENTRY deepCloneEntry(final ENTRY entry) throws CouldNotPerformException;
 }

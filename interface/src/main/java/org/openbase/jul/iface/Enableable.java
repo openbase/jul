@@ -4,7 +4,7 @@ package org.openbase.jul.iface;
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -30,9 +30,9 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Enableable {
 
-    public void enable() throws CouldNotPerformException, InterruptedException;
+    void enable() throws CouldNotPerformException, InterruptedException;
 
-    public void disable() throws CouldNotPerformException, InterruptedException;
+    void disable() throws CouldNotPerformException, InterruptedException;
 
-    public boolean isEnabled();
+    boolean isEnabled();
 }

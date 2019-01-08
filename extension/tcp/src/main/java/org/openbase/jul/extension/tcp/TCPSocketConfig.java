@@ -4,7 +4,7 @@ package org.openbase.jul.extension.tcp;
  * #%L
  * JUL Extension TCP
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,6 @@ package org.openbase.jul.extension.tcp;
  */
 import java.io.IOException;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -38,7 +37,7 @@ public class TCPSocketConfig {
         this.port = port;
     }
 
-    public Socket getSocket() throws UnknownHostException, IOException {
+    public Socket getSocket() throws IOException {
         return new Socket(host, port);
     }
 

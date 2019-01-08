@@ -4,7 +4,7 @@ package org.openbase.jul.extension.tcp;
  * #%L
  * JUL Extension TCP
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -60,7 +60,8 @@ public abstract class TCPConnection implements Runnable {
     public enum ConnectionSourceType {
 
         Server, Client
-    };
+    }
+
     public final static int HEARD_BEAT_FREQ = 30000; // Millisecunds
     public final static int COMMUNICATION_FREQUENZEPORT = 20; // Millisecunds
     public final static int RECONNECTION_TIME = 10000; // Millisecunds

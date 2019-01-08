@@ -4,7 +4,7 @@ package org.openbase.jul.iface.provider;
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -31,7 +31,7 @@ public interface PingProvider {
      *
      * @return the connection delay in milliseconds.
      */
-    public Future<Long> ping();
+    Future<Long> ping();
 
     /**
      * Method returns the result of the latest connection ping between this
@@ -39,5 +39,5 @@ public interface PingProvider {
      *
      * @return the latest connection delay in milliseconds.
      */
-    public Long getPing();
+    Long getPing();
 }

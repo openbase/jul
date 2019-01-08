@@ -32,6 +32,7 @@
         <module>default</module>
         <module>launch</module>
         <module>trigger</module>
+	<module>controller</module>
     </modules>
     
     <dependencies>

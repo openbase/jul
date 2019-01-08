@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.com;
  * #%L
  * JUL Extension RSB Communication
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -29,11 +29,12 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.domotic.registry.UnitRegistryDataType.UnitRegistryData;
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,11 +60,11 @@ public class FrequentBlockingMethodCallTest {
         JPService.setupJUnitTestMode();
         final String scope = "/test/blocking";
 
-        BlockingRSBCommunicationServiceImpl communicationService = new BlockingRSBCommunicationServiceImpl(UnitRegistryData.newBuilder());
+        AbstractBlockingControllerServerImpl communicationService = new AbstractBlockingControllerServerImpl(UnitRegistryData.newBuilder());
         communicationService.init(scope);
         communicationService.activate();
 
-        BlockingRSBRemoteServiceImpl remoteService = new BlockingRSBRemoteServiceImpl();
+        BlockingAbstractRemoteClientImpl remoteService = new BlockingAbstractRemoteClientImpl();
         remoteService.init(scope);
         remoteService.activate();
 
@@ -96,9 +97,9 @@ public class FrequentBlockingMethodCallTest {
         Void blockForever();
     }
 
-    public class BlockingRSBCommunicationServiceImpl extends RSBCommunicationService<UnitRegistryData, UnitRegistryData.Builder> implements Blocked {
+    public class AbstractBlockingControllerServerImpl extends AbstractControllerServer<UnitRegistryData, Builder> implements Blocked {
 
-        public BlockingRSBCommunicationServiceImpl(UnitRegistryData.Builder builder) throws InstantiationException {
+        public AbstractBlockingControllerServerImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
 
@@ -119,21 +120,17 @@ public class FrequentBlockingMethodCallTest {
         }
     }
 
-    public class BlockingRSBRemoteServiceImpl extends RSBRemoteService<UnitRegistryData> implements Blocked {
+    public class BlockingAbstractRemoteClientImpl extends AbstractRemoteClient<UnitRegistryData> implements Blocked {
 
         private final List<Future> futureList = new ArrayList<>();
 
-        public BlockingRSBRemoteServiceImpl() {
+        public BlockingAbstractRemoteClientImpl() {
             super(UnitRegistryData.class);
         }
 
         @Override
         public Void blockForever() {
-            try {
-                futureList.add(RPCHelper.callRemoteMethod(this));
-            } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not block forever", ex), LOGGER);
-            }
+             futureList.add(RPCHelper.callRemoteMethod(this));
             return null;
         }
 

@@ -4,7 +4,7 @@ package org.openbase.jul.iface;
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,6 @@ package org.openbase.jul.iface;
  */
 
 import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -35,7 +34,6 @@ public interface Executable<T> {
      * Executes this executable.
      *
      * @return A future instance is returned which provides information about the execution state.
-     * @throws CouldNotPerformException is thrown if the execution could not be started.
      */
-    Future<T> execute() throws CouldNotPerformException;
+    Future<T> execute();
 }

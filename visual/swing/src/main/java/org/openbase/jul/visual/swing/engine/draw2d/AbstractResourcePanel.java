@@ -4,7 +4,7 @@ package org.openbase.jul.visual.swing.engine.draw2d;
  * #%L
  * JUL Visual Swing
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -70,23 +70,24 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
 
     public enum VisibleResourcePanelState {
 
-        Selected, Unselected, Unknown;
-    };
+        Selected, Unselected, Unknown
+    }
 
     public enum VisibleResourcePanelMouseState {
 
-        Rollover, Klick, Untouched, Unknown;
-    };
+        Rollover, Klick, Untouched, Unknown
+    }
 
     public enum DrawLayer {
 
-        FORGROUND, BACKGROUND;
-    };
+        FORGROUND, BACKGROUND
+    }
 
     public enum ObjectType {
 
-        Static, Dynamic;
-    };
+        Static, Dynamic
+    }
+
     protected final ResourceDisplayPanel parentPanel;
     protected final PRP parentResourcePanel;
     protected final R resource;
@@ -228,7 +229,7 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
             mx = evt.getPoint().x;
             my = evt.getPoint().y;
         }
-        return transformedBoundingBox.contains(evt.getPoint()) ? tranformedPlacement.contains(evt.getPoint()) : false;
+        return transformedBoundingBox.contains(evt.getPoint()) && tranformedPlacement.contains(evt.getPoint());
     }
 
     protected AbstractResourcePanel getSelectedInstance(MouseEvent evt) {

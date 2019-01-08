@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,15 +25,7 @@ package org.openbase.jul.extension.protobuf;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.pattern.AbstractObservable;
-import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
-import org.openbase.jul.pattern.provider.DataProvider;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This class computes the hashCode to check if the observed value has changed invariant of

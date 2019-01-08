@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry.plugin;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@ package org.openbase.jul.storage.registry.plugin;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.DetachedHeadException;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -55,7 +55,7 @@ import java.util.Map;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> //
  */
-public class GitRegistryPlugin<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M, MB> {
+public class GitRegistryPlugin<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends ProtobufRegistryPluginAdapter<KEY, M, MB> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 

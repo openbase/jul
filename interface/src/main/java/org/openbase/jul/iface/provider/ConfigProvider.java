@@ -4,7 +4,7 @@ package org.openbase.jul.iface.provider;
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -30,5 +30,5 @@ import org.openbase.jul.exception.NotAvailableException;
  * @param <CONFIG>
  */
 public interface ConfigProvider<CONFIG> {
-    public CONFIG getConfig() throws NotAvailableException;
+    CONFIG getConfig() throws NotAvailableException;
 }

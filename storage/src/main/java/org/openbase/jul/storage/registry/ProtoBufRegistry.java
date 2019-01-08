@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -21,14 +21,13 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.pattern.provider.DataProvider;
 
 /**
  *
@@ -37,7 +36,7 @@ import org.openbase.jul.pattern.provider.DataProvider;
  * @param <M>
  * @param <MB>
  */
-public interface ProtoBufRegistry<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> {
+public interface ProtoBufRegistry<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends FileSynchronizedRegistry<KEY, IdentifiableMessage<KEY, M, MB>> {
 
     M register(final M entry) throws CouldNotPerformException;
 

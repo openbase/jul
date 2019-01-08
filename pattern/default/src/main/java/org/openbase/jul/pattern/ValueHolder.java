@@ -4,7 +4,7 @@ package org.openbase.jul.pattern;
  * #%L
  * JUL Pattern Default
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -45,11 +45,11 @@ public interface ValueHolder<V> {
      * Method stores the given {@code value} within the holder.
      * @param value the value to store.
      */
-    public void setValue(V value);
+    void setValue(V value);
 
     /**
      * Method return is the value was ever set.
      * @return true if the value is available.
      */
-    public boolean isValueAvailable();
+    boolean isValueAvailable();
 }

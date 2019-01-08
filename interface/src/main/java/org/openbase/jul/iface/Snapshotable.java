@@ -4,7 +4,7 @@ package org.openbase.jul.iface;
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,6 @@ package org.openbase.jul.iface;
  */
 
 import java.util.concurrent.Future;
-import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  *
@@ -32,7 +31,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
  */
 public interface Snapshotable<T> {
 
-    Future<T> recordSnapshot() throws CouldNotPerformException, InterruptedException;
+    Future<T> recordSnapshot();
 
-    Future<Void> restoreSnapshot(final T snapshot) throws CouldNotPerformException, InterruptedException;
+    Future<Void> restoreSnapshot(final T snapshot);
 }

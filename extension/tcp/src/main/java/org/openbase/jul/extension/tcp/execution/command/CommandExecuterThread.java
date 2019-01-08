@@ -4,7 +4,7 @@ package org.openbase.jul.extension.tcp.execution.command;
  * #%L
  * JUL Extension TCP
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -80,7 +80,7 @@ public abstract class CommandExecuterThread {
         }
     }
 
-    public abstract void execute(AbstractCommand command) throws ClassNotFoundException, InvalidStateException, Exception;
+    public abstract void execute(AbstractCommand command) throws Exception;
 
     @Override
     public String toString() {

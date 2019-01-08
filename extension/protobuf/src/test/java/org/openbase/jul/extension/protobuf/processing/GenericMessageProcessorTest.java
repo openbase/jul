@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf.processing;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -28,11 +28,11 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import rst.domotic.state.ColorStateType.ColorState;
-import rst.domotic.state.PowerStateType.PowerState;
-import rst.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
-import rst.domotic.unit.dal.LightDataType.LightData;
-import rst.vision.ColorType;
+import org.openbase.type.domotic.state.ColorStateType.ColorState;
+import org.openbase.type.domotic.state.PowerStateType.PowerState;
+import org.openbase.type.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
+import org.openbase.type.domotic.unit.dal.LightDataType.LightData;
+import org.openbase.type.vision.ColorType;
 
 /**
  *

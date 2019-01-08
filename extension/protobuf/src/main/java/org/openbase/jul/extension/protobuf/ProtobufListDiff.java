@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,11 +22,7 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.exception.printer.LogLevel;
-import org.slf4j.LoggerFactory;
+import com.google.protobuf.AbstractMessage;
 
 import java.util.List;
 
@@ -36,7 +32,7 @@ import java.util.List;
  * @param <MB>
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class ProtobufListDiff<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractListDiff<KEY, IdentifiableMessage<KEY, M, MB>, IdentifiableMessageMap<KEY, M, MB>> {
+public class ProtobufListDiff<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractListDiff<KEY, IdentifiableMessage<KEY, M, MB>, IdentifiableMessageMap<KEY, M, MB>> {
 
     public ProtobufListDiff(final List<M> originalMessages) {
         this();

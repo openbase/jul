@@ -4,7 +4,7 @@ package org.openbase.jul.visual.javafx.geometry;
  * #%L
  * JUL Visual JavaFX
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,8 +23,8 @@ package org.openbase.jul.visual.javafx.geometry;
  */
 import javafx.geometry.Point3D;
 import javafx.scene.paint.Material;
-import rst.geometry.Ray3DFloatType.Ray3DFloat;
-import rst.math.Vec3DFloatType.Vec3DFloat;
+import org.openbase.type.geometry.Ray3DFloatType.Ray3DFloat;
+import org.openbase.type.math.Vec3DFloatType.Vec3DFloat;
 
 /**
  * This class represents a ray in a 3d space represented by a cylinder. Default width is 2cm.

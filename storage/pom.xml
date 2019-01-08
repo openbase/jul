@@ -80,5 +80,10 @@
             <artifactId>cloning</artifactId>
             <version>1.9.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.pattern.controller</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

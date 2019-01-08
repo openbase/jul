@@ -1,13 +1,12 @@
 package org.openbase.jul.iface;
 
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.iface.provider.NameProvider;
 
 /*
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -40,7 +39,7 @@ public interface Launchable<CONFIG> extends Manageable<CONFIG>, DefaultInitializ
      * @throws CouldNotPerformException Is thrown in case any error occurs during the startup phase.
      * @throws InterruptedException is thrown in case the thread was externally interrupted.
      */
-    public default boolean launch() throws CouldNotPerformException, InterruptedException {
+    default boolean launch() throws CouldNotPerformException, InterruptedException {
         try {
             init();
             activate();

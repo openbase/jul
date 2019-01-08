@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 
@@ -38,7 +38,7 @@ import java.util.Set;
  * @param <M>
  * @param <MB>
  */
-public class IdentifiableMessageMap<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends IdentifiableValueMap<KEY, IdentifiableMessage<KEY, M, MB>> {
+public class IdentifiableMessageMap<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends IdentifiableValueMap<KEY, IdentifiableMessage<KEY, M, MB>> {
 
     public IdentifiableMessageMap(final Collection<M> messageList) {
         if (messageList == null) {

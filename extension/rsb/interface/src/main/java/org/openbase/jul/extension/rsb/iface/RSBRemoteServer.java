@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.iface;
  * #%L
  * JUL Extension RSB Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -24,8 +24,9 @@ package org.openbase.jul.extension.rsb.iface;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.TimeoutException;
 import rsb.Event;
+
+import java.util.concurrent.Future;
 
 /**
  *
@@ -35,22 +36,22 @@ public interface RSBRemoteServer extends RSBServer {
 
     double getTimeout() throws NotAvailableException;
 
-    RSBFuture<Event> callAsync(String name, Event event) throws CouldNotPerformException;
+    Future<Event> callAsync(String name, Event event);
 
-    RSBFuture<Event> callAsync(String name) throws CouldNotPerformException;
+    Future<Event> callAsync(String name);
 
-    <ReplyType extends Object, RequestType extends Object> RSBFuture<ReplyType> callAsync(String name, RequestType data) throws CouldNotPerformException;
+    <ReplyType extends Object, RequestType extends Object> Future<ReplyType> callAsync(String name, RequestType data);
 
-    Event call(String name, Event event) throws CouldNotPerformException, TimeoutException, InterruptedException;
+    Event call(String name, Event event) throws CouldNotPerformException, InterruptedException;
 
-    Event call(String name, Event event, double timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
+    Event call(String name, Event event, double timeout) throws CouldNotPerformException, InterruptedException;
 
-    Event call(String name) throws CouldNotPerformException, TimeoutException, InterruptedException;
+    Event call(String name) throws CouldNotPerformException, InterruptedException;
 
-    Event call(String name, double timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
+    Event call(String name, double timeout) throws CouldNotPerformException, InterruptedException;
 
-    <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data) throws CouldNotPerformException, TimeoutException, InterruptedException;
+    <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data) throws CouldNotPerformException, InterruptedException;
 
-    <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data, double timeout) throws CouldNotPerformException, TimeoutException, InterruptedException;
+    <ReplyType extends Object, RequestType extends Object> ReplyType call(String name, RequestType data, double timeout) throws CouldNotPerformException, InterruptedException;
 
 }

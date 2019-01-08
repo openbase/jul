@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf.iface;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -21,7 +21,7 @@ package org.openbase.jul.extension.protobuf.iface;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 
@@ -31,11 +31,11 @@ import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
  * @param <M> Message
  * @param <MB> Builder
  */
-public interface DataBuilderProvider<M extends GeneratedMessage, MB extends M.Builder<MB>> {
+public interface DataBuilderProvider<M extends AbstractMessage, MB extends M.Builder<MB>> {
 
-    public MB cloneDataBuilder();
+    MB cloneDataBuilder();
 
-    public BuilderSyncSetup<MB> getBuilderSetup();
+    BuilderSyncSetup<MB> getBuilderSetup();
 
     /**
      * This method generates a closable data builder wrapper including the
@@ -61,7 +61,7 @@ public interface DataBuilderProvider<M extends GeneratedMessage, MB extends M.Bu
      * @param consumer
      * @return a new builder wrapper with a locked builder instance.
      */
-    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
+    ClosableDataBuilder<MB> getDataBuilder(final Object consumer);
 
     /**
      * This method generates a closable data builder wrapper including the
@@ -88,5 +88,5 @@ public interface DataBuilderProvider<M extends GeneratedMessage, MB extends M.Bu
      * @param notifyChange this flag defines if notifyChange is done after unlocking.
      * @return a new builder wrapper with a locked builder instance.
      */
-    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange);
+    ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange);
 }

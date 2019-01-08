@@ -4,7 +4,7 @@ package org.openbase.jul.processing;
  * #%L
  * JUL Processing
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -63,10 +63,9 @@ public class VariableStore implements VariableProvider {
      *
      * @param variableContains the identifier to select the variables.
      * @return a map of the variable name and its current value.
-     * @throws NotAvailableException is thrown in case no variable name matches the given identifier.
      */
     @Override
-    public Map<String, String> getValues(final String variableContains) throws NotAvailableException {
+    public Map<String, String> getValues(final String variableContains)  {
         final Map<String, String> variableSelection = new HashMap<>();
         for (Entry<String, String> entry : variableMap.entrySet()) {
             if (entry.getKey().contains(variableContains)) {
@@ -74,9 +73,6 @@ public class VariableStore implements VariableProvider {
                     variableSelection.put(entry.getKey(), entry.getValue());
                 }
             }
-        }
-        if (variableSelection.isEmpty()) {
-            throw new NotAvailableException("No values found because no variables are matching [" + variableContains + "]!");
         }
         return variableSelection;
     }

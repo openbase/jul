@@ -4,7 +4,7 @@ package org.openbase.jul.pattern.launch;
  * #%L
  * JUL Pattern Launch
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -44,7 +44,7 @@ import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Scope;
-import rst.domotic.state.ActivationStateType.ActivationState;
+import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -260,7 +260,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     private static final List<Future> waitingTaskList = new ArrayList<>();
 
-    public static void main(final String args[], final Class application, final Class<? extends AbstractLauncher>... launchers) {
+    public static void main(final String[] args, final Class application, final Class<? extends AbstractLauncher>... launchers) {
         final Logger logger = LoggerFactory.getLogger(Launcher.class);
         JPService.setApplicationName(application);
 
@@ -295,7 +295,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                     System.exit(255);
                 }
                 System.out.println("Available launcher:");
-                System.out.println("");
+                System.out.println();
                 int maxLauncherNameSize = 0;
                 for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
                     maxLauncherNameSize = Math.max(maxLauncherNameSize, launcherEntry.getKey().getSimpleName().length());
@@ -303,7 +303,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
                     System.out.println("\t• " + StringProcessor.fillWithSpaces(launcherEntry.getKey().getSimpleName(), maxLauncherNameSize) + "  ⊳  " + launcherEntry.getKey().getName());
                 }
-                System.out.println("");
+                System.out.println();
                 System.exit(0);
             }
         } catch (JPNotAvailableException ex) {

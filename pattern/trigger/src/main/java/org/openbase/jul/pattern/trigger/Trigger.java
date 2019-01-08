@@ -5,7 +5,7 @@ package org.openbase.jul.pattern.trigger;
  * #%L
  * JUL Pattern Trigger
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -26,8 +26,8 @@ package org.openbase.jul.pattern.trigger;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Activatable;
 import org.openbase.jul.pattern.Observer;
-import rst.domotic.state.ActivationStateType;
-import rst.domotic.state.ActivationStateType.ActivationState;
+import org.openbase.type.domotic.state.ActivationStateType;
+import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

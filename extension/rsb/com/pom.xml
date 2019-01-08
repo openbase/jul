@@ -30,12 +30,12 @@
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rst.interface</artifactId>
+            <artifactId>jul.extension.type.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rst.util</artifactId>
+            <artifactId>jul.extension.type.util</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -66,6 +66,11 @@
         <dependency>
             <groupId>org.openbase</groupId>
             <artifactId>jul.schedule</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.pattern.controller</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

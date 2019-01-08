@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry.plugin;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -26,7 +26,6 @@ import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.storage.file.FileSynchronizer;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
-import org.openbase.jul.storage.registry.Registry;
 
 /**
  *
@@ -36,18 +35,18 @@ import org.openbase.jul.storage.registry.Registry;
  */
 public interface FileRegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends RegistryPlugin<KEY, ENTRY, REGISTRY> {
 
-    public void beforeRegister(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
+    void beforeRegister(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
-    public void afterRegister(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
+    void afterRegister(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
 
-    public void beforeRemove(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
+    void beforeRemove(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
-    public void afterRemove(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
+    void afterRemove(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
 
-    public void beforeUpdate(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
+    void beforeUpdate(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
-    public void afterUpdate(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
+    void afterUpdate(final ENTRY entry, final FileSynchronizer fileSynchronizer) throws CouldNotPerformException;
 
-    public void beforeGet(final KEY key, final FileSynchronizer fileSynchronizer) throws RejectedException;
+    void beforeGet(final KEY key, final FileSynchronizer fileSynchronizer) throws RejectedException;
 
 }

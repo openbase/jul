@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf.container.transformer;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@ package org.openbase.jul.extension.protobuf.container.transformer;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.extension.protobuf.IdGenerator;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
@@ -34,7 +34,7 @@ import org.openbase.jul.extension.protobuf.IdentifiableMessage;
  * @param <M>
  * @param <MB>
  */
-public class IdentifiableMessageTransformer<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends MessageTransformer<IdentifiableMessage<KEY, M, MB>, M, MB> {
+public class IdentifiableMessageTransformer<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends MessageTransformer<IdentifiableMessage<KEY, M, MB>, M, MB> {
 
     private final IdGenerator<KEY, M> idGenerator;
 

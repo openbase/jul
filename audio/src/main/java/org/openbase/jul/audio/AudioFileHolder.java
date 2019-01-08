@@ -4,7 +4,7 @@ package org.openbase.jul.audio;
  * #%L
  * JUL Audio
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -29,5 +29,5 @@ import java.io.File;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface AudioFileHolder extends AudioSource {
-	public File getFile();
+	File getFile();
 }

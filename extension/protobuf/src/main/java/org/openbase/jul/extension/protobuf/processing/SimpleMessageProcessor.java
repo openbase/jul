@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf.processing;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,13 +22,13 @@ package org.openbase.jul.extension.protobuf.processing;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class SimpleMessageProcessor<M extends GeneratedMessage> implements MessageProcessor<GeneratedMessage, M> {
+public class SimpleMessageProcessor<M extends Message> implements MessageProcessor<Message, M> {
 
     private final Class<M> dataClass;
 
@@ -37,7 +37,7 @@ public class SimpleMessageProcessor<M extends GeneratedMessage> implements Messa
     }
 
     @Override
-    public M process(GeneratedMessage input) throws CouldNotPerformException, InterruptedException {
+    public M process(Message input) throws CouldNotPerformException, InterruptedException {
         if (dataClass.isInstance(input)) {
             return (M) input;
         } else {

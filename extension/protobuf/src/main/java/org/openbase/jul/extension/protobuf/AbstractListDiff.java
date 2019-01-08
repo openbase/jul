@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -27,8 +27,6 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP extends IdentifiableValueMap<KEY, VALUE>>  {
 

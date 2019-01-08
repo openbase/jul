@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -24,10 +24,8 @@ package org.openbase.jul.storage.registry;
 import java.util.HashMap;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.pattern.Remote;
+import org.openbase.jul.pattern.controller.Remote;
 
 /**
  *

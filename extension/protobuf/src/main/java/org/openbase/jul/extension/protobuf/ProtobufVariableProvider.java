@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import java.util.HashMap;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
@@ -36,9 +36,9 @@ import java.util.Map;
 public class ProtobufVariableProvider implements VariableProvider {
 
     public static final String NAME_SUFIX = "VariableProvider";
-    private final GeneratedMessage message;
+    private final Message message;
 
-    public ProtobufVariableProvider(final GeneratedMessage message) {
+    public ProtobufVariableProvider(final Message message) {
         this.message = message;
     }
 
@@ -78,10 +78,9 @@ public class ProtobufVariableProvider implements VariableProvider {
      *
      * @param variableContains {@inheritDoc}
      * @return {@inheritDoc}
-     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
-    public Map<String, String> getValues(String variableContains) throws NotAvailableException {
+    public Map<String, String> getValues(String variableContains) {
         final Map<String, String> variableSelection = new HashMap<>();
         String key;
         for (Map.Entry<Descriptors.FieldDescriptor, Object> fieldEntry : message.getAllFields().entrySet()) {

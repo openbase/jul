@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.com;
  * #%L
  * JUL Extension RSB Communication
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -31,13 +31,14 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.pattern.Controller;
-import org.openbase.jul.pattern.Remote;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
-import rst.domotic.unit.UnitConfigType.UnitConfig;
-import rst.domotic.unit.scene.SceneDataType.SceneData;
-import rst.rsb.ScopeType.Scope;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
+import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData;
+import org.openbase.type.com.ScopeType.Scope;
+
+import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
 
 /**
  *
@@ -82,19 +83,19 @@ public class ConfigurableControllerAndRemoteTest {
         remote.init(unitConfig);
         remote.activate();
 
-        remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
-        controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
+        remote.waitForConnectionState(CONNECTED);
+        controller.waitForAvailabilityState(ONLINE);
         System.out.println("Successfully connected controller and remote!");
 
         scope = scope.toBuilder().clearComponent().addComponent("test").addComponent("configurables").build();
         unitConfig = unitConfig.toBuilder().setScope(scope).build();
         controller.init(unitConfig);
-        controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
+        controller.waitForAvailabilityState(ONLINE);
         System.out.println("Controller is online again!");
-        remote.waitForConnectionState(Remote.ConnectionState.CONNECTING);
+        remote.waitForConnectionState(CONNECTING);
         System.out.println("Remote switched to connecting after config change in the controller!");
         remote.init(unitConfig);
-        remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+        remote.waitForConnectionState(CONNECTED);
         System.out.println("Remote reconnected after reinitialization!");
 
         controller.shutdown();
@@ -118,20 +119,20 @@ public class ConfigurableControllerAndRemoteTest {
         remote.init(unitConfig);
         remote.activate();
 
-        remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
-        controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
+        remote.waitForConnectionState(CONNECTED);
+        controller.waitForAvailabilityState(ONLINE);
         System.out.println("Succesfully connected controller and remote!");
 
         scope = scope.toBuilder().clearComponent().addComponent("test2").addComponent("configurables2").build();
         unitConfig = unitConfig.toBuilder().setScope(scope).build();
 
         controller.applyConfigUpdate(unitConfig);
-        controller.waitForAvailabilityState(Controller.ControllerAvailabilityState.ONLINE);
+        controller.waitForAvailabilityState(ONLINE);
         System.out.println("Controller is online again!");
-        remote.waitForConnectionState(Remote.ConnectionState.CONNECTING);
+        remote.waitForConnectionState(CONNECTING);
         System.out.println("Remote switched to connecting after config change in the controller!");
         remote.applyConfigUpdate(unitConfig);
-        remote.waitForConnectionState(Remote.ConnectionState.CONNECTED);
+        remote.waitForConnectionState(CONNECTED);
         System.out.println("Remote reconnected after reinitialization!");
 
         remote.shutdown();

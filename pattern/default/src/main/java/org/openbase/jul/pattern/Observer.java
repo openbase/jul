@@ -4,7 +4,7 @@ package org.openbase.jul.pattern;
  * #%L
  * JUL Pattern Default
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,11 +22,10 @@ package org.openbase.jul.pattern;
  * #L%
  */
 
-    // todo release: evaluate if public interface Observer<S, T> would be a more generic solution.
- // @param <S> the source of the data update
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ *
  * @param <S> the source of the data update
  * @param <T> the observable data type
  */
@@ -34,14 +33,13 @@ public interface Observer<S, T> {
 
     /**
      * This method is called whenever the observed object is changed. An
-     * application calls an <tt>Observable</tt> object's
-     * <code>notifyObservers</code> method to have all the object's
+     * application calls an {@code Observable} object's
+     * {@code notifyObservers} method to have all the object's
      * observers notified of the change.
      *
      * @param source the source of the update
      * @param data the updated data
-     * @throws java.lang.Exception a possibly thrown exception
+     * @throws Exception a possibly thrown exception
      */
     void update(final S source, final T data) throws Exception;
-    //void update(final S source, final T data) throws Exception;
 }

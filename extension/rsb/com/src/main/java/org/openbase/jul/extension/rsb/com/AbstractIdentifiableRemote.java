@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.com;
  * #%L
  * JUL Extension RSB Communication
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,21 +22,20 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
-import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
-import org.openbase.jul.pattern.IdentifiableRemote;
+import org.openbase.jul.pattern.controller.IdentifiableRemote;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  */
-public abstract class AbstractIdentifiableRemote<M extends GeneratedMessage> extends RSBRemoteService<M> implements IdentifiableRemote<String, M> {
+public abstract class AbstractIdentifiableRemote<M extends Message> extends AbstractRemoteClient<M> implements IdentifiableRemote<String, M> {
 
     public AbstractIdentifiableRemote(final Class<M> dataClass) {
         super(dataClass);

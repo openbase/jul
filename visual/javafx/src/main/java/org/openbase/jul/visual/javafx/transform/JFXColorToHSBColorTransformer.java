@@ -4,7 +4,7 @@ package org.openbase.jul.visual.javafx.transform;
  * #%L
  * JUL Visual JavaFX
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@ package org.openbase.jul.visual.javafx.transform;
  */
 import javafx.scene.paint.Color;
 import org.openbase.jul.exception.CouldNotTransformException;
-import rst.vision.HSBColorType.HSBColor;
+import org.openbase.type.vision.HSBColorType.HSBColor;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>

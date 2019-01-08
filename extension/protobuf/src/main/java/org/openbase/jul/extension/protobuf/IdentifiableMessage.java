@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,13 +22,13 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPDebugMode;
-import org.openbase.jul.annotation.Experimental;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException.ContextType;
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> implements Identifiable<KEY>, MessageContainer<M> {
+public class IdentifiableMessage<KEY, M extends AbstractMessage, MB extends M.Builder> implements Identifiable<KEY>, MessageContainer<M> {
 
     protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
     private static boolean debugMode;
@@ -112,7 +112,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         }
     }
 
-    public static <KEY> KEY getId(GeneratedMessage message) throws NotAvailableException {
+    public static <KEY> KEY getId(Message message) throws NotAvailableException {
         try {
             if (message == null) {
                 throw new NotAvailableException("messageOrBuilder");
@@ -146,7 +146,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
      *
      * @return a short description of the message as string.
      */
-    public static String generateMessageDescription(final GeneratedMessage message) {
+    public static String generateMessageDescription(final Message message) {
 //        if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
 //            if (message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
 //                return (String) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
@@ -166,7 +166,7 @@ public class IdentifiableMessage<KEY, M extends GeneratedMessage, MB extends M.B
         return getId(internalMessage);
     }
 
-    private void setId(final KEY id) throws InvalidStateException, CouldNotPerformException {
+    private void setId(final KEY id) throws CouldNotPerformException {
         try {
             if (verifyId()) {
                 throw new InvalidStateException("ID already specified!");

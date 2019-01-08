@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.scope;
  * #%L
  * JUL Extension RSB Scope
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,13 +25,13 @@ package org.openbase.jul.extension.rsb.scope;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
-import org.openbase.jul.extension.rst.processing.LabelProcessor;
+import org.openbase.jul.extension.type.processing.LabelProcessor;
 import org.openbase.jul.processing.StringProcessor;
 import rsb.Scope;
-import rst.domotic.unit.UnitConfigType.UnitConfig;
-import rst.domotic.unit.agent.AgentClassType.AgentClass;
-import rst.domotic.unit.app.AppClassType.AppClass;
-import rst.rsb.ScopeType;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
+import org.openbase.type.domotic.unit.agent.AgentClassType.AgentClass;
+import org.openbase.type.domotic.unit.app.AppClassType.AppClass;
+import org.openbase.type.com.ScopeType;
 
 import java.util.Collection;
 import java.util.Locale;

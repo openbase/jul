@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
 
@@ -33,6 +33,6 @@ import org.openbase.jul.extension.protobuf.container.ProtoBufMessageMap;
  * @param <M>
  * @param <MB>
  */
-public abstract class AbstractProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends GeneratedMessage, MB extends M.Builder<MB>> extends AbstractConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistryConsistencyHandler<KEY, M, MB, ProtoBufRegistry<KEY, M, MB>> {
+public abstract class AbstractProtoBufRegistryConsistencyHandler<KEY extends Comparable<KEY>, M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractConsistencyHandler<KEY, IdentifiableMessage<KEY, M, MB>, ProtoBufMessageMap<KEY, M, MB>, ProtoBufRegistry<KEY, M, MB>> implements ProtoBufRegistryConsistencyHandler<KEY, M, MB, ProtoBufRegistry<KEY, M, MB>> {
 
 }

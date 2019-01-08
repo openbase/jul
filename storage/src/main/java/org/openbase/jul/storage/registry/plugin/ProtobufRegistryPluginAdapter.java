@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry.plugin;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,13 +22,8 @@ package org.openbase.jul.storage.registry.plugin;
  * #L%
  */
 
-import com.google.protobuf.GeneratedMessage;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.RejectedException;
+import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
-import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.storage.file.FileSynchronizer;
-import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.openbase.jul.storage.registry.ProtoBufRegistry;
 
 /**
@@ -36,5 +31,5 @@ import org.openbase.jul.storage.registry.ProtoBufRegistry;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  */
-public abstract class ProtobufRegistryPluginAdapter<KEY, M extends GeneratedMessage, MB extends M.Builder<MB>> extends FileRegistryPluginAdapter<KEY, IdentifiableMessage<KEY,M,MB>, ProtoBufRegistry<KEY, M, MB>> {
+public abstract class ProtobufRegistryPluginAdapter<KEY, M extends AbstractMessage, MB extends M.Builder<MB>> extends FileRegistryPluginAdapter<KEY, IdentifiableMessage<KEY,M,MB>, ProtoBufRegistry<KEY, M, MB>> {
 }

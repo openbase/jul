@@ -4,7 +4,7 @@ package org.openbase.jul.storage.registry.version;
  * #%L
  * JUL Storage
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -46,12 +46,12 @@ public interface GlobalDBVersionConverter extends DBVersionConverter {
      * @return the upgraded database entry.
      * @throws CouldNotPerformException can be thrown in case the upgrade could not be performed.
      */
-    default public JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot, final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots) throws CouldNotPerformException {
+    default JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot, final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots) throws CouldNotPerformException {
         return upgrade(outdatedDBEntry, dbSnapshot);
     }
 
     @Override
-    default public JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException {
+    default JsonObject upgrade(final JsonObject outdatedDBEntry, final Map<File, JsonObject> dbSnapshot) throws CouldNotPerformException {
         throw new NotSupportedException("upgrade", this);
     }
 }

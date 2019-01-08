@@ -43,7 +43,7 @@
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rst.processing</artifactId>
+            <artifactId>jul.extension.type.processing</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>

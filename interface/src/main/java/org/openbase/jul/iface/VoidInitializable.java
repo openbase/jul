@@ -4,7 +4,7 @@ package org.openbase.jul.iface;
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -31,19 +31,19 @@ import org.slf4j.LoggerFactory;
 public interface VoidInitializable extends DefaultInitializableImpl<Void> {
 
     @Override
-    public default void init(final Void config) throws InitializationException, InterruptedException {
+    default void init(final Void config) throws InitializationException, InterruptedException {
         // todo any better solution here?
         init();
     }
 
     @Override
-    public default void init() throws InitializationException, InterruptedException {
+    default void init() throws InitializationException, InterruptedException {
         LoggerFactory.getLogger(VoidInitializable.class).warn("This Method has to be overwritten. Else using it is useless!");
         new FatalImplementationErrorException("Did not overwrite init()!", this);
     }
 
     @Override
-    public default Void getDefaultConfig() {
+    default Void getDefaultConfig() {
         return null;
     }
 }

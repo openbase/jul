@@ -4,7 +4,7 @@ package org.openbase.jul.processing;
  * #%L
  * JUL Processing
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -142,7 +142,7 @@ public class StringProcessor {
                 return spaces + input;
             case CENTER:
                 final int half_spaces_size = (lenght - input.length()) / 2;
-                return spaces.substring(0, half_spaces_size - 1) + input + spaces.substring(half_spaces_size, spaces.length());
+                return spaces.substring(0, half_spaces_size - 1) + input + spaces.substring(half_spaces_size);
             case LEFT:
             default:
                 return input + spaces;
@@ -161,7 +161,7 @@ public class StringProcessor {
             // cleanup
             input = input.replaceAll("[_]+", "_");
             if (input.startsWith("_")) {
-                input = input.substring(1, input.length());
+                input = input.substring(1);
             }
             if (input.endsWith("_")) {
                 input = input.substring(0, input.length() - 1);

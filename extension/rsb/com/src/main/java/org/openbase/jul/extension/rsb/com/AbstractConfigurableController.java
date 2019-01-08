@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.com;
  * #%L
  * JUL Extension RSB Communication
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -21,25 +21,28 @@ package org.openbase.jul.extension.rsb.com;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
-import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
-import org.openbase.jul.pattern.ConfigurableController;
+import org.openbase.jul.pattern.controller.ConfigurableController;
 import org.openbase.jul.schedule.SyncObject;
-import rst.rsb.ScopeType.Scope;
+import org.openbase.type.com.ScopeType.Scope;
+
+import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 
 /**
+ * @param <M>      the message type
+ * @param <MB>     builder of the message M
+ * @param <CONFIG> the configuration data type
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <M> the message type
- * @param <MB> builder of the message M
- * @param <CONFIG> the configuration data type
  */
-public abstract class AbstractConfigurableController<M extends GeneratedMessage, MB extends M.Builder<MB>, CONFIG extends GeneratedMessage> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
+public abstract class AbstractConfigurableController<M extends AbstractMessage, MB extends M.Builder<MB>, CONFIG extends Message> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
 
     public static final String FIELD_SCOPE = "scope";
 
@@ -57,22 +60,23 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      * Initialize the controller with a configuration.
      *
      * @param config the configuration
-     * @throws InitializationException if the initialization fails
+     *
+     * @throws InitializationException        if the initialization fails
      * @throws java.lang.InterruptedException if the initialization is interrupted
      */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
-        synchronized (CONFIG_LOCK) {
-            try {
+        try {
+            synchronized (CONFIG_LOCK) {
                 if (config == null) {
                     throw new NotAvailableException("config");
                 }
                 currentScope = detectScope(config);
                 applyConfigUpdate(config);
-                super.init(currentScope);
-            } catch (CouldNotPerformException ex) {
-                throw new InitializationException(this, ex);
             }
+            super.init(currentScope);
+        } catch (CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
         }
     }
 
@@ -80,14 +84,17 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
      * Apply an update to the configuration of this controller.
      *
      * @param config the updated configuration
+     *
      * @return the updated configuration
+     *
      * @throws CouldNotPerformException if the update could not be performed
-     * @throws InterruptedException if the update has been interrupted
+     * @throws InterruptedException     if the update has been interrupted
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        synchronized (CONFIG_LOCK) {
-            try {
+        try {
+            boolean scopeChanged;
+            synchronized (CONFIG_LOCK) {
                 this.config = config;
 
                 if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
@@ -98,20 +105,23 @@ public abstract class AbstractConfigurableController<M extends GeneratedMessage,
                     setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
                 }
 
-                // detect scope change if instance is already active and reinit if needed.
-                try {
-                    if (isActive() && !currentScope.equals(detectScope(config))) {
-                        currentScope = detectScope();
-                        super.init(currentScope);
-                    }
-                } catch (CouldNotPerformException ex) {
-                    throw new CouldNotPerformException("Could not verify scope changes!", ex);
-                }
-
-                return this.config;
-            } catch (CouldNotPerformException ex) {
-                throw new CouldNotPerformException("Could not apply config update!", ex);
+                scopeChanged = !currentScope.equals(detectScope(config));
+                currentScope = detectScope();
             }
+
+            // detect scope change if instance is already active and reinit if needed.
+            // this needs to be done without holding the config lock to avoid a deadlock with the server manageable lock.
+            try {
+                if (isActive() && scopeChanged) {
+                    super.init(currentScope);
+                }
+            } catch (CouldNotPerformException ex) {
+                throw new CouldNotPerformException("Could not verify scope changes!", ex);
+            }
+
+            return this.config;
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not apply config update!", ex);
         }
     }
 

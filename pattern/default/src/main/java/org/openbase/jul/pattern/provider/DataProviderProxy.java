@@ -4,7 +4,7 @@ package org.openbase.jul.pattern.provider;
  * #%L
  * JUL Pattern Default
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -24,7 +24,6 @@ package org.openbase.jul.pattern.provider;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 
 import java.util.concurrent.CompletableFuture;

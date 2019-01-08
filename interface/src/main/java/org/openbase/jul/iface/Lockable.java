@@ -4,7 +4,7 @@ package org.openbase.jul.iface;
  * #%L
  * JUL Interface
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -35,7 +35,7 @@ public interface Lockable {
      *
      * @throws VerificationFailedException is thrown if the instance is currently maintained by another instance.
      */
-    public void verifyMaintainability() throws VerificationFailedException;
+    void verifyMaintainability() throws VerificationFailedException;
 
     /**
      * This method allows to lock this instance to make sure no other instances can maintain these one.
@@ -46,14 +46,14 @@ public interface Lockable {
      * @param maintainer
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown if the remote could not be locked.
      */
-    public void lock(final Object maintainer) throws CouldNotPerformException;
+    void lock(final Object maintainer) throws CouldNotPerformException;
 
     /**
      * Method checks if the this instance is currently locked by another instance.
      *
      * @return true if this instance is locked.
      */
-    public boolean isLocked();
+    boolean isLocked();
 
     /**
      * Method unlocks this instance.
@@ -62,5 +62,5 @@ public interface Lockable {
      * @param maintainer the instance which currently holds the lock.
      * @throws CouldNotPerformException is thrown if the instance could not be unlocked.
      */
-    public void unlock(final Object maintainer) throws CouldNotPerformException;
+    void unlock(final Object maintainer) throws CouldNotPerformException;
 }

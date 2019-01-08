@@ -50,7 +50,7 @@ after_deploy:
 
          # trigger upstream projects
          sh trigger-travis.sh openbase generic-display $TRAVIS_ACCESS_TOKEN
-         sh trigger-travis.sh openbase openhab-binding-rsb $TRAVIS_ACCESS_TOKEN
+         sh trigger-travis.sh openbase rct-java $TRAVIS_ACCESS_TOKEN
          sh trigger-travis.sh openbase bco.authentication $TRAVIS_ACCESS_TOKEN
          sh trigger-travis.sh openbase planetsudo $TRAVIS_ACCESS_TOKEN
          sh trigger-travis.sh openbase jeoparnaire $TRAVIS_ACCESS_TOKEN

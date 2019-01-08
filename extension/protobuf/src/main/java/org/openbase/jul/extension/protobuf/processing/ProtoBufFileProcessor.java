@@ -4,7 +4,7 @@ package org.openbase.jul.extension.protobuf.processing;
  * #%L
  * JUL Extension Protobuf
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -27,7 +27,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.protobuf.GeneratedMessage;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
 import com.googlecode.protobuf.format.JsonFormat;
 import java.io.File;
@@ -56,7 +57,7 @@ import org.openbase.jul.processing.FileProcessor;
  * @param <M> message
  * @param <MB> message builder
  */
-public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.Builder<MB>> implements FileProcessor<DT> {
+public class ProtoBufFileProcessor<DT, M extends AbstractMessage, MB extends M.Builder<MB>> implements FileProcessor<DT> {
 
     private static final String UTF_8 = "UTF-8";
     private final JsonParser parser;
@@ -118,16 +119,16 @@ public class ProtoBufFileProcessor<DT, M extends GeneratedMessage, MB extends M.
         }
     }
 
-    public static interface TypeToMessageTransformer<T, M extends GeneratedMessage, MB extends Builder> {
+    public interface TypeToMessageTransformer<T, M extends AbstractMessage, MB extends Builder> {
 
-        public GeneratedMessage transform(T type);
+        Message transform(T type);
 
-        public T transform(M message) throws CouldNotTransformException;
+        T transform(M message) throws CouldNotTransformException;
 
-        public MB newBuilderForType() throws CouldNotPerformException;
+        MB newBuilderForType() throws CouldNotPerformException;
     }
 
-    public static class SimpleMessageTransformer<M extends GeneratedMessage, MB extends M.Builder> implements TypeToMessageTransformer<M, M, MB> {
+    public static class SimpleMessageTransformer<M extends AbstractMessage, MB extends M.Builder> implements TypeToMessageTransformer<M, M, MB> {
 
         private final MB builder;
 

@@ -4,7 +4,7 @@ package org.openbase.jul.extension.rsb.scope;
  * #%L
  * JUL Extension RSB Scope
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ package org.openbase.jul.extension.rsb.scope;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.NotAvailableException;
 import rsb.Scope;
-import rst.rsb.ScopeType;
+import org.openbase.type.com.ScopeType;
 
 /**
  *

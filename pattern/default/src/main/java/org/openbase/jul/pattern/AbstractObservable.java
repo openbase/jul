@@ -4,7 +4,7 @@ package org.openbase.jul.pattern;
  * #%L
  * JUL Pattern Default
  * %%
- * Copyright (C) 2015 - 2018 openbase.org
+ * Copyright (C) 2015 - 2019 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -268,7 +268,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                             if (ex instanceof ClassCastException) {
                                 LOGGER.error("Probably defect observer [{}] registered on observable [{}]", observer, this);
                             }
-                            exceptionStack = MultiException.push(observer, ex, exceptionStack);
+                            exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer["+observer.getClass().getSimpleName()+"] update failed!", ex), exceptionStack);
                         }
                     } else {
                         // asynchronous notification
@@ -296,9 +296,8 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                         Thread.currentThread().interrupt();
                         return true;
                     } catch (Exception ex) {
-                        exceptionStack = MultiException.push(notificationFuture.getKey(), ex, exceptionStack);
+                        exceptionStack = MultiException.push(notificationFuture.getKey(), new CouldNotPerformException("Observer["+notificationFuture.getKey().getClass().getSimpleName()+"] update failed!", ex) , exceptionStack);
                     }
-
                 }
             }
 
