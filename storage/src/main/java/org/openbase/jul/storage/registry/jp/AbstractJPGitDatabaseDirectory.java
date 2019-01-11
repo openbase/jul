@@ -33,6 +33,7 @@ import org.eclipse.jgit.util.FS;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.JPForce;
+import org.openbase.jps.tools.FileHandler.ExistenceHandling;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.processing.FileProcessor;
@@ -63,29 +64,21 @@ public abstract class AbstractJPGitDatabaseDirectory extends AbstractJPDatabaseD
             if (getValue().list().length > 0) {
                 if(JPService.getValue(JPRecoverDB.class, false)) {
                     System.err.println("Invalid database detected at "+ getValue()+" try to recover...");
-                    try {
-                        FileUtils.deleteDirectory(getValue());
-                    } catch (IOException e) {
-                        ExceptionPrinter.printHistory("Could not reset database!", ex, System.err);
-                    }
+                    setExistenceHandling(ExistenceHandling.MustBeNew);
+                    super.validate();
                 } else {
-                    System.err.println("Database Folder[" + getValue() + "] does not contain a valid repository but already includes some files.");
-                    System.err.println("Please start bco in db recovery mode ("+JPRecoverDB.COMMAND_IDENTIFIERS[0]+") to reset the database to the latest compatible version.");
+                    ExceptionPrinter.printHistory("Database Folder[" + getValue() + "] does not contain a valid repository but already includes some files.",ex, logger);
+                    logger.info("Please start bco in db recovery mode ("+JPRecoverDB.COMMAND_IDENTIFIERS[0]+") to reset the database to the latest compatible version.");
                     System.exit(24);
                 }
             }
         }
 
-
-
-        try {
-            final Git git = Git.cloneRepository()
+        try (final Git git = Git.cloneRepository()
                     .setDirectory(getValue())
                     .setBare(false)
                     .setNoCheckout(true)
-                    .setURI(getRepositoryURL()).call();
-            git.fetch();
-            git.close();
+                    .setURI(getRepositoryURL()).call()) {
         } catch (TransportException ex) {
             // todo: some parts of the following code could be used to initially create the db from templates when the system is offline during initial startup.
 //            // during tests the registry generation is skipped because the mock registry is handling the db initialization.

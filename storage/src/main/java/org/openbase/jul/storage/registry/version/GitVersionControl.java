@@ -94,7 +94,12 @@ public class GitVersionControl {
             try {
                 registryDBGit.fetch().call();
             } catch (GitAPIException ex) {
-                logger.warn("Could not sync with remote repository of " + registry.getName()+ " and continue in offline mode...");
+                final String errorMessage = "Could not sync with remote repository of " + registry.getName() + " and continue in offline mode...";
+                if(JPService.verboseMode()) {
+                    ExceptionPrinter.printHistory(errorMessage, ex, logger, LogLevel.WARN);
+                } else {
+                    logger.warn(errorMessage);
+                }
                 offline = true;
             }
 
