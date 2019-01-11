@@ -117,7 +117,7 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     }
 
     /**
-     * Method triggers entry updates of all entries which was been modified during the last consistency check.
+     * Method triggers entry updates of all entries which have been modified during the last consistency check.
      * <p>
      * Note: do not register new entries within this method because consistency checks will be skipped.
      *
