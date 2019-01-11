@@ -42,4 +42,13 @@ public interface FileSynchronizedRegistry<KEY, VALUE extends Identifiable<KEY>> 
     Integer getDBVersion() throws NotAvailableException;
 
     File getDatabaseDirectory() throws NotAvailableException;
+
+    boolean isLocalRegistry();
+
+    enum DatabaseState {
+        UNKNOWN,
+        LOADING,
+        OUTDATED,
+        LATEST
+    }
 }

@@ -39,6 +39,8 @@ import java.util.regex.PatternSyntaxException;
  */
 public class StringProcessor {
 
+
+    // todo release: rename into pascal case.
     public static String insertSpaceBetweenCamelCase(String input) {
         String output = (input.isEmpty() ? "" : Character.toString(input.charAt(0)));
         for (int i = 1; i < input.length(); i++) {
@@ -70,6 +72,8 @@ public class StringProcessor {
         return removeDoubleWhiteSpaces(insertSpaceBetweenCamelCase(input).replaceAll("_", " ").replaceAll("-", " ")).trim();
     }
 
+
+    // todo release: rename into pascal case.
     public static String transformUpperCaseToCamelCase(final String input) {
         String output = "";
         for (String component : input.split("(_| )")) {
@@ -81,8 +85,13 @@ public class StringProcessor {
         return output;
     }
 
+    // todo release: rename into pascal case.
     public static String transformToCamelCase(final String input) {
         return transformUpperCaseToCamelCase(transformToUpperCase(replaceHyphenWithUnderscore(input)));
+    }
+
+    public static String transformToKebabCase(final String input) {
+        return transformToUpperCase(replaceHyphenWithUnderscore(input)).replace("_", "-").toLowerCase();
     }
 
     public static String replaceHyphenWithUnderscore(String input) {
@@ -92,6 +101,9 @@ public class StringProcessor {
     public static String transformToUpperCase(String input) {
         input = removeDoubleWhiteSpaces(input.trim());
         String output = input.replaceAll("([a-z])([A-Z])", "$1_$2");
+        output = output.replaceAll("_", " ");
+        output = output.replaceAll("-", " ");
+        output = removeDoubleWhiteSpaces(output).trim();
         output = output.replaceAll(" ", "_");
         return output.replaceAll("__", "_").toUpperCase();
     }

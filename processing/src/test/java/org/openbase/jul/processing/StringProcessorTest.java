@@ -114,6 +114,7 @@ public class StringProcessorTest {
         assertEquals("HALLO_MY_NAME_IS_NOTHING_TO_DO.", StringProcessor.transformToUpperCase("Hallo my name is nothing to do."));
         assertEquals("I_AM_ON_THE_WAY_TO_HELL_MY_GOD!", StringProcessor.transformToUpperCase("I am on the WayToHell my god!"));
         assertEquals("FINAL", StringProcessor.transformToUpperCase("final"));
+        assertEquals("UND_ER_SCORE", StringProcessor.transformToUpperCase("-Und-erScore--"));
     }
 
     @Test(timeout = 5000)
@@ -125,6 +126,17 @@ public class StringProcessorTest {
         assertEquals("", StringProcessor.transformToCamelCase(""));
         assertEquals("UndErScore", StringProcessor.transformToCamelCase("-Und-erScore--"));
         assertEquals("Final", StringProcessor.transformToCamelCase("final"));
+    }
+
+    @Test(timeout = 5000)
+    public void testTransformToKebabCase() {
+        System.out.println("transformToKebabCase");
+        assertEquals("my-farm", StringProcessor.transformToKebabCase("My Farm"));
+        assertEquals("i-am-on-the-way!", StringProcessor.transformToKebabCase("I_AM_ON_THE_WAY!"));
+        assertEquals("hallo-my-name-is-nothing-to-do.", StringProcessor.transformToKebabCase("Hallo my name is nothing to do."));
+        assertEquals("", StringProcessor.transformToKebabCase(""));
+        assertEquals("und-er-score", StringProcessor.transformToKebabCase("-Und-erScore--"));
+        assertEquals("final", StringProcessor.transformToKebabCase("final"));
     }
 
     @Test(timeout = 5000)

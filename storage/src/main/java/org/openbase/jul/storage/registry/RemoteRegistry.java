@@ -138,6 +138,12 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
     }
 
     @Override
+    public boolean isLocalRegistry() {
+        //TODO mpohling: implement!
+        return false;
+    }
+
+    @Override
     public File getDatabaseDirectory() throws NotAvailableException {
         throw new NotAvailableException("DatabaseDirectory", new NotSupportedException("A remote registry do not provide a database directory!", this));
     }

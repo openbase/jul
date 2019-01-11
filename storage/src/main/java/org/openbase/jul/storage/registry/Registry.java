@@ -47,11 +47,9 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * Method returns the name of this registry.
      *
      * @return the name as string.
-     *
-     * @throws org.openbase.jul.exception.NotAvailableException is thrown if the name is not available.
      */
     @Override
-    String getName() throws NotAvailableException;
+    String getName();
 
     /**
      * Method registers the given entry.

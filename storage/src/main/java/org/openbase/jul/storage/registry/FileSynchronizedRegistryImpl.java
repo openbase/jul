@@ -25,7 +25,6 @@ package org.openbase.jul.storage.registry;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -53,13 +52,6 @@ import org.openbase.jul.storage.registry.plugin.FileRegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.FileRegistryPluginPool;
 import org.openbase.jul.storage.registry.version.DBVersionControl;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
 /**
  * @param <KEY>
  * @param <ENTRY>
@@ -77,17 +69,31 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     private final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY> filePluginPool;
     private final String databaseName;
     private boolean readOnlyFlag = false;
+    private final boolean localRegistryFlag;
+
     private DBVersionControl versionControl;
     private DatabaseState databaseState;
 
-    public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
-        this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>());
+    public FileSynchronizedRegistryImpl(
+            final MAP entryMap,
+            final File databaseDirectory,
+            final FileProcessor<ENTRY> fileProcessor,
+            final FileProvider<Identifiable<KEY>> fileProvider,
+            final boolean localRegistryFlag) throws InstantiationException {
+        this(entryMap, databaseDirectory, fileProcessor, fileProvider, new FileRegistryPluginPool<>(), localRegistryFlag);
     }
 
-    public FileSynchronizedRegistryImpl(final MAP entryMap, final File databaseDirectory, final FileProcessor<ENTRY> fileProcessor, final FileProvider<Identifiable<KEY>> fileProvider, final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY> filePluginPool) throws InstantiationException, InterruptedException {
+    public FileSynchronizedRegistryImpl(
+            final MAP entryMap,
+            final File databaseDirectory,
+            final FileProcessor<ENTRY> fileProcessor,
+            final FileProvider<Identifiable<KEY>> fileProvider,
+            final FileRegistryPluginPool<KEY, ENTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY> filePluginPool,
+            final boolean localRegistryFlag) throws InstantiationException {
         super(entryMap, filePluginPool);
         try {
             this.databaseDirectory = databaseDirectory;
+            this.localRegistryFlag = localRegistryFlag;
             this.fileSynchronizerMap = new HashMap<>();
             this.fileProcessor = fileProcessor;
             this.fileProvider = fileProvider;
@@ -204,30 +210,32 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     public void loadRegistry() throws CouldNotPerformException {
         assert databaseDirectory != null;
 
+        // make sure registry is only loaded once.
+        if (databaseState != DatabaseState.UNKNOWN) {
+            throw new InvalidStateException(this + " can not be loaded twice!");
+        }
+        databaseState = DatabaseState.LOADING;
+
         // check db version
         if (versionControl != null) {
             try {
                 versionControl.validateAndUpgradeDBVersion();
-                databaseState = DatabaseState.LATEST;
             } catch (CouldNotPerformException ex) {
                 databaseState = DatabaseState.OUTDATED;
-                try {
-                    if (!JPService.getProperty(JPForce.class).getValue()) {
-                        throw new CouldNotPerformException("Registry is not up-to-date! To fix registry manually start the registry in force mode", ex);
-                    }
-                } catch (JPServiceException exx) {
-                    ExceptionPrinter.printHistory("Could not check force flag!", exx, logger);
+                if (!JPService.getValue(JPForce.class, false)) {
+                    throw new CouldNotPerformException("Registry is not up-to-date! To fix registry manually start the registry in force mode", ex);
                 }
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Registry is not up-to-date but force mode is enabled so you are able to apply manual fixes via the registry editor.", ex), logger);
             }
+        } else {
+            if (!isLocalRegistry()) {
+                throw new FatalImplementationErrorException("External registry without version control is not supported!", this);
+            }
         }
 
-        try {
-            if (JPService.getProperty(JPResetDB.class).getValue()) {
-                return;
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
+        // handle db reset
+        if (JPService.getValue(JPResetDB.class, false)) {
+            return;
         }
 
         logger.debug("Load " + this + " out of " + databaseDirectory + "...");
@@ -243,6 +251,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
         try {
             // check if db is based on share folder and mark db ready only
+            // this is done via the {@code databaseDirectory} to guarantee a proper detection.
             if (databaseDirectory.getAbsolutePath().startsWith(JPService.getProperty(JPShareDirectory.class).getValue().getAbsolutePath())) {
                 readOnlyFlag = true;
             }
@@ -272,7 +281,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             logger.info("====== " + size() + (size() == 1 ? " entry" : " entries") + " of " + this + " successfully loaded." + (MultiException.size(exceptionStack) > 0 ? MultiException.size(exceptionStack) + " skipped." : "") + " ======");
         }
 
-        MultiException.checkAndThrow(() ->"Could not load all registry entries!", exceptionStack);
+        MultiException.checkAndThrow(() -> "Could not load all registry entries!", exceptionStack);
 
         notifyObservers();
 
@@ -398,7 +407,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
     @Override
     public Integer getDBVersion() {
-        return versionControl.getLatestDBVersion();
+        return versionControl.getLatestSupportedDBVersion();
     }
 
     @Override
@@ -414,9 +423,8 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         return databaseState;
     }
 
-    public enum DatabaseState {
-        UNKNOWN,
-        OUTDATED,
-        LATEST
+    @Override
+    public boolean isLocalRegistry() {
+        return localRegistryFlag;
     }
 }

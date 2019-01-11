@@ -22,18 +22,24 @@ package org.openbase.jul.storage.registry.jp;
  * #L%
  */
 
-import org.openbase.jps.preset.AbstractJPMapStringString;
+import org.openbase.jps.exception.JPNotAvailableException;
+import org.openbase.jps.preset.AbstractJPString;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class JPGitRegistryPluginRemoteURL extends AbstractJPMapStringString {
+public class JPGitRegistryPluginRemoteURL extends AbstractJPString {
 
-    public static final String[] COMMAND_IDENTIFIERS = {"--git-remote-url"};
+    public static final String[] COMMAND_IDENTIFIERS = {"--db-remote-url"};
 
     public JPGitRegistryPluginRemoteURL() {
         super(COMMAND_IDENTIFIERS);
+    }
+
+    @Override
+    protected String getPropertyDefaultValue() throws JPNotAvailableException {
+        return "";
     }
 
     @Override

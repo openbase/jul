@@ -92,14 +92,6 @@ public class GitRegistryPlugin<KEY, M extends AbstractMessage, MB extends M.Buil
             } catch (DetachedHeadException ex) {
                 detached = true;
             }
-
-            // sync submodules
-            try {
-                this.git.submoduleInit();
-                this.git.submoduleUpdate();
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not init db submodules!", ex), logger, LogLevel.WARN);
-            }
         } catch (GitAPIException ex) {
             throw new CouldNotPerformException("Initial sync failed!", ex);
         }
@@ -122,11 +114,14 @@ public class GitRegistryPlugin<KEY, M extends AbstractMessage, MB extends M.Buil
                 logger.info("Could not find git repository in db Directory[" + databaseDirectory + "] for Registry[" + registry + "]!");
 
                 // === load git out of remote url === //
-                Map<String, String> remoteRepositoryMap = JPService.getProperty(JPGitRegistryPluginRemoteURL.class).getValue();
+                String remoteRepositoryURI = JPService.getValue(JPGitRegistryPluginRemoteURL.class, "");
 
-                if (remoteRepositoryMap.containsKey(registry.getName()) && !remoteRepositoryMap.get(registry.getName()).isEmpty()) {
-                    logger.info("Cloning git repository from " + remoteRepositoryMap.get(registry.getName()) + " into db Directory[" + databaseDirectory + "] ...");
-                    return Git.cloneRepository().setURI(remoteRepositoryMap.get(registry.getName())).setDirectory(databaseDirectory).call();
+                if (!remoteRepositoryURI.isEmpty()) {
+                    logger.info("Cloning git repository from " + remoteRepositoryURI + " into db Directory[" + databaseDirectory + "] ...");
+                    return Git.cloneRepository()
+                            .setURI(remoteRepositoryURI)
+                            .setDirectory(databaseDirectory)
+                            .setBare(false).call();
                 }
 
                 repo = FileRepositoryBuilder.create(databaseDirectory);
@@ -175,7 +170,7 @@ public class GitRegistryPlugin<KEY, M extends AbstractMessage, MB extends M.Buil
             git.add().addFilepattern(".").call();
 
             // commit
-            git.commit().setMessage(JPService.getApplicationName() + " commited all changes.").call();
+            git.commit().setMessage(JPService.getApplicationName() + " committed all changes.").call();
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not commit all database changes!", ex);
         }

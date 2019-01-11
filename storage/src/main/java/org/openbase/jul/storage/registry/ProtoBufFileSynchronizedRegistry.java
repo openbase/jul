@@ -57,12 +57,32 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     private final IdGenerator<KEY, M> idGenerator;
     private final Class<M> messageClass;
 
-    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final BuilderSyncSetup<SIB> builderSetup, final Descriptors.FieldDescriptor fieldDescriptor, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
-        this(messageClass, new ProtoBufMessageMapImpl<>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider);
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass,
+                                            final BuilderSyncSetup<SIB> builderSetup,
+                                            final Descriptors.FieldDescriptor fieldDescriptor,
+                                            final IdGenerator<KEY, M> idGenerator,
+                                            final File databaseDirectory,
+                                            final FileProvider<Identifiable<KEY>> fileProvider,
+                                            final boolean localRegistryFlag) throws InstantiationException, InterruptedException {
+        this(messageClass, new ProtoBufMessageMapImpl<>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider, localRegistryFlag);
     }
 
-    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass, final ProtoBufMessageMapImpl<KEY, M, MB, SIB> internalMap, final IdGenerator<KEY, M> idGenerator, final File databaseDirectory, final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
-        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new IdentifiableMessageTransformer<KEY, M, MB>(messageClass, idGenerator)), fileProvider);
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass,
+                                            final BuilderSyncSetup<SIB> builderSetup,
+                                            final Descriptors.FieldDescriptor fieldDescriptor,
+                                            final IdGenerator<KEY, M> idGenerator,
+                                            final File databaseDirectory,
+                                            final FileProvider<Identifiable<KEY>> fileProvider) throws InstantiationException, InterruptedException {
+        this(messageClass, new ProtoBufMessageMapImpl<>(builderSetup, fieldDescriptor), idGenerator, databaseDirectory, fileProvider, true);
+    }
+
+    public ProtoBufFileSynchronizedRegistry(final Class<M> messageClass,
+                                            final ProtoBufMessageMapImpl<KEY, M, MB, SIB> internalMap,
+                                            final IdGenerator<KEY, M> idGenerator,
+                                            final File databaseDirectory,
+                                            final FileProvider<Identifiable<KEY>> fileProvider,
+                                            final boolean localRegistryFlag) throws InstantiationException, InterruptedException {
+        super(internalMap, databaseDirectory, new ProtoBufFileProcessor<IdentifiableMessage<KEY, M, MB>, M, MB>(new IdentifiableMessageTransformer<KEY, M, MB>(messageClass, idGenerator)), fileProvider, localRegistryFlag);
         try {
             this.idGenerator = idGenerator;
             this.messageClass = messageClass;
@@ -70,7 +90,7 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
             this.setName(getDatabaseName() + "Registry");
 
             try {
-                if (JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
+                if (localRegistryFlag && JPService.getProperty(JPGitRegistryPlugin.class).getValue()) {
                     registerPlugin(new GitRegistryPlugin<KEY, M, MB>(this));
                 }
             } catch (JPServiceException ex) {
@@ -165,9 +185,5 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     @Override
     public MB getBuilder(KEY key) throws CouldNotPerformException {
         return (MB) getMessage(key).toBuilder();
-    }
-
-    public IdGenerator<KEY, M> getIdGenerator() {
-        return idGenerator;
     }
 }

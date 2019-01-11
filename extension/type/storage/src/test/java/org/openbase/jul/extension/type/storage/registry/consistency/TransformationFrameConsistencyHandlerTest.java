@@ -326,6 +326,11 @@ public class TransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
+                public boolean isLocalRegistry() {
+                    return true;
+                }
+
+                @Override
                 public void addObserver(Observer<DataProvider<Map<String, IdentifiableMessage<String, UnitConfig, Builder>>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
                      throw new UnsupportedOperationException("Not supported yet.");
                 }

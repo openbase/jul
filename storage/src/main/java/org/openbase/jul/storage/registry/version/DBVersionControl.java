@@ -26,12 +26,12 @@ import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.openbase.jul.exception.*;
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.iface.Writable;
 import org.openbase.jul.storage.file.FileProvider;
-import org.openbase.jul.storage.registry.ConsistencyHandler;
+import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,11 +52,9 @@ public class DBVersionControl {
     public static final String VERSION_FILE_NAME = ".db-version";
     public static final String VERSION_FIELD = "version";
     public static final String DB_CONVERTER_PACKAGE_NAME = "dbconvert";
-
-    public static final String APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD = "applied_consistency_handler";
     public static final String VERSION_FILE_WARNING = "### PLEASE DO NOT MODIFY ###\n";
 
-    protected final Logger logger = LoggerFactory.getLogger(DBVersionControl.class);
+    private final Logger logger = LoggerFactory.getLogger(DBVersionControl.class);
     private final JsonParser parser;
     private final Gson gson;
     private final Package converterPackage;
@@ -64,20 +62,22 @@ public class DBVersionControl {
     private final FileProvider entryFileProvider;
     private final String entryType;
     private final File databaseDirectory;
-    private final Writable databaseWriteAccess;
+    private final FileSynchronizedRegistry registry;
     private final List<File> globalDatabaseDirectories;
-    private int latestDBVersion;
-    private int versionOnStart;
+    private final int latestSupportedDBVersion;
+    private int currentDBVersion;
 
-    public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory, final Writable databaseWriteAccess) throws InstantiationException {
+    public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory, final FileSynchronizedRegistry registry) throws InstantiationException {
         try {
-            this.databaseWriteAccess = databaseWriteAccess;
+            this.registry = registry;
             this.entryType = entryType;
             this.gson = new GsonBuilder().setPrettyPrinting().create();
             this.parser = new JsonParser();
+            this.currentDBVersion = -1;
             this.converterPackage = converterPackage;
             this.entryFileProvider = entryFileProvider;
             this.converterPipeline = loadDBConverterPipelineAndDetectLatestVersion(converterPackage);
+            this.latestSupportedDBVersion = converterPipeline.size();
             this.databaseDirectory = databaseDirectory;
             this.globalDatabaseDirectories = detectNeighbourDatabaseDirectories(databaseDirectory);
         } catch (CouldNotPerformException ex) {
@@ -85,26 +85,31 @@ public class DBVersionControl {
         }
     }
 
-    public DBVersionControl(final String entryType, final FileProvider entryFileProvider, final Package converterPackage, final File databaseDirectory) throws InstantiationException {
-        this(entryType, entryFileProvider, converterPackage, databaseDirectory, () -> {
-            if (!databaseDirectory.canWrite()) {
-                throw new RejectedException("db directory not writable!");
-            }
-        });
-    }
-
     public void validateAndUpgradeDBVersion() throws CouldNotPerformException {
-        versionOnStart = detectAndUpgradeCurrentDBVersion();
-        int latestVersion = getLatestDBVersion();
 
-        if (versionOnStart == latestVersion) {
-            logger.debug("Database[" + databaseDirectory.getName() + "] is up-to-date.");
-            return;
-        } else if (versionOnStart > latestVersion) {
-            throw new InvalidStateException("DB Version[" + versionOnStart + "] is newer than the latest supported Version[" + latestVersion + "]!");
+        // sync with remote db if registry is located externally.
+        if(!registry.isLocalRegistry()) {
+            GitVersionControl.syncWithRemoteDatabase(latestSupportedDBVersion, registry);
         }
 
-        upgradeDB(versionOnStart, latestVersion);
+        // detect current db version
+        currentDBVersion = detectCurrentDBVersion();
+
+        // check if upgrade is necessary
+        if (currentDBVersion == latestSupportedDBVersion) {
+            logger.debug("Database[" + databaseDirectory.getName() + "] is up-to-date.");
+            return;
+        } else if (currentDBVersion > latestSupportedDBVersion) {
+            throw new InvalidStateException("DB Version[" + currentDBVersion + "] is newer than the latest supported Version[" + latestSupportedDBVersion + "]!");
+        }
+
+        // if current version is still unknown, we are not able to upgrade.
+        if(currentDBVersion == -1) {
+            throw new InvalidStateException("Current db version is unknown!");
+        }
+
+        // upgrade
+        upgradeDB(currentDBVersion, latestSupportedDBVersion);
     }
 
     public void upgradeDB(final int currentVersion, final int targetVersion) throws CouldNotPerformException {
@@ -114,13 +119,13 @@ public class DBVersionControl {
             // init
             Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots = null;
             final Map<String, Set<File>> globalKeySet = new HashMap<>();
-            final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestDBVersion);
+            final List<DBVersionConverter> currentToTargetConverterPipeline = getDBConverterPipeline(currentVersion, latestSupportedDBVersion);
 
             int versionOfCurrentTransaction = currentVersion;
 
             // check if upgrade is needed and write access is permitted.
             if (!currentToTargetConverterPipeline.isEmpty()) {
-                databaseWriteAccess.checkWriteAccess();
+                registry.checkWriteAccess();
             }
 
             // load db entries
@@ -134,7 +139,7 @@ public class DBVersionControl {
 
                 // load global dbs if needed
                 if (globalDbSnapshots == null && converter instanceof GlobalDBVersionConverter) {
-                    globalDbSnapshots = loadGlobalDbSnapshots();
+                    globalDbSnapshots = loadGlobalDBSnapshots();
                     for (Entry<String, Map<File, DatabaseEntryDescriptor>> entry : globalDbSnapshots.entrySet()) {
                         globalKeySet.put(entry.getKey(), new HashSet<>(entry.getValue().keySet()));
                     }
@@ -156,20 +161,20 @@ public class DBVersionControl {
                     dbFileEntryMap.replace(dbEntry.getKey(), dbEntry.getValue(), jsonObject);
                 }
 
-                // upgrade latest version to current version
-                latestDBVersion = versionOfCurrentTransaction;
+                // update current db version related to performed transactions.
+                currentDBVersion = versionOfCurrentTransaction;
 
                 // format and store
-                storeDbSnapshot(dbFileEntryMap);
+                storeDBSnapshot(dbFileEntryMap);
 
                 // format and store global db if changed
-                storeGlobalDbSnapshots(globalDbSnapshots, globalKeySet);
+                storeGlobalDBSnapshots(globalDbSnapshots, globalKeySet);
 
                 // upgrade db version
-                upgradeCurrentDBVersion();
+                syncCurrentDBVersionWithFilesystem();
             }
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not upgrade Database[" + databaseDirectory.getAbsolutePath() + "] to" + (targetVersion == latestDBVersion ? " latest" : "") + " Version[" + targetVersion + "]!", ex);
+            throw new CouldNotPerformException("Could not upgrade Database[" + databaseDirectory.getAbsolutePath() + "] to" + (targetVersion == latestSupportedDBVersion ? " latest" : "") + " Version[" + targetVersion + "]!", ex);
         }
     }
 
@@ -202,7 +207,7 @@ public class DBVersionControl {
         return dbFileEntryMap;
     }
 
-    private Map<String, Map<File, DatabaseEntryDescriptor>> loadGlobalDbSnapshots() {
+    private Map<String, Map<File, DatabaseEntryDescriptor>> loadGlobalDBSnapshots() {
         Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshotMap = new HashMap<>();
         globalDatabaseDirectories.stream().forEach((globalDatabaseDirectory) -> {
             try {
@@ -223,7 +228,7 @@ public class DBVersionControl {
         return globalDbSnapshotMap;
     }
 
-    private void storeDbSnapshot(final Map<File, JsonObject> dbFileEntryMap) throws CouldNotPerformException {
+    private void storeDBSnapshot(final Map<File, JsonObject> dbFileEntryMap) throws CouldNotPerformException {
         try {
             for (Entry<File, JsonObject> dbEntry : dbFileEntryMap.entrySet()) {
                 storeEntry(formatEntryToHumanReadableString(dbEntry.getValue()), dbEntry.getKey());
@@ -233,7 +238,7 @@ public class DBVersionControl {
         }
     }
 
-    private void storeDbSnapshotASDBEntryDescriptors(final Map<File, DatabaseEntryDescriptor> dbFileEntryMap) throws CouldNotPerformException {
+    private void storeDBSnapshotASDBEntryDescriptors(final Map<File, DatabaseEntryDescriptor> dbFileEntryMap) throws CouldNotPerformException {
         try {
             for (Entry<File, DatabaseEntryDescriptor> dbEntry : dbFileEntryMap.entrySet()) {
                 storeEntry(formatEntryToHumanReadableString(dbEntry.getValue().getEntry()), dbEntry.getKey());
@@ -243,7 +248,7 @@ public class DBVersionControl {
         }
     }
 
-    private void storeGlobalDbSnapshots(final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots,
+    private void storeGlobalDBSnapshots(final Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshots,
                                         final Map<String, Set<File>> globalKeySet) throws CouldNotPerformException {
         if (globalDbSnapshots == null) {
             // skip because globally databases were never loaded.
@@ -252,7 +257,7 @@ public class DBVersionControl {
 
         // store every entry in globalDBSnapshot
         for (Entry<String, Map<File, DatabaseEntryDescriptor>> entry : globalDbSnapshots.entrySet()) {
-            storeDbSnapshotASDBEntryDescriptors(entry.getValue());
+            storeDBSnapshotASDBEntryDescriptors(entry.getValue());
         }
 
         // remove all entries which have been removed
@@ -265,7 +270,6 @@ public class DBVersionControl {
                 }
             }
         }
-
     }
 
     /**
@@ -312,8 +316,8 @@ public class DBVersionControl {
         return jSonEntry;
     }
 
-    public int getLatestDBVersion() {
-        return latestDBVersion;
+    public int getLatestSupportedDBVersion() {
+        return latestSupportedDBVersion;
     }
 
     /**
@@ -330,7 +334,7 @@ public class DBVersionControl {
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
             if (!versionFile.exists()) {
-                return getLatestDBVersion();
+                return getLatestSupportedDBVersion();
             }
 
             // load db version
@@ -357,13 +361,22 @@ public class DBVersionControl {
      * @return
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
-    public int detectAndUpgradeCurrentDBVersion() throws CouldNotPerformException {
+    public int detectCurrentDBVersion() throws CouldNotPerformException {
         try {
             // detect file
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
 
+            // handle if version file is missing.
             if (!versionFile.exists()) {
-                upgradeCurrentDBVersion();
+                if(!registry.isLocalRegistry()) {
+                    throw new InvalidStateException("Not synced with remote registry!");
+                }
+
+                // a vanilla db will always be on the latest supported version.
+                if (databaseDirectory.list().length == 0) {
+                    currentDBVersion = latestSupportedDBVersion;
+                }
+                syncCurrentDBVersionWithFilesystem();
             }
 
             // load db version
@@ -371,6 +384,13 @@ public class DBVersionControl {
                 String versionAsString = FileUtils.readFileToString(versionFile, "UTF-8");
                 versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
                 JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
+
+                // handle unknown version and map those on -1
+                if(versionJsonObject.get(VERSION_FIELD).getAsString().equals("?")) {
+                    return -1;
+                }
+
+                // read current version
                 return versionJsonObject.get(VERSION_FIELD).getAsInt();
             } catch (IOException | JsonSyntaxException ex) {
                 throw new CouldNotPerformException("Could not load Field[" + VERSION_FIELD + "]!", ex);
@@ -385,17 +405,17 @@ public class DBVersionControl {
      *
      * @throws CouldNotPerformException
      */
-    public void upgradeCurrentDBVersion() throws CouldNotPerformException {
+    public void syncCurrentDBVersionWithFilesystem() throws CouldNotPerformException {
         try {
-
             // detect or create version file
             File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
+            String version = (currentDBVersion != -1 ? Integer.toString(currentDBVersion) : "?");
             if (!versionFile.exists()) {
                 if (!versionFile.createNewFile()) {
                     throw new CouldNotPerformException("Could not create db version file!");
                 }
                 JsonObject versionJsonObject = new JsonObject();
-                versionJsonObject.addProperty(VERSION_FIELD, latestDBVersion);
+                versionJsonObject.addProperty(VERSION_FIELD, version);
                 FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
                 return;
             }
@@ -406,7 +426,7 @@ public class DBVersionControl {
                 versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
                 JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
                 versionJsonObject.remove(VERSION_FIELD);
-                versionJsonObject.addProperty(VERSION_FIELD, latestDBVersion);
+                versionJsonObject.addProperty(VERSION_FIELD, version);
                 FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
             } catch (IOException | JsonSyntaxException | CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Could not write Field[" + VERSION_FIELD + "]!", ex);
@@ -432,113 +452,25 @@ public class DBVersionControl {
     private List<DBVersionConverter> loadDBConverterPipelineAndDetectLatestVersion(final Package converterPackage) throws CouldNotPerformException {
         List<DBVersionConverter> converterList = new ArrayList<>();
 
-        int version = 0;
         String converterClassName = "";
         Class<DBVersionConverter> converterClass;
         Constructor<DBVersionConverter> converterConstructor;
         try {
             while (true) {
+                final int version = converterList.size();
                 try {
                     converterClassName = converterPackage.getName() + "." + entryType + "_" + version + "_To_" + (version + 1) + "_DBConverter";
                     converterClass = (Class<DBVersionConverter>) Class.forName(converterClassName);
                     converterConstructor = converterClass.getConstructor(DBVersionControl.class);
                     converterList.add(converterConstructor.newInstance(this));
-                    version++;
                 } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InvocationTargetException ex) {
                     logger.debug("Could not load Converter[" + converterClassName + "] so latest db version should be " + version + ".", ex);
                     break;
                 }
             }
-            latestDBVersion = version;
             return converterList;
         } catch (java.lang.InstantiationException | IllegalAccessException ex) {
             throw new CouldNotPerformException("Could not load converter db pipeline of Package[" + converterPackage.getName() + "]!", ex);
-        }
-    }
-
-    /**
-     * Method upgrades the applied db version consistency handler list of the version file.
-     *
-     * @param versionConsistencyHandler
-     * @throws CouldNotPerformException
-     */
-    public void registerConsistencyHandlerExecution(final ConsistencyHandler versionConsistencyHandler) throws CouldNotPerformException {
-        try {
-
-            // detect version file
-            File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
-            if (!versionFile.exists()) {
-                throw new NotAvailableException("version db file");
-            }
-
-            // load db version
-            JsonObject versionJsonObject;
-            try {
-                String versionAsString = FileUtils.readFileToString(versionFile, "UTF-8");
-                versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
-                versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
-            } catch (IOException | JsonSyntaxException ex) {
-                throw new CouldNotPerformException("Could not load version file!", ex);
-            }
-
-            // register handler
-            try {
-                JsonArray consistencyHandlerJsonArray = versionJsonObject.getAsJsonArray(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD);
-
-                // create if not exists.
-                if (consistencyHandlerJsonArray == null) {
-                    consistencyHandlerJsonArray = new JsonArray();
-                    versionJsonObject.add(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD, consistencyHandlerJsonArray);
-                }
-
-                String versionConsistencyHandlerName = versionConsistencyHandler.getClass().getSimpleName();
-                for (int i = 0; i < consistencyHandlerJsonArray.size(); ++i) {
-                    if (consistencyHandlerJsonArray.get(i).getAsString().equals(versionConsistencyHandlerName)) {
-                        return;
-                    }
-                }
-                consistencyHandlerJsonArray.add(versionConsistencyHandler.getClass().getSimpleName());
-                FileUtils.writeStringToFile(versionFile, VERSION_FILE_WARNING + formatEntryToHumanReadableString(versionJsonObject), "UTF-8");
-            } catch (CouldNotPerformException | IOException ex) {
-                throw new CouldNotPerformException("Could not write Field[" + APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD + "]!", ex);
-            }
-
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not register ConsistencyHandler[" + versionConsistencyHandler.getClass().getSimpleName() + "] in current db version config of Database[" + databaseDirectory.getName() + "]!", ex);
-        }
-    }
-
-    /**
-     * Method detects the already executed version consistency handler which are registered within the db version file.
-     *
-     * @return
-     * @throws org.openbase.jul.exception.CouldNotPerformException
-     */
-    public Set<String> detectExecutedVersionConsistencyHandler() throws CouldNotPerformException {
-        try {
-            // detect file
-            File versionFile = new File(databaseDirectory, VERSION_FILE_NAME);
-
-            if (!versionFile.exists()) {
-                throw new CouldNotPerformException("No version information available!");
-            }
-
-            // load db version
-            try {
-                String versionAsString = FileUtils.readFileToString(versionFile, "UTF-8");
-                versionAsString = versionAsString.replace(VERSION_FILE_WARNING, "");
-                JsonObject versionJsonObject = new JsonParser().parse(versionAsString).getAsJsonObject();
-                Set<String> handlerList = new HashSet<>();
-                JsonArray consistencyHandlerJsonArray = versionJsonObject.getAsJsonArray(APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD);
-                if (consistencyHandlerJsonArray != null) {
-                    consistencyHandlerJsonArray.forEach(entry -> handlerList.add(entry.getAsString()));
-                }
-                return handlerList;
-            } catch (IOException | JsonSyntaxException ex) {
-                throw new CouldNotPerformException("Could not load Field[" + APPLIED_VERSION_CONSISTENCY_HANDLER_FIELD + "]!", ex);
-            }
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not detect db version of Database[" + databaseDirectory.getName() + "]!", ex);
         }
     }
 

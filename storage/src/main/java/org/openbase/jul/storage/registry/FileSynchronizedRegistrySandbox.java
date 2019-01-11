@@ -65,4 +65,9 @@ public class FileSynchronizedRegistrySandbox<KEY, ENTRY extends Identifiable<KEY
     public File getDatabaseDirectory() throws NotAvailableException{
         throw new NotAvailableException("database directory", new NotSupportedException("getDatabaseDirectory", this));
     }
+
+    @Override
+    public boolean isLocalRegistry() {
+        return true;
+    }
 }
