@@ -27,6 +27,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand.ListMode;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Ref;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -89,10 +90,12 @@ public class GitVersionControl {
             }
 
             // sync branches with remote repo
+            boolean offline = false;
             try {
                 registryDBGit.fetch().call();
             } catch (GitAPIException ex) {
-                logger.warn("Could not sync with remote repository of " + registry.getName()+ " and continue in offline mode");
+                logger.warn("Could not sync with remote repository of " + registry.getName()+ " and continue in offline mode...");
+                offline = true;
             }
 
             // checkout latest compatible database
@@ -151,7 +154,14 @@ public class GitVersionControl {
             }
 
             // sync with remote repo
-            registryDBGit.pull().call();
+            try {
+                registryDBGit.pull().call();
+            } catch (final TransportException ex) {
+                // skip offline warnings.
+                if(!offline) {
+                    throw ex;
+                }
+            }
         } catch (Exception ex) {
             throw new CouldNotPerformException("Auto db update of "+ registry.getName()+" failed!", ex);
         }

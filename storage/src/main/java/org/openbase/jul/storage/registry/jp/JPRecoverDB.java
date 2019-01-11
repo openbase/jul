@@ -31,6 +31,8 @@ import org.openbase.jps.preset.AbstractJPBoolean;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+
+import java.io.Console;
 import java.io.IOException;
 import java.util.List;
 
@@ -55,8 +57,8 @@ public class JPRecoverDB extends AbstractJPBoolean {
     public void validate() throws JPValidationException {
         super.validate();
         if (getValueType().equals((ValueType.CommandLine))) {
-            logger.warn("WARNING: RECOVER CURRENT DATABASE!!!");
-            logger.warn("WARNING: Entries which can not be recovered will be modifiered or erased to ensure db consistency.");
+            logger.warn("RECOVER CURRENT DATABASE!!!");
+            logger.warn("Entries which can not be recovered will be modified or erased to ensure db consistency.");
             try {
                 if (JPService.getProperty(JPTestMode.class).getValue()) {
                     return;
@@ -65,14 +67,10 @@ public class JPRecoverDB extends AbstractJPBoolean {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
             }
 
-            logger.warn("=== Type y and press enter to contine ===");
-            try {
-                if (!(System.in.read() == 'y')) {
-                    throw new JPValidationException("Execution aborted by user!");
-                }
-            } catch (IOException ex) {
-                throw new JPValidationException("Validation failed because of invalid input state!", ex);
-            }
+            JPService.awaitUserConfirmationOrExit(
+                    "Please type 'y' and press enter to confirm the database recovery.",
+                    "Database recovery canceled by user...",
+                    25);
         }
     }
 

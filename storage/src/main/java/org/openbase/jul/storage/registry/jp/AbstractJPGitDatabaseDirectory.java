@@ -22,15 +22,20 @@ package org.openbase.jul.storage.registry.jp;
  * #L%
  */
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.RepositoryCache;
 import org.eclipse.jgit.util.FS;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPValidationException;
+import org.openbase.jps.preset.JPForce;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.processing.FileProcessor;
 
 import java.io.IOException;
 
@@ -38,12 +43,14 @@ public abstract class AbstractJPGitDatabaseDirectory extends AbstractJPDatabaseD
 
     public AbstractJPGitDatabaseDirectory(final String[] commandIdentifier) {
         super(commandIdentifier);
+        registerDependingProperty(JPForce.class);
     }
 
     @Override
     public void validate() throws JPValidationException {
         // this makes sure the db folder is created.
         super.validate();
+
 
         try(final Git git = Git.open(getValue())) {
             if (git.getRepository().getConfig().getString( "remote", "origin", "url" ).equals(getRepositoryURL())) {
@@ -52,7 +59,24 @@ public abstract class AbstractJPGitDatabaseDirectory extends AbstractJPDatabaseD
             }
         } catch (IOException ex) {
             // git seems not to be valid, so try to create / recover.
+
+            if (getValue().list().length > 0) {
+                if(JPService.getValue(JPRecoverDB.class, false)) {
+                    System.err.println("Invalid database detected at "+ getValue()+" try to recover...");
+                    try {
+                        FileUtils.deleteDirectory(getValue());
+                    } catch (IOException e) {
+                        ExceptionPrinter.printHistory("Could not reset database!", ex, System.err);
+                    }
+                } else {
+                    System.err.println("Database Folder[" + getValue() + "] does not contain a valid repository but already includes some files.");
+                    System.err.println("Please start bco in db recovery mode ("+JPRecoverDB.COMMAND_IDENTIFIERS[0]+") to reset the database to the latest compatible version.");
+                    System.exit(24);
+                }
+            }
         }
+
+
 
         try {
             final Git git = Git.cloneRepository()
@@ -62,9 +86,7 @@ public abstract class AbstractJPGitDatabaseDirectory extends AbstractJPDatabaseD
                     .setURI(getRepositoryURL()).call();
             git.fetch();
             git.close();
-        } catch (GitAPIException ex) {
-            throw new JPValidationException("Could not connect to remote repository!", ex);
-
+        } catch (TransportException ex) {
             // todo: some parts of the following code could be used to initially create the db from templates when the system is offline during initial startup.
 //            // during tests the registry generation is skipped because the mock registry is handling the db initialization.
 //            if (!JPService.testMode()) {
@@ -74,6 +96,9 @@ public abstract class AbstractJPGitDatabaseDirectory extends AbstractJPDatabaseD
 //                    throw new JPValidationException(ex);
 //                }
 //            }
+            throw new JPValidationException("Could not connect to remote repository! Maybe you are offline, but offline initial setup is not supported yet!", ex);
+        } catch (GitAPIException ex) {
+            throw new JPValidationException("Initial database setup failed!", ex);
         }
     }
 
