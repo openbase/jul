@@ -344,9 +344,9 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
     /**
      * Method checks if a notification is currently in progess.
      *
-     * @return notificationInProgess returns true if a notification is currently in progess.
+     * @return notificationInProgress returns true if a notification is currently in progress.
      */
-    public boolean isNotificationInProgess() {
+    public boolean isNotificationInProgress() {
         return notificationInProgress;
     }
 

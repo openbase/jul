@@ -24,12 +24,10 @@ package org.openbase.jul.extension.rsb.com;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
-import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
-
 import org.openbase.jps.core.JPService;
-import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
@@ -48,13 +46,14 @@ import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
+import org.openbase.type.com.ScopeType.Scope;
+import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.Handler;
 import rsb.RSBException;
 import rsb.config.ParticipantConfig;
-import org.openbase.type.com.ScopeType.Scope;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -1189,7 +1188,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      */
     @Override
     public boolean isDataAvailable() {
-        return data != null;
+        // Note: checking the data observable is important so that wait for data waits for notifications from the
+        // prioritized observable. Else bugs in the registry can occur where waitForData returns but values are not
+        // synced into the remote registries
+        return data != null && dataObservable.isValueAvailable();
     }
 
     /**
@@ -1208,7 +1210,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             getDataFuture().get();
             dataObservable.waitForValue();
         } catch (ExecutionException | CancellationException ex) {
-            if(shutdownInitiated) {
+            if (shutdownInitiated) {
                 throw new InterruptedException("Interrupt request because system shutdown was initiated!");
             }
             throw new CouldNotPerformException("Could not wait for data!", ex);
@@ -1238,7 +1240,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             }
             dataObservable.waitForValue(partialTimeout, TimeUnit.MILLISECONDS);
         } catch (java.util.concurrent.TimeoutException | CouldNotPerformException | ExecutionException | CancellationException ex) {
-            if(shutdownInitiated) {
+            if (shutdownInitiated) {
                 throw new InterruptedException("Interrupt request because system shutdown was initiated!");
             }
             throw new NotAvailableException("Data is not yet available!", ex);
@@ -1790,8 +1792,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                             timeout = generateTimeout(timeout);
 
                             // prevent rapid looping over the same exception
-                            if(ex instanceof ExecutionException) {
-                                if(lastException == null) {
+                            if (ex instanceof ExecutionException) {
+                                if (lastException == null) {
                                     lastException = (ExecutionException) ex;
                                 } else {
                                     if (ExceptionProcessor.getInitialCauseMessage(ex).equals(ExceptionProcessor.getInitialCauseMessage(lastException))) {
