@@ -31,6 +31,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
@@ -69,6 +72,8 @@ public class ThreadPoolUnorderedEventReceivingStrategy
      */
     private final Set<Handler> handlers = new HashSet<>();
 
+    private RecurrenceEventFilter<String> logEventFilter;
+
     /**
      * Create a new {@link ThreadPoolUnorderedEventReceivingStrategy}.
      *
@@ -78,6 +83,12 @@ public class ThreadPoolUnorderedEventReceivingStrategy
             final ExecutorService executorService) {
         this.executorService = executorService;
         this.eventTaskMap = new ConcurrentHashMap<>();
+        this.logEventFilter = new RecurrenceEventFilter<String>() {
+            @Override
+            public void relay() throws Exception {
+                LOGGER.warn(getLatestValue());
+            }
+        };
     }
 
     @Override
@@ -234,7 +245,11 @@ public class ThreadPoolUnorderedEventReceivingStrategy
 
         final int taskCounter = eventTaskMap.size();
         if(taskCounter > 50) {
-            LOGGER.warn("Participant["+event.getScope() + "/" + event.getMethod()+"] overload detected! Processing "+taskCounter+" tasks at once probably affects the application performance.");
+            try {
+                logEventFilter.trigger("Participant["+event.getScope() + "/" + event.getMethod()+"] overload detected! Processing "+taskCounter+" tasks at once probably affects the application performance.");
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(ex, LOGGER);
+            }
         }
     }
 
