@@ -1074,7 +1074,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      */
     @Override
     public boolean isReady() {
-        return isConsistent() && !isBusy() && !isNotificationInProgess() && registryLock.getReadLockCount() == 0;
+        return isConsistent() && !isBusy() && !isNotificationInProgress() && registryLock.getReadLockCount() == 0;
     }
 
     /**
