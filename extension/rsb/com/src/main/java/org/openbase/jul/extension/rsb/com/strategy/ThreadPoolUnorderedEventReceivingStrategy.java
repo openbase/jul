@@ -50,7 +50,7 @@ import rsb.filter.Filter;
 public class ThreadPoolUnorderedEventReceivingStrategy
         extends AbstractEventReceivingStrategy {
 
-    private Logger LOGGER = LoggerFactory.getLogger(ThreadPoolUnorderedEventReceivingStrategy.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(ThreadPoolUnorderedEventReceivingStrategy.class);
 
     private final Map<DispatchTask, Future> eventTaskMap;
 
@@ -72,7 +72,12 @@ public class ThreadPoolUnorderedEventReceivingStrategy
      */
     private final Set<Handler> handlers = new HashSet<>();
 
-    private RecurrenceEventFilter<String> logEventFilter;
+    private static final RecurrenceEventFilter<String> logEventFilter = new RecurrenceEventFilter<String>(3000) {
+        @Override
+        public void relay() throws Exception {
+            LOGGER.warn(getLatestValue());
+        }
+    };
 
     /**
      * Create a new {@link ThreadPoolUnorderedEventReceivingStrategy}.
@@ -83,12 +88,6 @@ public class ThreadPoolUnorderedEventReceivingStrategy
             final ExecutorService executorService) {
         this.executorService = executorService;
         this.eventTaskMap = new ConcurrentHashMap<>();
-        this.logEventFilter = new RecurrenceEventFilter<String>() {
-            @Override
-            public void relay() throws Exception {
-                LOGGER.warn(getLatestValue());
-            }
-        };
     }
 
     @Override
