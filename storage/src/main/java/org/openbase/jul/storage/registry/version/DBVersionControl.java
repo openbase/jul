@@ -89,7 +89,11 @@ public class DBVersionControl {
 
         // sync with remote db if registry is located externally.
         if(!registry.isLocalRegistry()) {
-            GitVersionControl.syncWithRemoteDatabase(latestSupportedDBVersion, registry);
+            try {
+                GitVersionControl.syncWithRemoteDatabase(latestSupportedDBVersion, registry);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(ex, logger);
+            }
         }
 
         // detect current db version
