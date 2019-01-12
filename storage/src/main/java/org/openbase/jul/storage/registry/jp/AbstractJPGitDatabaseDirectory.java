@@ -52,6 +52,10 @@ public abstract class AbstractJPGitDatabaseDirectory extends AbstractJPDatabaseD
         // this makes sure the db folder is created.
         super.validate();
 
+        // skip git validation in test mode.
+        if(JPService.testMode()) {
+            return;
+        }
 
         try(final Git git = Git.open(getValue())) {
             if (git.getRepository().getConfig().getString( "remote", "origin", "url" ).equals(getRepositoryURL())) {

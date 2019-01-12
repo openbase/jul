@@ -58,6 +58,7 @@ public class GitVersionControl {
     private static final Logger logger = LoggerFactory.getLogger(GitVersionControl.class);
 
     public static void syncWithRemoteDatabase(final int latestSupportedDBVersion, final FileSynchronizedRegistry registry) throws CouldNotPerformException {
+
         try(final Git registryDBGit = Git.open(registry.getDatabaseDirectory())) {
 
             // reset current database state before triggering the remote sync if repo is valid.

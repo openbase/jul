@@ -26,6 +26,7 @@ import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -88,7 +89,7 @@ public class DBVersionControl {
     public void validateAndUpgradeDBVersion() throws CouldNotPerformException {
 
         // sync with remote db if registry is located externally.
-        if(!registry.isLocalRegistry()) {
+        if(!registry.isLocalRegistry() && !JPService.testMode()) {
             try {
                 GitVersionControl.syncWithRemoteDatabase(latestSupportedDBVersion, registry);
             } catch (CouldNotPerformException ex) {
@@ -372,7 +373,7 @@ public class DBVersionControl {
 
             // handle if version file is missing.
             if (!versionFile.exists()) {
-                if(!registry.isLocalRegistry()) {
+                if(!registry.isLocalRegistry() && !JPService.testMode()) {
                     throw new InvalidStateException("Not synced with remote registry!");
                 }
 
