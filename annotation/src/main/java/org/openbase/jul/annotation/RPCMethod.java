@@ -41,7 +41,7 @@ public @interface RPCMethod {
 
     /**
      * Flag marking legacy RPCs. When true they will not be registered per default, but can be activated using
-     * a jp property. TODO: which property.
+     * a jp property {@code JPRSBLegacyMode.class} via "--rsb-legacy".
      *
      * @return if the annotated method is an rpc method
      */
