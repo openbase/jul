@@ -106,7 +106,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     }
 
     private String generateDatabaseName(final File databaseDirectory) {
-        return StringProcessor.transformToCamelCase(databaseDirectory.getName().replaceAll("db", "").replaceAll("DB", ""));
+        return StringProcessor.transformToPascalCase(databaseDirectory.getName().replaceAll("db", "").replaceAll("DB", ""));
     }
 
     public String getDatabaseName() {

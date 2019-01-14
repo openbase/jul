@@ -52,7 +52,7 @@ public class ProtoBufBuilderProcessor {
             Method method;
 
             try {
-                method = builderClass.getMethod("get" + StringProcessor.transformUpperCaseToCamelCase(repeatedFieldName) + "BuilderList");
+                method = builderClass.getMethod("get" + StringProcessor.transformUpperCaseToPascalCase(repeatedFieldName) + "BuilderList");
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Missing RepeatedField[" + repeatedFieldName + "] in protobuf Type[" + builder.getClass().getName() + "]! ", ex);
             }
@@ -85,7 +85,7 @@ public class ProtoBufBuilderProcessor {
             Method method;
 
             try {
-                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToCamelCase(repeatedFieldName), messageBuilder.getClass());
+                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToPascalCase(repeatedFieldName), messageBuilder.getClass());
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Missing RepeatedField[" + repeatedFieldName + "] in protobuf Type[" + builder.getClass().getName() + "]! ", ex);
             }
@@ -141,7 +141,7 @@ public class ProtoBufBuilderProcessor {
             Method method;
 
             try {
-                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToCamelCase(repeatedFieldName) + "Builder");
+                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToPascalCase(repeatedFieldName) + "Builder");
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Missing RepeatedField[" + repeatedFieldName + "] in protobuf Type[" + builder.getClass().getName() + "]! ", ex);
             }
@@ -176,7 +176,7 @@ public class ProtoBufBuilderProcessor {
             Method method;
 
             try {
-                method = builderClass.getMethod("get" + StringProcessor.transformUpperCaseToCamelCase(repeatedFieldName) + "BuilderList");
+                method = builderClass.getMethod("get" + StringProcessor.transformUpperCaseToPascalCase(repeatedFieldName) + "BuilderList");
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Missing RepeatedField[" + repeatedFieldName + "] in protobuf Type[" + builder.getClass().getName() + "]! ", ex);
             }
@@ -209,7 +209,7 @@ public class ProtoBufBuilderProcessor {
             Method method;
 
             try {
-                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToCamelCase(repeatedFieldName), messageBuilder.getClass());
+                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToPascalCase(repeatedFieldName), messageBuilder.getClass());
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Missing RepeatedField[" + repeatedFieldName + "] in protobuf Type[" + builder.getClass().getName() + "]! ", ex);
             }
@@ -265,7 +265,7 @@ public class ProtoBufBuilderProcessor {
             Method method;
 
             try {
-                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToCamelCase(repeatedFieldName) + "Builder");
+                method = builderClass.getMethod("add" + StringProcessor.transformUpperCaseToPascalCase(repeatedFieldName) + "Builder");
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Missing RepeatedField[" + repeatedFieldName + "] in protobuf Type[" + builder.getClass().getName() + "]! ", ex);
             }

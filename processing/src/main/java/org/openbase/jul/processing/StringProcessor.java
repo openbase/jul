@@ -39,9 +39,7 @@ import java.util.regex.PatternSyntaxException;
  */
 public class StringProcessor {
 
-
-    // todo release: rename into pascal case.
-    public static String insertSpaceBetweenCamelCase(String input) {
+    public static String insertSpaceBetweenPascalCase(String input) {
         String output = (input.isEmpty() ? "" : Character.toString(input.charAt(0)));
         for (int i = 1; i < input.length(); i++) {
             if (Character.isLowerCase(input.charAt(i - 1)) && Character.isUpperCase(input.charAt(i))) {
@@ -69,12 +67,10 @@ public class StringProcessor {
     }
 
     public static String formatHumanReadable(String input) {
-        return removeDoubleWhiteSpaces(insertSpaceBetweenCamelCase(input).replaceAll("_", " ").replaceAll("-", " ")).trim();
+        return removeDoubleWhiteSpaces(insertSpaceBetweenPascalCase(input).replaceAll("_", " ").replaceAll("-", " ")).trim();
     }
 
-
-    // todo release: rename into pascal case.
-    public static String transformUpperCaseToCamelCase(final String input) {
+    public static String transformUpperCaseToPascalCase(final String input) {
         String output = "";
         for (String component : input.split("(_| )")) {
             if (component.isEmpty()) {
@@ -85,9 +81,8 @@ public class StringProcessor {
         return output;
     }
 
-    // todo release: rename into pascal case.
-    public static String transformToCamelCase(final String input) {
-        return transformUpperCaseToCamelCase(transformToUpperCase(replaceHyphenWithUnderscore(input)));
+    public static String transformToPascalCase(final String input) {
+        return transformUpperCaseToPascalCase(transformToUpperCase(replaceHyphenWithUnderscore(input)));
     }
 
     public static String transformToKebabCase(final String input) {

@@ -200,7 +200,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                     verified = false;
                     verificationFailedException = ex;
                 }
-            } catch (CouldNotPerformException ex) {
+            } catch (Exception ex) {
                 setState(LauncherState.ERROR);
                 launchable.shutdown();
                 throw new CouldNotPerformException("Could not launch " + getName(), ex);

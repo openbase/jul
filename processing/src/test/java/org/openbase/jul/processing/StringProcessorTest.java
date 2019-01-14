@@ -55,7 +55,7 @@ public class StringProcessorTest {
 
     @Test(timeout = 5000)
     public void testFormatHumanReadable() {
-        System.out.println("insertSpaceBetweenCamelCase");
+        System.out.println("insertSpaceBetweenPascalCase");
         assertEquals("My Farm", StringProcessor.formatHumanReadable("MyFarm"));
         assertEquals("I am on the Way To Hell my god!", StringProcessor.formatHumanReadable("I am on the WayToHell my god!"));
         assertEquals("Hallo my name is nothing to do.", StringProcessor.formatHumanReadable("Hallo my name is nothing to do."));
@@ -68,7 +68,7 @@ public class StringProcessorTest {
      */
     @Test(timeout = 5000)
     public void testRemoveDoubleWhiteSpaces() {
-        System.out.println("insertSpaceBetweenCamelCase");
+        System.out.println("insertSpaceBetweenPascalCase");
         assertEquals("My Farm", StringProcessor.removeDoubleWhiteSpaces("My	 		Farm"));
         assertEquals("I am on the Way To Hell my god!", StringProcessor.removeDoubleWhiteSpaces("I   am on the Way To   Hell my	god!"));
         assertEquals("Hallo my name is nothing to do.", StringProcessor.removeDoubleWhiteSpaces("Hallo my name is nothing to do."));
@@ -77,38 +77,38 @@ public class StringProcessorTest {
     }
 
     /**
-     * Test of insertSpaceBetweenCamelCase method, of class StringProcessor.
+     * Test of insertSpaceBetweenPascalCase method, of class StringProcessor.
      */
     @Test(timeout = 5000)
-    public void testInsertSpaceBetweenCamelCase() {
-        System.out.println("insertSpaceBetweenCamelCase");
-        assertEquals("My Farm", StringProcessor.insertSpaceBetweenCamelCase("MyFarm"));
-        assertEquals("I am on the Way To Hell my god!", StringProcessor.insertSpaceBetweenCamelCase("I am on the WayToHell my god!"));
-        assertEquals("Hallo my name is nothing to do.", StringProcessor.insertSpaceBetweenCamelCase("Hallo my name is nothing to do."));
-        assertEquals("I am on the Way To Hell my god!", StringProcessor.insertSpaceBetweenCamelCase("I am on the WayToHell my god!"));
-        assertEquals("final", StringProcessor.insertSpaceBetweenCamelCase("final"));
-        assertEquals("C8I7", StringProcessor.insertSpaceBetweenCamelCase("C8I7"));
-        assertEquals("", StringProcessor.insertSpaceBetweenCamelCase(""));
-        assertEquals("O", StringProcessor.insertSpaceBetweenCamelCase("O"));
-        assertEquals("i", StringProcessor.insertSpaceBetweenCamelCase("i"));
+    public void testInsertSpaceBetweenPascalcase() {
+        System.out.println("insertSpaceBetweenPascalCase");
+        assertEquals("My Farm", StringProcessor.insertSpaceBetweenPascalCase("MyFarm"));
+        assertEquals("I am on the Way To Hell my god!", StringProcessor.insertSpaceBetweenPascalCase("I am on the WayToHell my god!"));
+        assertEquals("Hallo my name is nothing to do.", StringProcessor.insertSpaceBetweenPascalCase("Hallo my name is nothing to do."));
+        assertEquals("I am on the Way To Hell my god!", StringProcessor.insertSpaceBetweenPascalCase("I am on the WayToHell my god!"));
+        assertEquals("final", StringProcessor.insertSpaceBetweenPascalCase("final"));
+        assertEquals("C8I7", StringProcessor.insertSpaceBetweenPascalCase("C8I7"));
+        assertEquals("", StringProcessor.insertSpaceBetweenPascalCase(""));
+        assertEquals("O", StringProcessor.insertSpaceBetweenPascalCase("O"));
+        assertEquals("i", StringProcessor.insertSpaceBetweenPascalCase("i"));
     }
 
     /**
-     * Test of transformUpperCaseToCamelCase method, of class StringProcessor.
+     * Test of transformUpperCaseToPascalCase method, of class StringProcessor.
      */
     @Test(timeout = 5000)
-    public void testTransformUpperCaseToCamelCase() {
-        System.out.println("transformUpperCaseToCamelCase");
-        assertEquals("MyFarm", StringProcessor.transformUpperCaseToCamelCase("My Farm"));
-        assertEquals("IAmOnTheWay!", StringProcessor.transformUpperCaseToCamelCase("I_AM_ON_THE_WAY!"));
-        assertEquals("HalloMyNameIsNothingToDo.", StringProcessor.transformUpperCaseToCamelCase("Hallo my name is nothing to do."));
-        assertEquals("", StringProcessor.transformUpperCaseToCamelCase(""));
-        assertEquals("Final", StringProcessor.transformUpperCaseToCamelCase("final"));
+    public void testTransformUpperCaseToPascalcase() {
+        System.out.println("transformUpperCaseToPascalCase");
+        assertEquals("MyFarm", StringProcessor.transformUpperCaseToPascalCase("My Farm"));
+        assertEquals("IAmOnTheWay!", StringProcessor.transformUpperCaseToPascalCase("I_AM_ON_THE_WAY!"));
+        assertEquals("HalloMyNameIsNothingToDo.", StringProcessor.transformUpperCaseToPascalCase("Hallo my name is nothing to do."));
+        assertEquals("", StringProcessor.transformUpperCaseToPascalCase(""));
+        assertEquals("Final", StringProcessor.transformUpperCaseToPascalCase("final"));
     }
 
     @Test(timeout = 5000)
     public void testTransformToUpperCase() {
-        System.out.println("insertSpaceBetweenCamelCase");
+        System.out.println("insertSpaceBetweenPascalCase");
         assertEquals("MY_FARM", StringProcessor.transformToUpperCase("MyFarm"));
         assertEquals("I_AM_ON_THE_WAY_TO_HELL_MY_GOD", StringProcessor.transformToUpperCase("I am on the WayToHell my god"));
         assertEquals("HALLO_MY_NAME_IS_NOTHING_TO_DO.", StringProcessor.transformToUpperCase("Hallo my name is nothing to do."));
@@ -118,14 +118,14 @@ public class StringProcessorTest {
     }
 
     @Test(timeout = 5000)
-    public void testTransformToCamelCase() {
-        System.out.println("transformToCamelCase");
-        assertEquals("MyFarm", StringProcessor.transformToCamelCase("My Farm"));
-        assertEquals("IAmOnTheWay!", StringProcessor.transformToCamelCase("I_AM_ON_THE_WAY!"));
-        assertEquals("HalloMyNameIsNothingToDo.", StringProcessor.transformToCamelCase("Hallo my name is nothing to do."));
-        assertEquals("", StringProcessor.transformToCamelCase(""));
-        assertEquals("UndErScore", StringProcessor.transformToCamelCase("-Und-erScore--"));
-        assertEquals("Final", StringProcessor.transformToCamelCase("final"));
+    public void testTransformToPascalcase() {
+        System.out.println("transformToPascalCase");
+        assertEquals("MyFarm", StringProcessor.transformToPascalCase("My Farm"));
+        assertEquals("IAmOnTheWay!", StringProcessor.transformToPascalCase("I_AM_ON_THE_WAY!"));
+        assertEquals("HalloMyNameIsNothingToDo.", StringProcessor.transformToPascalCase("Hallo my name is nothing to do."));
+        assertEquals("", StringProcessor.transformToPascalCase(""));
+        assertEquals("UndErScore", StringProcessor.transformToPascalCase("-Und-erScore--"));
+        assertEquals("Final", StringProcessor.transformToPascalCase("final"));
     }
 
     @Test(timeout = 5000)

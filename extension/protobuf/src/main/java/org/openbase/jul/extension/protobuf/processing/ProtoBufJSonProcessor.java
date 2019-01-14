@@ -158,7 +158,7 @@ public class ProtoBufJSonProcessor {
             case INT:
                 return javaPrimitvePrefix + "Integer";
             default:
-                return javaPrimitvePrefix + StringProcessor.transformUpperCaseToCamelCase(protoType.getJavaType().name());
+                return javaPrimitvePrefix + StringProcessor.transformUpperCaseToPascalCase(protoType.getJavaType().name());
         }
     }
 
