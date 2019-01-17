@@ -41,8 +41,8 @@ import java.util.concurrent.TimeUnit;
 public class TimestampProcessor {
 
     public static final String SET = "set";
-    public static final String TIMESTEMP_NAME = "Timestamp";
-    public static final String TIMESTEMP_FIELD_NAME = TIMESTEMP_NAME.toLowerCase();
+    public static final String TIMESTAMP_NAME = "Timestamp";
+    public static final String TIMESTAMP_FIELD_NAME = TIMESTAMP_NAME.toLowerCase();
 
     /**
      * Method returns a new Timestamp object with the current system time.
@@ -108,13 +108,13 @@ public class TimestampProcessor {
             try {
                 // handle builder
                 if (messageOrBuilder.getClass().getSimpleName().equals("Builder")) {
-                    messageOrBuilder.getClass().getMethod(SET + TIMESTEMP_NAME, Timestamp.class).invoke(messageOrBuilder, TimestampJavaTimeTransform.transform(milliseconds));
+                    messageOrBuilder.getClass().getMethod(SET + TIMESTAMP_NAME, Timestamp.class).invoke(messageOrBuilder, TimestampJavaTimeTransform.transform(milliseconds));
                     return messageOrBuilder;
                 }
 
                 //handle message
                 final Object builder = messageOrBuilder.getClass().getMethod("toBuilder").invoke(messageOrBuilder);
-                builder.getClass().getMethod(SET + TIMESTEMP_NAME, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
+                builder.getClass().getMethod(SET + TIMESTAMP_NAME, Timestamp.class).invoke(builder, TimestampJavaTimeTransform.transform(milliseconds));
                 return (M) builder.getClass().getMethod("build").invoke(builder);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
                 throw new NotSupportedException("Field[Timestamp]", messageOrBuilder.getClass().getName(), ex);
@@ -135,9 +135,9 @@ public class TimestampProcessor {
      * @throws NotAvailableException in thrown if the {@code messageOrBuilder} does not support or contain a timestamp.
      */
     public static long getTimestamp(final MessageOrBuilder messageOrBuilder, final TimeUnit timeUnit) throws NotAvailableException {
-        final FieldDescriptor timeStampFieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(messageOrBuilder, TIMESTEMP_NAME.toLowerCase());
+        final FieldDescriptor timeStampFieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(messageOrBuilder, TIMESTAMP_NAME.toLowerCase());
         if (timeStampFieldDescriptor == null || !messageOrBuilder.hasField(timeStampFieldDescriptor)) {
-            throw new NotAvailableException(TIMESTEMP_NAME);
+            throw new NotAvailableException(TIMESTAMP_NAME);
         }
         return TimeUnit.MILLISECONDS.convert(((Timestamp) messageOrBuilder.getField(timeStampFieldDescriptor)).getTime(), timeUnit);
     }
@@ -245,7 +245,7 @@ public class TimestampProcessor {
      */
     public static boolean hasTimestamp(final MessageOrBuilder messageOrBuilder) {
         try {
-            final FieldDescriptor fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(messageOrBuilder, TIMESTEMP_FIELD_NAME);
+            final FieldDescriptor fieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(messageOrBuilder, TIMESTAMP_FIELD_NAME);
             return messageOrBuilder.hasField(fieldDescriptor);
         } catch (NotAvailableException ex) {
             return false;
