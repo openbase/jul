@@ -36,13 +36,13 @@ deploy:
     on:
         repo: openbase/jul
         branch: master
-        jdk: openjdk8
+        jdk: openjdk11
   - provider: script
     script: .travis/deploy.sh
     on:
         repo: openbase/jul
         tags: true
-        jdk: openjdk8
+        jdk: openjdk11
 
 after_deploy:
    - |
