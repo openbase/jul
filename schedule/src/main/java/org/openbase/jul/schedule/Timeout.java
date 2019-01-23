@@ -43,7 +43,7 @@ public abstract class Timeout {
     private final Object lock = new SyncObject("TimeoutLock");
     private Future timerTask;
     private long defaultWaitTime;
-    private boolean expired;
+    private volatile boolean expired;
 
     /**
      * Constructor creates a new Timeout instance. The default timeout can be configured via the given {@code defaultWaitTime} argument.
