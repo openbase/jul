@@ -68,7 +68,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             @Override
             public void expired() {
                 try {
-                    if (JPService.getProperty(JPDebugMode.class).getValue()) {
+                    if (JPService.getProperty(JPTestMode.class).getValue()) {
                         return;
                     }
                 } catch (JPServiceException ex) {

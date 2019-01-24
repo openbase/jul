@@ -43,10 +43,7 @@ import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.iface.Requestable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
-import org.openbase.jul.schedule.FutureProcessor;
-import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import org.openbase.jul.schedule.SyncObject;
-import org.openbase.jul.schedule.WatchDog;
+import org.openbase.jul.schedule.*;
 import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,10 +90,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     private final MB dataBuilder;
     private final Class<M> messageClass;
 
-    protected final SyncObject manageableLock = new SyncObject(getClass());
     private final SyncObject transactionIdLock = new SyncObject(getClass());
 
     private final ReentrantReadWriteLock dataLock;
+    private final BundledReentrantReadWriteLock manageLock;
     private final ReadLock dataBuilderReadLock;
     private final WriteLock dataBuilderWriteLock;
 
@@ -132,6 +129,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
+            this.manageLock = new BundledReentrantReadWriteLock(dataLock, false, this);
             this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
@@ -219,78 +217,79 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws InterruptedException
      */
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        synchronized (manageableLock) {
-            try {
-                final boolean alreadyActivated = isActive();
-                ParticipantConfig internalParticipantConfig = participantConfig;
+        manageLock.lockWrite(this);
+        try {
+            final boolean alreadyActivated = isActive();
+            ParticipantConfig internalParticipantConfig = participantConfig;
 
-                if (scope == null) {
-                    throw new NotAvailableException("scope");
-                }
-
-                // check if this instance was partly or fully initialized before.
-                if (initialized | informerWatchDog != null | serverWatchDog != null) {
-                    deactivate();
-                    reset();
-                }
-
-                this.scope = scope;
-                rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
-
-                // init new instances.
-                logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + internalScope + ".");
-                informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
-                informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
-
-                // get local server object which allows to expose remotely callable methods.
-                server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
-
-                // register rpc methods.
-                RPCHelper.registerInterface(Pingable.class, this, server);
-                RPCHelper.registerInterface(Requestable.class, this, server);
-                registerMethods(server);
-
-                serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
-
-                this.informerWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data) -> {
-                    if (data == WatchDog.ServiceState.RUNNING) {
-
-                        // Sync data after service start.
-                        initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
-                            try {
-                                // skip if shutdown was already initiated
-                                if (informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
-                                    return;
-                                }
-
-                                informerWatchDog.waitForServiceActivation();
-                                serverWatchDog.waitForServiceActivation();
-
-                                // mark controller as online.
-                                setAvailabilityState(ONLINE);
-
-                                logger.debug("trigger initial sync");
-                                notifyChange();
-                            } catch (InterruptedException ex) {
-                                logger.debug("Initial sync was skipped because of controller shutdown.");
-                            } catch (CouldNotPerformException ex) {
-                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
-                            }
-                        });
-                    }
-                });
-
-                postInit();
-
-                initialized = true;
-
-                // check if communication service was already activated before and recover state.
-                if (alreadyActivated) {
-                    activate();
-                }
-            } catch (CouldNotPerformException | NullPointerException ex) {
-                throw new InitializationException(this, ex);
+            if (scope == null) {
+                throw new NotAvailableException("scope");
             }
+
+            // check if this instance was partly or fully initialized before.
+            if (initialized | informerWatchDog != null | serverWatchDog != null) {
+                deactivate();
+                reset();
+            }
+
+            this.scope = scope;
+            rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
+
+            // init new instances.
+            logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + internalScope + ".");
+            informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
+            informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
+
+            // get local server object which allows to expose remotely callable methods.
+            server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
+
+            // register rpc methods.
+            RPCHelper.registerInterface(Pingable.class, this, server);
+            RPCHelper.registerInterface(Requestable.class, this, server);
+            registerMethods(server);
+
+            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
+
+            this.informerWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data) -> {
+                if (data == WatchDog.ServiceState.RUNNING) {
+
+                    // Sync data after service start.
+                    initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
+                        try {
+                            // skip if shutdown was already initiated
+                            if (informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
+                                return;
+                            }
+
+                            informerWatchDog.waitForServiceActivation();
+                            serverWatchDog.waitForServiceActivation();
+
+                            // mark controller as online.
+                            setAvailabilityState(ONLINE);
+
+                            logger.debug("trigger initial sync");
+                            notifyChange();
+                        } catch (InterruptedException ex) {
+                            logger.debug("Initial sync was skipped because of controller shutdown.");
+                        } catch (CouldNotPerformException ex) {
+                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
+                        }
+                    });
+                }
+            });
+
+            postInit();
+
+            initialized = true;
+
+            // check if communication service was already activated before and recover state.
+            if (alreadyActivated) {
+                activate();
+            }
+        } catch (CouldNotPerformException | NullPointerException ex) {
+            throw new InitializationException(this, ex);
+        } finally {
+            manageLock.unlockWrite(this);
         }
     }
 
@@ -336,7 +335,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
-        synchronized (manageableLock) {
+        manageLock.lockWrite(this);
+        try {
             validateInitialization();
             logger.debug("Activate AbstractControllerServer for: " + this);
             setAvailabilityState(ACTIVATING);
@@ -344,6 +344,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             assert informerWatchDog != null;
             serverWatchDog.activate();
             informerWatchDog.activate();
+        } finally {
+            manageLock.unlockWrite(this);
         }
     }
 
@@ -355,7 +357,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public synchronized void deactivate() throws InterruptedException, CouldNotPerformException {
-        synchronized (manageableLock) {
+        manageLock.lockWrite(this);
+        try {
             try {
                 validateInitialization();
             } catch (InvalidStateException ex) {
@@ -381,12 +384,14 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 informerWatchDog.deactivate();
             }
             setAvailabilityState(OFFLINE);
+        } finally {
+            manageLock.unlockWrite(this);
         }
     }
 
     private void reset() {
-        // disabled related to #44
-        synchronized (manageableLock) {
+        manageLock.lockWrite(this);
+        try {
             // clear init flag
             initialized = false;
 
@@ -402,6 +407,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 informerWatchDog = null;
                 informer = new NotInitializedRSBInformer<>();
             }
+        } finally {
+            manageLock.unlockWrite(this);
         }
     }
 
@@ -608,7 +615,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         logger.debug("Notify data change of " + this);
         // synchronized by manageable lock to prevent reinit between validateInitialization and publish
         M newData;
-        synchronized (manageableLock) {
+        manageLock.lockWrite(this);
+        try {
             try {
                 validateInitialization();
             } catch (final NotInitializedException ex) {
@@ -632,6 +640,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform about data change of " + this + "!", ex), logger);
                 }
             }
+        } finally {
+            manageLock.unlockWrite(this);
         }
 
         // Notify data update
@@ -798,10 +808,13 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws NotInitializedException is thrown if the controller is not initialized.
      */
     public void validateInitialization() throws NotInitializedException {
-        synchronized (manageableLock) {
+        manageLock.lockWrite(this);
+        try {
             if (!initialized) {
                 throw new NotInitializedException("communication service");
             }
+        } finally {
+            manageLock.unlockWrite(this);
         }
     }
 
