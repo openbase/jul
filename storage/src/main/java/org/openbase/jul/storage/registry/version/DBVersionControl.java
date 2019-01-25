@@ -31,6 +31,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.storage.file.FileProvider;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
 import org.slf4j.Logger;
@@ -93,7 +94,7 @@ public class DBVersionControl {
             try {
                 GitVersionControl.syncWithRemoteDatabase(latestSupportedDBVersion, registry);
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(ex, logger);
+                ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
             }
         }
 

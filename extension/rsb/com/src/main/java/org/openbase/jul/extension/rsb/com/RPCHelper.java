@@ -25,9 +25,7 @@ package org.openbase.jul.extension.rsb.com;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jul.annotation.RPCMethod;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBLegacyMode;
@@ -44,6 +42,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -165,7 +164,10 @@ public class RPCHelper {
                     Thread.currentThread().interrupt();
                 } catch (CouldNotPerformException | IllegalArgumentException | ExecutionException | CancellationException | RejectedExecutionException ex) {
                     final CouldNotPerformException exx = new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")] of " + instance + "!", ex);
-                    ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger);
+
+                    if (!(ExceptionProcessor.getInitialCause(ex) instanceof ShutdownInProgressException)) {
+                        ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger);
+                    }
                     throw new UserCodeException(exx);
                 }
                 return new Event(Void.class);

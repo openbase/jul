@@ -48,7 +48,7 @@ public class WatchDog implements Activatable, Shutdownable {
     private final SyncObject STATE_LOCK;
 
     private static final long RUNNING_DELAY = 60000;
-    private static final long DEFAULT_DELAY = 10000;
+    private static final long DEFAULT_DELAY = 5000;
     private static final long TEST_DELAY = 10;
 
     public enum ServiceState {
@@ -170,12 +170,6 @@ public class WatchDog implements Activatable, Shutdownable {
                     throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service["+serviceName+"] is not running anymore!");
                 }
 
-                // skip if watchdog is not active
-                //TODO: makes no sense to allow waitForServiceActivation if this quits when not activated
-//                if (!isActive()) {
-//                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service["+serviceName+"] is not active!");
-//                }
-
                 // skip if state is already passed.
                 //TODO: validate that this new strategy with allowing the one who waits to guarantee that he does not wait indefinitely works
 //                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
@@ -185,10 +179,11 @@ public class WatchDog implements Activatable, Shutdownable {
                 if (timeout <= 0) {
                     STATE_LOCK.wait();
                 } else {
-                    if ((System.currentTimeMillis() - requestTimestamp) > timeUnit.toMillis(timeout)) {
-                        throw new TimeoutException();
+                    final long passedTime = System.currentTimeMillis() - requestTimestamp;
+                    if (passedTime > timeUnit.toMillis(timeout)) {
+                        throw new TimeoutException("Still in State["+this.serviceState.name()+"] and timeout occurs before reaching State["+serviceState.name()+"].");
                     }
-                    STATE_LOCK.wait(timeUnit.toMillis(timeout));
+                    STATE_LOCK.wait(timeUnit.toMillis(timeout) - passedTime);
                 }
             }
         }
@@ -203,7 +198,7 @@ public class WatchDog implements Activatable, Shutdownable {
     private class Minder implements Runnable, Shutdownable {
 
         private final String name;
-        private boolean processing;
+        private volatile boolean processing;
         private ScheduledFuture future;
         private final Object FUTURE_LOCK = new SyncObject("FUTURE_LOCK");
 
@@ -238,7 +233,6 @@ public class WatchDog implements Activatable, Shutdownable {
             return !future.isDone();
         }
 
-        @Override
         public void run() {
 
             // avoid parallel execution by simple process filter.
@@ -251,26 +245,32 @@ public class WatchDog implements Activatable, Shutdownable {
                 try {
                     try {
                         waitForInit();
-                        if (!future.isCancelled()) {
-                            if (!service.isActive()) {
-                                setServiceState(ServiceState.INITIALIZING);
-                                try {
-                                    logger.debug("Service activate: " + service.hashCode() + " : " + serviceName);
-                                    service.activate();
-                                    if (service.isActive()) {
-                                        setServiceState(ServiceState.RUNNING);
-                                    }
-                                } catch (CouldNotPerformException | NullPointerException ex) {
-                                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName +  "] try again in " + (getRate() / 1000) + " seconds...", ex), logger, LogLevel.WARN);
-                                    setServiceState(ServiceState.FAILED);
-                                }
-                            } else {
-                                if (getServiceState() != ServiceState.RUNNING) {
-                                    setServiceState(ServiceState.RUNNING);
-                                }
-                            }
-                            return; // check finished because service is still running.
+                        if (future.isCancelled()) {
+                            // finish when task was canceled.
+                            return;
                         }
+
+                        // when not active than activate
+                        if (!service.isActive()) {
+                            setServiceState(ServiceState.INITIALIZING);
+                            try {
+                                logger.debug("Service activate: " + service.hashCode() + " : " + serviceName);
+                                service.activate();
+                                if (service.isActive()) {
+                                    setServiceState(ServiceState.RUNNING);
+                                } else {
+                                    throw new InvalidStateException("Not active after activation!");
+                                }
+                            } catch (CouldNotPerformException | NullPointerException ex) {
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName +  "] try again in " + (getRate() / 1000) + " seconds...", ex), logger, LogLevel.WARN);
+                                setServiceState(ServiceState.FAILED);
+                            }
+                        } else {
+                            if (getServiceState() != ServiceState.RUNNING) {
+                                setServiceState(ServiceState.RUNNING);
+                            }
+                        }
+                        return; // check finished because service is still running.
                     } catch (InterruptedException ex) {
                         /**
                          * An interrupted exception was caught triggered by the deactivate() or cancel() method of the watchdog.

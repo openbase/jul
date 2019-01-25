@@ -29,7 +29,7 @@ public class ShutdownException extends CouldNotPerformException {
 
     /**
      * This exception can be used to print a shutdown exception.
-     * This exception should not be used as exception handling of any shutdown methods because the should always return without any exceptions to gurantee the overall shutdown sequence.
+     * This exception should not be used as exception handling of any shutdown methods because the should always return without any exceptions to grantee the overall shutdown sequence.
      * Instead exceptions should be printed via the ExceptionPrinter.
      *
      * In case the cause is an instance of an InterruptedException, the interrupted state of the current thread is recovered so no further handling is needed.

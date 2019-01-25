@@ -220,7 +220,6 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             // wait for deactivation and handle error case
             try {
                 deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
-
                 logger.debug("Participant[" + this + "] deactivated.");
             } catch (TimeoutException ex) {
                 logger.warn("Deactivation stall detected! " + this + " did not response in time!");

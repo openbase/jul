@@ -636,6 +636,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 try {
                     waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
                     informer.publish(event);
+                } catch (TimeoutException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Skip data update notification because middleware is not ready since "+TimeUnit.MILLISECONDS.toSeconds(NOTIFICATILONG_TIMEOUT)+" seconds of " + this + "!", ex), logger, LogLevel.WARN);
                 } catch (CouldNotPerformException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform about data change of " + this + "!", ex), logger);
                 }
