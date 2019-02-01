@@ -115,8 +115,8 @@ public class TriggerPool extends AbstractTrigger {
                 notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build()));
             }
         } else {
-            if (!getActivationState().getValue().equals(ActivationState.State.DEACTIVE)) {
-                notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.DEACTIVE).build()));
+            if (!getActivationState().getValue().equals(ActivationState.State.INACTIVE)) {
+                notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.INACTIVE).build()));
             }
         }
     }
