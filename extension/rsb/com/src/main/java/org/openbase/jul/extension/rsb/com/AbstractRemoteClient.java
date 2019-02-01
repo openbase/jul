@@ -1431,21 +1431,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     }
 
     /**
-     * Just a hack to support unit group remotes.
-     * TODO: redesign needed.
-     */
-    protected void applyExternalDataUpdate(final M data) throws CouldNotPerformException {
-        try {
-            if (listenerWatchDog.isActive() && remoteServerWatchDog.isActive()) {
-                throw new InvalidStateException("Because of synchronization reasons data updates can not be applied on active remote services.");
-            }
-        } catch (NullPointerException ex) {
-            // does not care because remote should not be activated anyway.
-        }
-        applyDataUpdate(data);
-    }
-
-    /**
      * Method is used to internally update the data object.
      *
      * @param data
@@ -1744,18 +1729,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                         }
 
                         try {
-                            //TODO: remove if system is running like this
-//                            try {
-//                                internalFuture = internalRequestStatus();
-//                            } catch (CouldNotPerformException ex) {
-//                                logger.warn("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex);
-//                                continue;
-//                            }
-
                             try {
                                 ping().get(timeout, TimeUnit.MILLISECONDS);
                             } catch (ExecutionException ex) {
-//                                internalFuture.cancel(true);
                                 continue;
                             }
 

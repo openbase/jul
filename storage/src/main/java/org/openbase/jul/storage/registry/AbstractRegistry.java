@@ -1127,14 +1127,16 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     /**
      * Method returns the name of this registry. In case the name was never set
      * for this registry the simple class name of the registry class is returned
-     * instead.
+     * instead where the "Controller" or "Remote" suffix are removed.
      *
      * @return the name of the registry.
      */
     @Override
     public String getName() {
         if (name == null) {
-            return getClass().getSimpleName();
+            return getClass().getSimpleName()
+                    .replace("Remote", "")
+                    .replace("Controller","");
         }
         return name;
     }

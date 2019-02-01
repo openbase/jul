@@ -23,6 +23,7 @@ package org.openbase.jul.storage.registry;
  */
 
 import com.google.protobuf.AbstractMessage;
+import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -36,6 +37,7 @@ import org.openbase.jul.storage.registry.plugin.RemoteRegistryPlugin;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.TimeoutException;
 
 import static org.openbase.jul.iface.Identifiable.TYPE_FIELD_ID;
 
@@ -204,9 +206,17 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
      */
     public void waitUntilReady() throws InterruptedException, CouldNotPerformException {
         try {
-            waitUntilReadyFuture().get();
+            while(true) {
+                try {
+                    waitUntilReadyFuture().get((JPService.testMode() ? 4, ),TimeUnit.SECONDS);
+                    break;
+                } catch (final TimeoutException ex) {
+                    logger.warn("Still waiting for " + getName());
+                    continue;
+                }
+            }
         } catch (final ExecutionException | CancellationException ex) {
-            throw new CouldNotPerformException("Could not wait unit registry is ready.", ex);
+            throw new CouldNotPerformException("Could not wait until "+getName()+" is ready.", ex);
         }
     }
 
@@ -265,7 +275,7 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
             }
             getRegistryRemote().waitForData();
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory("Could not wait until remote registry is ready!", ex, logger);
+            ExceptionPrinter.printHistory("Could not wait until "+getName()+" is ready!", ex, logger);
         }
     }
 
@@ -278,7 +288,7 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
             }
             getRegistryRemote().waitForData(timeout, timeUnit);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory("Could not wait until remote registry is ready!", ex, logger);
+            ExceptionPrinter.printHistory("Could not wait until "+getName()+" is is ready!", ex, logger);
         }
     }
 

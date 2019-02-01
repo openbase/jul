@@ -22,21 +22,14 @@ package org.openbase.jul.storage.registry.jp;
  * #L%
  */
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.RepositoryCache;
-import org.eclipse.jgit.util.FS;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.tools.FileHandler.ExistenceHandling;
-import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.processing.FileProcessor;
 
 import java.io.IOException;
 
