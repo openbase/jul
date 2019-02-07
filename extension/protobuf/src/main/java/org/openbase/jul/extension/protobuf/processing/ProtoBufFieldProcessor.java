@@ -54,8 +54,6 @@ public class ProtoBufFieldProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProtoBufFieldProcessor.class);
 
-    //TODO release: Create ProtoBufFieldProcessor and move some methods to there and to ProtoBufBuilderProcessor
-
     //TODO: write java doc for all methods
     public static Descriptors.FieldDescriptor getFieldDescriptor(final MessageOrBuilder builder, final int fieldNumber) {
         return builder.getDescriptorForType().findFieldByNumber(fieldNumber);
