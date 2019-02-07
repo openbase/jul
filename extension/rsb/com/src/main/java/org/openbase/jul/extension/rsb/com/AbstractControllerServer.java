@@ -590,6 +590,64 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     }
 
     /**
+     * This method generates a closable manager lock wrapper including the
+     * internal builder instance. Be informed that the controller and all its services are
+     * directly locked and internal builder operations are queued. Therefore please
+     * call the close method soon as possible to release the builder lock after
+     * you builder modifications, otherwise the overall processing pipeline is
+     * delayed.
+     *
+     * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
+     * This is a recovering feature but should never be used by design!
+     *
+     *
+     * <pre>
+     * {@code Usage Example:
+     *
+     *     try(final CloseableWriteLockWrapper ignored = getManageWriteLock(this)) {
+     *         // do important stuff...
+     *     }
+     * }
+     * </pre> In this example the CloseableWriteLockWrapper.close method is be called
+     * in background after leaving the try brackets.
+     *
+     * @param consumer
+     * @return a new builder wrapper which already locks the manage lock.
+     */
+    protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer){
+        return new CloseableWriteLockWrapper(manageLock.getTimelimitedClone(consumer));
+    }
+
+    /**
+     * This method generates a closable manager lock wrapper including the
+     * internal builder instance. Be informed that the controller and all its services are
+     * directly locked and internal builder operations are queued. Therefore please
+     * call the close method soon as possible to release the builder lock after
+     * you builder modifications, otherwise the overall processing pipeline is
+     * delayed.
+     *
+     * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
+     * This is a recovering feature but should never be used by design!
+     *
+     *
+     * <pre>
+     * {@code Usage Example:
+     *
+     *     try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+     *         // do important stuff...
+     *     }
+     * }
+     * </pre> In this example the CloseableWriteLockWrapper.close method is be called
+     * in background after leaving the try brackets.
+     *
+     * @param consumer
+     * @return a new builder wrapper which already locks the manage lock.
+     */
+    protected CloseableReadLockWrapper getManageReadLock(final Object consumer){
+        return new CloseableReadLockWrapper(manageLock.getTimelimitedClone(consumer));
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
