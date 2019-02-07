@@ -42,10 +42,12 @@ public class ListDiffImpl<KEY, VALUE extends Identifiable<KEY>> extends  Abstrac
         super(new IdentifiableValueMap<>(), new IdentifiableValueMap<>(), new IdentifiableValueMap<>(), new IdentifiableValueMap<>());
     }
 
+    @Override
     public void diff(final List<VALUE> modifiedList) {
         diff(IdentifiableValueMap.fromCollection(modifiedList));
     }
 
+    @Override
     public void diff(final List<VALUE> originalList, final List<VALUE> modifiedList) {
         diff(IdentifiableValueMap.fromCollection(originalList), IdentifiableValueMap.fromCollection(modifiedList));
     }

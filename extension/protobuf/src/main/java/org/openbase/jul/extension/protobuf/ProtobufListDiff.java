@@ -23,6 +23,11 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.AbstractMessage;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.iface.Identifiable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -48,12 +53,22 @@ public class ProtobufListDiff<KEY, M extends AbstractMessage, MB extends M.Build
         super(new IdentifiableMessageMap<>(), new IdentifiableMessageMap<>(), new IdentifiableMessageMap<>(),  new IdentifiableMessageMap<>());
     }
 
-    public void diff(final List<M> modifiedList) {
+    public void diffMessages(final List<M> modifiedList) {
         diff(new IdentifiableMessageMap<>(modifiedList));
     }
 
-    public void diff(final List<M> originalList, final List<M> modifiedList) {
+    public void diffMessages(final List<M> originalList, final List<M> modifiedList) {
         diff(new IdentifiableMessageMap<>(originalList), new IdentifiableMessageMap<>(modifiedList));
+    }
+
+    @Override
+    public void diff(final List<IdentifiableMessage<KEY, M, MB>> modifiedList) {
+        diff(new IdentifiableMessageMap<>(IdentifiableValueMap.fromCollection(modifiedList)));
+    }
+
+    @Override
+    public void diff(final List<IdentifiableMessage<KEY, M, MB>> originalList, final List<IdentifiableMessage<KEY, M, MB>> modifiedList) {
+        diff(new IdentifiableMessageMap<>(IdentifiableValueMap.fromCollection(originalList)), new IdentifiableMessageMap<>(IdentifiableValueMap.fromCollection(modifiedList)));
     }
 
     public IdentifiableMessageMap<KEY, M, MB> getNewMessageMap() {

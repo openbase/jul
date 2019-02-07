@@ -25,6 +25,9 @@ package org.openbase.jul.extension.protobuf;
 import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.iface.Identifiable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;

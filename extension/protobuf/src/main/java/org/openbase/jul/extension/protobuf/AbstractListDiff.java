@@ -28,6 +28,8 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP extends IdentifiableValueMap<KEY, VALUE>>  {
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(getClass());
@@ -72,10 +74,6 @@ public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP
         // update original messages.
         originalValues = modifiedMap;
     }
-// TODO release2.0: enable
-//    public abstract void diff(final List<VALUE> modifiedList);
-//
-//    public abstract void diff(final List<VALUE> originalList, final List<VALUE> modifiedList);
 
     public final MAP getNewValueMap() {
         return newValues;
@@ -101,4 +99,9 @@ public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP
     public final MAP getOriginalValueMap() {
         return originalValues;
     }
+
+    public abstract void diff(final List<VALUE> modifiedList);
+
+    public abstract void diff(final List<VALUE> originalList, final List<VALUE> modifiedList);
+
 }

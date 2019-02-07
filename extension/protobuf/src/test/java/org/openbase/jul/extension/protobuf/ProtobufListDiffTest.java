@@ -77,12 +77,12 @@ public class ProtobufListDiffTest {
 
         UnitConfig newUnitConfig = UnitConfig.newBuilder().setId("new").build();
 
-        ProtobufListDiff diff = new ProtobufListDiff(currentContext);
+        ProtobufListDiff<String, UnitConfig, UnitConfig.Builder> diff = new ProtobufListDiff<>(currentContext);
         modContext = new ArrayList<>(currentContext);
 
         modContext.add(newUnitConfig);
 
-        diff.diff(modContext);
+        diff.diffMessages(modContext);
         Assert.assertTrue(diff.getUpdatedMessageMap().isEmpty());
         Assert.assertTrue(diff.getRemovedMessageMap().isEmpty());
         Assert.assertEquals(1, diff.getNewMessageMap().size());
@@ -97,7 +97,7 @@ public class ProtobufListDiffTest {
         System.out.println("getUpdatedMessages");
         UnitConfig updatedUnitConfig = UnitConfig.newBuilder().setId("2").addAlias("coolUnit").build();
 
-        ProtobufListDiff diff = new ProtobufListDiff(currentContext);
+        ProtobufListDiff<String, UnitConfig, UnitConfig.Builder> diff = new ProtobufListDiff<>(currentContext);
         modContext = new ArrayList<>(currentContext);
 
         for (UnitConfig context : currentContext) {
@@ -107,7 +107,7 @@ public class ProtobufListDiffTest {
             }
         }
         modContext.add(updatedUnitConfig);
-        diff.diff(modContext);
+        diff.diffMessages(modContext);
         Assert.assertTrue(diff.getNewMessageMap().isEmpty());
         Assert.assertTrue(diff.getRemovedMessageMap().isEmpty());
         Assert.assertEquals(1, diff.getUpdatedMessageMap().size());
@@ -122,12 +122,12 @@ public class ProtobufListDiffTest {
         System.out.println("getRemovedMessages");
         UnitConfig removedUnitConfig = UnitConfig.newBuilder().setId("1").build();
 
-        ProtobufListDiff diff = new ProtobufListDiff(currentContext);
+        ProtobufListDiff<String, UnitConfig, UnitConfig.Builder> diff = new ProtobufListDiff<>(currentContext);
         modContext = new ArrayList<>(currentContext);
 
         modContext.remove(removedUnitConfig);
 
-        diff.diff(modContext);
+        diff.diffMessages(modContext);
         Assert.assertTrue(diff.getUpdatedMessageMap().isEmpty());
         Assert.assertTrue(diff.getNewMessageMap().isEmpty());
         Assert.assertEquals(1, diff.getRemovedMessageMap().size());
