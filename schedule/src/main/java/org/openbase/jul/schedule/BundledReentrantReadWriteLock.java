@@ -45,7 +45,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class BundledReentrantReadWriteLock {
+public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     public static final long LOCK_TIMEOUT = 10000;
 
@@ -113,6 +113,12 @@ public class BundledReentrantReadWriteLock {
         };
     }
 
+    @Override
+    public void lockRead() {
+        lockRead(holder);
+    }
+
+    @Override
     public void lockRead(final Object consumer) {
         logger.debug("order lockRead by {}", consumer);
         secondaryLock.readLock().lock();
@@ -122,6 +128,12 @@ public class BundledReentrantReadWriteLock {
         logger.debug("lockRead by {}", consumer);
     }
 
+    @Override
+    public boolean tryLockRead() {
+        return tryLockRead(holder);
+    }
+
+    @Override
     public boolean tryLockRead(final Object consumer) {
         final boolean secondarySuccess = secondaryLock.readLock().tryLock();
 
@@ -138,6 +150,12 @@ public class BundledReentrantReadWriteLock {
         return false;
     }
 
+    @Override
+    public boolean tryLockRead(final long time, final TimeUnit unit) throws InterruptedException {
+        return tryLockRead(time, unit, holder);
+    }
+
+    @Override
     public boolean tryLockRead(final long time, final TimeUnit unit, final Object consumer) throws InterruptedException {
         final boolean secondarySuccess = secondaryLock.readLock().tryLock(time, unit);
 
@@ -154,6 +172,12 @@ public class BundledReentrantReadWriteLock {
         return false;
     }
 
+    @Override
+    public void unlockRead() {
+        unlockRead(holder);
+    }
+
+    @Override
     public void unlockRead(final Object consumer) {
         logger.debug("order unlockRead by {}", consumer);
         if (readLockConsumer == consumer) {
@@ -165,6 +189,12 @@ public class BundledReentrantReadWriteLock {
         logger.debug("unlockRead by {}", consumer);
     }
 
+    @Override
+    public void lockWrite() {
+        lockWrite(holder);
+    }
+
+    @Override
     public void lockWrite(final Object consumer) {
         logger.debug("order lockWrite by {}", consumer);
         secondaryLock.writeLock().lock();
@@ -174,6 +204,7 @@ public class BundledReentrantReadWriteLock {
         logger.debug("lockWrite by {}", consumer);
     }
 
+    @Override
     public boolean tryLockWrite(final Object consumer) {
         final boolean secondarySuccess = secondaryLock.writeLock().tryLock();
 
@@ -190,6 +221,12 @@ public class BundledReentrantReadWriteLock {
         return false;
     }
 
+    @Override
+    public boolean tryLockWrite(final long time, final TimeUnit unit) throws InterruptedException {
+        return tryLockWrite(time, unit, holder);
+    }
+
+    @Override
     public boolean tryLockWrite(final long time, final TimeUnit unit, final Object consumer) throws InterruptedException {
         final boolean secondarySuccess = secondaryLock.writeLock().tryLock(time, unit);
 
@@ -206,10 +243,12 @@ public class BundledReentrantReadWriteLock {
         return false;
     }
 
-    /**
-     * Method unlocks the write lock of the primary and secondary lock.
-     * @param consumer the responsible instance which is performing the unlock.
-     */
+    @Override
+    public void unlockWrite() {
+        unlockWrite(holder);
+    }
+
+    @Override
     public void unlockWrite(final Object consumer) {
         logger.debug("order write unlock by {}", consumer);
         writeLockTimeout.cancel();
@@ -233,5 +272,19 @@ public class BundledReentrantReadWriteLock {
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not setup builder write lock fallback timeout!", ex, logger, LogLevel.WARN);
         }
+    }
+
+    /**
+     * Returns a new clone of this lock with @{code autoLockReleaseOnLongtermBlock} enabled (see constructor).
+     *
+     * Note: The timed lock limitation is just a procedure to avoid a blocking system in case external components are buggy.
+     * But it should never be used as an implementation strategy because it still can result in strange behaviour.
+     * Always release the lock afterwards.
+     *
+     * @param holder the instance holding the new lock.
+     * @return a new lock instance sharing the same internal locks but with limited access time.
+     */
+    public BundledReentrantReadWriteLock getTimelimitedClone(final Object holder) {
+        return new BundledReentrantReadWriteLock(primaryLock, secondaryLock, true, holder);
     }
 }
