@@ -30,6 +30,8 @@ import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.controller.ConfigurableController;
+import org.openbase.jul.schedule.CloseableReadLockWrapper;
+import org.openbase.jul.schedule.CloseableWriteLockWrapper;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.type.com.ScopeType.Scope;
 
@@ -45,8 +47,6 @@ import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 public abstract class AbstractConfigurableController<M extends AbstractMessage, MB extends M.Builder<MB>, CONFIG extends Message> extends AbstractIdentifiableController<M, MB> implements ConfigurableController<String, M, CONFIG> {
 
     public static final String FIELD_SCOPE = "scope";
-
-    private final SyncObject CONFIG_LOCK = new SyncObject("ConfigLock");
 
     private CONFIG config;
 
@@ -67,7 +67,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
         try {
-            synchronized (CONFIG_LOCK) {
+            try(final CloseableWriteLockWrapper ignored = getManageWriteLock(this)) {
                 if (config == null) {
                     throw new NotAvailableException("config");
                 }
@@ -94,7 +94,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
         try {
             boolean scopeChanged;
-            synchronized (CONFIG_LOCK) {
+            try(final CloseableWriteLockWrapper ignored = getManageWriteLock(this)) {
                 this.config = config;
 
                 if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
@@ -134,13 +134,13 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     }
 
     private Scope detectScope() throws NotAvailableException {
-        synchronized (CONFIG_LOCK) {
+        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             return detectScope(getConfig());
         }
     }
 
     protected final Object getConfigField(String name) throws CouldNotPerformException {
-        synchronized (CONFIG_LOCK) {
+        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             return getConfigField(name, getConfig());
         }
     }
@@ -158,7 +158,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     }
 
     protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
-        synchronized (CONFIG_LOCK) {
+        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             try {
                 Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
                 if (findFieldByName == null) {
@@ -172,7 +172,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     }
 
     protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
-        synchronized (CONFIG_LOCK) {
+        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             try {
                 Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
                 return findFieldByName != null;
@@ -184,7 +184,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
 
     @Override
     public CONFIG getConfig() throws NotAvailableException {
-        synchronized (CONFIG_LOCK) {
+        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             if (config == null) {
                 throw new NotAvailableException("config");
             }
