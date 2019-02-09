@@ -108,23 +108,6 @@ public class ProtoBufFieldProcessor {
         }
     }
 
-    /**
-     * @param msg
-     *
-     * @return
-     *
-     * @throws CouldNotPerformException
-     * @deprecated cannot be used in its current form because the label is now an openbase type and not a string
-     */
-    @Deprecated
-    public static String getLabel(final Message.Builder msg) throws CouldNotPerformException {
-        try {
-            return (String) msg.getField(getFieldDescriptor(msg, LabelProvider.TYPE_FIELD_LABEL));
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not get label of [" + msg + "]", ex);
-        }
-    }
-
     public static void initRequiredFieldsWithDefault(final Message.Builder builder) {
         List<String> missingFieldList = builder.findInitializationErrors();
         missingFieldList.stream().forEach((initError) -> {

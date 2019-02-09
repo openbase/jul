@@ -42,13 +42,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RecurrenceEventFilter.class);
 
-    @Deprecated
-    public static final long DEFAULT_TIMEOUT = 1000;
-
     public static final long DEFAULT_MAX_FREQUENCY = 1000;
-
-    @Deprecated
-    public static final long DEFAULT_TEST_TIMEOUT = 100;
     public static final long TEST_MAX_FREQUENCY = 10;
 
     private Timeout timeout;
@@ -168,7 +162,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
      * Method returns the latest triggered value.
      *
      * @return the last value or null if no last value is available
-     * @deprecated please use {@code getLatestValue()} instead.
+     * @deprecated since v2.0 and will be removed in v3.0. Please use {@code getLatestValue()} instead.
      */
     @Deprecated
     public VALUE getLastValue() {

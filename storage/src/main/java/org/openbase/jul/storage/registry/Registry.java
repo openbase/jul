@@ -133,18 +133,6 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
     boolean isEmpty();
 
     /**
-     * Return true if this registry does not contain any entries.
-     *
-     * @return is true if the registry is empty.
-     *
-     * @deprecated since 1.3: removed because of typo. Please use isEmpty() instead!
-     */
-    @Deprecated
-    default boolean isEmtpy() {
-        return isEmpty();
-    }
-
-    /**
      * Try to acquire the write lock for this registry.
      * If this method returns true then this thread now holds the write
      * lock for this registry. If it returns false then the lock could

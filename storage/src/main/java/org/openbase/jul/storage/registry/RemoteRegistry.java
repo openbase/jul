@@ -323,14 +323,4 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
         }
         return registryRemote.isDataAvailable();
     }
-
-    /**
-     * @return
-     *
-     * @deprecated please use isDataAvailable() instead
-     */
-    @Deprecated
-    public boolean isDataAvalable() {
-        return isDataAvailable();
-    }
 }

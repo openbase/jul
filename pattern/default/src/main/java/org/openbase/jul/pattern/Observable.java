@@ -111,7 +111,7 @@ public interface Observable<S, T> extends Shutdownable {
      * @return
      *
      * @throws NotAvailableException
-     * @deprecated please use {@link #getValue()} instead.
+     * @deprecated since v2.0 and will be removed in v3.0. Please  use {@link #getValue()} instead.
      */
     @Deprecated
     default T getLatestValue() throws NotAvailableException {

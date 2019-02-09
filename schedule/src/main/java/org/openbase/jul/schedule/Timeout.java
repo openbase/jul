@@ -208,7 +208,7 @@ public abstract class Timeout {
     /**
      * @param waitTime
      *
-     * @deprecated please use setDefaultWaitTime instead.
+     * @deprecated since v2.0 and will be removed in v3.0. Please  use setDefaultWaitTime instead.
      */
     @Deprecated
     public void setWaitTime(long waitTime) {

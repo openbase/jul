@@ -103,21 +103,6 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
     private final Object CHILDREN_MONITOR = new Object();
     protected ObjectType objectType;
 
-    /**
-     *
-     * @param resource
-     * @param placementPolygon
-     * @param parentPanel
-     * @param imageURI
-     * @deprecated use public AbstractResourcePanel(R resource, Polygon
-     * placementPolygon, ObjectType objectType, String imageURI,
-     * ResourceDisplayPanel parentPanel) instead.
-     */
-    @Deprecated
-    public AbstractResourcePanel(final R resource, final Polygon placementPolygon, final ResourceDisplayPanel parentPanel, final String imageURI) {
-        this(resource, placementPolygon, ObjectType.Static, imageURI, parentPanel);
-    }
-
     public AbstractResourcePanel(final R resource, final Polygon placementPolygon, final String imageURI, final ResourceDisplayPanel parentPanel) {
         this(resource, placementPolygon, ObjectType.Static, imageURI, parentPanel);
     }
@@ -150,22 +135,6 @@ public abstract class AbstractResourcePanel<R extends NameProvider, RP extends A
         this.transformedBoundingBox = new Rectangle2D.Double();
         this.jComponents = new ArrayList<JComponent>();
         this.childrens = new LinkedList<RP>();
-    }
-
-    /**
-     *
-     * @param resource
-     * @param placementPolygon
-     * @param parentResourcePanel
-     * @param drawLayer
-     * @param imageURI
-     * @deprecated use public AbstractResourcePanel(R resource, Polygon
-     * placementPolygon, String imageURI, PRP parentResourcePanel, DrawLayer
-     * drawLayer) instead.
-     */
-    @Deprecated
-    public AbstractResourcePanel(final R resource, final Polygon placementPolygon, final PRP parentResourcePanel, final DrawLayer drawLayer, final String imageURI) {
-        this(resource, placementPolygon, ObjectType.Static, imageURI, parentResourcePanel, drawLayer);
     }
 
     public AbstractResourcePanel(final R resource, final Polygon placementPolygon, final String imageURI, final PRP parentResourcePanel, final DrawLayer drawLayer) {

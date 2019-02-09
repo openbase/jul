@@ -87,7 +87,7 @@ public class MultiException extends CouldNotPerformException {
      * @param exceptionStack  the stack to check.
      *
      * @throws MultiException
-     * @deprecated please use {@code checkAndThrow(final Callable<String> messageProvider, final ExceptionStack exceptionStack)} out of performance reasons.
+     * @deprecated since v2.0 and will be removed in v3.0. Please use {@code checkAndThrow(final Callable<String> messageProvider, final ExceptionStack exceptionStack)} out of performance reasons.
      */
     @Deprecated
     public static void checkAndThrow(final String message, final ExceptionStack exceptionStack) throws MultiException {

@@ -31,7 +31,7 @@ import java.util.concurrent.TimeoutException;
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @deprecated Please use package org.openbase.jul.schedule.FutureProcessor instead!;
+ * @deprecated since v2.0 and will be removed in v3.0. Please use package org.openbase.jul.schedule.FutureProcessor instead!
  */
 @Deprecated
 public class FutureProcessor {

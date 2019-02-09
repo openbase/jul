@@ -86,7 +86,7 @@ public class ProtobufListDiff<KEY, M extends AbstractMessage, MB extends M.Build
     /**
      *
      * @param originMap
-     * @deprecated use replaceOriginalMap instead, will be removed in 3.0
+     * @deprecated since v2.0 and will be removed in v3.0. Please use replaceOriginalMap instead, will be removed in 3.0
      */
     @Deprecated
     public void replaceOriginMap(IdentifiableMessageMap<KEY, M, MB> originMap) {
@@ -96,7 +96,7 @@ public class ProtobufListDiff<KEY, M extends AbstractMessage, MB extends M.Build
     /**
      *
      * @return
-     * @deprecated use getOriginalMessageMap instead, will be removed in 3.0
+     * @deprecated since v2.0 and will be removed in v3.0. Please use getOriginalMessageMap instead.
      */
     @Deprecated
     public IdentifiableMessageMap<KEY, M, MB> getOriginMessages() {

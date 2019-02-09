@@ -1198,19 +1198,6 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     }
 
     /**
-     * This method can be used to log registry info messages which are only printed for the origin registry.
-     * Info messages of a sandbox instance are redirected to the debug channel.
-     *
-     * @param message the info message to print as string.
-     *
-     * @deprecated please use method {@code log(String message)}.
-     */
-    @Deprecated
-    public void info(final String message) {
-        log(message);
-    }
-
-    /**
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
