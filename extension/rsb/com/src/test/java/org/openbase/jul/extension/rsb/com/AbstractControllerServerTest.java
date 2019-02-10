@@ -26,7 +26,9 @@ import org.junit.*;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -35,6 +37,7 @@ import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData.Builder;
+import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.converter.DefaultConverterRepository;
@@ -42,6 +45,7 @@ import rsb.converter.ProtocolBufferConverter;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 
+import java.util.ArrayList;
 import java.util.concurrent.*;
 
 import static org.junit.Assert.assertEquals;
@@ -370,7 +374,18 @@ public class AbstractControllerServerTest {
         remoteService.init(scope);
         remoteService.activate();
 
-        GlobalCachedExecutorService.submit(new NotificationCallable(communicationService));
+        // Todo release: what is this for?
+        //GlobalCachedExecutorService.submit(new NotificationCallable(communicationService));
+        // and is the following reimplementation missing something?
+        GlobalCachedExecutorService.submit( () -> {
+            try {
+                communicationService.activate();
+                communicationService.waitForAvailabilityState(ONLINE);
+                // notification should be send automatically.
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, ex), System.err);
+            }
+        });
 
         remoteService.waitForData();
         try {
@@ -383,59 +398,58 @@ public class AbstractControllerServerTest {
         remoteService.deactivate();
     }
 
-//    /**
-//     *
-//     * @throws Exception
-//     */
-//    @Test(timeout = 10000)
-//    public void testReinit() throws Exception {
-//        System.out.println("testReinit");
-//
-//        final int TEST_PARALLEL_REINIT_TASKS = 5;
-//
-//        String scope = "/test/notification";
-//        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
-//        communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
-//        communicationService.init(scope);
-//        communicationService.activate();
-//
-//        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
-//        remoteService.init(scope);
-//        remoteService.activate();
-//
-//        final Runnable reinitTask = () -> {
-//            try {
-//                remoteService.reinit();
-//                remoteService.requestData().get();
-//            } catch (Exception ex) {
-//                ExceptionPrinter.printHistory("reinit failed!", ex, logger);
-//            }
-//        };
-//
-//        
-//        // execute reinits 
-//        final ArrayList<Future> taskFutures = new ArrayList<Future>();
-//        for (int i = 0; i < TEST_PARALLEL_REINIT_TASKS; i++) {
-//            taskFutures.add(GlobalCachedExecutorService.submit(reinitTask));
-//        }
-//        for (Future future : taskFutures) {
-//            future.get();
-//        }
-//        
-//        remoteService.requestData().get();
-//        try {
-//            remoteService.ping().get(500, TimeUnit.MILLISECONDS);
-//        } catch (TimeoutException ex) {
-//            Assert.fail("Even though wait for data returned the pinging immediatly afterwards failed");
-//        }
-//        communicationService.deactivate();
-//        remoteService.deactivate();
-//        remoteService.reinit();
-//        
-//        communicationService.shutdown();
-//        remoteService.shutdown();
-//        remoteService.reinit();
-//    }
+    /**
+     *
+     * @throws Exception
+     */
+    @Test(timeout = 10000)
+    public void testReinit() throws Exception {
+        System.out.println("testReinit");
+
+        final int TEST_PARALLEL_REINIT_TASKS = 5;
+
+        String scope = "/test/notification";
+        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
+        communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
+        communicationService.init(scope);
+        communicationService.activate();
+
+        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
+        remoteService.init(scope);
+        remoteService.activate();
+
+        final Runnable reinitTask = () -> {
+            try {
+                remoteService.reinit();
+                remoteService.requestData().get();
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory("reinit failed!", ex, logger);
+            }
+        };
+
+        // execute reinits
+        final ArrayList<Future> taskFutures = new ArrayList<Future>();
+        for (int i = 0; i < TEST_PARALLEL_REINIT_TASKS; i++) {
+            taskFutures.add(GlobalCachedExecutorService.submit(reinitTask));
+        }
+        for (Future future : taskFutures) {
+            future.get();
+        }
+
+        remoteService.requestData().get();
+        try {
+            remoteService.ping().get(500, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException ex) {
+            Assert.fail("Even though wait for data returned the pinging immediatly afterwards failed");
+        }
+        communicationService.deactivate();
+        remoteService.deactivate();
+        remoteService.reinit();
+
+        communicationService.shutdown();
+        remoteService.shutdown();
+        remoteService.reinit();
+    }
 
     public static class AbstractControllerServerImpl extends AbstractControllerServer<UnitRegistryData, Builder> {
 
@@ -490,6 +504,7 @@ public class AbstractControllerServerTest {
         public Void call() throws Exception {
             communicationService.activate();
             while (!stateReached()) {
+                // todo release: what's that for? Was it just a hack?
                 communicationService.deactivate();
                 communicationService.activate();
             }
@@ -504,6 +519,9 @@ public class AbstractControllerServerTest {
                         communicationService.notifyChange();
                         return true;
                     } else if (communicationService.server.isActive()) {
+                        // todo release: why returning false in this case to initiate a deactivation?
+                        //  Is this not more than less random which one get started first?
+                        //  why not checking communicationService.isActive instead.
                         return false;
                     }
                 }
