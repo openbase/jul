@@ -146,14 +146,16 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     }
 
     protected final Object getConfigField(String name, final CONFIG config) throws CouldNotPerformException {
-        try {
-            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
-            if (findFieldByName == null) {
-                throw new NotAvailableException("Field[" + name + "] does not exist for type " + config.getClass().getName());
+        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+            try {
+                Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+                if (findFieldByName == null) {
+                    throw new NotAvailableException("Field[" + name + "] does not exist for type " + config.getClass().getName());
+                }
+                return config.getField(findFieldByName);
+            } catch (Exception ex) {
+                throw new CouldNotPerformException("Could not return value of config field [" + name + "] for " + this, ex);
             }
-            return config.getField(findFieldByName);
-        } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not return value of config field [" + name + "] for " + this, ex);
         }
     }
 
