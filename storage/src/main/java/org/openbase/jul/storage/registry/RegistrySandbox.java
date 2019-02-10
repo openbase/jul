@@ -36,7 +36,7 @@ import org.openbase.jul.iface.Identifiable;
  */
 public interface RegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends Registry<KEY, ENTRY>> extends Registry<KEY, ENTRY> {
 
-    void sync(final MAP map) throws CouldNotPerformException;
+    void sync(final MAP map);
 
     void registerConsistencyHandler(final ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler) throws CouldNotPerformException;
 

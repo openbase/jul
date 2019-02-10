@@ -24,6 +24,7 @@ package org.openbase.jul.storage.registry;
 import java.util.Map;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -76,12 +77,12 @@ public class RegistrySandboxImpl<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
-    public void sync(MAP map) throws CouldNotPerformException {
+    public void sync(MAP map) {
         try {
             replaceInternalMap(map, false);
             consistent = true;
         } catch (Exception ex) {
-            throw new FatalImplementationErrorException("Sandbox sync failed!", this, ex);
+            ExceptionPrinter.printHistory(new FatalImplementationErrorException("Sandbox sync failed!", this, ex), logger);
         }
     }
 
