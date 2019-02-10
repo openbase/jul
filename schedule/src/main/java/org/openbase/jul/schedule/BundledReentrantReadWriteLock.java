@@ -47,7 +47,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
-    public static final long LOCK_TIMEOUT = 10000;
+    public static final long DEFAULT_LOCK_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
     protected final Logger logger = LoggerFactory.getLogger(BundledReentrantReadWriteLock.class);
 
@@ -64,7 +64,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
      * Constructor creates a new bundled lock.
      * @param secondaryLock a less important lock maybe used for frequently by notification purpose with is locked in advance.
      *
-     * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 10 seconds.
+     * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
      * @param holder the instance holding the locks.
      */
     public BundledReentrantReadWriteLock(final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
@@ -76,7 +76,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
      * @param primaryLock the more important lock used e.g. for configure or manage an instance.
      * @param secondaryLock a less important lock maybe used for frequently by notification purpose with is locked in advance.
      *
-     * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 10 seconds.
+     * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
      * @param holder the instance holding the locks.
      */
     public BundledReentrantReadWriteLock(final ReentrantReadWriteLock primaryLock, final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
@@ -85,27 +85,28 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         this.autoLockReleaseOnLongtermBlock = autoLockReleaseOnLongtermBlock;
 
         this.holder = holder;
-        this.readLockTimeout = new Timeout(LOCK_TIMEOUT) {
+        this.readLockTimeout = new Timeout(DEFAULT_LOCK_TIMEOUT) {
 
             @Override
             public void expired() {
                 if (JPService.getValue(JPTestMode.class, false)) {
                     return;
                 }
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + holder + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
                 if (autoLockReleaseOnLongtermBlock) {
+
                     unlockRead("TimeoutHandler");
                 }
             }
         };
-        this.writeLockTimeout = new Timeout(LOCK_TIMEOUT) {
+        this.writeLockTimeout = new Timeout(DEFAULT_LOCK_TIMEOUT) {
 
             @Override
             public void expired() {
                 if (JPService.getValue(JPTestMode.class, false)) {
                     return;
                 }
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + holder + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!")), logger);
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!")), logger);
                 if (autoLockReleaseOnLongtermBlock) {
                     unlockWrite("TimeoutHandler");
                 }
