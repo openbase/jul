@@ -436,7 +436,7 @@ public class AbstractControllerServerTest {
             future.get();
         }
 
-        remoteService.requestData().get();
+        remoteService.waitForData();
         try {
             remoteService.ping().get(500, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
