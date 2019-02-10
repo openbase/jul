@@ -129,8 +129,8 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 }
             };
             setHashGenerator(value -> {
+                registryLock.readLock().lock();
                 try {
-                    registryLock.readLock().lock();
                     return value.hashCode();
                 } finally {
                     registryLock.readLock().unlock();
