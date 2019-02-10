@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -182,16 +182,19 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             checkWriteAccess();
             lock();
             try {
-                if (entryMap.containsKey(entry.getId())) {
-                    throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
+                try {
+                    if (entryMap.containsKey(entry.getId())) {
+                        throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
+                    }
+                    sandbox.register(entry);
+                    pluginPool.beforeRegister(entry);
+                    entryMap.put(entry.getId(), entry);
+                    finishTransaction();
+                    pluginPool.afterRegister(entry);
+                } finally {
+                    syncSandbox();
                 }
-                sandbox.register(entry);
-                pluginPool.beforeRegister(entry);
-                entryMap.put(entry.getId(), entry);
-                finishTransaction();
-                pluginPool.afterRegister(entry);
             } finally {
-                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
@@ -210,15 +213,18 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         try {
             lock();
             try {
-                if (entryMap.containsKey(entry.getId())) {
-                    throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
+                try {
+                    if (entryMap.containsKey(entry.getId())) {
+                        throw new CouldNotPerformException("Could not register " + entry + "! Entry with same Id[" + entry.getId() + "] already registered!");
+                    }
+                    sandbox.load(entry);
+                    pluginPool.beforeRegister(entry);
+                    entryMap.put(entry.getId(), entry);
+                    pluginPool.afterRegister(entry);
+                } finally {
+                    syncSandbox();
                 }
-                sandbox.load(entry);
-                pluginPool.beforeRegister(entry);
-                entryMap.put(entry.getId(), entry);
-                pluginPool.afterRegister(entry);
             } finally {
-                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
@@ -246,24 +252,27 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             checkWriteAccess();
             lock();
             try {
-                // validate update
-                if (!entryMap.containsKey(entry.getId())) {
-                    throw new InvalidStateException("Entry not registered!");
-                }
-                // perform update
-                sandbox.update(entry);
-                // check if the new message results in an update after consistency checks
-                final boolean changed = !isSandbox() && ((sandbox instanceof MockRegistrySandbox) || !get(entry).equals(sandbox.get(entry)));
-                pluginPool.beforeUpdate(entry);
-                entryMap.put(entry.getId(), entry);
-                finishTransaction();
-                pluginPool.afterUpdate(entry);
-                // test if the entry has changed at all by this update method
-                if (changed) {
-                    notifySuccessfulTransaction();
+                try {
+                    // validate update
+                    if (!entryMap.containsKey(entry.getId())) {
+                        throw new InvalidStateException("Entry not registered!");
+                    }
+                    // perform update
+                    sandbox.update(entry);
+                    // check if the new message results in an update after consistency checks
+                    final boolean changed = !isSandbox() && ((sandbox instanceof MockRegistrySandbox) || !get(entry).equals(sandbox.get(entry)));
+                    pluginPool.beforeUpdate(entry);
+                    entryMap.put(entry.getId(), entry);
+                    finishTransaction();
+                    pluginPool.afterUpdate(entry);
+                    // test if the entry has changed at all by this update method
+                    if (changed) {
+                        notifySuccessfulTransaction();
+                    }
+                } finally {
+                    syncSandbox();
                 }
             } finally {
-                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
@@ -311,21 +320,24 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             checkWriteAccess();
             lock();
             try {
-                // validate removal
-                if (!entryMap.containsKey(entry.getId())) {
-                    throw new InvalidStateException("Entry not registered!");
-                }
-                // perform removal
-                pluginPool.beforeRemove(entry);
-                sandbox.remove(entry);
                 try {
-                    oldEntry = entryMap.remove(entry.getId());
+                    // validate removal
+                    if (!entryMap.containsKey(entry.getId())) {
+                        throw new InvalidStateException("Entry not registered!");
+                    }
+                    // perform removal
+                    pluginPool.beforeRemove(entry);
+                    sandbox.remove(entry);
+                    try {
+                        oldEntry = entryMap.remove(entry.getId());
+                    } finally {
+                        finishTransaction();
+                    }
+                    pluginPool.afterRemove(entry);
                 } finally {
-                    finishTransaction();
+                    syncSandbox();
                 }
-                pluginPool.afterRemove(entry);
             } finally {
-                syncSandbox();
                 unlock();
             }
         } catch (CouldNotPerformException ex) {
@@ -343,7 +355,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      *
      * @return {@inheritDoc}
      *
-     * @throws MultiException {@inheritDoc}
+     * @throws MultiException        {@inheritDoc}
      * @throws InvalidStateException {@inheritDoc}
      */
     @Override
@@ -355,7 +367,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             for (ENTRY entry : entries) {
 
                 // shutdown check is needed because this is not a atomic transaction.
-                if(shutdownInitiated) {
+                if (shutdownInitiated) {
                     throw new InvalidStateException("Entry removal canceled because registry is shutting down!");
                 }
 
@@ -568,17 +580,20 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         }
         lock();
         try {
-            sandbox.replaceInternalMap(map);
-            entryMap.clear();
-            entryMap.putAll(map);
-            if (finishTransaction && !(this instanceof RemoteRegistry)) {
-                logger.warn("Replace internal map of [" + this + "]");
-                finishTransaction();
+            try {
+                sandbox.replaceInternalMap(map);
+                entryMap.clear();
+                entryMap.putAll(map);
+                if (finishTransaction && !(this instanceof RemoteRegistry)) {
+                    logger.warn("Replace internal map of [" + this + "]");
+                    finishTransaction();
+                }
+            } finally {
+                syncSandbox();
             }
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Internal map replaced by invalid data!", ex), logger, LogLevel.ERROR);
         } finally {
-            syncSandbox();
             unlock();
         }
         if (this instanceof RemoteRegistry) {
@@ -863,161 +878,164 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             consistencyCheckLock.writeLock().lock();
             try {
                 try {
-                    int iterationCounter = 0;
-                    MultiException.ExceptionStack exceptionStack = null, previousExceptionStack = null;
+                    try {
+                        int iterationCounter = 0;
+                        MultiException.ExceptionStack exceptionStack = null, previousExceptionStack = null;
 
-                    final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
-                    Object lastModifiedEntry = null;
-                    final ArrayList<ENTRY> entryValueCopy = new ArrayList<>();
-                    int maxConsistencyChecks;
-                    int iterationErrorCounter;
-                    String note;
+                        final ArrayDeque<ConsistencyHandler> consistencyHandlerQueue = new ArrayDeque<>();
+                        Object lastModifiedEntry = null;
+                        final ArrayList<ENTRY> entryValueCopy = new ArrayList<>();
+                        int maxConsistencyChecks;
+                        int iterationErrorCounter;
+                        String note;
 
-                    mainLoop:
-                    while (true) {
+                        mainLoop:
+                        while (true) {
 
-                        // do not burn cpu
-                        Thread.yield();
+                            // do not burn cpu
+                            Thread.yield();
 
-                        if (isSandbox() && Thread.currentThread().isInterrupted()) {
-                            throw new InvalidStateException("Cancel check because " + getName() + " shutdown detected!");
-                        }
-
-                        // init next iteration
-                        iterationCounter++;
-
-                        // handle handler interference
-                        maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
-                        if (iterationCounter > maxConsistencyChecks) {
-                            final int stackSize = MultiException.size(exceptionStack);
-                            MultiException.checkAndThrow(() -> stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
-                            throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
-                        }
-
-                        // prepare for next iteration
-                        if (exceptionStack != null) {
-                            iterationErrorCounter = exceptionStack.size();
-                            previousExceptionStack = new ExceptionStack(exceptionStack);
-                            exceptionStack.clear();
-                        } else {
-                            iterationErrorCounter = 0;
-                        }
-                        if (!consistencyHandlerQueue.isEmpty() || iterationErrorCounter != 0) {
-
-                            if (iterationErrorCounter > 0) {
-                                note = " with " + iterationErrorCounter + " errors";
-                            } else {
-                                note = "";
+                            if (isSandbox() && Thread.currentThread().isInterrupted()) {
+                                throw new InvalidStateException("Cancel check because " + getName() + " shutdown detected!");
                             }
 
-                            if (!consistencyHandlerQueue.isEmpty()) {
-                                note += " after " + consistencyHandlerQueue.size() + " applied modifications";
-                            }
+                            // init next iteration
+                            iterationCounter++;
 
-                            final int percentage = ((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100));
-                            // only print progress information if more than 10% of the max tests are already performed to reduce logger load during unit tests.
-                            if (percentage > 10) {
-                                consistencyFeedbackEventFilter.trigger(percentage + "% of max consistency checks passed of " + this + note + ".");
-                            }
-                        }
-                        consistencyHandlerQueue.clear();
-
-                        // consistency check
-                        try {
-                            for (ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler : consistencyHandlerList) {
-                                consistencyHandler.reset();
-                                entryValueCopy.clear();
-                                entryValueCopy.addAll(new ArrayList<>(entryMap.values()));
-                                for (ENTRY entry : entryValueCopy) {
-                                    try {
-                                        consistencyHandler.processData(entry.getId(), entry, entryMap, (REGISTRY) this);
-                                    } catch (CouldNotPerformException | NullPointerException ex) {
-                                        logger.debug("Inconsistency detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
-                                        exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
-                                    }
-                                }
-                            }
-                        } catch (EntryModification ex) {
-
-                            // check if consistency handler is looping
-                            if (ex.getConsistencyHandler() == consistencyHandlerQueue.peekLast() && ex.getEntry().equals(lastModifiedEntry)) {
-                                throw new InvalidStateException("ConsistencyHandler[" + consistencyHandlerQueue.peekLast() + "] is looping over same Entry[" + lastModifiedEntry + "] more than once!");
-                            }
-
-                            consistencyHandlerQueue.remove(ex.getConsistencyHandler());
-                            consistencyHandlerQueue.offer(ex.getConsistencyHandler());
-                            lastModifiedEntry = ex.getEntry();
-
-                            // inform about modifications
-                            try {
-                                if (JPService.getProperty(JPVerbose.class).getValue() && !JPService.getProperty(JPTestMode.class).getValue()) {
-                                    log("Consistency modification applied: " + ex.getMessage());
-                                } else {
-                                    logger.debug("Consistency modification applied: " + ex.getMessage());
-                                }
-                            } catch (JPNotAvailableException exx) {
-                                ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
-                            }
-                            pluginPool.afterConsistencyModification((ENTRY) ex.getEntry());
-                            modificationCounter++;
-                            continue;
-                        } catch (Throwable ex) {
-                            throw ExceptionPrinter.printHistoryAndReturnThrowable(new InvalidStateException("Fatal error occurred during consistency check!", ex), logger);
-                        }
-
-                        // has been an error occurred during current run?
-                        if (exceptionStack != null && !exceptionStack.isEmpty()) {
-
-                            // has been the same errors occurred since the last run and so no entry fixes applied during this run?
-                            if (previousExceptionStack != null && !previousExceptionStack.isEmpty() && exceptionStack.size() == previousExceptionStack.size()) {
-
-                                for (int i = 0; i < exceptionStack.size(); i++) {
-
-                                    // Check if the error source is not the same.
-                                    if (!exceptionStack.get(i).getSource().equals(previousExceptionStack.get(i).getSource())) {
-                                        // continue with consistency check
-                                        continue mainLoop;
-                                    }
-
-                                    // check if the initial cause of the error is not the same.
-
-                                    final String initialCauseMessage = ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException());
-                                    final String previousInitialCauseMessage = ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException());
-                                    if (!initialCauseMessage.equals(previousInitialCauseMessage)) {
-                                        // continue with consistency check
-                                        continue mainLoop;
-                                    }
-                                }
+                            // handle handler interference
+                            maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
+                            if (iterationCounter > maxConsistencyChecks) {
                                 final int stackSize = MultiException.size(exceptionStack);
                                 MultiException.checkAndThrow(() -> stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
+                                throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
                             }
-                            continue;
-                        }
 
-                        logger.debug(this + " consistent.");
-                        break;
-                    }
-                    consistent = true;
+                            // prepare for next iteration
+                            if (exceptionStack != null) {
+                                iterationErrorCounter = exceptionStack.size();
+                                previousExceptionStack = new ExceptionStack(exceptionStack);
+                                exceptionStack.clear();
+                            } else {
+                                iterationErrorCounter = 0;
+                            }
+                            if (!consistencyHandlerQueue.isEmpty() || iterationErrorCounter != 0) {
 
-                    if (modificationCounter > 0 || consistencyFeedbackEventFilter.isTriggered()) {
-                        consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.", true);
-                    }
-                    return modificationCounter;
-                } catch (CouldNotPerformException ex) {
-                    consistent = false;
-                    try {
-                        if (JPService.getProperty(JPForce.class).getValue()) {
-                            ExceptionPrinter.printHistory(new CouldNotPerformException("Consistency process of " + this + " aborted after " + modificationCounter + " modifications but transaction passed because registry force mode is enabled!", ex), logger, LogLevel.WARN);
-                            return modificationCounter;
+                                if (iterationErrorCounter > 0) {
+                                    note = " with " + iterationErrorCounter + " errors";
+                                } else {
+                                    note = "";
+                                }
+
+                                if (!consistencyHandlerQueue.isEmpty()) {
+                                    note += " after " + consistencyHandlerQueue.size() + " applied modifications";
+                                }
+
+                                final int percentage = ((int) (((double) iterationCounter) / ((double) maxConsistencyChecks) * 100));
+                                // only print progress information if more than 10% of the max tests are already performed to reduce logger load during unit tests.
+                                if (percentage > 10) {
+                                    consistencyFeedbackEventFilter.trigger(percentage + "% of max consistency checks passed of " + this + note + ".");
+                                }
+                            }
+                            consistencyHandlerQueue.clear();
+
+                            // consistency check
+                            try {
+                                for (ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler : consistencyHandlerList) {
+                                    consistencyHandler.reset();
+                                    entryValueCopy.clear();
+                                    entryValueCopy.addAll(new ArrayList<>(entryMap.values()));
+                                    for (ENTRY entry : entryValueCopy) {
+                                        try {
+                                            consistencyHandler.processData(entry.getId(), entry, entryMap, (REGISTRY) this);
+                                        } catch (CouldNotPerformException | NullPointerException ex) {
+                                            logger.debug("Inconsistency detected by ConsistencyHandler[" + consistencyHandler + "] in Entry[" + entry + "]!");
+                                            exceptionStack = MultiException.push(consistencyHandler, new VerificationFailedException("Verification of Entry[" + entry + "] failed with " + consistencyHandler + "!", ex), exceptionStack);
+                                        }
+                                    }
+                                }
+                            } catch (EntryModification ex) {
+
+                                // check if consistency handler is looping
+                                if (ex.getConsistencyHandler() == consistencyHandlerQueue.peekLast() && ex.getEntry().equals(lastModifiedEntry)) {
+                                    throw new InvalidStateException("ConsistencyHandler[" + consistencyHandlerQueue.peekLast() + "] is looping over same Entry[" + lastModifiedEntry + "] more than once!");
+                                }
+
+                                consistencyHandlerQueue.remove(ex.getConsistencyHandler());
+                                consistencyHandlerQueue.offer(ex.getConsistencyHandler());
+                                lastModifiedEntry = ex.getEntry();
+
+                                // inform about modifications
+                                try {
+                                    if (JPService.getProperty(JPVerbose.class).getValue() && !JPService.getProperty(JPTestMode.class).getValue()) {
+                                        log("Consistency modification applied: " + ex.getMessage());
+                                    } else {
+                                        logger.debug("Consistency modification applied: " + ex.getMessage());
+                                    }
+                                } catch (JPNotAvailableException exx) {
+                                    ExceptionPrinter.printHistory(new CouldNotPerformException("JPVerbose property could not be loaded!", exx), logger, LogLevel.WARN);
+                                }
+                                pluginPool.afterConsistencyModification((ENTRY) ex.getEntry());
+                                modificationCounter++;
+                                continue;
+                            } catch (Throwable ex) {
+                                throw ExceptionPrinter.printHistoryAndReturnThrowable(new InvalidStateException("Fatal error occurred during consistency check!", ex), logger);
+                            }
+
+                            // has been an error occurred during current run?
+                            if (exceptionStack != null && !exceptionStack.isEmpty()) {
+
+                                // has been the same errors occurred since the last run and so no entry fixes applied during this run?
+                                if (previousExceptionStack != null && !previousExceptionStack.isEmpty() && exceptionStack.size() == previousExceptionStack.size()) {
+
+                                    for (int i = 0; i < exceptionStack.size(); i++) {
+
+                                        // Check if the error source is not the same.
+                                        if (!exceptionStack.get(i).getSource().equals(previousExceptionStack.get(i).getSource())) {
+                                            // continue with consistency check
+                                            continue mainLoop;
+                                        }
+
+                                        // check if the initial cause of the error is not the same.
+
+                                        final String initialCauseMessage = ExceptionProcessor.getInitialCauseMessage(exceptionStack.get(i).getException());
+                                        final String previousInitialCauseMessage = ExceptionProcessor.getInitialCauseMessage(previousExceptionStack.get(i).getException());
+                                        if (!initialCauseMessage.equals(previousInitialCauseMessage)) {
+                                            // continue with consistency check
+                                            continue mainLoop;
+                                        }
+                                    }
+                                    final int stackSize = MultiException.size(exceptionStack);
+                                    MultiException.checkAndThrow(() -> stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
+                                }
+                                continue;
+                            }
+
+                            logger.debug(this + " consistent.");
+                            break;
                         }
-                    } catch (JPServiceException exx) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", exx), logger);
+                        consistent = true;
+
+                        if (modificationCounter > 0 || consistencyFeedbackEventFilter.isTriggered()) {
+                            consistencyFeedbackEventFilter.trigger("100% consistency checks passed of " + this + " after " + modificationCounter + " applied modifications.", true);
+                        }
+                        return modificationCounter;
+                    } catch (CouldNotPerformException ex) {
+                        consistent = false;
+                        try {
+                            if (JPService.getProperty(JPForce.class).getValue()) {
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Consistency process of " + this + " aborted after " + modificationCounter + " modifications but transaction passed because registry force mode is enabled!", ex), logger, LogLevel.WARN);
+                                return modificationCounter;
+                            }
+                        } catch (JPServiceException exx) {
+                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", exx), logger);
+                        }
+                        throw new CouldNotPerformException("Consistency process of " + this + " aborted!", ex);
                     }
-                    throw new CouldNotPerformException("Consistency process of " + this + " aborted!", ex);
+                } finally {
+                    consistencyFeedbackEventFilter.reset();
+                    afterConsistencyCheck();
                 }
             } finally {
-                consistencyFeedbackEventFilter.reset();
-                afterConsistencyCheck();
                 consistencyCheckLock.writeLock().unlock();
             }
         } finally {
@@ -1045,7 +1063,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         }
     }
 
-    private void syncSandbox() throws CouldNotPerformException {
+    private void syncSandbox() {
 //        if (consistencyCheckLock.isWriteLocked()) {
 //            throw new FatalImplementationErrorException("Sync sandbox registry during consistency check[" + consistencyCheckLock.writeLock().isHeldByCurrentThread() + "]", this);
 //        }
@@ -1136,7 +1154,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         if (name == null) {
             return getClass().getSimpleName()
                     .replace("Remote", "")
-                    .replace("Controller","");
+                    .replace("Controller", "");
         }
         return name;
     }
@@ -1467,13 +1485,16 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                     boolean notificationNeeded;
                     lock();
                     try {
-                        pluginPool.beforeUpstreamDependencyNotification(dependency);
-                        notificationNeeded = checkConsistency() > 0 || notificationSkipped;
-                        if (notificationNeeded) {
-                            dependingRegistryObservable.notifyObservers(entryMap);
+                        try {
+                            pluginPool.beforeUpstreamDependencyNotification(dependency);
+                            notificationNeeded = checkConsistency() > 0 || notificationSkipped;
+                            if (notificationNeeded) {
+                                dependingRegistryObservable.notifyObservers(entryMap);
+                            }
+                        } finally {
+                            syncSandbox();
                         }
                     } finally {
-                        syncSandbox();
                         unlock();
                     }
 
