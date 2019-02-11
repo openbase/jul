@@ -25,6 +25,7 @@ package org.openbase.jul.exception;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.exception.printer.Printer;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -33,6 +34,28 @@ import java.util.Map;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class StackTracePrinter {
+
+    /**
+     * Method prints the stack trace of the calling thread in a human readable way.
+     *
+     * Note: The used log level will be ERROR.
+     *
+     * @param responsibleClass   the class which is responsible for the printing.
+     */
+    public static void printStackTrace(final Class responsibleClass) {
+        printStackTrace((String) null, LoggerFactory.getLogger(responsibleClass), LogLevel.ERROR);
+    }
+
+    /**
+     * Method prints the stack trace of the calling thread in a human readable way.
+     *
+     * Note: The used log level will be ERROR.
+     *
+     * @param logger   the logger used for printing.
+     */
+    public static void printStackTrace(final Logger logger) {
+        printStackTrace((String) null, logger, LogLevel.ERROR);
+    }
 
     /**
      * Method prints the stack trace of the calling thread in a human readable way.

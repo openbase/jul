@@ -28,6 +28,7 @@ import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.pattern.Observer;
@@ -402,7 +403,7 @@ public class AbstractControllerServerTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 10000)
+    @Test(timeout = 20000)
     public void testReinit() throws Exception {
         System.out.println("testReinit");
 
@@ -428,12 +429,17 @@ public class AbstractControllerServerTest {
         };
 
         // execute reinits
-        final ArrayList<Future> taskFutures = new ArrayList<Future>();
+        final ArrayList<Future> taskFutures = new ArrayList<>();
         for (int i = 0; i < TEST_PARALLEL_REINIT_TASKS; i++) {
             taskFutures.add(GlobalCachedExecutorService.submit(reinitTask));
         }
         for (Future future : taskFutures) {
-            future.get();
+            try {
+                future.get(15, TimeUnit.SECONDS);
+            } catch (TimeoutException ex) {
+                Assert.fail("Reint took too long! Please analyse deadlock in stacktrace...");
+                StackTracePrinter.printStackTrace(AbstractControllerServerTest.class);
+            }
         }
 
         remoteService.waitForData();
