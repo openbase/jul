@@ -68,7 +68,11 @@ public interface DataProvider<D> {
     CompletableFuture<D> getDataFuture();
     
     /**
-     * This method allows the registration of data observers to get informed about data updates.
+     * This method allows the registration of data observers to get informed about current data updates.
+     * Current data changes means that this method is only notified if the current service state has changed.
+     * Changes not affecting the current state like requested state changes, action scheduling changes are not notified via this observer.
+     *
+     * Note: To get informed about any state data changes use the UNKNOWN tempus as wildcard.
      *
      * @param observer the observer added
      */
