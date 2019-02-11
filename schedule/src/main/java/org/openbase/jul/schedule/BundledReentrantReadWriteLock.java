@@ -114,6 +114,20 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         };
     }
 
+    /**
+     * Kind of copy constructor which returns a new clone of the given lock.
+     *
+     * Note: The timed lock limitation is just a procedure to avoid a blocking system in case external components are buggy.
+     * But it should never be used as an implementation strategy because it still can result in strange behaviour.
+     * Always release the lock afterwards.
+     *
+     * @param holder the instance holding the new lock.
+     * @return a new lock instance sharing the same internal locks.
+     */
+    public BundledReentrantReadWriteLock(final BundledReentrantReadWriteLock lock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
+        this(lock.primaryLock, lock.secondaryLock, true, holder);
+    }
+
     @Override
     public void lockRead() {
         lockRead(holder);
@@ -273,19 +287,5 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not setup builder write lock fallback timeout!", ex, logger, LogLevel.WARN);
         }
-    }
-
-    /**
-     * Returns a new clone of this lock with @{code autoLockReleaseOnLongtermBlock} enabled (see constructor).
-     *
-     * Note: The timed lock limitation is just a procedure to avoid a blocking system in case external components are buggy.
-     * But it should never be used as an implementation strategy because it still can result in strange behaviour.
-     * Always release the lock afterwards.
-     *
-     * @param holder the instance holding the new lock.
-     * @return a new lock instance sharing the same internal locks but with limited access time.
-     */
-    public BundledReentrantReadWriteLock getTimelimitedClone(final Object holder) {
-        return new BundledReentrantReadWriteLock(primaryLock, secondaryLock, true, holder);
     }
 }
