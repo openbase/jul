@@ -37,10 +37,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * This lock can be used to bundle to locks into one.
- *
+ * <p>
  * The secondary lock will always be locked first and than the primary (mostly more important) one.
  * The unlock us performed in revise order.
- *
+ * <p>
  * Note: When auto lock release is enabled, than the locks are auto released when locked to long by on consumer. Additionally an FatalImplementationErrorException is thrown in this case.
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -62,10 +62,10 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     /**
      * Constructor creates a new bundled lock.
-     * @param secondaryLock a less important lock maybe used for frequently by notification purpose with is locked in advance.
      *
+     * @param secondaryLock                  a less important lock maybe used for frequently by notification purpose with is locked in advance.
      * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
-     * @param holder the instance holding the locks.
+     * @param holder                         the instance holding the locks.
      */
     public BundledReentrantReadWriteLock(final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
         this(new ReentrantReadWriteLock(), secondaryLock, autoLockReleaseOnLongtermBlock, holder);
@@ -73,11 +73,11 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     /**
      * Constructor creates a new bundled lock.
-     * @param primaryLock the more important lock used e.g. for configure or manage an instance.
-     * @param secondaryLock a less important lock maybe used for frequently by notification purpose with is locked in advance.
      *
+     * @param primaryLock                    the more important lock used e.g. for configure or manage an instance.
+     * @param secondaryLock                  a less important lock maybe used for frequently by notification purpose with is locked in advance.
      * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
-     * @param holder the instance holding the locks.
+     * @param holder                         the instance holding the locks.
      */
     public BundledReentrantReadWriteLock(final ReentrantReadWriteLock primaryLock, final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
         this.secondaryLock = secondaryLock;
@@ -94,7 +94,6 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
                 }
                 ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
                 if (autoLockReleaseOnLongtermBlock) {
-
                     unlockRead("TimeoutHandler");
                 }
             }
@@ -116,13 +115,14 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     /**
      * Kind of copy constructor which returns a new clone of the given lock.
-     *
+     * <p>
      * Note: The timed lock limitation is just a procedure to avoid a blocking system in case external components are buggy.
      * But it should never be used as an implementation strategy because it still can result in strange behaviour.
      * Always release the lock afterwards.
      *
-     * @param holder the instance holding the new lock.
-     * @return a new lock instance sharing the same internal locks.
+     * @param lock                           the instance to clone.
+     * @param holder                         the instance holding the new lock.
+     * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
      */
     public BundledReentrantReadWriteLock(final BundledReentrantReadWriteLock lock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
         this(lock.primaryLock, lock.secondaryLock, true, holder);
