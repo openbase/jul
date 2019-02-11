@@ -590,12 +590,11 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     }
 
     /**
-     * This method generates a closable manager lock wrapper including the
-     * internal builder instance. Be informed that the controller and all its services are
+     * This method generates a closable manager lock wrapper.
+     * Be informed that the controller and all its services are
      * directly locked and internal builder operations are queued. Therefore please
-     * call the close method soon as possible to release the builder lock after
-     * you builder modifications, otherwise the overall processing pipeline is
-     * delayed.
+     * call the close method soon as possible to release the lock after
+     * you are done, otherwise the overall processing pipeline is delayed.
      *
      * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
      * This is a recovering feature but should never be used by design!
@@ -611,20 +610,19 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * </pre> In this example the CloseableWriteLockWrapper.close method is be called
      * in background after leaving the try brackets.
      *
-     * @param consumer
+     * @param consumer a responsible instance which consumes the lock.
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer){
-        return new CloseableWriteLockWrapper(manageLock.getTimelimitedClone(consumer));
+        return new CloseableWriteLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
     }
 
     /**
-     * This method generates a closable manager lock wrapper including the
-     * internal builder instance. Be informed that the controller and all its services are
+     * This method generates a closable manager lock wrapper.
+     * Be informed that the controller and all its services are
      * directly locked and internal builder operations are queued. Therefore please
-     * call the close method soon as possible to release the builder lock after
-     * you builder modifications, otherwise the overall processing pipeline is
-     * delayed.
+     * call the close method soon as possible to release the lock after
+     * you are done, otherwise the overall processing pipeline is delayed.
      *
      * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
      * This is a recovering feature but should never be used by design!
@@ -640,11 +638,37 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * </pre> In this example the CloseableWriteLockWrapper.close method is be called
      * in background after leaving the try brackets.
      *
-     * @param consumer
+     * @param consumer a responsible instance which consumes the lock.
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableReadLockWrapper getManageReadLock(final Object consumer){
-        return new CloseableReadLockWrapper(manageLock.getTimelimitedClone(consumer));
+        return new CloseableReadLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
+    }
+
+    /**
+     * This method generates a closable lock provider.
+     * Be informed that the controller and all its services are
+     * directly locked and internal builder operations are queued. Therefore please
+     * release the locks after usage, otherwise the overall processing pipeline is
+     * delayed.
+     *
+     * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
+     * This is a recovering feature but should never be used by design!
+     * @return a provider to access the manage read and write lock.
+     */
+    protected CloseableLockProvider getManageLock() {
+        return new CloseableLockProvider() {
+
+            @Override
+            public CloseableReadLockWrapper getCloseableReadLock(final Object consumer) {
+                return getManageReadLock(consumer);
+            }
+
+            @Override
+            public CloseableWriteLockWrapper getCloseableWriteLock(final Object consumer) {
+                return getManageWriteLock(consumer);
+            }
+        };
     }
 
     /**
