@@ -53,7 +53,7 @@ public class JFXTaskExecutor {
      * @return a future representing the task result.
      * @throws CouldNotPerformException is thrown if the task execution has been failed.
      */
-    private <V> Future<V> executeTask(final Callable<V> callable, final TargetThread targetThread, final Logger logger) throws CouldNotPerformException {
+    private <V> Future<V> executeTask(final Callable<V> callable, final TargetThread targetThread, final Logger logger) {
         try {
             switch (targetThread) {
                 // force execution on gui thread
@@ -85,7 +85,7 @@ public class JFXTaskExecutor {
             Thread.currentThread().interrupt();
             return FutureProcessor.canceledFuture(ex);
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not perform task!", ex);
+            return FutureProcessor.canceledFuture(ex);
         }
     }
 }

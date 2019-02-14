@@ -67,10 +67,11 @@ public interface RegistryService {
     /**
      * Test if all internal registries managed by this service are consistent.
      *
+     * Note: If the consistency cannot be tested, true is returned.
      * @throws CouldNotPerformException if the consistency cannot be tested
-     * @return true if all managed registries are consistent and else false
+     * @return true if all managed registries are consistent or not available and else false.
      */
-    Boolean isConsistent() throws CouldNotPerformException;
+    Boolean isConsistent();
 
     /**
      * Method validates if the registry data object.

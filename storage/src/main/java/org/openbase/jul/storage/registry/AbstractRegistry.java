@@ -517,15 +517,16 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      * @param key {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
-     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public boolean contains(final KEY key) throws CouldNotPerformException {
-        if (key == null) {
-            throw new NotAvailableException("key");
+    public boolean contains(final KEY key) {
+        try {
+            verifyID(key);
+        } catch (VerificationFailedException ex) {
+            new FatalImplementationErrorException("Contains check failed because of an invalid key!", this, ex);
+            return false;
         }
-        return entryMap.containsKey(verifyID(key));
+        return entryMap.containsKey(key);
     }
 
     /**

@@ -222,7 +222,7 @@ public class FutureProcessor {
      * @return the future of the error handler.
      * @throws CouldNotPerformException thrown by the errorProcessor
      */
-    public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit, final ExecutorService executorService) throws CouldNotPerformException {
+    public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit, final ExecutorService executorService) {
         return executorService.submit(() -> {
             try {
                 future.get(timeout, timeUnit);
@@ -245,7 +245,7 @@ public class FutureProcessor {
      * @return the future of the error handler.
      * @throws CouldNotPerformException thrown by the errorProcessor
      */
-    public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException {
+    public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) {
         return applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
     }
 
@@ -253,7 +253,7 @@ public class FutureProcessor {
         return allOf(executorService, inputList, (Collection<Future<Void>> input) -> null, taskProcessor);
     }
 
-    public static <I, R> Future<R> allOf(final Collection<I> inputList, final Processable<I, Future<R>> taskProcessor) throws CouldNotPerformException {
+    public static <I, R> Future<R> allOf(final Collection<I> inputList, final Processable<I, Future<R>> taskProcessor) {
         return allOf(getInstance().getExecutorService(), inputList, (Collection<Future<R>> input) -> null, taskProcessor);
     }
 

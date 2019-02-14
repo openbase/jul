@@ -43,6 +43,7 @@ import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.controller.Remote;
 import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
@@ -747,7 +748,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public <R> Future<R> callMethodAsync(final String methodName) throws CouldNotPerformException {
+    public <R> Future<R> callMethodAsync(final String methodName) {
         return callMethodAsync(methodName, null);
     }
 
@@ -870,9 +871,14 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException {
+    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) {
 
-        validateMiddleware();
+        try {
+            validateMiddleware();
+        } catch (InvalidStateException ex) {
+            return FutureProcessor.canceledFuture(ex);
+        }
+
         return GlobalCachedExecutorService.submit(new Callable<R>() {
 
             private Future<R> internalCallFuture;
@@ -973,6 +979,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      */
     @Override
     public CompletableFuture<M> requestData() throws CouldNotPerformException {
+        // todo release: remove CouldNotPerformException because of future return value but make first of all sure all usages are using .get if neede.
         logger.debug(this + " requestData...");
         validateInitialization();
         try {

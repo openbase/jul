@@ -104,7 +104,7 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
     }
 
     @Override
-    public boolean contains(final M entry) throws CouldNotPerformException {
+    public boolean contains(final M entry) {
         KEY key;
         try {
             key = getId(entry);

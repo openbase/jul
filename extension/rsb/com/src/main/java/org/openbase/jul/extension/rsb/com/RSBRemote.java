@@ -184,10 +184,8 @@ public interface RSBRemote<M extends Message> extends Remote<M> {
      * @param methodName the method name.
      *
      * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
-     *
-     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
      */
-    <R> Future<R> callMethodAsync(final String methodName) throws CouldNotPerformException;
+    <R> Future<R> callMethodAsync(final String methodName);
 
     /**
      * Method asynchronously calls the given method on the main controller.
@@ -198,8 +196,6 @@ public interface RSBRemote<M extends Message> extends Remote<M> {
      * @param argument   the method argument.
      *
      * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
-     *
-     * @throws CouldNotPerformException is thrown in case any error occurred during processing.
      */
-    <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) throws CouldNotPerformException;
+    <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument);
 }

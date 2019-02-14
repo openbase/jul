@@ -159,11 +159,14 @@ public class AbstractRemoteClientTest {
         remoteService.init("/test/testReinit");
         remoteService.activate();
 
+        boolean[] check = new boolean[1];
+        check[0] = false;
         GlobalCachedExecutorService.submit(() -> {
             try {
                 remoteService.callMethodAsync("method").get();
-            } catch (CouldNotPerformException | InterruptedException | ExecutionException ex) {
+            } catch (InterruptedException | ExecutionException ex) {
                 // is expected since reinit should kill the method call
+                check[0] = true;
             }
         });
 
@@ -177,6 +180,8 @@ public class AbstractRemoteClientTest {
         } catch (java.util.concurrent.TimeoutException ex) {
             // is expected here since no server is started
         }
+
+        assertTrue("call was not canceled!", check[0]);
 
         remoteService.shutdown();
     }

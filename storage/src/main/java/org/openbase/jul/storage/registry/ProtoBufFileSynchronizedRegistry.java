@@ -30,7 +30,9 @@ import java.io.File;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.IdGenerator;
@@ -163,8 +165,13 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
     }
 
     @Override
-    public boolean contains(final M message) throws CouldNotPerformException {
-        return contains(new IdentifiableMessage<KEY, M, MB>(message).getId());
+    public boolean contains(final M message) {
+        try {
+            return contains(new IdentifiableMessage<KEY, M, MB>(message).getId());
+        } catch (CouldNotPerformException ex) {
+            new FatalImplementationErrorException("Contains check failed because of an invalid message!", this, ex);
+            return false;
+        }
     }
 
     @Override
