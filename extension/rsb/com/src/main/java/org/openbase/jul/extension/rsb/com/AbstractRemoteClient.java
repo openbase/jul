@@ -684,11 +684,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     // if disconnected before the data request is already initiated.
                     if (isActive() && oldConnectionState != DISCONNECTED) {
                         connectionFailure = true;
-                        try {
-                            requestData();
-                        } catch (CouldNotPerformException ex) {
-                            ExceptionPrinter.printHistory(new CouldNotPerformException("Reconnection failed!", ex), logger, LogLevel.WARN);
-                        }
+                        requestData();
                     }
                     break;
                 case CONNECTED:
@@ -744,8 +740,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     /**
      * {@inheritDoc}
-     *
-     * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
     @Override
     public <R> Future<R> callMethodAsync(final String methodName) {
@@ -867,8 +861,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @param argument   {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
-     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) {
@@ -974,15 +966,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
-     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public CompletableFuture<M> requestData() throws CouldNotPerformException {
-        // todo release: remove CouldNotPerformException because of future return value but make first of all sure all usages are using .get if neede.
+    public Future<M> requestData() {
         logger.debug(this + " requestData...");
-        validateInitialization();
         try {
+            validateInitialization();
             synchronized (syncMonitor) {
 
                 // Check if sync is in process.
@@ -1006,7 +995,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 return syncFuture;
             }
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not request data!", ex);
+            return FutureProcessor.canceledFuture(new CouldNotPerformException("Could not request data!", ex));
         }
     }
 

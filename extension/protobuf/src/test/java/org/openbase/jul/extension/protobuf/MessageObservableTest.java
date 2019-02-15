@@ -24,7 +24,7 @@ package org.openbase.jul.extension.protobuf;
 
 import com.google.protobuf.Message;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -39,6 +39,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.type.domotic.state.PowerStateType.PowerState;
 import org.openbase.type.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
@@ -137,8 +138,8 @@ public class MessageObservableTest {
         }
 
         @Override
-        public CompletableFuture<M> getDataFuture() {
-            return CompletableFuture.completedFuture(null);
+        public Future<M> getDataFuture() {
+            return FutureProcessor.completedFuture(null);
         }
 
         @Override

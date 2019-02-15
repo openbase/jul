@@ -27,7 +27,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class ObservableDataProviderAdapter<D> implements DataProvider<D> {
@@ -60,7 +60,7 @@ public class ObservableDataProviderAdapter<D> implements DataProvider<D> {
     }
 
     @Override
-    public CompletableFuture<D> getDataFuture() {
+    public Future<D> getDataFuture() {
         return observable.getValueFuture();
     }
 

@@ -468,9 +468,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return {@inheritDoc}
      */
     @Override
-    public CompletableFuture<M> getDataFuture() {
+    public Future<M> getDataFuture() {
         try {
-            return CompletableFuture.completedFuture(getData());
+            return FutureProcessor.completedFuture(getData());
         } catch (NotAvailableException ex) {
             CompletableFuture future = new CompletableFuture();
             future.completeExceptionally(ex);
@@ -952,7 +952,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 FutureProcessor.canceledFuture(ex);
             }
         }
-        return CompletableFuture.completedFuture(timestamp);
+        return FutureProcessor.completedFuture(timestamp);
     }
 
     /**

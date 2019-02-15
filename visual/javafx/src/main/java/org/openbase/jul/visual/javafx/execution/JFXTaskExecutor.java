@@ -23,7 +23,6 @@ package org.openbase.jul.visual.javafx.execution;
  */
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import javafx.application.Platform;
@@ -59,7 +58,7 @@ public class JFXTaskExecutor {
                 // force execution on gui thread
                 case GUI_THREAD:
                     if (Platform.isFxApplicationThread()) {
-                        return CompletableFuture.completedFuture(callable.call());
+                        return FutureProcessor.completedFuture(callable.call());
                     }
 
                     FutureTask<V> future = new FutureTask(() -> {
@@ -77,7 +76,7 @@ public class JFXTaskExecutor {
                         return GlobalCachedExecutorService.submit(callable);
                     }
 
-                    return CompletableFuture.completedFuture(callable.call());
+                    return FutureProcessor.completedFuture(callable.call());
                 default:
                     throw new EnumNotSupportedException(targetThread, this);
             }

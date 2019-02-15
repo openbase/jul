@@ -269,7 +269,7 @@ public class AbstractControllerServerTest {
 
         remoteService.activate();
 
-        CompletableFuture dataFuture = remoteService.getDataFuture();
+        Future dataFuture = remoteService.getDataFuture();
 
         communicationService.activate();
 

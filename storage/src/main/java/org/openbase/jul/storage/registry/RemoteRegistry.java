@@ -247,7 +247,7 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
     }
 
     @Override
-    public CompletableFuture<Map<KEY, IdentifiableMessage<KEY, M, MB>>> getDataFuture() {
+    public Future<Map<KEY, IdentifiableMessage<KEY, M, MB>>> getDataFuture() {
         return getValueFuture();
     }
 

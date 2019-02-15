@@ -34,6 +34,7 @@ import org.openbase.jul.iface.Lockable;
 import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.iface.provider.PingProvider;
 import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 
 /**
@@ -109,12 +110,12 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * @return a future object delivering the data if available.
      */
     @Override
-    default CompletableFuture<M> getDataFuture() {
+    default Future<M> getDataFuture() {
         try {
             if (!isDataAvailable()) {
                 return requestData();
             }
-            return CompletableFuture.completedFuture(getData());
+            return FutureProcessor.completedFuture(getData());
 
         } catch (CouldNotPerformException ex) {
             CompletableFuture future = new CompletableFuture();
@@ -183,12 +184,9 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      * method with caution because high frequently calls will reduce the network
      * performance! The preferred by to access the data object
      *
-     * @return A CompletableFuture which gives feedback about the successful
-     * synchronization.
-     * @throws CouldNotPerformException In case the sync could not be triggered
-     * an CouldNotPerformException will be thrown.
+     * @return A Future which gives feedback about the successful synchronization.
      */
-    CompletableFuture<M> requestData() throws CouldNotPerformException;
+    Future<M> requestData();
 
     /**
      * Method triggers a ping between this remote and its main controller and

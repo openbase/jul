@@ -23,6 +23,7 @@ package org.openbase.jul.pattern;
  */
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -136,7 +137,7 @@ public class ObservableImpl<S, T> extends AbstractObservable<S, T> {
      * @return {@inheritDoc}
      */
     @Override
-    public CompletableFuture<T> getValueFuture() {
+    public Future<T> getValueFuture() {
         return valueFuture;
     }
 

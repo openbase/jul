@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rsb.com;
  */
 import org.slf4j.LoggerFactory;
 import rsb.config.ParticipantConfig;
+//noinspection deprecation
 import rsb.transport.spread.InPushConnectorFactoryRegistry;
 import rsb.transport.spread.SharedInPushConnectorFactory;
 
@@ -66,6 +67,7 @@ public class RSBSharedConnectionConfig {
         // connectors. In this case the factory tries to share all connections
         // except the converters differ. You can implement other strategies to
         // better match your needs.
+        //noinspection deprecation
         InPushConnectorFactoryRegistry.getInstance().registerFactory(KEY_IN_PUSH_FACTORY, new SharedInPushConnectorFactory());
 
         initFactory = true;

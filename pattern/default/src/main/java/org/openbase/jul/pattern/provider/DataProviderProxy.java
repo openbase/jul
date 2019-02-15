@@ -26,7 +26,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observer;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class DataProviderProxy<D> implements DataProvider<D> {
@@ -53,7 +53,7 @@ public class DataProviderProxy<D> implements DataProvider<D> {
     }
 
     @Override
-    public CompletableFuture<D> getDataFuture() {
+    public Future<D> getDataFuture() {
         return internalDataProvider.getDataFuture();
     }
 

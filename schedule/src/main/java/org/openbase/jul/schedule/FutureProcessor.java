@@ -220,7 +220,6 @@ public class FutureProcessor {
      * @param timeUnit        the unit of the timeout.
      * @param executorService the execution service to apply the handler.
      * @return the future of the error handler.
-     * @throws CouldNotPerformException thrown by the errorProcessor
      */
     public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit, final ExecutorService executorService) {
         return executorService.submit(() -> {
@@ -243,7 +242,6 @@ public class FutureProcessor {
      * @param errorProcessor the processable which handles thrown exceptions
      * @param timeUnit       the unit of the timeout.
      * @return the future of the error handler.
-     * @throws CouldNotPerformException thrown by the errorProcessor
      */
     public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit) {
         return applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
