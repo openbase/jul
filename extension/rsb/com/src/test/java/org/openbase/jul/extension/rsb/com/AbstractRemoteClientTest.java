@@ -262,7 +262,7 @@ public class AbstractRemoteClientTest {
             super(PowerSwitchData.class);
         }
 
-        public Future<TransactionValue> performTransaction() throws CouldNotPerformException {
+        public Future<TransactionValue> performTransaction() {
             return new TransactionSynchronizationFuture<>(RPCHelper.callRemoteMethod(this, TransactionValue.class), this);
         }
     }

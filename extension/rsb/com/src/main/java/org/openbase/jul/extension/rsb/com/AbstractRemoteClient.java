@@ -1005,20 +1005,22 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * reconnection.
      *
      * @return fresh synchronized data object.
-     *
-     * @throws CouldNotPerformException
      */
-    private Future<M> sync() throws CouldNotPerformException {
+    private Future<M> sync() {
         logger.debug("Synchronization of Remote[" + this + "] triggered...");
-        validateInitialization();
         try {
-            SyncTaskCallable syncCallable = new SyncTaskCallable();
+            validateInitialization();
+            try {
+                SyncTaskCallable syncCallable = new SyncTaskCallable();
 
-            final Future<M> currentSyncTask = GlobalCachedExecutorService.submit(syncCallable);
-            syncCallable.setRelatedFuture(currentSyncTask);
-            return currentSyncTask;
-        } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
-            throw new CouldNotPerformException("Could not request the current status.", ex);
+                final Future<M> currentSyncTask = GlobalCachedExecutorService.submit(syncCallable);
+                syncCallable.setRelatedFuture(currentSyncTask);
+                return currentSyncTask;
+            } catch (java.util.concurrent.RejectedExecutionException | NullPointerException ex) {
+                throw new CouldNotPerformException("Could not request the current status.", ex);
+            }
+        } catch (CouldNotPerformException ex) {
+            return FutureProcessor.canceledFuture(ex);
         }
     }
 
@@ -1026,7 +1028,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         return remoteServer;
     }
 
-    protected Future<Event> internalRequestStatus() throws CouldNotPerformException {
+    protected Future<Event> internalRequestStatus() {
         return remoteServer.callAsync(RPC_REQUEST_STATUS);
     }
 
@@ -1731,13 +1733,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                                 continue;
                             }
 
-                            try {
-                                internalFuture = internalRequestStatus();
-                                event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-                            } catch (CouldNotPerformException ex) {
-                                ExceptionPrinter.printHistory("Something went wrong during data request, maybe the connection or activation state has just changed so all checks will be performed again...", ex, logger, LogLevel.WARN);
-                                continue;
-                            }
+                            internalFuture = internalRequestStatus();
+                            event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");

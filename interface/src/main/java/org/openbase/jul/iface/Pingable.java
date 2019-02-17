@@ -35,10 +35,9 @@ public interface Pingable {
      * Method can be used to calculate connection ping.
      * The given timestamp argument is just returned from the local server to calculate the delay on client side.
      *
-     * @param timestemp
-     * @return
-     * @throws org.openbase.jul.exception.CouldNotPerformException
+     * @param timestamp the current time in milliseconds.
+     * @return the timestamp returned by the controller.
      */
     @RPCMethod
-    Future<Long> ping(final Long timestemp) throws CouldNotPerformException;
+    Future<Long> ping(final Long timestamp);
 }
