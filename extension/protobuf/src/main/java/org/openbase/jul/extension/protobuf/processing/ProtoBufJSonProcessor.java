@@ -50,11 +50,11 @@ public class ProtoBufJSonProcessor {
     }
 
     /**
-     * Serialize a serviceAttribute which can be a proto message, enumeration or
+     * Serialize a serviceState which can be a proto message, enumeration or
      * a java primitive to string. If its a primitive toString is called while
      * messages or enumerations will be serialized into JSon
      *
-     * @param serviceAttribute
+     * @param serviceState
      *
      * @return
      *
@@ -63,11 +63,11 @@ public class ProtoBufJSonProcessor {
      *                                                          <p>
      *                                                          TODO: release: change parameter type to message since java primitives cannot be de-/serialized anymore anyway
      */
-    public String   serialize(final Object serviceAttribute) throws InvalidStateException, CouldNotPerformException {
+    public String   serialize(final Object serviceState) throws InvalidStateException, CouldNotPerformException {
         String jsonStringRep;
-        if (serviceAttribute instanceof Message) {
+        if (serviceState instanceof Message) {
             try {
-                jsonStringRep = jsonFormat.printToString((Message) serviceAttribute);
+                jsonStringRep = jsonFormat.printToString((Message) serviceState);
             } catch (Exception ex) {
                 throw new CouldNotPerformException("Could not serialize service argument to string!", ex);
             }
@@ -79,38 +79,38 @@ public class ProtoBufJSonProcessor {
     }
 
     /**
-     * Get the string representation for a given serviceAttribute which can be a
+     * Get the string representation for a given serviceState which can be a
      * proto message, enumeration or a java primitive.
      *
-     * @param serviceAttribute the serviceAttribute
+     * @param serviceState the serviceState
      *
-     * @return a string representation of the serviceAttribute type
+     * @return a string representation of the serviceState type
      *
      * @throws CouldNotPerformException
      */
-    public String getServiceAttributeType(final Object serviceAttribute) throws CouldNotPerformException {
-        if (serviceAttribute.getClass().getName().startsWith("org.openbase.type")) {
-            return serviceAttribute.getClass().getName();
+    public String getServiceStateClassName(final Object serviceState) throws CouldNotPerformException {
+        if (serviceState.getClass().getName().startsWith("org.openbase.type")) {
+            return serviceState.getClass().getName();
         }
 
-        if (serviceAttribute.getClass().isEnum()) {
-            logger.info(serviceAttribute.getClass().getName());
-            return serviceAttribute.getClass().getName();
+        if (serviceState.getClass().isEnum()) {
+            logger.info(serviceState.getClass().getName());
+            return serviceState.getClass().getName();
         }
 
-        logger.debug("Simple class name of attribute to upper case [" + serviceAttribute.getClass().getSimpleName().toUpperCase() + "]");
+        logger.debug("Simple class name of attribute to upper case [" + serviceState.getClass().getSimpleName().toUpperCase() + "]");
         JavaTypeToProto javaToProto;
         try {
-            javaToProto = JavaTypeToProto.valueOf(serviceAttribute.getClass().getSimpleName().toUpperCase());
+            javaToProto = JavaTypeToProto.valueOf(serviceState.getClass().getSimpleName().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new CouldNotPerformException("ServiceAttribute is not a supported java primitive nor a supported rst type", ex);
+            throw new CouldNotPerformException("ServiceState is not a supported java primitive nor a supported rst type", ex);
         }
         logger.debug("According proto type [" + javaToProto.getProtoType().name() + "]");
         return javaToProto.getProtoType().name();
     }
 
-    public <SAT> SAT deserialize(String jsonStringRep, Class<SAT> serviceAttributeTypeClass) throws CouldNotPerformException {
-        return (SAT) deserialize(jsonStringRep, serviceAttributeTypeClass.getSimpleName());
+    public <SAT> SAT deserialize(String jsonStringRep, Class<SAT> serviceStateClass) throws CouldNotPerformException {
+        return (SAT) deserialize(jsonStringRep, serviceStateClass.getSimpleName());
     }
 
     /**
@@ -118,38 +118,38 @@ public class ProtoBufJSonProcessor {
      * name for the value or the type if its a primitive.
      *
      * @param jsonStringRep        the string representation of the rst value
-     * @param serviceAttributeType the class name or the type of the value
+     * @param serviceStateClassName the class name or the type of the value
      *
      * @return the deserialized message
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
-    public Message deserialize(String jsonStringRep, String serviceAttributeType) throws CouldNotPerformException {
+    public Message deserialize(String jsonStringRep, String serviceStateClassName) throws CouldNotPerformException {
         try {
 
-            if (!serviceAttributeType.startsWith("org.openbase.type")) {
-                throw new NotSupportedException(serviceAttributeType, this, "Service arguments must be a protobuf message but detected type is ["+serviceAttributeType+"]!");
+            if (!serviceStateClassName.startsWith("org.openbase.type")) {
+                throw new NotSupportedException(serviceStateClassName, this, "Service arguments must be a protobuf message but detected type is ["+serviceStateClassName+"]!");
             }
 
             try {
-                Class attributeClass = Class.forName(serviceAttributeType);
-                if (attributeClass.isEnum()) {
-                    throw new NotSupportedException(serviceAttributeType, this, "Service attribute type must be a protobuf message!");
+                Class serviceStateClass = Class.forName(serviceStateClassName);
+                if (serviceStateClass.isEnum()) {
+                    throw new NotSupportedException(serviceStateClassName, this, "Service attribute type must be a protobuf message!");
                 }
-                Message.Builder builder = (Message.Builder) attributeClass.getMethod("newBuilder").invoke(null);
+                Message.Builder builder = (Message.Builder) serviceStateClass.getMethod("newBuilder").invoke(null);
                 jsonFormat.merge(new ByteArrayInputStream(jsonStringRep.getBytes(Charset.forName(UTF8))), builder);
                 return builder.build();
             } catch (ClassNotFoundException ex) {
-                throw new CouldNotPerformException("Could not find class for serviceAttributeType [" + serviceAttributeType + "]", ex);
+                throw new CouldNotPerformException("Could not find class for serviceStateClassName [" + serviceStateClassName + "]", ex);
             } catch (IOException ex) {
                 throw new CouldNotPerformException("Could not merge [" + jsonStringRep + "] into builder", ex);
             } catch (NoSuchMethodException | SecurityException ex) {
-                throw new CouldNotPerformException("Could not find or access newBuilder method for rst type [" + serviceAttributeType + "]", ex);
+                throw new CouldNotPerformException("Could not find or access newBuilder method for rst type [" + serviceStateClassName + "]", ex);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                throw new CouldNotPerformException("Could not invoke newBuilder method for rst type [" + serviceAttributeType + "]", ex);
+                throw new CouldNotPerformException("Could not invoke newBuilder method for rst type [" + serviceStateClassName + "]", ex);
             }
         } catch (CouldNotPerformException | NullPointerException ex) {
-            throw new CouldNotPerformException("Could not deserialize json String[" + jsonStringRep + "] into ServiceAttributeType[" + serviceAttributeType + "]!", ex);
+            throw new CouldNotPerformException("Could not deserialize json String[" + jsonStringRep + "] into ServiceStateClassName[" + serviceStateClassName + "]!", ex);
         }
     }
 
