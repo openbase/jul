@@ -10,12 +10,12 @@ package org.openbase.jul.pattern;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -27,10 +27,10 @@ import org.openbase.jul.exception.FatalImplementationErrorException;
 import java.util.concurrent.*;
 
 /**
- * This is a lite version of the jdk8 CompletableFuture implementation. It was implemented to be used on android 6 with do not supporte the default implementation.
- * However, this base implementation only enables to complete and to cancel the future.
+ * This is a lite version of the jdk8 CompletableFuture implementation. It was implemented to be used on android 6 which does not support the default implementation.
+ * However, this lite implementation only enables to complete and to cancel the future.
  *
- * @param <V>
+ * @param <V> the type of result value.
  */
 public class CompletableFutureLite<V> implements Future<V> {
 
@@ -52,7 +52,7 @@ public class CompletableFutureLite<V> implements Future<V> {
     private Throwable throwable = null;
 
     /**
-     * This method enables to complete the future with the given {@value}.
+     * This method enables to complete the future with the given {@code value}.
      * It will be nothing changed if the future was already completed or canceled in advance.
      *
      * @param value the value used to complete the future.
@@ -71,7 +71,7 @@ public class CompletableFutureLite<V> implements Future<V> {
     }
 
     /**
-     * This method enables to exceptionally complete the future with the given {@throwable}.
+     * This method enables to exceptionally complete the future with the given {@code throwable}.
      * It will be nothing changed if the future was already completed or canceled in advance.
      *
      * @param throwable the throwable used to exceptionally complete the future.
@@ -132,7 +132,7 @@ public class CompletableFutureLite<V> implements Future<V> {
     /**
      * Method returns if the task has failed.
      *
-     * @retur {@code true} if exceptionally completed, otherwise {@code false}.
+     * @return {@code true} if exceptionally completed, otherwise {@code false}.
      */
     public boolean isFailed() {
         return throwable != null && !isCancelled();
