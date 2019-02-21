@@ -21,10 +21,10 @@ package org.openbase.jul.pattern.controller;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.openbase.jul.pattern.CompletableFutureLite;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -118,7 +118,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
             return FutureProcessor.completedFuture(getData());
 
         } catch (CouldNotPerformException ex) {
-            CompletableFuture future = new CompletableFuture();
+            CompletableFutureLite future = new CompletableFutureLite();
             future.completeExceptionally(ex);
             return future;
         }

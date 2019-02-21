@@ -22,7 +22,6 @@ package org.openbase.jul.pattern;
  * #L%
  */
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -48,14 +47,14 @@ public class ObservableImpl<S, T> extends AbstractObservable<S, T> {
     };
 
     private T value;
-    private CompletableFuture<T> valueFuture;
+    private CompletableFutureLite<T> valueFuture;
 
     /**
      * {@inheritDoc}
      */
     public ObservableImpl() {
         super();
-        this.valueFuture = new CompletableFuture<>();
+        this.valueFuture = new CompletableFutureLite<>();
     }
 
     /**
@@ -65,7 +64,7 @@ public class ObservableImpl<S, T> extends AbstractObservable<S, T> {
      */
     public ObservableImpl(final S source) {
         super(source);
-        this.valueFuture = new CompletableFuture<>();
+        this.valueFuture = new CompletableFutureLite<>();
     }
 
     /**
@@ -75,7 +74,7 @@ public class ObservableImpl<S, T> extends AbstractObservable<S, T> {
      */
     public ObservableImpl(final boolean unchangedValueFilter) {
         super(unchangedValueFilter);
-        this.valueFuture = new CompletableFuture<>();
+        this.valueFuture = new CompletableFutureLite<>();
     }
 
     /**
@@ -86,7 +85,7 @@ public class ObservableImpl<S, T> extends AbstractObservable<S, T> {
      */
     public ObservableImpl(final boolean unchangedValueFilter, final S source) {
         super(unchangedValueFilter, source);
-        this.valueFuture = new CompletableFuture<>();
+        this.valueFuture = new CompletableFutureLite<>();
     }
 
     /**

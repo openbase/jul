@@ -38,6 +38,7 @@ import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
+import org.openbase.jul.pattern.CompletableFutureLite;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -104,7 +105,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private ConnectionState.State connectionState;
     private long connectionPing;
     private long lastPingReceived;
-    private CompletableFuture<M> syncFuture;
+    private CompletableFutureLite<M> syncFuture;
     private Future<M> syncTask;
     private M data;
     private boolean initialized;
@@ -990,7 +991,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 }
 
                 // Create new sync process
-                syncFuture = new CompletableFuture();
+                syncFuture = new CompletableFutureLite();
                 syncTask = sync();
                 return syncFuture;
             }
@@ -1435,7 +1436,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      */
     private void applyDataUpdate(final M data) {
         this.data = data;
-        CompletableFuture<M> currentSyncFuture = null;
+        CompletableFutureLite<M> currentSyncFuture = null;
         Future<M> currentSyncTask = null;
 
         // Check if sync is in process.
@@ -1582,7 +1583,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     }
 
     private void skipSyncTasks() {
-        CompletableFuture<M> currentSyncFuture = null;
+        CompletableFutureLite<M> currentSyncFuture = null;
         Future<M> currentSyncTask = null;
 
         // Check if sync is in process.
