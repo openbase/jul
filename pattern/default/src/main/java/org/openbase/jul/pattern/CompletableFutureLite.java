@@ -200,7 +200,7 @@ public class CompletableFutureLite<V> implements Future<V> {
             if (throwable != null) {
                 throw new ExecutionException(throwable);
             }
-            throw new ExecutionException(new TimeoutException());
+            throw new TimeoutException();
         }
     }
 }
