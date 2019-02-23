@@ -53,13 +53,13 @@ public class WatchDog implements Activatable, Shutdownable {
 
     public enum ServiceState {
 
-        UNKNWON, CONSTRUCTED, INITIALIZING, RUNNING, TERMINATING, FINISHED, FAILED, INTERRUPTED
+        UNKNOWN, CONSTRUCTED, INITIALIZING, RUNNING, TERMINATING, FINISHED, FAILED, INTERRUPTED
     }
 
     private final Activatable service;
     private final String serviceName;
     private Minder minder;
-    private ServiceState serviceState = ServiceState.UNKNWON;
+    private ServiceState serviceState = ServiceState.UNKNOWN;
 
     private final ObservableImpl<WatchDog, ServiceState> serviceStateObservable;
 

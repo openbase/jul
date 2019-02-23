@@ -926,6 +926,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     public void waitForMiddleware(final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
         validateActivation();
+        // todo split timeout.
         informerWatchDog.waitForServiceActivation(timeout, timeUnit);
         serverWatchDog.waitForServiceActivation(timeout, timeUnit);
     }
