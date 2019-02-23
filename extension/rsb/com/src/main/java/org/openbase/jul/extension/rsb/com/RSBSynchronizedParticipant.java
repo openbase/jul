@@ -149,13 +149,11 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             synchronized (participantLock) {
 
                 // ignore request if participant is already active.
-                if (isActive()) {
+                if (participant != null) {
                     return;
                 }
 
-                if (participant == null) {
-                    participant = init();
-                }
+                participant = init();
                 logger.debug("Participant[" + this + "] will be activated.");
                 if (getParticipant().isActive()) {
                     logger.warn("Skip activation because Participant[" + this + "] is already active!");
@@ -190,7 +188,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
             synchronized (participantLock) {
 
                 // ignore request if participant is already or still inactive.
-                if (!isActive()) {
+                if (participant == null) {
                     return;
                 }
 
@@ -244,9 +242,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
 
     @Override
     public boolean isActive() {
-        synchronized (participantLock) {
-            return participant != null;
-        }
+        return participant != null && participant.isActive();
     }
 
     @Override
