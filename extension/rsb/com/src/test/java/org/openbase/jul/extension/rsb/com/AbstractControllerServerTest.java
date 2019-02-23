@@ -437,8 +437,8 @@ public class AbstractControllerServerTest {
             try {
                 future.get(15, TimeUnit.SECONDS);
             } catch (TimeoutException ex) {
-                Assert.fail("Reint took too long! Please analyse deadlock in stacktrace...");
                 StackTracePrinter.printStackTrace(AbstractControllerServerTest.class);
+                Assert.fail("Reint took too long! Please analyse deadlock in stacktrace...");
             }
         }
 
@@ -446,7 +446,7 @@ public class AbstractControllerServerTest {
         try {
             remoteService.ping().get(500, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
-            Assert.fail("Even though wait for data returned the pinging immediatly afterwards failed");
+            Assert.fail("Even though wait for data returned the pinging immediately afterwards failed");
         }
         communicationService.deactivate();
         remoteService.deactivate();
@@ -468,7 +468,7 @@ public class AbstractControllerServerTest {
         }
 
         @Override
-        public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
+        public void registerMethods(RSBLocalServer server) {
         }
     }
 
@@ -480,58 +480,6 @@ public class AbstractControllerServerTest {
 
         public AbstractRemoteClientImpl() {
             super(UnitRegistryData.class);
-        }
-    }
-
-    public class NotificationCallable implements Callable<Void> {
-
-        private final AbstractControllerServer communicationService;
-        private final Object watchDogUpdateLock = new Object();
-
-        public NotificationCallable(AbstractControllerServer communicationService) {
-            this.communicationService = communicationService;
-            this.communicationService.informerWatchDog.addObserver((WatchDog source, WatchDog.ServiceState data) -> {
-                synchronized (watchDogUpdateLock) {
-                    if (data == WatchDog.ServiceState.RUNNING) {
-                        watchDogUpdateLock.notifyAll();
-                    }
-                }
-            });
-            this.communicationService.serverWatchDog.addObserver((WatchDog source, WatchDog.ServiceState data) -> {
-                synchronized (watchDogUpdateLock) {
-                    if (data == WatchDog.ServiceState.RUNNING) {
-                        watchDogUpdateLock.notifyAll();
-                    }
-                }
-            });
-        }
-
-        @Override
-        public Void call() throws Exception {
-            communicationService.activate();
-            while (!stateReached()) {
-                // todo release: what's that for? Was it just a hack?
-                communicationService.deactivate();
-                communicationService.activate();
-            }
-            return null;
-        }
-
-        private boolean stateReached() throws InterruptedException, CouldNotPerformException {
-            synchronized (watchDogUpdateLock) {
-                while (true) {
-                    watchDogUpdateLock.wait();
-                    if (communicationService.informer.isActive() && communicationService.server.isActive()) {
-                        communicationService.notifyChange();
-                        return true;
-                    } else if (communicationService.server.isActive()) {
-                        // todo release: why returning false in this case to initiate a deactivation?
-                        //  Is this not more than less random which one get started first?
-                        //  why not checking communicationService.isActive instead.
-                        return false;
-                    }
-                }
-            }
         }
     }
 }
