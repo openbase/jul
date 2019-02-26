@@ -221,7 +221,7 @@ public class FutureProcessor {
      * @param executorService the execution service to apply the handler.
      * @return the future of the error handler.
      */
-    public static Future applyErrorHandling(final Future future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit, final ExecutorService executorService) {
+    public static Future applyErrorHandling(final Future<?> future, final Processable<Exception, Void> errorProcessor, final long timeout, final TimeUnit timeUnit, final ExecutorService executorService) {
         return executorService.submit(() -> {
             try {
                 future.get(timeout, timeUnit);
@@ -259,16 +259,16 @@ public class FutureProcessor {
         return allOf(getInstance().getExecutorService(), inputList, resultProcessor, taskProcessor);
     }
 
-    public static Future<Void> allOf(final Future... futures) {
+    public static Future<Void> allOf(final Future<?>... futures) {
         return allOf(Arrays.asList(futures));
     }
 
-    public static <R> Future<R> allOf(final Callable resultCallable, final Future... futures) {
+    public static <R> Future<R> allOf(final Callable resultCallable, final Future<?>... futures) {
         return allOf(getInstance().getExecutorService(), resultCallable, Arrays.asList(futures));
     }
 
-    public static <R> Future<R> allOfInclusiveResultFuture(final Future<R> resultFuture, final Future... futures) {
-        final List<Future> futureList = new ArrayList<>(Arrays.asList(futures));
+    public static <R> Future<R> allOfInclusiveResultFuture(final Future<R> resultFuture, final Future<?>... futures) {
+        final List<Future<?>> futureList = new ArrayList<>(Arrays.asList(futures));
 
         // Add result future to future list to make sure that the result is available if requested.
         futureList.add(resultFuture);
@@ -276,15 +276,15 @@ public class FutureProcessor {
         return allOf(getInstance().getExecutorService(), () -> resultFuture.get(), futureList);
     }
 
-    public static <R> Future<R> allOf(final Collection<Future> futureCollection) {
+    public static <R> Future<R> allOf(final Collection<? extends Future<?>> futureCollection) {
         return allOf(getInstance().getExecutorService(), () -> null, futureCollection);
     }
 
-    public static <R> Future<R> allOf(final R returnValue, final Collection<Future> futureCollection) {
+    public static <R> Future<R> allOf(final R returnValue, final Collection<? extends Future<?>> futureCollection) {
         return allOf(getInstance().getExecutorService(), returnValue, futureCollection);
     }
 
-    public static <R> Future<R> allOf(final ExecutorService executorService, R returnValue, final Collection<Future> futureCollection) {
+    public static <R> Future<R> allOf(final ExecutorService executorService, R returnValue, final Collection<? extends Future<?>> futureCollection) {
         return allOf(executorService, () -> returnValue, futureCollection);
     }
 
@@ -313,7 +313,7 @@ public class FutureProcessor {
      * @param futureCollection the inner future collection.
      * @return the outer future.
      */
-    public static <R> Future<R> allOf(final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+    public static <R> Future<R> allOf(final Callable<R> resultCallable, final Collection<? extends Future<?>> futureCollection) {
         return allOf(getInstance().getExecutorService(), resultCallable, futureCollection);
     }
 
@@ -326,7 +326,7 @@ public class FutureProcessor {
      * @param futureCollection the inner future collection.
      * @return the outer future.
      */
-    public static <R> Future<R> allOf(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection) {
+    public static <R> Future<R> allOf(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<? extends Future<?>> futureCollection) {
         // todo: can be optimized by providing a new future implementation which aggregates the futureCollection. This would reduce one thread usage of each call.
         return executorService.submit(new Callable<R>() {
             @Override
@@ -389,14 +389,14 @@ public class FutureProcessor {
         });
     }
 
-    private static void internalAllOf(final Collection<? extends Future> futureCollection, final Object source) throws CouldNotPerformException, InterruptedException {
+    private static void internalAllOf(final Collection<? extends Future<?>> futureCollection, final Object source) throws CouldNotPerformException, InterruptedException {
         MultiException.ExceptionStack exceptionStack = null;
         try {
             if (JPService.debugMode()) {
                 int iteration = 0;
-                Set<Future> runningFutures = new HashSet<>(futureCollection);
-                Set<Future> finishedFutures = new HashSet<>();
-                Set<Future> failedFutures = new HashSet<>();
+                Set<Future<?>> runningFutures = new HashSet<>(futureCollection);
+                Set<Future<?>> finishedFutures = new HashSet<>();
+                Set<Future<?>> failedFutures = new HashSet<>();
                 while (runningFutures.size() != 0 && !Thread.currentThread().isInterrupted()) {
                     for (final Future future : new HashSet<>(runningFutures)) {
                         try {
@@ -421,7 +421,7 @@ public class FutureProcessor {
                     iteration++;
                 }
             } else {
-                for (final Future future : futureCollection) {
+                for (final Future<?> future : futureCollection) {
                     try {
                         future.get();
                     } catch (ExecutionException | CancellationException ex) {
@@ -441,11 +441,11 @@ public class FutureProcessor {
         MultiException.checkAndThrow(() ->"Could not execute all tasks!", exceptionStack);
     }
 
-    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future<?>> futureCollection, final long timeout, final TimeUnit timeUnit) {
         return atLeastOne(() -> returnValue, futureCollection, timeout, timeUnit);
     }
 
-    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable, final Collection<Future<?>> futureCollection, final long timeout, final TimeUnit timeUnit) {
         return atLeastOne(getInstance().getExecutorService(), resultCallable, futureCollection, timeout, timeUnit);
     }
 
@@ -461,7 +461,7 @@ public class FutureProcessor {
      * @param timeUnit
      * @return the outer future.
      */
-    public static <R> Future<R> atLeastOne(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future> futureCollection, final long timeout, final TimeUnit timeUnit) {
+    public static <R> Future<R> atLeastOne(final ExecutorService executorService, final Callable<R> resultCallable, final Collection<Future<?>> futureCollection, final long timeout, final TimeUnit timeUnit) {
         return executorService.submit(new Callable<R>() {
             @Override
             public R call() throws Exception {
