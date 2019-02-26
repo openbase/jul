@@ -30,6 +30,7 @@ import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -375,13 +376,11 @@ public class AbstractControllerServerTest {
         remoteService.init(scope);
         remoteService.activate();
 
-        // Todo release: what is this for?
-        //GlobalCachedExecutorService.submit(new NotificationCallable(communicationService));
-        // and is the following reimplementation missing something?
         GlobalCachedExecutorService.submit( () -> {
             try {
+                // make sure the remote is ready to wait for data
+                Thread.sleep(10);
                 communicationService.activate();
-                communicationService.waitForAvailabilityState(ONLINE);
                 // notification should be send automatically.
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, ex), System.err);
@@ -392,11 +391,13 @@ public class AbstractControllerServerTest {
         try {
             remoteService.ping().get(500, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
-            Assert.fail("Even though wait for data returned the pinging immediatly afterwards failed");
+
+            StackTracePrinter.printAllStackTraces(LoggerFactory.getLogger(getClass()), LogLevel.WARN);
+            Assert.fail("Even though wait for data returned the pinging immediatly afterwards took to long. Please check stacktrace for deadlocks...");
         }
 
-        communicationService.deactivate();
         remoteService.deactivate();
+        communicationService.deactivate();
     }
 
     /**
