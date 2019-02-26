@@ -53,6 +53,16 @@ public class RSBResolvedException extends CouldNotPerformException {
     }
 
     /**
+     * Default constructor only used
+     * @param message      an error description.
+     * @param cause the cause.
+     */
+    public RSBResolvedException(final String message, final Throwable cause) {
+        super(message, cause);
+        this.rsbException = null;
+    }
+
+    /**
      * Constructor creates a new RSBResolvedException which is than representing the given {@code rsbException} while the message is reconstructed as exception cause chain.
      *
      * @param rsbException the RSBException to resolve.
