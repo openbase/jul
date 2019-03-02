@@ -2,10 +2,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.openbase</groupId>
-    <artifactId>jul.processing.module</artifactId>
+    <artifactId>jul.communication.module</artifactId>
     <packaging>pom</packaging>
 
-    <name>JUL Processing</name>
+    <name>JUL Communication</name>
     
     <parent>
         <groupId>org.openbase</groupId>
@@ -30,13 +30,13 @@
 
     <modules>
         <module>default</module>
-        <module>xml</module>
+        <module>tcp</module>
     </modules>
     
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.exception</artifactId>
+            <artifactId>jul.extention.type</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

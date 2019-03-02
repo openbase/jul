@@ -185,8 +185,9 @@
         <module>exception</module>
         <module>visual</module>
         <module>processing</module>
-        <module>interface</module>
         <module>storage</module>
+        <module>interface</module>
+        <module>communication</module>
         <module>audio</module>
         <module>extension</module>
     </modules>

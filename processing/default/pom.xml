@@ -2,16 +2,16 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.openbase</groupId>
-    <artifactId>jul.extension.tcp</artifactId>
+    <artifactId>jul.processing</artifactId>
     <packaging>jar</packaging>
 
-    <name>JUL Extension TCP</name>
+    <name>JUL Processing Default</name>
     
     <parent>
         <groupId>org.openbase</groupId>
-        <artifactId>jul.extension</artifactId>
+        <artifactId>jul.processing.module</artifactId>
         <version>2.0-SNAPSHOT</version>
-    </parent>
+    </parent>    
     
     <url>https://github.com/openbase/jul/wiki</url>
     <build>
@@ -30,20 +30,19 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.xml</artifactId>
-            <version>${project.version}</version>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.5</version>
         </dependency>
         <dependency>
-            <groupId>org.openbase</groupId>
-            <artifactId>jul.schedule</artifactId>
-            <version>${project.version}</version>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.6</version>
-            <type>jar</type>
+            <groupId>java3d</groupId>
+            <artifactId>vecmath</artifactId>
+            <version>1.3.1</version>
         </dependency>
     </dependencies>
 </project>
