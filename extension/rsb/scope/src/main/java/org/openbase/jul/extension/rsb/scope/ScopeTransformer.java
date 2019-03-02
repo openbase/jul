@@ -25,7 +25,7 @@ package org.openbase.jul.extension.rsb.scope;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.jul.exception.NotAvailableException;
 import rsb.Scope;
-import org.openbase.type.com.ScopeType;
+import org.openbase.type.communication.ScopeType;
 
 /**
  *

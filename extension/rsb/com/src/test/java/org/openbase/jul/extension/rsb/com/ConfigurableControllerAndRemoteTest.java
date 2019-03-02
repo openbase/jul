@@ -35,7 +35,7 @@ import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData;
-import org.openbase.type.com.ScopeType.Scope;
+import org.openbase.type.communication.ScopeType.Scope;
 
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
 import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;

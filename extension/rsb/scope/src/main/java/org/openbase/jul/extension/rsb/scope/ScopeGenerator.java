@@ -31,7 +31,7 @@ import rsb.Scope;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.openbase.type.domotic.unit.agent.AgentClassType.AgentClass;
 import org.openbase.type.domotic.unit.app.AppClassType.AppClass;
-import org.openbase.type.com.ScopeType;
+import org.openbase.type.communication.ScopeType;
 
 import java.util.Collection;
 import java.util.Locale;

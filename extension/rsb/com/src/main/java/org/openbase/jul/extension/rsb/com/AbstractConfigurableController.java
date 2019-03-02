@@ -33,7 +33,7 @@ import org.openbase.jul.pattern.controller.ConfigurableController;
 import org.openbase.jul.schedule.CloseableReadLockWrapper;
 import org.openbase.jul.schedule.CloseableWriteLockWrapper;
 import org.openbase.jul.schedule.SyncObject;
-import org.openbase.type.com.ScopeType.Scope;
+import org.openbase.type.communication.ScopeType.Scope;
 
 import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 

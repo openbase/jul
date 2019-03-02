@@ -49,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.config.ParticipantConfig;
-import org.openbase.type.com.ScopeType.Scope;
+import org.openbase.type.communication.ScopeType.Scope;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;

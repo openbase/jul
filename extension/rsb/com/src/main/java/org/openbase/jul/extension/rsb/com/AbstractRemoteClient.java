@@ -48,7 +48,7 @@ import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
-import org.openbase.type.com.ScopeType.Scope;
+import org.openbase.type.communication.ScopeType.Scope;
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
