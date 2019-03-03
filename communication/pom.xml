@@ -34,10 +34,10 @@
     </modules>
     
     <dependencies>
-        <dependency>
+        <!--dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extention.type</artifactId>
+            <artifactId>jul.extention.type....</artifactId>
             <version>${project.version}</version>
-        </dependency>
+        </dependency-->
     </dependencies>
 </project>

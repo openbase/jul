@@ -1,8 +1,8 @@
-package org.openbase.jul.processing;
+package org.openbase.jul.processing.xml.exception;
 
 /*
  * #%L
- * JUL Processing Default
+ * JUL Processing XML
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -22,13 +22,19 @@ package org.openbase.jul.processing;
  * #L%
  */
 
-import org.openbase.jul.exception.CouldNotPerformException;
-import java.io.File;
+import nu.xom.Element;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface FileProcessor<A> extends Processor<A, File> {
-    A deserialize(File file) throws CouldNotPerformException;
+public class MissingAttributeException extends XMLParsingException {
+
+	public MissingAttributeException(final String attributeName, final Element sourceElement, final Exception cause) {
+		super("Missing Attribute["+attributeName+"] for Element["+sourceElement.getQualifiedName()+"].", cause);
+	}
+
+	public MissingAttributeException(final String attributeName, final Element sourceElement) {
+		super("Missing Attribute["+attributeName+"] for Element["+sourceElement.getQualifiedName()+"].");
+	}
 }

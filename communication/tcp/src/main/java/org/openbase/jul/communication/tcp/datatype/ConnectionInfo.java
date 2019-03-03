@@ -1,8 +1,8 @@
-package org.openbase.jul.processing;
+package org.openbase.jul.communication.tcp.datatype;
 
-/*
+/*-
  * #%L
- * JUL Processing Default
+ * JUL Extension TCP
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -21,14 +21,44 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.exception.CouldNotPerformException;
-import java.io.File;
+import java.io.Serializable;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface FileProcessor<A> extends Processor<A, File> {
-    A deserialize(File file) throws CouldNotPerformException;
+public final class ConnectionInfo implements Serializable {
+
+    private final int sourceID;
+    private final int targetID;
+
+    /**
+     *
+     * @param sourceID
+     * @param targetID
+     */
+    public ConnectionInfo(int sourceID, int targetID) {
+        this.sourceID = sourceID;
+        this.targetID = targetID;
+    }
+
+    /**
+     * JSON Constructor
+     */
+    private ConnectionInfo() {
+        this.sourceID = -1;
+        this.targetID = -1;
+    }
+
+    public int getSourceID() {
+        return sourceID;
+    }
+
+    public int getTargetID() {
+        return targetID;
+    }
+
+    @Override
+    public String toString() {
+        return "ConnectionInfo[SourceID:" + sourceID + " | TargetID:" + targetID + "]";
+    }
 }

@@ -2,7 +2,7 @@ package org.openbase.jul.processing;
 
 /*
  * #%L
- * JUL Processing
+ * JUL Processing Default
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%

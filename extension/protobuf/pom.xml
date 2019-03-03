@@ -47,7 +47,7 @@
         <dependency>
             <!-- processing package -->
             <groupId>org.openbase</groupId>
-            <artifactId>jul.processing</artifactId>
+            <artifactId>jul.processing.json</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

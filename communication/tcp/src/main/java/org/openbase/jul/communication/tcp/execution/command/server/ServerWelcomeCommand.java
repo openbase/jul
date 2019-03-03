@@ -1,8 +1,8 @@
-package org.openbase.jul.processing;
+package org.openbase.jul.communication.tcp.execution.command.server;
 
-/*
+/*-
  * #%L
- * JUL Processing Default
+ * JUL Extension TCP
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -21,14 +21,14 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.jul.exception.CouldNotPerformException;
-import java.io.File;
+import org.openbase.jul.communication.tcp.execution.command.AbstractCommand;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface FileProcessor<A> extends Processor<A, File> {
-    A deserialize(File file) throws CouldNotPerformException;
+public class ServerWelcomeCommand extends AbstractCommand {
+
+    public ServerWelcomeCommand() {
+        super(AbstractCommand.DELETE_BY_TRANSMIT_FAIL);
+    }
 }

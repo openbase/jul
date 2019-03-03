@@ -1,8 +1,8 @@
-package org.openbase.jul.processing;
+package org.openbase.jul.processing.xml.exception;
 
 /*
  * #%L
- * JUL Processing Default
+ * JUL Processing XML
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
@@ -22,13 +22,20 @@ package org.openbase.jul.processing;
  * #L%
  */
 
-import org.openbase.jul.exception.CouldNotPerformException;
-import java.io.File;
+import nu.xom.Node;
+import nu.xom.Nodes;
 
 /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public interface FileProcessor<A> extends Processor<A, File> {
-    A deserialize(File file) throws CouldNotPerformException;
+public class NotOneNodeException extends XMLParsingException {
+    
+	public NotOneNodeException(final String nodeName, final Nodes nodes, final Node parent, final Exception cause) {
+		super("Found "+nodes.size()+" instead of one Node["+nodeName+"] in Element["+parent.getBaseURI()+"].", parent.getBaseURI(), cause);
+	}
+
+	public NotOneNodeException(final String nodeName, final Nodes nodes, final Node parent) {
+		super("Found "+nodes.size()+" instead of one Node["+nodeName+"] in Element["+parent.getBaseURI()+"].");
+	}
 }
