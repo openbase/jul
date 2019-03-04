@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*
  * #%L
@@ -28,6 +28,7 @@ import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.extension.rsb.com.RSBRemote;
 import org.openbase.jul.extension.rsb.com.jp.JPRSBLegacyMode;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;

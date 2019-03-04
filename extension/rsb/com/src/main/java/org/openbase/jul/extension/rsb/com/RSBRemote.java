@@ -55,27 +55,6 @@ public interface RSBRemote<M extends Message> extends Remote<M> {
     /**
      * Initialize the remote on the given scope.
      *
-     * @param scope the scope where the remote communicates
-     *
-     * @throws InitializationException if the initialization fails
-     * @throws InterruptedException    if the initialization is interrupted
-     */
-    void init(final Scope scope) throws InitializationException, InterruptedException;
-
-    /**
-     * Initialize the remote on the given scope.
-     *
-     * @param scope             the scope where the remote communicates
-     * @param participantConfig the rsb participant config which should be used for the connection.
-     *
-     * @throws InitializationException if the initialization fails
-     * @throws InterruptedException    if the initialization is interrupted
-     */
-    void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException;
-
-    /**
-     * Initialize the remote on the given scope.
-     *
      * @param scope             the scope where the remote communicates
      * @param participantConfig the rsb participant config which should be used for the connection.
      *

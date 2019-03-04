@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.scope;
+package org.openbase.jul.extension.type.processing;
 
 /*
  * #%L
@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import rsb.Scope;
 import org.openbase.type.communication.ScopeType;
 
@@ -39,12 +40,12 @@ import org.openbase.type.communication.ScopeType;
  *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
-public class ScopeGeneratorTest {
+public class ScopeProcessorTest {
 
     private final List<String> components;
     private final String scopeStringRep;
 
-    public ScopeGeneratorTest() {
+    public ScopeProcessorTest() {
         this.components = new ArrayList<String>();
         this.components.add("home");
         this.components.add("kitchen");
@@ -70,36 +71,25 @@ public class ScopeGeneratorTest {
     }
 
     /**
-     * Test of generateStringRep method, of class ScopeGenerator.
-     */
-    @Test(timeout = 5000)
-    public void testGenerateStringRep_Scope() throws CouldNotPerformException {
-        System.out.println("generateStringRep");
-        Scope scope = new Scope(scopeStringRep);
-        String result = ScopeGenerator.generateStringRep(scope);
-        assertEquals(scopeStringRep, result);
-    }
-
-    /**
-     * Test of generateStringRep method, of class ScopeGenerator.
+     * Test of generateStringRep method, of class ScopeProcessor.
      */
     @Test(timeout = 5000)
     public void testGenerateStringRep_ScopeTypeScope() throws CouldNotPerformException {
         System.out.println("generateStringRep");
         ScopeType.Scope scope = ScopeType.Scope.newBuilder().addAllComponent(components).build();
         String expResult = scopeStringRep;
-        String result = ScopeGenerator.generateStringRep(scope);
+        String result = ScopeProcessor.generateStringRep(scope);
         assertEquals(expResult, result);
     }
 
     /**
-     * Test of generateStringRep method, of class ScopeGenerator.
+     * Test of generateStringRep method, of class ScopeProcessor.
      */
     @Test(timeout = 5000)
     public void testGenerateStringRep_Collection() throws CouldNotPerformException {
         System.out.println("generateStringRep");
         String expResult = scopeStringRep;
-        String result = ScopeGenerator.generateStringRep(components);
+        String result = ScopeProcessor.generateStringRep(components);
         assertEquals(expResult, result);
     }
 
@@ -107,7 +97,7 @@ public class ScopeGeneratorTest {
     public void testGenerateScope() throws CouldNotPerformException {
         System.out.println("testGenerateScope");
         ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
-        ScopeType.Scope result = ScopeGenerator.generateScope("/paradise/room/device/test");
+        ScopeType.Scope result = ScopeProcessor.generateScope("/paradise/room/device/test");
         assertEquals("Scope not fully generated!", expected, result);
     }
 
@@ -116,19 +106,19 @@ public class ScopeGeneratorTest {
         System.out.println("testGenerateScope");
 
         ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
-        ScopeType.Scope result_1 = ScopeGenerator.generateScope(ScopeGenerator.generateStringRep(expected));
+        ScopeType.Scope result_1 = ScopeProcessor.generateScope(ScopeProcessor.generateStringRep(expected));
         assertEquals("Scope not fully generated!", expected, result_1);
-        String result_2 = ScopeGenerator.generateStringRep(result_1);
+        String result_2 = ScopeProcessor.generateStringRep(result_1);
         assertEquals("Scope not fully generated!", "/paradise/room/device/test/", result_2);
     }
 
     @Test
     public void testConvertIntoValidScopeComponent() {
-        assertEquals("Scope component invalid!", "qijijs", ScopeGenerator.convertIntoValidScopeComponent("qijijs"));
-        assertEquals("Scope component invalid!", "qijijs", ScopeGenerator.convertIntoValidScopeComponent("qi__jijs"));
-        assertEquals("Scope component invalid!", "qijijs", ScopeGenerator.convertIntoValidScopeComponent("qi_____jijs"));
-        assertEquals("Scope component invalid!", "quejsss", ScopeGenerator.convertIntoValidScopeComponent("qüjßs"));
-        assertEquals("Scope component invalid!", "mycomponent", ScopeGenerator.convertIntoValidScopeComponent("_myComponent__"));
+        assertEquals("Scope component invalid!", "qijijs", ScopeProcessor.convertIntoValidScopeComponent("qijijs"));
+        assertEquals("Scope component invalid!", "qijijs", ScopeProcessor.convertIntoValidScopeComponent("qi__jijs"));
+        assertEquals("Scope component invalid!", "qijijs", ScopeProcessor.convertIntoValidScopeComponent("qi_____jijs"));
+        assertEquals("Scope component invalid!", "quejsss", ScopeProcessor.convertIntoValidScopeComponent("qüjßs"));
+        assertEquals("Scope component invalid!", "mycomponent", ScopeProcessor.convertIntoValidScopeComponent("_myComponent__"));
 
     }
 }

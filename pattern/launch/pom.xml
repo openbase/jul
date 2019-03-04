@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rsb.com</artifactId>
+            <artifactId>jul.communication.controller</artifactId>
             <version>${project.version}</version>
             <type>jar</type>
         </dependency>

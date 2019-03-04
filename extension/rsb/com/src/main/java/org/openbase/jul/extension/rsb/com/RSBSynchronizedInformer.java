@@ -55,7 +55,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
      * @param type the data type to send by this informer
      * @throws org.openbase.jul.exception.InstantiationException
      */
-    protected RSBSynchronizedInformer(final Scope scope, final Class<DT> type) throws InstantiationException {
+    public RSBSynchronizedInformer(final Scope scope, final Class<DT> type) throws InstantiationException {
         this(scope, type, null);
     }
 
@@ -68,7 +68,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
      * @param config
      * @throws org.openbase.jul.exception.InstantiationException
      */
-    protected RSBSynchronizedInformer(final Scope scope, final Class<DT> type, final ParticipantConfig config) throws InstantiationException {
+    public RSBSynchronizedInformer(final Scope scope, final Class<DT> type, final ParticipantConfig config) throws InstantiationException {
         super(scope, config);
         this.type = type;
     }

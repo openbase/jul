@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*-
  * #%L

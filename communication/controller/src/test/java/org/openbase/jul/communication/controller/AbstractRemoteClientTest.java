@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*-
  * #%L
@@ -30,8 +30,8 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
-import org.openbase.jul.extension.rsb.com.AbstractControllerServerTest.AbstractControllerServerImpl;
-import org.openbase.jul.extension.rsb.com.AbstractControllerServerTest.AbstractRemoteClientImpl;
+import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractControllerServerImpl;
+import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractRemoteClientImpl;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.type.util.TransactionSynchronizationFuture;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;

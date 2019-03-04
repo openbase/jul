@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*
  * #%L
@@ -32,7 +32,6 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.controller.ConfigurableController;
 import org.openbase.jul.schedule.CloseableReadLockWrapper;
 import org.openbase.jul.schedule.CloseableWriteLockWrapper;
-import org.openbase.jul.schedule.SyncObject;
 import org.openbase.type.communication.ScopeType.Scope;
 
 import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;

@@ -28,10 +28,10 @@ import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
-import org.openbase.jul.extension.rsb.com.AbstractIdentifiableController;
-import org.openbase.jul.extension.rsb.com.RPCHelper;
+import org.openbase.jul.communication.controller.AbstractIdentifiableController;
+import org.openbase.jul.communication.controller.RPCHelper;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Launchable;
 import org.openbase.jul.iface.VoidInitializable;
 import org.openbase.jul.iface.provider.NameProvider;
@@ -98,7 +98,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     @Override
     public void init() throws InitializationException, InterruptedException {
         try {
-            super.init(SCOPE_PREFIX_LAUNCHER + Scope.COMPONENT_SEPARATOR + ScopeGenerator.convertIntoValidScopeComponent(getName()));
+            super.init(SCOPE_PREFIX_LAUNCHER + Scope.COMPONENT_SEPARATOR + ScopeProcessor.convertIntoValidScopeComponent(getName()));
         } catch (NotAvailableException ex) {
             throw new InitializationException(this, ex);
         }

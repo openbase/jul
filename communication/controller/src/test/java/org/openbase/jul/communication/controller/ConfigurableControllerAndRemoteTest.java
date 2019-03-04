@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*-
  * #%L
@@ -29,8 +29,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.communication.controller.AbstractConfigurableController;
+import org.openbase.jul.communication.controller.AbstractConfigurableRemote;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
+import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData.Builder;
 import rsb.converter.DefaultConverterRepository;
 import rsb.converter.ProtocolBufferConverter;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
@@ -139,7 +142,7 @@ public class ConfigurableControllerAndRemoteTest {
         controller.shutdown();
     }
 
-    public class AbstractConfigurableControllerImpl extends AbstractConfigurableController<SceneData, SceneData.Builder, UnitConfig> {
+    public class AbstractConfigurableControllerImpl extends AbstractConfigurableController<SceneData, Builder, UnitConfig> {
 
         public AbstractConfigurableControllerImpl() throws Exception {
             super(SceneData.newBuilder());

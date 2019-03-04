@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*
  * #%L
@@ -30,12 +30,12 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
-import org.openbase.jul.pattern.controller.MessageController;
-import org.openbase.jul.extension.protobuf.MessageObservable;
+import org.openbase.jul.extension.rsb.com.*;
 import org.openbase.jul.extension.rsb.iface.RSBInformer;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
-import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
+import org.openbase.jul.pattern.controller.MessageController;
+import org.openbase.jul.extension.protobuf.MessageObservable;
 import org.openbase.jul.extension.type.iface.ScopeProvider;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.iface.Pingable;
@@ -160,51 +160,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws InitializationException
      * @throws InterruptedException
      */
-    public void init(final rsb.Scope scope) throws InitializationException, InterruptedException {
-        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
-    }
-
-    /**
-     * @param scope
-     *
-     * @throws InitializationException
-     * @throws InterruptedException
-     */
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
-            init(new rsb.Scope(scope));
+            init(ScopeProcessor.generateScope(scope));
         } catch (CouldNotPerformException | NullPointerException ex) {
-            throw new InitializationException(this, ex);
-        }
-    }
-
-    /**
-     * @param label
-     * @param type
-     * @param location
-     *
-     * @throws InitializationException
-     * @throws InterruptedException
-     */
-    public void init(final String label, final String type, final ScopeProvider location) throws InitializationException, InterruptedException {
-        try {
-            init(ScopeGenerator.generateScope(label, type, location.getScope()));
-        } catch (CouldNotPerformException | NullPointerException ex) {
-            throw new InitializationException(this, ex);
-        }
-    }
-
-    /**
-     * @param scope
-     * @param participantConfig
-     *
-     * @throws InitializationException
-     * @throws InterruptedException
-     */
-    public void init(final rsb.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        try {
-            init(ScopeTransformer.transform(scope), participantConfig);
-        } catch (CouldNotTransformException ex) {
             throw new InitializationException(this, ex);
         }
     }
@@ -233,7 +192,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
 
             this.scope = scope;
-            rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
+            rsb.Scope internalScope = new rsb.Scope(ScopeProcessor.generateStringRep(scope).toLowerCase());
 
             // init new instances.
             logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + internalScope + ".");

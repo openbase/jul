@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*
  * #%L
@@ -22,46 +22,35 @@ package org.openbase.jul.extension.rsb.com;
  * #L%
  */
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Message;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.iface.Enableable;
-import org.openbase.jul.schedule.SyncObject;
+import org.openbase.jul.exception.InvalidStateException;
+import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.pattern.controller.IdentifiableController;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <M>
  * @param <MB>
- * @param <CONFIG>
  */
-public abstract class AbstractEnableableConfigurableController<M extends AbstractMessage, MB extends M.Builder<MB>, CONFIG extends Message> extends AbstractConfigurableController<M, MB, CONFIG> implements Enableable {
+public abstract class AbstractIdentifiableController<M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractControllerServer<M, MB> implements IdentifiableController<String, M> {
 
-    private boolean enabled;
-    private final SyncObject enablingLock = new SyncObject(AbstractEnableableConfigurableController.class);
-
-    public AbstractEnableableConfigurableController(final MB builder) throws InstantiationException {
+    public AbstractIdentifiableController(MB builder) throws InstantiationException {
         super(builder);
     }
 
     @Override
-    public void enable() throws CouldNotPerformException, InterruptedException {
-        synchronized (enablingLock) {
-            enabled = true;
-            activate();
+    public String getId() throws NotAvailableException {
+        try {
+            String id = (String) getDataField(TYPE_FIELD_ID);
+            if (id.isEmpty()) {
+                throw new InvalidStateException("data.id is empty!");
+            }
+            return id;
+        } catch (CouldNotPerformException ex) {
+            throw new NotAvailableException("data.id", ex);
         }
     }
 
-    @Override
-    public void disable() throws CouldNotPerformException, InterruptedException {
-        synchronized (enablingLock) {
-            enabled = false;
-            deactivate();
-        }
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
 }

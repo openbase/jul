@@ -31,6 +31,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import rsb.Scope;
 import org.openbase.type.communication.ScopeType;
 
@@ -73,8 +74,8 @@ public class ScopeTransformerTest {
         components.add("table");
         ScopeType.Scope scope = ScopeType.Scope.newBuilder().addAllComponent(components).build();
         Scope result = ScopeTransformer.transform(scope);
-        assertEquals(ScopeGenerator.generateStringRep(scope), ScopeGenerator.generateStringRep(result));
-        assertEquals(ScopeGenerator.generateStringRep(scope), ScopeGenerator.generateStringRep(components));
+        assertEquals(ScopeProcessor.generateStringRep(scope), result.toString());
+        assertEquals(ScopeProcessor.generateStringRep(scope), ScopeProcessor.generateStringRep(components));
     }
 
     /**
@@ -87,9 +88,9 @@ public class ScopeTransformerTest {
         components.add("home");
         components.add("kitchen");
         components.add("table");
-        Scope scope = new Scope(ScopeGenerator.generateStringRep(components));
+        Scope scope = new Scope(ScopeProcessor.generateStringRep(components));
         ScopeType.Scope result = ScopeTransformer.transform(scope);
-        assertEquals(ScopeGenerator.generateStringRep(scope), ScopeGenerator.generateStringRep(result));
-        assertEquals(ScopeGenerator.generateStringRep(scope), ScopeGenerator.generateStringRep(components));
+        assertEquals(scope.toString(), ScopeProcessor.generateStringRep(result));
+        assertEquals(scope.toString(), ScopeProcessor.generateStringRep(components));
     }
 }

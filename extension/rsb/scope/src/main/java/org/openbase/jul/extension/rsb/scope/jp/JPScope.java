@@ -25,7 +25,8 @@ package org.openbase.jul.extension.rsb.scope.jp;
 import org.openbase.jps.core.AbstractJavaProperty;
 import java.util.List;
 import org.openbase.jps.core.JPService;
-import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
+import org.openbase.jul.processing.StringProcessor;
 import rsb.Scope;
 
 /**
@@ -47,7 +48,7 @@ public class JPScope extends AbstractJavaProperty<Scope> {
     @Override
     protected Scope getPropertyDefaultValue() {
         if(JPService.testMode()) {
-            String user = ScopeGenerator.convertIntoValidScopeComponent(System.getProperty("user.name"));
+            String user = ScopeProcessor.convertIntoValidScopeComponent(System.getProperty("user.name"));
             return new Scope("/test/"+user);
         }
         return new Scope("/");
@@ -67,5 +68,9 @@ public class JPScope extends AbstractJavaProperty<Scope> {
     protected String[] generateArgumentIdentifiers() {
         String[] args = {"SCOPE"};
         return args;
+    }
+
+    public static String convertIntoValidScopeComponent(String scopeComponent) {
+        return StringProcessor.transformToIdString(scopeComponent.toLowerCase()).replaceAll("_", "");
     }
 }

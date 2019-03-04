@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*-
  * #%L
@@ -29,7 +29,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.communication.controller.RPCHelper;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.extension.rsb.com.RSBFactoryImpl;
+import org.openbase.jul.extension.rsb.com.RSBSharedConnectionConfig;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.iface.Requestable;
@@ -43,14 +46,14 @@ import rsb.config.ParticipantConfig;
  *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class RSBFutureCancelTest implements Requestable<Object> {
+public class FutureCancelTest implements Requestable<Object> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private RSBLocalServer localServer;
     private RSBRemoteServer remoteServer;
 
-    public RSBFutureCancelTest() {
+    public FutureCancelTest() {
     }
 
     @BeforeClass

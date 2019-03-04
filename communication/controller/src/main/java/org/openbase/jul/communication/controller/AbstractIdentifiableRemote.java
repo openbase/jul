@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*
  * #%L
@@ -27,7 +27,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 
-import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.pattern.controller.IdentifiableRemote;
 
 /**
@@ -67,7 +67,7 @@ public abstract class AbstractIdentifiableRemote<M extends Message> extends Abst
     @Override
     public String toString() {
         try {
-            return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
+            return getClass().getSimpleName() + "[scope:" + ScopeProcessor.generateStringRep(scope) + "]";
         } catch (CouldNotPerformException ex) {
             try {
                 return getClass().getSimpleName() + "[id:" + getId() + "]";

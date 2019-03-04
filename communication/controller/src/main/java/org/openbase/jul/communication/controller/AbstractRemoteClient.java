@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com;
+package org.openbase.jul.communication.controller;
 
 /*
  * #%L
@@ -32,18 +32,21 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
+import org.openbase.jul.extension.rsb.com.*;
 import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
 import org.openbase.jul.extension.rsb.iface.RSBListener;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
-import org.openbase.jul.extension.rsb.scope.ScopeGenerator;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.controller.Remote;
 import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
@@ -62,7 +65,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.*;
 
-import static org.openbase.jul.extension.rsb.com.AbstractControllerServer.RPC_REQUEST_STATUS;
+import static org.openbase.jul.communication.controller.AbstractControllerServer.RPC_REQUEST_STATUS;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
 
 /**
@@ -154,19 +157,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     }
 
     /**
-     * {@inheritDoc}
-     *
-     * @param scope {@inheritDoc}
-     *
-     * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
-     * @throws java.lang.InterruptedException                     {@inheritDoc}
-     */
-    @Override
-    public void init(final rsb.Scope scope) throws InitializationException, InterruptedException {
-        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
-    }
-
-    /**
      * Initialize the remote on a scope.
      *
      * @param scope the scope where the remote communicates
@@ -177,26 +167,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public void init(final String scope) throws InitializationException, InterruptedException {
         try {
-            init(new rsb.Scope(scope));
+            init(ScopeProcessor.generateScope(scope));
         } catch (CouldNotPerformException | NullPointerException ex) {
-            throw new InitializationException(this, ex);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * @param scope             {@inheritDoc}
-     * @param participantConfig {@inheritDoc}
-     *
-     * @throws InitializationException {@inheritDoc}
-     * @throws InterruptedException    {@inheritDoc}
-     */
-    @Override
-    public void init(final rsb.Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        try {
-            init(ScopeTransformer.transform(scope), participantConfig);
-        } catch (CouldNotTransformException ex) {
             throw new InitializationException(this, ex);
         }
     }
@@ -253,7 +225,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
                 this.scope = scope;
 
-                rsb.Scope internalScope = new rsb.Scope(ScopeGenerator.generateStringRep(scope).toLowerCase());
+                rsb.Scope internalScope = new rsb.Scope(ScopeProcessor.generateStringRep(scope).toLowerCase());
                 logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + this.scope + ".");
 
                 initListener(internalScope, internalParticipantConfig);
@@ -1082,12 +1054,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 if (event.getMetaData().hasUserTime(RPCHelper.USER_TIME_KEY)) {
                     userTime = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
                 } else {
-                    logger.debug("Data message does not contain user time key on scope " + ScopeGenerator.generateStringRep(event.getScope()));
+                    logger.debug("Data message does not contain user time key on scope " + event.getScope());
                 }
 
                 // filter outdated events
                 if (event.getMetaData().getCreateTime() < newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && userTime < newestEventTimeNano)) {
-                    logger.debug("Skip event on scope[" + ScopeGenerator.generateStringRep(event.getScope()) + "] because event seems to be outdated! Received event time < latest event time [" + event.getMetaData().getCreateTime() + "<= " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + " < " + newestEventTimeNano + "]");
+                    logger.debug("Skip event on scope[" + event.getScope() + "] because event seems to be outdated! Received event time < latest event time [" + event.getMetaData().getCreateTime() + "<= " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + " < " + newestEventTimeNano + "]");
                     return data;
                 }
 
@@ -1391,7 +1363,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     private String getScopeStringRep() {
         try {
-            return ScopeGenerator.generateStringRep(scope);
+            return ScopeProcessor.generateStringRep(scope);
         } catch (CouldNotPerformException ex) {
             return "?";
         }
@@ -1627,7 +1599,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public String toString() {
         try {
-            return getClass().getSimpleName() + "[scope:" + ScopeGenerator.generateStringRep(scope) + "]";
+            return getClass().getSimpleName() + "[scope:" + ScopeProcessor.generateStringRep(scope) + "]";
         } catch (CouldNotPerformException ex) {
             return getClass().getSimpleName() + "[scope:?]";
         }
