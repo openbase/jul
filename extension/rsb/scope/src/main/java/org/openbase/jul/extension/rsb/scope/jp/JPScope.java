@@ -26,13 +26,14 @@ import org.openbase.jps.core.AbstractJavaProperty;
 import java.util.List;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
-import org.openbase.jul.processing.StringProcessor;
 import rsb.Scope;
 
 /**
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @deprecated please use org.openbase.jul.communication.controller.jp.JPScope
  */
+@Deprecated
 public class JPScope extends AbstractJavaProperty<Scope> {
 
 	public final static String[] COMMAND_IDENTIFIERS = {"-s", "--scope"};
@@ -68,9 +69,5 @@ public class JPScope extends AbstractJavaProperty<Scope> {
     protected String[] generateArgumentIdentifiers() {
         String[] args = {"SCOPE"};
         return args;
-    }
-
-    public static String convertIntoValidScopeComponent(String scopeComponent) {
-        return StringProcessor.transformToIdString(scopeComponent.toLowerCase()).replaceAll("_", "");
     }
 }

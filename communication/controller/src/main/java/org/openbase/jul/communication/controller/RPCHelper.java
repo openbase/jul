@@ -2,7 +2,7 @@ package org.openbase.jul.communication.controller;
 
 /*
  * #%L
- * JUL Extension RSB Communication
+ * JUL Extension Controller
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%

@@ -2,7 +2,7 @@ package org.openbase.jul.extension.type.processing;
 
 /*
  * #%L
- * JUL Extension RSB Scope
+ * JUL Extension Type Processing
  * %%
  * Copyright (C) 2015 - 2019 openbase.org
  * %%
