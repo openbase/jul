@@ -67,7 +67,7 @@ public class JPRSBPort extends AbstractJPInteger {
         }
         
         // return default host
-        return 4814;
+        return 4803;
     }
 
 }
