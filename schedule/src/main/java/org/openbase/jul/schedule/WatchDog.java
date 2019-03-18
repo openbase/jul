@@ -296,7 +296,9 @@ public class WatchDog implements Activatable, Shutdownable {
 
         @Override
         public void shutdown() {
-            future.cancel(true);
+            if (future == null) {
+                future.cancel(true);
+            }
             if (service.isActive()) {
                 setServiceState(ServiceState.TERMINATING);
                 try {
