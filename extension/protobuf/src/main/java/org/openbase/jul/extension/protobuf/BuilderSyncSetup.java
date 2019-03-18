@@ -31,6 +31,7 @@ import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.pattern.ChangeListener;
@@ -203,6 +204,8 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     private void restartReadLockTimeout() {
         try {
             readLockTimeout.restart();
+        } catch (ShutdownInProgressException ex) {
+            // skip restart
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not setup builder read lock fallback timeout!", ex, logger, LogLevel.WARN);
         }
@@ -211,6 +214,8 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     private void restartWriteLockTimeout() {
         try {
             writeLockTimeout.restart();
+        } catch (ShutdownInProgressException ex) {
+            // skip restart
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not setup builder write lock fallback timeout!", ex, logger, LogLevel.WARN);
         }

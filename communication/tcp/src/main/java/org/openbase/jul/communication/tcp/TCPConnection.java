@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.schedule.Timeout;
@@ -343,8 +344,13 @@ public abstract class TCPConnection implements Runnable {
                     }
                 }
                 if (!timeOut.isActive()) {
-                    timeOut.start();
-                    sendCommand(new PingCommand(this));
+                    try {
+                        timeOut.start();
+                        sendCommand(new PingCommand(this));
+                    } catch (ShutdownInProgressException ex) {
+                        // skip ping when shutdown is initiated and just disconnect
+                        disconnect();
+                    }
                 }
             }
             logger.info("Communication finished.");

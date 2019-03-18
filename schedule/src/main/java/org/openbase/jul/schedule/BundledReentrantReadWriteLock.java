@@ -26,6 +26,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
@@ -276,6 +277,8 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
     private void restartReadLockTimeout() {
         try {
             readLockTimeout.restart();
+        } catch (ShutdownInProgressException ex) {
+            // skip restart
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not setup builder read lock fallback timeout!", ex, logger, LogLevel.WARN);
         }
@@ -284,6 +287,8 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
     private void restartWriteLockTimeout() {
         try {
             writeLockTimeout.restart();
+        } catch (ShutdownInProgressException ex) {
+            // skip restart
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not setup builder write lock fallback timeout!", ex, logger, LogLevel.WARN);
         }

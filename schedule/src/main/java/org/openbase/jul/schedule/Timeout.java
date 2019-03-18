@@ -23,6 +23,8 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.ShutdownException;
+import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
@@ -79,6 +81,7 @@ public abstract class Timeout {
      * @param waitTime the new wait time to update.
      *
      * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart(final long waitTime) throws CouldNotPerformException {
         logger.debug("Reset timer.");
@@ -87,6 +90,8 @@ public abstract class Timeout {
                 cancel();
                 start(waitTime);
             }
+        } catch (ShutdownInProgressException ex) {
+            throw ex;
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not restart timer!", ex);
         }
@@ -96,6 +101,7 @@ public abstract class Timeout {
      * Method restarts the timeout.
      *
      * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart() throws CouldNotPerformException {
         restart(defaultWaitTime);
@@ -122,16 +128,13 @@ public abstract class Timeout {
     }
 
     /**
-     * Method starts the timeout.
+     * Start the timeout with the default wait time.
      *
      * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void start() throws CouldNotPerformException {
-        try {
-            internal_start(defaultWaitTime);
-        } catch (CouldNotPerformException | RejectedExecutionException ex) {
-            throw new CouldNotPerformException("Could not start " + this, ex);
-        }
+        start(defaultWaitTime);
     }
 
     /**
@@ -140,11 +143,15 @@ public abstract class Timeout {
      * @param waitTime The time to wait until the timeout is reached.
      *
      * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void start(final long waitTime) throws CouldNotPerformException {
         try {
             internal_start(waitTime);
         } catch (CouldNotPerformException | RejectedExecutionException ex) {
+            if (ex instanceof RejectedExecutionException && GlobalScheduledExecutorService.getInstance().getExecutorService().isShutdown()) {
+                throw new ShutdownInProgressException("GlobalScheduledExecutorService");
+            }
             throw new CouldNotPerformException("Could not start " + this, ex);
         }
     }

@@ -26,6 +26,7 @@ import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
@@ -146,6 +147,8 @@ public abstract class RecurrenceEventFilter<VALUE> {
             changeDetected = false;
             callRelay();
             timeout.start();
+        } catch (final ShutdownInProgressException ex) {
+            // just skip trigger when shutdown is in progress
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not trigger " + this, ex);
         }
