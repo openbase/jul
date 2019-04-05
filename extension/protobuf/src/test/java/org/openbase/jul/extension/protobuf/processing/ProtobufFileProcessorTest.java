@@ -36,6 +36,6 @@ public class ProtobufFileProcessorTest {
         String HASH_ALGORITHM = "SHA-256";
         MessageDigest sha = MessageDigest.getInstance(HASH_ALGORITHM);
         key = sha.digest(key);
-        return Arrays.copyOf(key, 16);
+        return Arrays.copyOf(key, 8);
     }
 }
