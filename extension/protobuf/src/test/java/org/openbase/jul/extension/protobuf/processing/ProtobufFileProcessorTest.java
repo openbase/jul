@@ -54,10 +54,10 @@ public class ProtobufFileProcessorTest {
     }
 
     private byte[] hash(String toHash) throws Exception {
-        byte[] key = toHash.getBytes(StandardCharsets.UTF_8);
+        byte[] key = toHash.getBytes(StandardCharsets.UTF_16);
         String HASH_ALGORITHM = "SHA-256";
         MessageDigest sha = MessageDigest.getInstance(HASH_ALGORITHM);
         key = sha.digest(key);
-        return Arrays.copyOf(key, 8);
+        return Arrays.copyOf(key, 16);
     }
 }
