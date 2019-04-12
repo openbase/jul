@@ -1,5 +1,27 @@
 package org.openbase.jul.extension.protobuf.processing;
 
+/*-
+ * #%L
+ * JUL Extension Protobuf
+ * %%
+ * Copyright (C) 2015 - 2019 openbase.org
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Lesser Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Lesser Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/lgpl-3.0.html>.
+ * #L%
+ */
+
 import com.google.protobuf.ByteString;
 import org.junit.Test;
 import org.openbase.type.domotic.authentication.LoginCredentialsType.LoginCredentials;
@@ -32,10 +54,10 @@ public class ProtobufFileProcessorTest {
     }
 
     private byte[] hash(String toHash) throws Exception {
-        byte[] key = toHash.getBytes(StandardCharsets.UTF_8);
+        byte[] key = toHash.getBytes(StandardCharsets.UTF_16);
         String HASH_ALGORITHM = "SHA-256";
         MessageDigest sha = MessageDigest.getInstance(HASH_ALGORITHM);
         key = sha.digest(key);
-        return Arrays.copyOf(key, 8);
+        return Arrays.copyOf(key, 16);
     }
 }
