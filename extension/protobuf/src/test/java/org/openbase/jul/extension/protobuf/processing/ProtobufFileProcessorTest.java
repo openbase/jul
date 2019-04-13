@@ -39,7 +39,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class ProtobufFileProcessorTest {
 
-    /*@Test
+    @Test
     public void testByteArraySerialization() throws Exception {
         final ProtoBufFileProcessor<LoginCredentials, LoginCredentials, Builder> fileProcessor = new ProtoBufFileProcessor<>(LoginCredentials.newBuilder());
 
@@ -47,14 +47,14 @@ public class ProtobufFileProcessorTest {
         final String password = "12345678";
         final LoginCredentials loginCredentials = LoginCredentials.newBuilder()
                 .setId("user_id")
-                .setCredentials(ByteString.copyFrom(hash(password).)).build();
+                .setCredentials(ByteString.copyFrom(hash(password))).build();
         fileProcessor.serialize(loginCredentials, testFile);
 
         assertEquals(loginCredentials, fileProcessor.deserialize(testFile));
-    }*/
+    }
 
     private byte[] hash(String toHash) throws Exception {
-        byte[] key = toHash.getBytes(StandardCharsets.UTF_8);
+        byte[] key = toHash.getBytes(StandardCharsets.UTF_16);
         String HASH_ALGORITHM = "SHA-256";
         MessageDigest sha = MessageDigest.getInstance(HASH_ALGORITHM);
         key = sha.digest(key);
