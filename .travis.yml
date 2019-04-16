@@ -7,7 +7,10 @@ jdk:
   - openjdk-ea
 
 install:
-  - mvn --settings .travis/settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true -B -U -V -q
+  - mvn --settings .travis/settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode --update-snapshots --show-version --quiet
+
+script:
+  - mvn test -Dmaven.javadoc.skip=true --batch-mode --quiet --fail-fast
 
 before_install:
   - echo $GPG_SECRET_KEYS | base64 --decode | $GPG_EXECUTABLE --import
@@ -23,25 +26,44 @@ notifications:
         rooms:
             - openbase-org:vGz7LO4CvGoGMneYkEm3ON7E#build
             #- openbase-org:vGz7LO4CvGoGMneYkEm3ON7E#jul
-
-deploy:
-  - provider: script
-    script: .travis/deploy.sh
-    on:
-        repo: openbase/jul
-        branch: master
-        jdk: openjdk11
-  - provider: script
-    script: .travis/deploy.sh
-    on:
-        repo: openbase/jul
-        tags: true
-        jdk: openjdk11
+stages:
+  - compile
+  - test
+  - generate
+  - deploy
+  - trigger
 
 jobs:
   include:
-    - stage: trigger downstream
+    - stage: compile
+      script: skip  # skip tests
+    - stage: test
+      install: skip # skip compile
+    - stage: generate
+      install: skip # skip compile
+      script: .travis/generate-doc.sh documentation
+    - stage: deploy
       jdk: openjdk11
+      install: skip # skip compile
+      script: skip  # skip tests
+      deploy:
+      - provider: script
+        script: .travis/deploy.sh
+        
+        on:
+            repo: openbase/jul
+            branch: master
+            jdk: openjdk11
+      - provider: script
+        script: .travis/deploy.sh
+        skip_cleanup: true
+        on:
+            repo: openbase/jul
+            tags: true
+            jdk: openjdk11
+    - stage: trigger
+      jdk: openjdk11
+      install: skip # skip compile
       script: |
         echo "TRAVIS_BRANCH=$TRAVIS_BRANCH TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST"
         if [[ ($TRAVIS_BRANCH == master) &&
