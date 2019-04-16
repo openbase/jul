@@ -42,6 +42,7 @@ jobs:
     - stage: compile
       jdk: openjdk-ea
       script: skip  # skip tests
+    - script: skip  # skip tests
     - stage: generate
       install: skip # skip compile
       jdk: openjdk-ea
