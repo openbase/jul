@@ -6,6 +6,10 @@ jdk:
   - openjdk11
   - openjdk-ea
 
+matrix:
+  allow_failures:
+  - jdk: openjdk-ea
+
 cache:
   directories:
   - $HOME/.m2
@@ -33,7 +37,7 @@ notifications:
 stages:
   - compile
   - test
-  - generate
+  - documentation
   - deploy
   - trigger
 
@@ -43,11 +47,11 @@ jobs:
       script: skip  # skip tests
     - script: skip  # skip tests
       jdk: openjdk-ea
-    - stage: generate
+    - stage: documentation
+      name: Generate Documentation
       install: skip # skip compile
-      script: .travis/generate-doc.sh documentation
-    - script: .travis/generate-doc.sh documentation
-      jdk: openjdk-ea
+      script: .travis/generate-doc.sh
+    - jdk: openjdk-ea
     - stage: deploy
       install: skip # skip compile
       script: skip  # skip tests
