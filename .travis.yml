@@ -40,11 +40,8 @@ stages:
 jobs:
   include:
     - stage: compile
+      jdk: all
       script: skip  # skip tests
-    - script: skip  # skip tests
-    
-    - stage: test
-      install: skip # skip compile
     - stage: generate
 
       install: skip # skip compile
