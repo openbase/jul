@@ -43,14 +43,17 @@ stages:
 
 jobs:
   include:
-    - install: skip # skip compile for test stage
-    - stage: compile
+    - &compile
+      stage: compile
       script: skip  # skip tests
-    - jdk: openjdk-ea
-    - stage: documentation
+    - <<: *compile
+      jdk: openjdk-ea
+    - &documentation
+      stage: documentation
       install: skip # skip compile
       script: .travis/generate-doc.sh
-    - jdk: openjdk-ea
+    - <<: *documentation
+      jdk: openjdk-ea
     - stage: deploy
       name: "Central Maven"
       install: skip # skip compile
