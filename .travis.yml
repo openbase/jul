@@ -4,7 +4,6 @@ dist: xenial
 
 jdk:
   - openjdk12
-  - openjdk11
   - openjdk-ea
 
 matrix:
@@ -60,7 +59,7 @@ jobs:
       script: skip  # skip tests
       deploy:
       - provider: script
-        script: .travis/deploy.sh
+        script: ${AUTO_DEPLOY} && .travis/deploy.sh
         skip_cleanup: true
         on:
             repo: ${REPO_ID}
