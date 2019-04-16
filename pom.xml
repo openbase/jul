@@ -128,15 +128,13 @@
                             </execution>
                         </executions>
                     </plugin>
-                    <plugin>
+                    <!--plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
                         <version>3.1.0</version>
-                        <configuration>
-                            <!-- workaround for https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+                        <configuration-->
+                            <!-- workaround for https://bugs.openjdk.java.net/browse/JDK-8212233>
                             <source>8</source>
-                            <additionalparam>--source 8</additionalparam>
-                            <!-- workaround for https://bugs.openjdk.java.net/browse/JDK-8212233 -->
                             <javaApiLinks>
                                 <property>
                                     <name>foo</name>
@@ -152,7 +150,7 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
+                    </plugin-->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
