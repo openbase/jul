@@ -43,11 +43,11 @@ stages:
 
 jobs:
   include:
-    - stage: compile
-      script: skip  # skip tests
-    - jdk: openjdk-ea
     - stage: test
       install: skip # skip compile
+    - jdk: openjdk-ea
+    - stage: compile
+      script: skip  # skip tests
     - jdk: openjdk-ea
     - stage: documentation
       install: skip # skip compile
