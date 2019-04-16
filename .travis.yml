@@ -6,6 +6,10 @@ jdk:
   - openjdk11
   - openjdk-ea
 
+cache:
+  directories:
+  - $HOME/.m2
+
 install:
   - mvn --settings .travis/settings.xml install -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode --update-snapshots --show-version --quiet
 
@@ -37,13 +41,15 @@ jobs:
   include:
     - stage: compile
       script: skip  # skip tests
+    - script: skip  # skip tests
+    
     - stage: test
       install: skip # skip compile
     - stage: generate
+
       install: skip # skip compile
       script: .travis/generate-doc.sh documentation
     - stage: deploy
-      jdk: openjdk11
       install: skip # skip compile
       script: skip  # skip tests
       deploy:
@@ -62,7 +68,6 @@ jobs:
             tags: true
             jdk: openjdk11
     - stage: trigger
-      jdk: openjdk11
       install: skip # skip compile
       script: |
         echo "TRAVIS_BRANCH=$TRAVIS_BRANCH TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST"
