@@ -45,14 +45,16 @@ jobs:
   include:
     - stage: compile
       script: skip  # skip tests
-    - script: skip  # skip tests
-      jdk: openjdk-ea
+    - jdk: openjdk-ea
+    - stage: test
+      install: skip # skip compile
+    - jdk: openjdk-ea
     - stage: documentation
-      name: Generate Documentation
       install: skip # skip compile
       script: .travis/generate-doc.sh
     - jdk: openjdk-ea
     - stage: deploy
+      name: "Central Maven"
       install: skip # skip compile
       script: skip  # skip tests
       deploy:
@@ -69,6 +71,7 @@ jobs:
             repo: openbase/jul
             tags: true
     - stage: trigger
+      name: "Upstream Projects"
       install: skip # skip compile
       script: |
         echo "TRAVIS_BRANCH=$TRAVIS_BRANCH TRAVIS_PULL_REQUEST=$TRAVIS_PULL_REQUEST"
