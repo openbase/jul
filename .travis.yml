@@ -50,7 +50,7 @@ jobs:
     - &documentation
       stage: documentation
       install: skip # skip compile
-      script: .travis/generate-doc.sh
+      script: ${AUTO_DEPLOY} && .travis/deploy.sh
     - <<: *documentation
       jdk: openjdk-ea
     - stage: deploy
