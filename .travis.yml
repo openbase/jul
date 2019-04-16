@@ -2,7 +2,7 @@ language: java
 
 dist: xenial
 
-jdk:
+jdk: &jdk
   - openjdk11
   - openjdk-ea
 
@@ -39,11 +39,12 @@ stages:
 
 jobs:
   include:
-    - stage: &compile
+    - stage: compile
+      jdk: openjdk-ea
       script: skip  # skip tests
     - stage: generate
-
       install: skip # skip compile
+      jdk: openjdk-ea
       script: .travis/generate-doc.sh documentation
     - stage: deploy
       install: skip # skip compile
