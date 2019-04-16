@@ -3,6 +3,7 @@ language: java
 dist: xenial
 
 jdk:
+  - openjdk12
   - openjdk11
   - openjdk-ea
 
@@ -33,7 +34,6 @@ notifications:
         on_success: change
         rooms:
             - openbase-org:vGz7LO4CvGoGMneYkEm3ON7E#build
-            #- openbase-org:vGz7LO4CvGoGMneYkEm3ON7E#jul
 stages:
   - compile
   - test
@@ -63,13 +63,13 @@ jobs:
         script: .travis/deploy.sh
         skip_cleanup: true
         on:
-            repo: openbase/jul
+            repo: ${REPO_ID}
             branch: master
       - provider: script
         script: .travis/deploy.sh
         skip_cleanup: true
         on:
-            repo: openbase/jul
+            repo: ${REPO_ID}
             tags: true
     - stage: trigger
       name: "Upstream Projects"
@@ -81,10 +81,8 @@ jobs:
           curl -LO --retry 3 https://raw.github.com/mernst/plume-lib/master/bin/trigger-travis.sh
 
           # trigger upstream projects
-          sh trigger-travis.sh openbase generic-display $TRAVIS_ACCESS_TOKEN
-          sh trigger-travis.sh openbase rct-java $TRAVIS_ACCESS_TOKEN
-          sh trigger-travis.sh openbase bco.authentication $TRAVIS_ACCESS_TOKEN
-          sh trigger-travis.sh openbase planetsudo $TRAVIS_ACCESS_TOKEN
-          sh trigger-travis.sh openbase jeoparnaire $TRAVIS_ACCESS_TOKEN
+          for PROJECT in ${UPSTREAM_PROJECTS}; do
+              sh trigger-travis.sh openbase ${PROJECT} $TRAVIS_ACCESS_TOKEN
+          done
         fi
         
