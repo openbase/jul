@@ -43,9 +43,7 @@ stages:
 
 jobs:
   include:
-    - &test
-      stage: test
-      install: skip # skip compile
+    - install: skip # skip compile for test stage
     - stage: compile
       script: skip  # skip tests
     - jdk: openjdk-ea
