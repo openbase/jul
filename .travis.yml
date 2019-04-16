@@ -43,7 +43,8 @@ stages:
 
 jobs:
   include:
-    - stage: test
+    - &test
+      stage: test
       install: skip # skip compile
     - stage: compile
       script: skip  # skip tests
