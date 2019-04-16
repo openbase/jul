@@ -135,6 +135,14 @@
                         <configuration>
                             <!-- workaround for https://bugs.openjdk.java.net/browse/JDK-8212233 -->
                             <source>8</source>
+                            <additionalparam>--source 8</additionalparam>
+                            <!-- workaround for https://bugs.openjdk.java.net/browse/JDK-8212233 -->
+                            <javaApiLinks>
+                                <property>
+                                    <name>foo</name>
+                                    <value>bar</value>
+                                </property>
+                            </javaApiLinks>
                         </configuration>
                         <executions>
                             <execution>
