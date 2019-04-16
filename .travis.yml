@@ -2,9 +2,20 @@ language: java
 
 dist: xenial
 
+addons:
+  apt:
+    sources:
+      - sourceline: 'deb http://repos.azulsystems.com/ubuntu stable main'
+        key_url: 'http://repos.azulsystems.com/RPM-GPG-KEY-azulsystems'
+    packages:
+      - zulu-11
+      - zulu-13
+
 jdk:
-  - openjdk12
-  - openjdk-ea
+  - zulu-11
+  - zulu-13
+  #- openjdk12
+  #- openjdk-ea
 
 matrix:
   allow_failures:
@@ -65,7 +76,7 @@ jobs:
             repo: ${REPO_ID}
             branch: master
       - provider: script
-        script: .travis/deploy.sh
+        script: ${AUTO_DEPLOY} && .travis/deploy.sh
         skip_cleanup: true
         on:
             repo: ${REPO_ID}
