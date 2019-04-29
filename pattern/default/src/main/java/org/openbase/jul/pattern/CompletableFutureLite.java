@@ -78,7 +78,7 @@ public class CompletableFutureLite<V> implements Future<V> {
      *
      * @return if this invocation caused this CompletableFuture to be done, than {@code true} is returned. Otherwise {@code false} is returned.
      */
-    public boolean completeExceptionally(Throwable throwable) {
+    public boolean completeExceptionally(final Throwable throwable) {
         synchronized (lock) {
             if (isDone()) {
                 return false;
@@ -97,7 +97,7 @@ public class CompletableFutureLite<V> implements Future<V> {
      * @return if this invocation caused this CompletableFuture to be canceled, than {@code true} is returned. Otherwise {@code false} is returned.
      */
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
+    public boolean cancel(final boolean mayInterruptIfRunning) {
         synchronized (lock) {
             if (isDone()) {
                 return false;
