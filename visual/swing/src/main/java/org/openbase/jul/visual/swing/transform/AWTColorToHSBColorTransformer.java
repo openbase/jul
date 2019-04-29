@@ -36,7 +36,7 @@ public class AWTColorToHSBColorTransformer {
         try {
             float[] hsb = new float[3];
             Color.RGBtoHSB(color.getRed(), color.getGreen(), color.getBlue(), hsb);
-            return HSBColor.newBuilder().setHue(hsb[0] * 360).setSaturation(hsb[1] * 100).setBrightness(hsb[2] * 100).build();
+            return HSBColor.newBuilder().setHue(hsb[0] * 360).setSaturation(hsb[1]).setBrightness(hsb[2]).build();
         } catch (Exception ex) {
             throw new CouldNotTransformException("Could not transform " + Color.class.getName() + " to " + HSBColor.class.getName() + "!", ex);
         }
@@ -44,7 +44,7 @@ public class AWTColorToHSBColorTransformer {
 
     public static Color transform(final HSBColor color) throws TypeNotSupportedException, CouldNotTransformException {
         try {
-            return Color.getHSBColor((((float) color.getHue()) / 360f), (((float) color.getSaturation()) / 100f), (((float) color.getBrightness()) / 100f));
+            return Color.getHSBColor((((float) color.getHue()) / 360f), (float) color.getSaturation(), (float) color.getBrightness());
         } catch (Exception ex) {
             throw new CouldNotTransformException("Could not transform " + HSBColor.class.getName() + " to " + Color.class.getName() + "!", ex);
         }

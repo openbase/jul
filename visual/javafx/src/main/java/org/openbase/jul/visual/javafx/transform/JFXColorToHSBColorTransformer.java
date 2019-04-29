@@ -32,13 +32,13 @@ public class JFXColorToHSBColorTransformer {
 
     public static Color transform(final HSBColor hsbColor) throws CouldNotTransformException {
         try {
-            return Color.hsb(hsbColor.getHue(), hsbColor.getSaturation() / 100, hsbColor.getBrightness() / 100);
+            return Color.hsb(hsbColor.getHue(), hsbColor.getSaturation(), hsbColor.getBrightness());
         } catch (final IllegalArgumentException ex) {
             throw new CouldNotTransformException(hsbColor, Color.class, ex);
         }
     }
 
     public static HSBColor transform(final Color color) {
-        return HSBColor.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation() * 100).setBrightness(color.getBrightness() * 100).build();
+        return HSBColor.newBuilder().setHue(color.getHue()).setSaturation(color.getSaturation()).setBrightness(color.getBrightness()).build();
     }
 }

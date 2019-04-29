@@ -66,8 +66,6 @@ public class HSBColorToRGBColorTransformer {
             }
 
             hue *= 360.0d;
-            saturation *= 100.0d;
-            brightness *= 100.0d;
 
             return HSBColor.newBuilder().setHue(hue).setSaturation(saturation).setBrightness(brightness).build();
         } catch (Exception ex) {
@@ -79,8 +77,8 @@ public class HSBColorToRGBColorTransformer {
         try {
             int r = 0, g = 0, b = 0;
             double hue = hsbColor.getHue()/360.0d;
-            double saturation = hsbColor.getSaturation()/100.0d;
-            double brightness = hsbColor.getBrightness()/100.0d;
+            double saturation = hsbColor.getSaturation();
+            double brightness = hsbColor.getBrightness();
 
             if (saturation == 0) {
                 r = g = b = (int) (brightness * 255.0d + 0.5d);
