@@ -37,10 +37,7 @@ import org.slf4j.LoggerFactory;
 import rsb.*;
 import rsb.config.ParticipantConfig;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -183,7 +180,7 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
     public void deactivate() throws CouldNotPerformException, InterruptedException {
         try {
 
-            final Future<Void> deactivationFuture;
+            Future<Void> deactivationFuture = null;
 
             synchronized (participantLock) {
 
@@ -195,40 +192,47 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                 // deactivate
                 logger.debug("Participant[" + this + "] will be deactivated.");
                 final P tmpParticipant = getParticipant();
-                deactivationFuture = GlobalCachedExecutorService.submit(() -> {
+                if (tmpParticipant.isActive()) {
                     try {
-                        try {
-                            if (tmpParticipant.isActive()) {
-                                tmpParticipant.deactivate();
+                        deactivationFuture = GlobalCachedExecutorService.submit(() -> {
+                            try {
+                                try {
+                                    tmpParticipant.deactivate();
+                                } catch (RSBException ex) {
+                                    throw new RSBResolvedException("Participant deactivation failed!", ex);
+                                }
+                            } catch (final IllegalStateException | RSBResolvedException ex) {
+                                ExceptionPrinter.printHistory(new InvalidStateException("RSB Participant[" + tmpParticipant.toString() + "] deactivation bug detected!", ex), logger, LogLevel.WARN);
+                                // no need for deactivating non existing participant.
                             }
-                        } catch (RSBException ex) {
-                            throw new RSBResolvedException("Participant deactivation failed!", ex);
-                        }
-                    } catch (final IllegalStateException | RSBResolvedException ex) {
-                        ExceptionPrinter.printHistory(new InvalidStateException("RSB Participant[" + tmpParticipant.toString() + "] deactivation bug detected!", ex), logger, LogLevel.WARN);
-                        // no need for deactivating non existing participant.
+                            return null;
+                        });
+                    } catch (RejectedExecutionException ex) {
+                        // apply fallback solution by using a synchronized shutdown
+                        tmpParticipant.deactivate();
                     }
-                    return null;
-                });
+                }
 
                 // clear global instance to avoid any further interaction and free the participantLock.
                 this.participant = null;
             }
 
             // wait for deactivation and handle error case
-            try {
-                deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
-                logger.debug("Participant[" + this + "] deactivated.");
-            } catch (TimeoutException ex) {
-                logger.warn("Deactivation stall detected! " + this + " did not response in time!");
-            } catch (ExecutionException ex) {
-                if (ex.getCause() == null) {
+            if(deactivationFuture != null) {
+                try {
+                    deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
+                    logger.debug("Participant[" + this + "] deactivated.");
+                } catch (TimeoutException ex) {
+                    logger.warn("Deactivation stall detected! " + this + " did not response in time!");
+                } catch (ExecutionException ex) {
+                    if (ex.getCause() == null) {
+                        throw ex;
+                    }
+                    throw ex.getCause();
+                } catch (InterruptedException ex) {
+                    deactivationFuture.cancel(true);
                     throw ex;
                 }
-                throw ex.getCause();
-            } catch (InterruptedException ex) {
-                deactivationFuture.cancel(true);
-                throw ex;
             }
         } catch (InterruptedException ex) {
             throw ex;
