@@ -63,7 +63,7 @@ public class ProtoBufJSonProcessor {
      *                                                          <p>
      *                                                          TODO: release: change parameter type to message since java primitives cannot be de-/serialized anymore anyway
      */
-    public String   serialize(final Object serviceState) throws InvalidStateException, CouldNotPerformException {
+    public String serialize(final Object serviceState) throws InvalidStateException, CouldNotPerformException {
         String jsonStringRep;
         if (serviceState instanceof Message) {
             try {
@@ -72,7 +72,7 @@ public class ProtoBufJSonProcessor {
                 throw new CouldNotPerformException("Could not serialize service argument to string!", ex);
             }
         } else {
-            throw new InvalidStateException("Service attribute is not a protobuf message!");
+            throw new InvalidStateException("Service attribute Class[" + serviceState.getClass().getSimpleName() + "] not a protobuf message!");
         }
 
         return jsonStringRep;
@@ -89,6 +89,7 @@ public class ProtoBufJSonProcessor {
      * @throws CouldNotPerformException
      */
     public String getServiceStateClassName(final Object serviceState) throws CouldNotPerformException {
+        // todo: move to dal or any bco component. Jul should be independent from bco architecture.
         if (serviceState.getClass().getName().startsWith("org.openbase.type")) {
             return serviceState.getClass().getName();
         }
@@ -109,47 +110,53 @@ public class ProtoBufJSonProcessor {
         return javaToProto.getProtoType().name();
     }
 
-    public <SAT> SAT deserialize(String jsonStringRep, Class<SAT> serviceStateClass) throws CouldNotPerformException {
-        return (SAT) deserialize(jsonStringRep, serviceStateClass.getSimpleName());
+    /**
+     * Deserialise a JSon string representation for a protobuf message given the class of the type.
+     *
+     * @param jsonStringRep the string representation of the rst value
+     * @param messageClassName  the message class name of the type to load the class.
+     *
+     * @return the deserialized message.
+     *
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the deserialization fails.
+     */
+    public Message deserialize(String jsonStringRep, String messageClassName) throws CouldNotPerformException {
+        try {
+            Class<? extends Message> messageClass = (Class<? extends Message>) Class.forName(messageClassName);
+            if (messageClass.isEnum()) {
+                throw new NotSupportedException(messageClass, this, "Service attribute type must be a protobuf message!");
+            }
+            return deserialize(jsonStringRep, messageClass);
+        } catch (ClassNotFoundException ex) {
+            throw new CouldNotPerformException("Could not load Class[" + messageClassName + "]", ex);
+        }
     }
 
     /**
-     * Deserialise a JSon string representation for an rst value given the class
-     * name for the value or the type if its a primitive.
+     * Deserialise a JSon string representation for a protobuf message given the class of the type.
      *
-     * @param jsonStringRep        the string representation of the rst value
-     * @param serviceStateClassName the class name or the type of the value
+     * @param jsonStringRep the string representation of the rst value
+     * @param messageClass  the message class of the type.
      *
-     * @return the deserialized message
+     * @return the deserialized message.
      *
-     * @throws org.openbase.jul.exception.CouldNotPerformException
+     * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the deserialization fails.
      */
-    public Message deserialize(String jsonStringRep, String serviceStateClassName) throws CouldNotPerformException {
+    public <M extends Message> M deserialize(String jsonStringRep, Class<M> messageClass) throws CouldNotPerformException {
         try {
-
-            if (!serviceStateClassName.startsWith("org.openbase.type")) {
-                throw new NotSupportedException(serviceStateClassName, this, "Service arguments must be a protobuf message but detected type is ["+serviceStateClassName+"]!");
-            }
-
             try {
-                Class serviceStateClass = Class.forName(serviceStateClassName);
-                if (serviceStateClass.isEnum()) {
-                    throw new NotSupportedException(serviceStateClassName, this, "Service attribute type must be a protobuf message!");
-                }
-                Message.Builder builder = (Message.Builder) serviceStateClass.getMethod("newBuilder").invoke(null);
+                Message.Builder builder = (Message.Builder) messageClass.getMethod("newBuilder").invoke(null);
                 jsonFormat.merge(new ByteArrayInputStream(jsonStringRep.getBytes(Charset.forName(UTF8))), builder);
-                return builder.build();
-            } catch (ClassNotFoundException ex) {
-                throw new CouldNotPerformException("Could not find class for serviceStateClassName [" + serviceStateClassName + "]", ex);
+                return (M) builder.build();
             } catch (IOException ex) {
                 throw new CouldNotPerformException("Could not merge [" + jsonStringRep + "] into builder", ex);
             } catch (NoSuchMethodException | SecurityException ex) {
-                throw new CouldNotPerformException("Could not find or access newBuilder method for rst type [" + serviceStateClassName + "]", ex);
+                throw new CouldNotPerformException("Could not find or access newBuilder method of type [" + messageClass + "]", ex);
             } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                throw new CouldNotPerformException("Could not invoke newBuilder method for rst type [" + serviceStateClassName + "]", ex);
+                throw new CouldNotPerformException("Could not invoke newBuilder method of type [" + messageClass + "]", ex);
             }
         } catch (CouldNotPerformException | NullPointerException ex) {
-            throw new CouldNotPerformException("Could not deserialize json String[" + jsonStringRep + "] into ServiceStateClassName[" + serviceStateClassName + "]!", ex);
+            throw new CouldNotPerformException("Could not deserialize json String[" + jsonStringRep + "] into protobuf type of Class[" + messageClass + "]!", ex);
         }
     }
 
