@@ -72,7 +72,7 @@ public class ProtoBufJSonProcessor {
                 throw new CouldNotPerformException("Could not serialize service argument to string!", ex);
             }
         } else {
-            throw new InvalidStateException("Service attribute is not a protobuf message!");
+            throw new InvalidStateException("Service attribute Class["+serviceState.getClass().getSimpleName()+"] not a protobuf message!");
         }
 
         return jsonStringRep;
@@ -114,7 +114,7 @@ public class ProtoBufJSonProcessor {
     }
 
     /**
-     * Deserialise a JSon string representation for an rst value given the class
+     * Deserialise a JSon string representation for a protobuf message given the class
      * name for the value or the type if its a primitive.
      *
      * @param jsonStringRep        the string representation of the rst value
@@ -126,11 +126,6 @@ public class ProtoBufJSonProcessor {
      */
     public Message deserialize(String jsonStringRep, String serviceStateClassName) throws CouldNotPerformException {
         try {
-
-            if (!serviceStateClassName.startsWith("org.openbase.type")) {
-                throw new NotSupportedException(serviceStateClassName, this, "Service arguments must be a protobuf message but detected type is ["+serviceStateClassName+"]!");
-            }
-
             try {
                 Class serviceStateClass = Class.forName(serviceStateClassName);
                 if (serviceStateClass.isEnum()) {
