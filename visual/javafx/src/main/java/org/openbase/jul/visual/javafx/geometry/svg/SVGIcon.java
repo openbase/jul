@@ -118,6 +118,8 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
         this.styled = styled;
         this.shapeProvider = shapeProvider;
         this.iconState = new IconState();
+        this.setWidth(size);
+        this.setHeight(size);
 
         disableProperty().addListener((ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean disabled) -> {
             if (disabled) {
@@ -317,7 +319,7 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
         assert color != null;
         stopForegroundIconColorFadeAnimation();
         foregroundFadeIcon.setFill(color);
-        foregroundColorFadeAnimation = Animations.createFadeTransition(foregroundFadeIcon, JFXConstants.TRANSPARENCY_FULLY, JFXConstants.TRANSPARENCY_NONE, Animation.INDEFINITE, JFXConstants.ANIMATION_DURATION_FADE_DEFAULT);
+        foregroundColorFadeAnimation = Animations.createFadeTransition(foregroundFadeIcon, JFXConstants.TRANSPARENCY_FULLY, JFXConstants.TRANSPARENCY_NONE, cycleCount, JFXConstants.ANIMATION_DURATION_FADE_DEFAULT);
         foregroundColorFadeAnimation.setOnFinished(event -> {
             foregroundFadeIcon.setFill(color);
             foregroundFadeIcon.setOpacity(JFXConstants.TRANSPARENCY_FULLY);
