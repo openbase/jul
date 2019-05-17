@@ -50,6 +50,21 @@ public interface VariableProvider {
     String getValue(final String variable) throws NotAvailableException;
 
     /**
+     *
+     * @param variable the variable name to be resolved.
+     * @param defaultValue the value to return in case the variable could not be resolved.
+     *                 
+     * @return the value of the variable.
+     */
+    default String getValue(final String variable, final String defaultValue) {
+        try {
+            return getValue(variable);
+        } catch (NotAvailableException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
      * Method resolves all variables whose name contains the given identifier.
      *
      * @param variableContains the identifier to select the variables.
