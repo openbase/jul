@@ -43,6 +43,20 @@ public interface ConfigurableRemote<ID, M, CONFIG> extends IdentifiableRemote<ID
     CONFIG getConfig() throws NotAvailableException;
 
     /**
+     * Check if the config object is already available.
+     *
+     * @return true if config is available
+     */
+    default boolean isConfigAvailable() {
+        try {
+            getConfig();
+        } catch (NotAvailableException e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Method returns the class of the configuration instance.
      *
      * @return the class of the configuration.
