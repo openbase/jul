@@ -21,17 +21,21 @@ package org.openbase.jul.extension.type.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import org.junit.After;
 import org.junit.AfterClass;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.type.domotic.state.PowerStateType;
 
+import java.util.concurrent.TimeUnit;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class TimestampProcessorTest {
@@ -94,9 +98,11 @@ public class TimestampProcessorTest {
     public void testUpdateTimeStamp() throws Exception {
         System.out.println("updateTimeStamp");
         PowerStateType.PowerState.Builder powerState = PowerStateType.PowerState.newBuilder();
-        long time = 9999;
+        long time = System.currentTimeMillis();
         TimestampProcessor.updateTimestamp(time, powerState);
-        assertEquals(TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());
+        assertEquals("Timestamp not build correctly!", TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());
+        assertEquals("Timestamp unit is not microseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MICROSECONDS), powerState.getTimestamp().getTime());
+        assertEquals("Timestamp is not correctly converted into milliseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS), powerState.getTimestamp().getTime() * 1000);
     }
 
     /**
