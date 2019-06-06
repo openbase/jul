@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.type.domotic.state.PowerStateType;
+import org.openbase.type.domotic.state.PowerStateType.PowerState;
 
 import java.util.concurrent.TimeUnit;
 
@@ -80,15 +81,16 @@ public class TimestampProcessorTest {
     @Test
     public void testUpdateTimeStampWithCurrentTime() throws Exception {
         System.out.println("updateTimeStampWithCurrentTime");
-        PowerStateType.PowerState powerState = PowerStateType.PowerState.newBuilder().build();
+        PowerState powerState = PowerState.getDefaultInstance();
         long time1 = System.currentTimeMillis();
         Thread.sleep(1);
-        long time2 = TimestampJavaTimeTransform.transform(TimestampProcessor.updateTimestampWithCurrentTime(powerState).getTimestamp());
+        powerState = TimestampProcessor.updateTimestampWithCurrentTime(powerState);
+        long time2 = TimestampJavaTimeTransform.transform(powerState.getTimestamp());
         Thread.sleep(1);
         long time3 = System.currentTimeMillis();
         assertTrue(time1 < time2);
         assertTrue(time2 < time3);
-
+        assertEquals("Timestamp is not correctly converted into milliseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS.convert(powerState.getTimestamp().getTime(), TimeUnit.MICROSECONDS));
     }
 
     /**
@@ -97,7 +99,7 @@ public class TimestampProcessorTest {
     @Test
     public void testUpdateTimeStamp() throws Exception {
         System.out.println("updateTimeStamp");
-        PowerStateType.PowerState.Builder powerState = PowerStateType.PowerState.newBuilder();
+        PowerStateType.PowerState.Builder powerState = PowerState.newBuilder();
         long time = System.currentTimeMillis();
         TimestampProcessor.updateTimestamp(time, powerState);
         assertEquals("Timestamp not build correctly!", TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());

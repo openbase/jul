@@ -139,7 +139,7 @@ public class TimestampProcessor {
         if (timeStampFieldDescriptor == null || !messageOrBuilder.hasField(timeStampFieldDescriptor)) {
             throw new NotAvailableException(TIMESTAMP_NAME);
         }
-        return TimeUnit.MICROSECONDS.convert(((Timestamp) messageOrBuilder.getField(timeStampFieldDescriptor)).getTime(), timeUnit);
+        return timeUnit.convert(((Timestamp) messageOrBuilder.getField(timeStampFieldDescriptor)).getTime(), TimeUnit.MICROSECONDS);
     }
 
     /**
