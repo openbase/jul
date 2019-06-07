@@ -10,12 +10,12 @@ package org.openbase.jul.extension.type.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -104,7 +104,7 @@ public class TimestampProcessorTest {
         TimestampProcessor.updateTimestamp(time, powerState);
         assertEquals("Timestamp not build correctly!", TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());
         assertEquals("Timestamp unit is not microseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MICROSECONDS), powerState.getTimestamp().getTime());
-        assertEquals("Timestamp is not correctly converted into milliseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS), powerState.getTimestamp().getTime() * 1000);
+        assertEquals("Timestamp is not correctly converted into milliseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS), TimeUnit.MICROSECONDS.toMillis(powerState.getTimestamp().getTime()));
     }
 
     /**
