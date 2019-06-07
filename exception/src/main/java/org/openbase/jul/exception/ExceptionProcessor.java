@@ -67,4 +67,16 @@ public class ExceptionProcessor {
         }
         return cause;
     }
+
+    /**
+     * Method checks if the initial cause of the given throwable is related to any system shutdown routine.
+     * In more detail, an initial cause is related to the system shutdown when it is an instance of the {@code ShutdownInProgressException} class.
+     *
+     * @param throwable the top level cause.
+     *
+     * @return returns true if the given throwable is caused by a system shutdown, otherwise false.
+     */
+    public static boolean isCausedBySystemShutdown(final Throwable throwable) {
+        return ExceptionProcessor.getInitialCause(throwable) instanceof ShutdownInProgressException;
+    }
 }
