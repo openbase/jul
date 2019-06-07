@@ -21,15 +21,19 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.AbstractMessage.Builder;
+
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -40,9 +44,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * @param <MB>
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- * @param <MB>
  */
 public class BuilderSyncSetup<MB extends Builder<MB>> {
 
@@ -68,14 +72,12 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                try {
-                    if (JPService.getProperty(JPTestMode.class).getValue()) {
-                        return;
-                    }
-                } catch (JPServiceException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-                }
                 ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
+
+                // in test mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
+                if (JPService.testMode()) {
+                    return;
+                }
                 unlockRead("TimeoutHandler");
             }
         };
@@ -83,14 +85,12 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                try {
-                    if (JPService.getProperty(JPTestMode.class).getValue()) {
-                        return;
-                    }
-                } catch (JPServiceException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-                }
                 ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!")), logger);
+
+                // in test mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
+                if (JPService.testMode()) {
+                    return;
+                }
                 unlockWrite();
             }
         };
@@ -196,7 +196,10 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                     Thread.currentThread().interrupt();
                 }
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
+                // only print error if the exception was not caused by a system shutdown.
+                if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
+                }
             }
         }
     }
