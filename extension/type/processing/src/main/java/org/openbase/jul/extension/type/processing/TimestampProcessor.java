@@ -10,12 +10,12 @@ package org.openbase.jul.extension.type.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -27,6 +27,7 @@ import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.NotSupportedException;
+import org.openbase.jul.exception.VerificationFailedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor;
 import org.slf4j.Logger;
@@ -136,8 +137,10 @@ public class TimestampProcessor {
      */
     public static long getTimestamp(final MessageOrBuilder messageOrBuilder, final TimeUnit timeUnit) throws NotAvailableException {
         final FieldDescriptor timeStampFieldDescriptor = ProtoBufFieldProcessor.getFieldDescriptor(messageOrBuilder, TIMESTAMP_NAME.toLowerCase());
-        if (timeStampFieldDescriptor == null || !messageOrBuilder.hasField(timeStampFieldDescriptor)) {
-            throw new NotAvailableException(TIMESTAMP_NAME);
+        if (timeStampFieldDescriptor == null) {
+            throw new NotAvailableException(TIMESTAMP_NAME, new VerificationFailedException(messageOrBuilder.getDescriptorForType().getName() + " does not provide Field[" + TIMESTAMP_NAME + "]"));
+        } else if (!messageOrBuilder.hasField(timeStampFieldDescriptor)) {
+            throw new NotAvailableException(messageOrBuilder.getDescriptorForType().getName(), TIMESTAMP_NAME);
         }
         return timeUnit.convert(((Timestamp) messageOrBuilder.getField(timeStampFieldDescriptor)).getTime(), TimeUnit.MICROSECONDS);
     }
@@ -187,10 +190,10 @@ public class TimestampProcessor {
      * Method copies the timestamp field of the source message into the target message.
      * In case of an error the original message is returned.
      *
-     * @param <M>              the message type of the message to update.
+     * @param <M>                    the message type of the message to update.
      * @param sourceMessageOrBuilder the message providing a timestamp.
      * @param targetMessageOrBuilder the message offering a timestamp field to update.
-     * @param logger           the logger which is used for printing the exception stack in case something went wrong.
+     * @param logger                 the logger which is used for printing the exception stack in case something went wrong.
      *
      * @return the updated message or the original one in case of errors.
      */
@@ -207,7 +210,7 @@ public class TimestampProcessor {
      * Method copies the timestamp field of the source message into the target message.
      * In case of an error the original message is returned.
      *
-     * @param <M>              the message type of the message to update.
+     * @param <M>                    the message type of the message to update.
      * @param sourceMessageOrBuilder the message providing a timestamp.
      * @param targetMessageOrBuilder the message offering a timestamp field to update.
      *
@@ -216,7 +219,7 @@ public class TimestampProcessor {
      * @throws CouldNotPerformException is thrown in case the copy could not be performed e.g. because of a missing timestamp field.
      */
     public static <M extends MessageOrBuilder> M copyTimestamp(final M sourceMessageOrBuilder, final M targetMessageOrBuilder) throws CouldNotPerformException {
-        return TimestampProcessor.updateTimestamp(TimestampProcessor.getTimestamp(sourceMessageOrBuilder, TimeUnit.MICROSECONDS), targetMessageOrBuilder , TimeUnit.MICROSECONDS);
+        return TimestampProcessor.updateTimestamp(TimestampProcessor.getTimestamp(sourceMessageOrBuilder, TimeUnit.MICROSECONDS), targetMessageOrBuilder, TimeUnit.MICROSECONDS);
     }
 
     /**
@@ -240,7 +243,9 @@ public class TimestampProcessor {
 
     /**
      * Method return true if the given message contains a timestamp field.
+     *
      * @param messageOrBuilder the message to analyze
+     *
      * @return true if the timestamp field is provided, otherwise false.
      */
     public static boolean hasTimestamp(final MessageOrBuilder messageOrBuilder) {
