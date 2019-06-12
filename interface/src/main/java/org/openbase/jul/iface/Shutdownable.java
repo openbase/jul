@@ -3,6 +3,7 @@ package org.openbase.jul.iface;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +90,13 @@ public interface Shutdownable {
             this.shutdownable = shutdownable;
             this.delay = delay;
             this.canceled = false;
-            Runtime.getRuntime().addShutdownHook(this);
+            try {
+                Runtime.getRuntime().addShutdownHook(this);
+            } catch (IllegalStateException ex) {
+                if (ex.getMessage().equals("Shutdown in progress")) {
+                    throw new ShutdownInProgressException(Runtime.class);
+                }
+            }
         }
 
         @Override
