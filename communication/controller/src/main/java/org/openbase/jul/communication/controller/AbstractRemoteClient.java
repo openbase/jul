@@ -1118,13 +1118,17 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         try {
             notifyPrioritizedObservers(data);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+            if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+            }
         }
 
         try {
             dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
+            if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
+            }
         }
     }
 
