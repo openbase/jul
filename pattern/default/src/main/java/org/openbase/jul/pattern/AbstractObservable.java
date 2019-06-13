@@ -266,7 +266,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                         } catch (Exception ex) {
                             //TODO I do not know if this is useful generally, but it helps debugging if invalid service state observers are registered on a unit
                             if (ex instanceof ClassCastException) {
-                                LOGGER.error("Probably defect observer [{}] registered on observable [{}]", observer, this);
+                                LOGGER.error("Probably defect Observer[{}] registered on {}", observer, this);
                             }
                             exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer["+observer.getClass().getSimpleName()+"] update failed!", ex), exceptionStack);
                         }
