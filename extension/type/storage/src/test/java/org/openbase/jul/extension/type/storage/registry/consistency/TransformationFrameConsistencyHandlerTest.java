@@ -301,7 +301,7 @@ public class TransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public List<IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntries() throws CouldNotPerformException {
+                public List<IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntries(){
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 

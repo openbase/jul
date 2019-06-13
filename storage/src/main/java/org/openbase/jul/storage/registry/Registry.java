@@ -87,10 +87,8 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      * Copies all entries into a list.
      *
      * @return a list with all values of the entry map
-     *
-     * @throws CouldNotPerformException if something fails
      */
-    List<ENTRY> getEntries() throws CouldNotPerformException;
+    List<ENTRY> getEntries();
 
     /**
      * An unmodifiable map of the current entry map.

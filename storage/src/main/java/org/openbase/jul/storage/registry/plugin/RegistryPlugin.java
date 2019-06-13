@@ -65,8 +65,6 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY e
 
     void beforeGet(final KEY key) throws RejectedException;
 
-    void beforeGetEntries() throws CouldNotPerformException;
-
     void checkAccess() throws RejectedException;
 
     void beforeUpstreamDependencyNotification(final Registry dependency) throws CouldNotPerformException;

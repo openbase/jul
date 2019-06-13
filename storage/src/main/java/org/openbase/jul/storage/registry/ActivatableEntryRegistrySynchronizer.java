@@ -21,6 +21,7 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -30,8 +31,8 @@ import org.openbase.jul.iface.Shutdownable;
 import org.openbase.jul.pattern.Factory;
 
 /**
- *
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ *
  * @param <KEY>
  * @param <ENTRY>
  * @param <CONFIG_M>
@@ -92,12 +93,8 @@ public abstract class ActivatableEntryRegistrySynchronizer<KEY, ENTRY extends Co
 
     @Override
     public void shutdown() {
-        try {
-            for (ENTRY entry : localRegistry.getEntries()) {
-                entry.shutdown();
-            }
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(ex, logger);
+        for (ENTRY entry : localRegistry.getEntries()) {
+            entry.shutdown();
         }
         super.shutdown();
     }

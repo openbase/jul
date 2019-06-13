@@ -97,10 +97,6 @@ public abstract class AbstractRegistryPluginAdapter<KEY, ENTRY extends Identifia
     }
 
     @Override
-    public void beforeGetEntries() throws CouldNotPerformException {
-    }
-
-    @Override
     public void checkAccess() throws RejectedException {
     }
 

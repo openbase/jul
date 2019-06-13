@@ -440,14 +440,11 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
-     * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public List<ENTRY> getEntries() throws CouldNotPerformException {
+    public List<ENTRY> getEntries() {
         registryLock.readLock().lock();
         try {
-            pluginPool.beforeGetEntries();
             return new ArrayList<>(entryMap.values());
         } finally {
             registryLock.readLock().unlock();

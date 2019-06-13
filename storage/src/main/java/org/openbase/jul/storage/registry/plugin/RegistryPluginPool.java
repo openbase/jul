@@ -292,21 +292,6 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
     }
 
     @Override
-    public void beforeGetEntries() throws CouldNotPerformException {
-        if (pluginList.isEmpty()) {
-            return;
-        }
-
-        for (PLUGIN plugin : pluginList) {
-            try {
-                plugin.beforeGetEntries();
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about planned registry publishment!", plugin, ex), logger, LogLevel.ERROR);
-            }
-        }
-    }
-
-    @Override
     public void checkAccess() throws RejectedException {
         if (pluginList.isEmpty()) {
             return;
