@@ -219,7 +219,7 @@
 
         <!-- fix version since the new one seems to cause a blocking bco start on netboot systems. -->
         <!--dependency.org.eclipse.jgit.version>[5.1,5.2-alpha)</dependency.org.eclipse.jgit.version-->
-        <dependency.org.eclipse.jgit.version>5.1.7</dependency.org.eclipse.jgit.version>
+        <dependency.org.eclipse.jgit.version>[5.1.7,5.1.8-alpha)</dependency.org.eclipse.jgit.version>
 
         <dependency.jps.version>[3.4,3.5-alpha)</dependency.jps.version>
 
