@@ -57,7 +57,6 @@ public abstract class AbstractFXApplication extends Application {
     @Override
     public void start(Stage stage) {
         try {
-            System.out.println("start");
             // setup java property service
             JPService.setApplicationName(getClass());
             registerProperties();
