@@ -39,18 +39,17 @@ import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
-import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.controller.Remote;
 import org.openbase.jul.pattern.provider.DataProvider;
-import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.jul.schedule.WatchDog;
+import org.openbase.jul.schedule.WatchDog.ServiceState;
 import org.openbase.type.communication.ScopeType.Scope;
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 import org.slf4j.Logger;
@@ -106,6 +105,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private WatchDog listenerWatchDog, remoteServerWatchDog;
     private RSBRemoteServer remoteServer;
     private ConnectionState.State connectionState;
+    private Observer<WatchDog, ServiceState> middlewareFailureObserver;
+    private Observer<WatchDog, ServiceState> middlewareReadyObserver;
     private long connectionPing;
     private long lastPingReceived;
     private CompletableFutureLite<M> syncFuture;
@@ -121,6 +122,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private Future<Long> pingTask = null;
     private long transactionId = -1;
 
+
     public AbstractRemoteClient(final Class<M> dataClass) {
         this.dataClass = dataClass;
         this.mainHandler = generateHandler();
@@ -133,6 +135,23 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         this.lastPingReceived = -1;
         this.messageProcessor = new SimpleMessageProcessor<>(dataClass);
         this.connectionStateObservable.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
+        this.middlewareFailureObserver = (source, watchDogState) -> {
+            switch (watchDogState) {
+                case FAILED:
+                    logger.warn("Middleware connection lost...");
+                    AbstractRemoteClient.this.setConnectionState(DISCONNECTED);
+                    break;
+            }
+        };
+        this.middlewareReadyObserver = (final WatchDog source, WatchDog.ServiceState watchDogState) -> {
+            // Sync data after service start.
+            switch (watchDogState) {
+                case RUNNING:
+                    remoteServerWatchDog.waitForServiceActivation();
+                    requestData();
+                    break;
+            }
+        };
     }
 
     private static long generateTimeout(long currentTimeout) {
@@ -265,14 +284,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         try {
             this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(AbstractControllerServer.SCOPE_SUFFIX_CONTROL), participantConfig);
             this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(AbstractControllerServer.SCOPE_SUFFIX_CONTROL) + "]");
-            this.listenerWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data1) -> {
-                logger.debug("listener state update: " + data1.name());
-                // Sync data after service start.
-                if (data1 == WatchDog.ServiceState.RUNNING) {
-                    remoteServerWatchDog.waitForServiceActivation();
-                    requestData();
-                }
-            });
+            this.listenerWatchDog.addObserver(middlewareReadyObserver);
+            this.listenerWatchDog.addObserver(middlewareFailureObserver);
+            this.remoteServerWatchDog.addObserver(middlewareFailureObserver);
         } catch (RuntimeException | InstantiationException ex) {
             throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope + "]!", ex);
         }
