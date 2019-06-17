@@ -79,4 +79,22 @@ public class ExceptionProcessor {
     public static boolean isCausedBySystemShutdown(final Throwable throwable) {
         return ExceptionProcessor.getInitialCause(throwable) instanceof ShutdownInProgressException;
     }
+
+    /**
+     * Method throws an interrupted exception if the given {@code throwable) is caused by a system shutdown.
+     *
+     * @param throwable the throwable to check.
+     * @param <T>       the type of the {@code throwable)
+     *
+     * @return the bypassed {@code throwable)
+     *
+     * @throws InterruptedException is thrown if the system shutdown was initiated.
+     */
+    public static <T extends Throwable> T interruptOnShutdown(final T throwable) throws InterruptedException {
+        if (ExceptionProcessor.isCausedBySystemShutdown(throwable)) {
+            throw new InterruptedException();
+        } else {
+            return throwable;
+        }
+    }
 }
