@@ -660,6 +660,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 return;
             }
 
+            // skip reconnect on system shutdown
+            if (shutdownInitiated && connectionState != DISCONNECTED) {
+                return;
+            }
+
             // update state and notify
             final ConnectionState.State oldConnectionState = this.connectionState;
             this.connectionState = connectionState;
@@ -1515,6 +1520,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public Future<Long> ping() {
         synchronized (pingLock) {
+
+            if(shutdownInitiated) {
+                return FutureProcessor.canceledFuture(Long.class, new CouldNotPerformException("Ping canceled because of system shutdown!"));
+            }
+
             if (pingTask == null || pingTask.isDone()) {
                 pingTask = GlobalCachedExecutorService.submit(() -> {
                     final ConnectionState.State previousConnectionState = connectionState;
