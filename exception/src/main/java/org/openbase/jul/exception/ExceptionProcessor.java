@@ -92,7 +92,7 @@ public class ExceptionProcessor {
      */
     public static <T extends Throwable> T interruptOnShutdown(final T throwable) throws InterruptedException {
         if (ExceptionProcessor.isCausedBySystemShutdown(throwable)) {
-            throw new InterruptedException();
+            throw new InterruptedException(getInitialCauseMessage(throwable));
         } else {
             return throwable;
         }
