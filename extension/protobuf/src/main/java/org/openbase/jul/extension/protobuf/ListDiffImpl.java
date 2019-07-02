@@ -43,6 +43,11 @@ public class ListDiffImpl<KEY, VALUE extends Identifiable<KEY>> extends  Abstrac
     }
 
     @Override
+    protected IdentifiableValueMap<KEY, VALUE> copyMap(IdentifiableValueMap<KEY, VALUE> map) {
+        return new IdentifiableValueMap<>(map);
+    }
+
+    @Override
     public void diff(final List<VALUE> modifiedList) {
         diff(IdentifiableValueMap.fromCollection(modifiedList));
     }

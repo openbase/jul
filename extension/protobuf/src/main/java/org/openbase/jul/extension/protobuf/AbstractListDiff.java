@@ -26,15 +26,18 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP extends IdentifiableValueMap<KEY, VALUE>>  {
+public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP extends IdentifiableValueMap<KEY, VALUE>> {
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(getClass());
 
     private MAP newValues, updatedValues, removedValues, originalValues;
+
+    private SyncObject listDiffLock = new SyncObject("'ListDiffLock");
 
     public AbstractListDiff(final MAP newValues, final MAP updatedValues, final MAP removedValues, final MAP originalValues) {
         this.newValues = newValues;
@@ -48,60 +51,78 @@ public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP
     }
 
     public void diff(final MAP originalMap, final MAP modifiedMap) {
-        newValues.clear();
-        updatedValues.clear();
-        removedValues.clear();
+        synchronized (listDiffLock) {
+            newValues.clear();
+            updatedValues.clear();
+            removedValues.clear();
 
-        final IdentifiableValueMap<KEY, VALUE> modifiedCopy = new IdentifiableValueMap<>(modifiedMap);
+            final IdentifiableValueMap<KEY, VALUE> modifiedCopy = new IdentifiableValueMap<>(modifiedMap);
 
-        originalMap.keySet().stream().forEach((id) -> {
-            try {
-                if (modifiedMap.containsKey(id)) {
-                    if (!originalMap.get(id).equals(modifiedMap.get(id))) {
-                        updatedValues.put(modifiedMap.get(id));
+
+            for (KEY id : originalMap.keySet()) {
+                try {
+                    if (modifiedMap.containsKey(id)) {
+                        if (!originalMap.get(id).equals(modifiedMap.get(id))) {
+                            updatedValues.put(modifiedMap.get(id));
+                        }
+                        modifiedCopy.remove(id);
+                    } else {
+                        removedValues.put(originalMap.get(id));
                     }
-                    modifiedCopy.remove(id);
-                } else {
-                    removedValues.put(originalMap.get(id));
+                } catch (CouldNotPerformException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Ignoring invalid value[" + id + "]", ex), logger, LogLevel.ERROR);
                 }
-            } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Ignoring invalid value[" + id + "]", ex), logger, LogLevel.ERROR);
             }
-        });
-        // add all messages which are not included in original list.
-        newValues.putAll(modifiedCopy);
 
-        // update original messages.
-        originalValues = modifiedMap;
+            // add all messages which are not included in original list.
+            newValues.putAll(modifiedCopy);
+
+            // update original messages.
+            originalValues = modifiedMap;
+        }
     }
 
     public final MAP getNewValueMap() {
-        return newValues;
+        synchronized (listDiffLock) {
+            return copyMap(newValues);
+        }
     }
 
     public final MAP getUpdatedValueMap() {
-        return updatedValues;
+        synchronized (listDiffLock) {
+            return copyMap(updatedValues);
+        }
     }
 
     public final MAP getRemovedValueMap() {
-        return removedValues;
+        synchronized (listDiffLock) {
+            return copyMap(removedValues);
+        }
     }
 
     public int getChangeCounter() {
-        return newValues.size() + updatedValues.size() + removedValues.size();
+        synchronized (listDiffLock) {
+            return newValues.size() + updatedValues.size() + removedValues.size();
+        }
     }
 
     public void replaceOriginalMap(final MAP originalMap) {
-        originalValues.clear();
-        originalValues.putAll(originalMap);
+        synchronized (listDiffLock) {
+            originalValues.clear();
+            originalValues.putAll(originalMap);
+        }
     }
 
     public final MAP getOriginalValueMap() {
-        return originalValues;
+        synchronized (listDiffLock) {
+            return copyMap(originalValues);
+        }
     }
 
     public abstract void diff(final List<VALUE> modifiedList);
 
     public abstract void diff(final List<VALUE> originalList, final List<VALUE> modifiedList);
+
+    protected abstract MAP copyMap(final MAP map);
 
 }

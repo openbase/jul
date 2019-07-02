@@ -53,6 +53,11 @@ public class ProtobufListDiff<KEY, M extends AbstractMessage, MB extends M.Build
         super(new IdentifiableMessageMap<>(), new IdentifiableMessageMap<>(), new IdentifiableMessageMap<>(),  new IdentifiableMessageMap<>());
     }
 
+    @Override
+    protected IdentifiableMessageMap<KEY, M, MB> copyMap(IdentifiableMessageMap<KEY, M, MB> map) {
+        return new IdentifiableMessageMap<>(map);
+    }
+
     public void diffMessages(final List<M> modifiedList) {
         diff(new IdentifiableMessageMap<>(modifiedList));
     }
