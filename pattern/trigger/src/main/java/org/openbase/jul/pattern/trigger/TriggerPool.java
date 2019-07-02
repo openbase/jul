@@ -139,6 +139,22 @@ public class TriggerPool extends AbstractTrigger {
         return false;
     }
 
+    /**
+     * return the total amount of registered triggers.
+     * @return the total amount of trigger.
+     */
+    public int getSize() {
+        return triggerListAND.size() + triggerListOR.size();
+    }
+
+    /**
+     * Check if pool contains any trigger.
+     * @return true if no trigger are registered.
+     */
+    public boolean isEmpty() {
+        return triggerListAND.isEmpty() &&  triggerListOR.isEmpty();
+    }
+
     @Override
     public void activate() throws CouldNotPerformException, InterruptedException {
         for (Trigger trigger : triggerListAND) {
