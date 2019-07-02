@@ -37,7 +37,7 @@ public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP
 
     private MAP newValues, updatedValues, removedValues, originalValues;
 
-    private SyncObject listDiffLock = new SyncObject("'ListDiffLock");
+    private final SyncObject listDiffLock = new SyncObject("'ListDiffLock");
 
     public AbstractListDiff(final MAP newValues, final MAP updatedValues, final MAP removedValues, final MAP originalValues) {
         this.newValues = newValues;

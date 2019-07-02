@@ -30,12 +30,12 @@ public class ListDiffImpl<KEY, VALUE extends Identifiable<KEY>> extends  Abstrac
 
     public ListDiffImpl(final List<VALUE> originalValues) {
         this();
-        getOriginalValueMap().putAll(IdentifiableValueMap.fromCollection(originalValues));
+        replaceOriginalMap(IdentifiableValueMap.fromCollection(originalValues));
     }
 
     public ListDiffImpl(IdentifiableValueMap<KEY, VALUE> originValues) {
         this();
-        getOriginalValueMap().putAll(originValues);
+        replaceOriginalMap(originValues);
     }
 
     public ListDiffImpl() {

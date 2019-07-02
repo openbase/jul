@@ -41,12 +41,12 @@ public class ProtobufListDiff<KEY, M extends AbstractMessage, MB extends M.Build
 
     public ProtobufListDiff(final List<M> originalMessages) {
         this();
-        getOriginalMessages().putAll(new IdentifiableMessageMap<>(originalMessages));
+        replaceOriginalMap(new IdentifiableMessageMap<>(originalMessages));
     }
 
     public ProtobufListDiff(IdentifiableMessageMap<KEY, M, MB> originalMessages) {
         this();
-        getOriginalMessages().putAll(originalMessages);
+        replaceOriginalMap(new IdentifiableMessageMap<>(originalMessages));
     }
 
     public ProtobufListDiff() {
