@@ -53,17 +53,19 @@ public class TriggerPool extends AbstractTrigger {
         triggerListAND = new ArrayList();
         triggerListOR = new ArrayList();
         active = false;
+
         triggerAndObserver = (Trigger source, ActivationState data) -> {
             verifyCondition();
         };
+
         triggerOrObserver = (Trigger source, ActivationState data) -> {
-            if (data.getValue().equals(ActivationState.State.ACTIVE)) {
-                if (!getActivationState().getValue().equals(ActivationState.State.ACTIVE)) {
-                    notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build()));
-                }
-            } else {
+//            if (data.getValue().equals(ActivationState.State.ACTIVE)) {
+//                if (!getActivationState().getValue().equals(ActivationState.State.ACTIVE)) {
+//                    notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build()));
+//                }
+//            } else {
                 verifyCondition();
-            }
+//            }
         };
 
         try {
@@ -80,11 +82,15 @@ public class TriggerPool extends AbstractTrigger {
             triggerListOR.add(trigger);
         }
         if (active) {
-            if (triggerAggregation == TriggerAggregation.AND) {
-                trigger.addObserver(triggerAndObserver);
-            } else {
-                trigger.addObserver(triggerOrObserver);
+            switch (triggerAggregation) {
+                case OR:
+                    trigger.addObserver(triggerOrObserver);
+                    break;
+                case AND:
+                    trigger.addObserver(triggerAndObserver);
+                    break;
             }
+
             try {
                 trigger.activate();
             } catch (InterruptedException ex) {
