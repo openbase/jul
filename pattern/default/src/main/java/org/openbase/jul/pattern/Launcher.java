@@ -3,6 +3,8 @@ package org.openbase.jul.pattern;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.iface.Launchable;
 
+import java.util.concurrent.Future;
+
 /*
  * #%L
  * JUL Pattern Default
@@ -33,11 +35,8 @@ public interface Launcher<L extends Launchable> {
 
     /**
      * starts the launchable.
-     *
-     * @throws CouldNotPerformException
-     * @throws java.lang.InterruptedException
      */
-    void launch() throws CouldNotPerformException, InterruptedException;
+    Future<Void> launch();
 
     /**
      * Restarts the launchable.

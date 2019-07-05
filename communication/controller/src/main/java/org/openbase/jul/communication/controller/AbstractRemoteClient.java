@@ -1206,7 +1206,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             dataObservable.waitForValue();
         } catch (ExecutionException | CancellationException ex) {
             if (shutdownInitiated) {
-                throw new InterruptedException("Interrupt request because system shutdown was initiated!");
+                throw new ShutdownInProgressException(this);
             }
             throw new CouldNotPerformException("Could not wait for data!", ex);
         }
@@ -1268,7 +1268,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     public void validateInitialization() throws InvalidStateException {
         if (!initialized) {
-            throw new InvalidStateException(this + " not initialized!");
+            if (shutdownInitiated) {
+                throw new NotInitializedException(this, new ShutdownInProgressException(this));
+            }
+            throw new NotInitializedException(this);
         }
     }
 
@@ -1794,7 +1797,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     }
                     return null;
                 }
-            } catch (CouldNotPerformException | CancellationException ex) {
+            } catch (CouldNotPerformException | CancellationException | RejectedExecutionException ex) {
                 if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {

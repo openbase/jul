@@ -262,6 +262,10 @@ public class WatchDog implements Activatable, Shutdownable {
                                     throw new InvalidStateException("Not active after activation!");
                                 }
                             } catch (CouldNotPerformException | NullPointerException ex) {
+                                if (ExceptionProcessor.isCausedByInterruption(ex)) {
+                                    setServiceState(ServiceState.INTERRUPTED);
+                                    throw new InterruptedException();
+                                }
                                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName +  "] try again in " + (getRate() / 1000) + " seconds...", ex), logger, LogLevel.WARN);
                                 setServiceState(ServiceState.FAILED);
                             }

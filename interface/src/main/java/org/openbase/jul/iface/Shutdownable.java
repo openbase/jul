@@ -79,6 +79,7 @@ public interface Shutdownable {
         private Shutdownable shutdownable;
         private final long delay;
         private boolean canceled;
+        private boolean shutdown;
 
         private ShutdownDaemon(final Shutdownable shutdownable, final long delay) throws CouldNotPerformException {
             super(ShutdownDaemon.class.getSimpleName() + "[" + shutdownable + "]");
@@ -90,6 +91,7 @@ public interface Shutdownable {
             this.shutdownable = shutdownable;
             this.delay = delay;
             this.canceled = false;
+            this.shutdown = false;
             try {
                 Runtime.getRuntime().addShutdownHook(this);
             } catch (IllegalStateException ex) {
@@ -101,6 +103,7 @@ public interface Shutdownable {
 
         @Override
         public void run() {
+            shutdown = true;
             try {
                 if (delay > 0) {
                     try {
@@ -129,6 +132,10 @@ public interface Shutdownable {
                     canceled = true;
                 }
             }
+        }
+
+        public boolean isShutdownInProgress() {
+            return shutdown;
         }
     }
 }

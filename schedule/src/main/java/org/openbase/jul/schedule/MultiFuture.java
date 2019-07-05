@@ -23,6 +23,7 @@ package org.openbase.jul.schedule;
  */
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -40,8 +41,8 @@ public class MultiFuture<FUTURE_TYPE> implements Future<List<FUTURE_TYPE>> {
 
     private final List<Future<FUTURE_TYPE>> futureList;
 
-    public MultiFuture(final List<Future<FUTURE_TYPE>> futureList) {
-        this.futureList = futureList;
+    public MultiFuture(final Collection<Future<FUTURE_TYPE>> futureList) {
+        this.futureList = new ArrayList<>(futureList);
     }
 
     /**

@@ -554,7 +554,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * directly locked and internal builder operations are queued. Therefore please
      * call the close method soon as possible to release the lock after
      * you are done, otherwise the overall processing pipeline is delayed.
-     *
+     * <p>
      * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
      * This is a recovering feature but should never be used by design!
      *
@@ -570,9 +570,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
+     *
      * @return a new builder wrapper which already locks the manage lock.
      */
-    protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer){
+    protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer) {
         return new CloseableWriteLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
     }
 
@@ -582,7 +583,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * directly locked and internal builder operations are queued. Therefore please
      * call the close method soon as possible to release the lock after
      * you are done, otherwise the overall processing pipeline is delayed.
-     *
+     * <p>
      * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
      * This is a recovering feature but should never be used by design!
      *
@@ -598,9 +599,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
+     *
      * @return a new builder wrapper which already locks the manage lock.
      */
-    protected CloseableReadLockWrapper getManageReadLock(final Object consumer){
+    protected CloseableReadLockWrapper getManageReadLock(final Object consumer) {
         return new CloseableReadLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
     }
 
@@ -610,9 +612,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * directly locked and internal builder operations are queued. Therefore please
      * release the locks after usage, otherwise the overall processing pipeline is
      * delayed.
-     *
+     * <p>
      * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
      * This is a recovering feature but should never be used by design!
+     *
      * @return a provider to access the manage read and write lock.
      */
     protected CloseableLockProvider getManageLock() {
@@ -678,7 +681,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                     waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
                     informer.publish(event);
                 } catch (TimeoutException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Skip data update notification because middleware is not ready since "+TimeUnit.MILLISECONDS.toSeconds(NOTIFICATILONG_TIMEOUT)+" seconds of " + this + "!", ex), logger, LogLevel.WARN);
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Skip data update notification because middleware is not ready since " + TimeUnit.MILLISECONDS.toSeconds(NOTIFICATILONG_TIMEOUT) + " seconds of " + this + "!", ex), logger, LogLevel.WARN);
                 } catch (CouldNotPerformException ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform about data change of " + this + "!", ex), logger);
                 }
@@ -854,7 +857,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         manageLock.lockWrite(this);
         try {
             if (!initialized) {
-                throw new NotInitializedException("communication service");
+                if (shutdownDaemon.isShutdownInProgress()) {
+                    throw new NotInitializedException("server", new ShutdownInProgressException("server"));
+                }
+                throw new NotInitializedException("server");
             }
         } finally {
             manageLock.unlockWrite(this);

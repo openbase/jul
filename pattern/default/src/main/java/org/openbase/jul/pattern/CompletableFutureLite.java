@@ -40,6 +40,7 @@ public class CompletableFutureLite<V> implements Future<V> {
             return "CompletableFutureLite.Lock";
         }
     };
+    private boolean nullValueCompletion = false;
 
     /**
      * This is the value were the result is stored in case the future is complete.
@@ -65,6 +66,9 @@ public class CompletableFutureLite<V> implements Future<V> {
                 return false;
             }
             this.value = value;
+
+            // used to handle null value completion.
+            this.nullValueCompletion = true;
             lock.notifyAll();
         }
         return true;
@@ -126,7 +130,7 @@ public class CompletableFutureLite<V> implements Future<V> {
      */
     @Override
     public boolean isDone() {
-        return value != null || throwable != null;
+        return nullValueCompletion || value != null || throwable != null;
     }
 
     /**
@@ -150,12 +154,17 @@ public class CompletableFutureLite<V> implements Future<V> {
     @Override
     public V get() throws InterruptedException, ExecutionException {
         synchronized (lock) {
-            if (value != null) {
+            if (nullValueCompletion || value != null) {
                 return value;
             }
+
+            if (throwable != null) {
+                throw new ExecutionException(throwable);
+            }
+
             lock.wait();
 
-            if (value != null) {
+            if (nullValueCompletion || value != null) {
                 return value;
             }
 
@@ -188,12 +197,17 @@ public class CompletableFutureLite<V> implements Future<V> {
     @Override
     public V get(final long timeout, final TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
         synchronized (lock) {
-            if (value != null) {
+            if (nullValueCompletion || value != null) {
                 return value;
             }
+
+            if (throwable != null) {
+                throw new ExecutionException(throwable);
+            }
+
             lock.wait(timeUnit.toMillis(timeout));
 
-            if (value != null) {
+            if (nullValueCompletion || value != null) {
                 return value;
             }
 

@@ -29,7 +29,7 @@ package org.openbase.jul.exception;
 public class NotInitializedException extends InvalidStateException {
 
 	public NotInitializedException(String message, Object context) {
-		super(context+" is not initialized yet: "+message);
+		super(context.toString()+" is not initialized yet: "+message);
 	}
 
 	public NotInitializedException(Object context) {
@@ -37,10 +37,26 @@ public class NotInitializedException extends InvalidStateException {
 	}
 
 	public NotInitializedException(Object context, Throwable cause) {
+		super(context.toString()+" is not initialized yet!", cause);
+	}
+
+	public NotInitializedException(String message, Object context, Throwable cause) {
+		super(context.toString()+" is not initialized yet: "+message, cause);
+	}
+
+	public NotInitializedException(String message, String context) {
+		super(context+" is not initialized yet: "+message);
+	}
+
+	public NotInitializedException(String context) {
+		super(context+" is not initialized yet!");
+	}
+
+	public NotInitializedException(String context, Throwable cause) {
 		super(context+" is not initialized yet!", cause);
 	}
 
-	public NotInitializedException(String message,Object context, Throwable cause) {
+	public NotInitializedException(String message, String context, Throwable cause) {
 		super(context+" is not initialized yet: "+message, cause);
 	}
 }

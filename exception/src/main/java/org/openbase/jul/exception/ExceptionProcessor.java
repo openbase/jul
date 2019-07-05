@@ -81,6 +81,38 @@ public class ExceptionProcessor {
     }
 
     /**
+     * Method checks if any cause of the given throwable is related to any thread interruption.
+     *
+     * @param throwable the top level cause.
+     *
+     * @return returns true if the given throwable is caused by any thread interruption, otherwise false.
+     */
+    public static boolean isCausedByInterruption(final Throwable throwable) {
+        if (throwable == null) {
+            new FatalImplementationErrorException(ExceptionProcessor.class, new NotAvailableException("cause"));
+            return false;
+        }
+
+        Throwable cause = throwable;
+
+        // initial check
+        if(cause instanceof InterruptedException) {
+            return true;
+        }
+
+        // check causes
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+            if(cause instanceof InterruptedException) {
+                return true;
+            }
+        }
+
+        // no interruption found
+        return false;
+    }
+
+    /**
      * Method throws an interrupted exception if the given {@code throwable) is caused by a system shutdown.
      *
      * @param throwable the throwable to check.

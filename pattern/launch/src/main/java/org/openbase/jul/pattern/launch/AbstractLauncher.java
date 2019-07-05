@@ -39,6 +39,7 @@ import org.openbase.jul.pattern.Launcher;
 import org.openbase.jul.pattern.launch.jp.JPExcludeLauncher;
 import org.openbase.jul.pattern.launch.jp.JPPrintLauncher;
 import org.openbase.jul.processing.StringProcessor;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
 import org.slf4j.Logger;
@@ -46,10 +47,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Scope;
 import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.concurrent.TimeoutException;
@@ -74,6 +72,8 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     private boolean verified;
     private VerificationFailedException verificationFailedException;
 
+    private Future<Void> launcherTask;
+
     /**
      * Constructor prepares the launcher and registers already a shutdown hook.
      * The launcher class is used to instantiate a new launcher instance if the instantiateLaunchable() method is not overwritten.
@@ -87,21 +87,13 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      */
     public AbstractLauncher(final Class applicationClass, final Class<L> launchableClass) throws InstantiationException {
         super(ActivationState.newBuilder());
-//        try {
         this.launchableClass = launchableClass;
         this.applicationClass = applicationClass;
-//        } catch (CouldNotPerformException ex) {
-//            throw new InstantiationException(this, ex);
-//        }
     }
 
     @Override
     public void init() throws InitializationException, InterruptedException {
-        try {
-            super.init(SCOPE_PREFIX_LAUNCHER + Scope.COMPONENT_SEPARATOR + ScopeProcessor.convertIntoValidScopeComponent(getName()));
-        } catch (NotAvailableException ex) {
-            throw new InitializationException(this, ex);
-        }
+        super.init(SCOPE_PREFIX_LAUNCHER + Scope.COMPONENT_SEPARATOR + ScopeProcessor.convertIntoValidScopeComponent(getName()));
     }
 
     @Override
@@ -134,7 +126,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      * @throws NotAvailableException
      */
     @Override
-    public String getName() throws NotAvailableException {
+    public String getName() {
         return applicationClass.getSimpleName();
     }
 
@@ -175,7 +167,8 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         RUNNING,
         STOPPING,
         STOPPED,
-        ERROR
+        ERROR,
+        INTERRUPTED
     }
 
     private void setState(final LauncherState state) {
@@ -183,41 +176,62 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     }
 
     @Override
-    public void launch() throws CouldNotPerformException, InterruptedException {
-        synchronized (LAUNCHER_LOCK) {
-            setState(LauncherState.INITIALIZING);
-            launchable = instantiateLaunchable();
-            try {
-                launchable.init();
-                setState(LauncherState.LAUNCHING);
-                launchable.activate();
-                launchTime = System.currentTimeMillis();
-                setState(LauncherState.RUNNING);
-                try {
-                    verify();
-                    verified = true;
-                } catch (VerificationFailedException ex) {
-                    verified = false;
-                    verificationFailedException = ex;
-                }
-            } catch (Exception ex) {
-                setState(LauncherState.ERROR);
-                launchable.shutdown();
-                throw new CouldNotPerformException("Could not launch " + getName(), ex);
-            }
+    public Future<Void> launch() {
+
+        if (launcherTask != null && !launcherTask.isDone()) {
+            return FutureProcessor.canceledFuture(new InvalidStateException("Could not launch " + getName() + "! Application still running!"));
         }
+
+        launcherTask = GlobalCachedExecutorService.submit(() -> {
+            synchronized (LAUNCHER_LOCK) {
+                setState(LauncherState.INITIALIZING);
+                launchable = instantiateLaunchable();
+                try {
+                    launchable.init();
+                    setState(LauncherState.LAUNCHING);
+                    launchable.activate();
+                    launchTime = System.currentTimeMillis();
+                    setState(LauncherState.RUNNING);
+                    try {
+                        verify();
+                        verified = true;
+                    } catch (VerificationFailedException ex) {
+                        verified = false;
+                        verificationFailedException = ex;
+                    }
+                } catch (InterruptedException ex) {
+                    setState(LauncherState.INTERRUPTED);
+                    return null;
+                } catch (Exception ex) {
+                    setState(LauncherState.ERROR);
+                    launchable.shutdown();
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("could not launch " + getName(), ex), logger);
+                    }
+                }
+                return null;
+            }
+        });
+        return launcherTask;
     }
 
     @Override
     public void relaunch() throws CouldNotPerformException, InterruptedException {
         synchronized (LAUNCHER_LOCK) {
             stop();
-            launch();
+            try {
+                launch().get();
+            } catch (ExecutionException | CancellationException ex) {
+                throw new CouldNotPerformException(ex);
+            }
         }
     }
 
     @Override
     public void stop() {
+
+        interruptBoot();
+
         synchronized (LAUNCHER_LOCK) {
             setState(LauncherState.STOPPING);
             if (launchable != null) {
@@ -225,6 +239,22 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             }
             setState(LauncherState.STOPPED);
         }
+    }
+
+    /**
+     * Method cancels the boot process of this launcher.
+     */
+    private void interruptBoot() {
+        if (isBooting()) {
+            launcherTask.cancel(true);
+        }
+    }
+
+    /**
+     * @return true if the launcher is currently booting.
+     */
+    private boolean isBooting() {
+        return launcherTask != null && !launcherTask.isDone();
     }
 
     @Override
@@ -255,6 +285,10 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         return verificationFailedException;
     }
 
+    public Future<Void> getLauncherTask() {
+        return launcherTask;
+    }
+
     private static MultiException.ExceptionStack errorExceptionStack = null;
     private static MultiException.ExceptionStack verificationExceptionStack = null;
 
@@ -268,7 +302,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         final Thread mainThread = Thread.currentThread();
         Runtime.getRuntime().addShutdownHook(new Thread(mainThread::interrupt));
 
-        Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap = new HashMap<>();
+        final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap = new HashMap<>();
         for (final Class<? extends AbstractLauncher> launcherClass : launchers) {
             try {
                 launcherMap.put(launcherClass, launcherClass.newInstance());
@@ -312,7 +346,6 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
         logger.info("Start " + JPService.getApplicationName() + "...");
 
-        final Map<Entry<Class<? extends AbstractLauncher>, AbstractLauncher>, Future> launchableFutureMap = new HashMap<>();
         for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
 
             // check if launcher was excluded
@@ -332,53 +365,60 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 continue;
             }
 
-            launchableFutureMap.put(launcherEntry, GlobalCachedExecutorService.submit((Callable<Void>) () -> {
-                launcherEntry.getValue().launch();
-                return null;
-            }));
+            launcherEntry.getValue().launch();
         }
 
-        // start all waiting tasks in parallel
-        for (final Entry<Entry<Class<? extends AbstractLauncher>, AbstractLauncher>, Future> launcherEntry : new ArrayList<>(launchableFutureMap.entrySet())) {
-            final Future waitingTask = GlobalCachedExecutorService.submit(() -> {
-                while (!Thread.interrupted()) {
-                    try {
+        synchronized (WAITING_TASK_LIST_LOCK) {
+            // start all waiting tasks in parallel
+            for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
+                final Future waitingTask = GlobalCachedExecutorService.submit(() -> {
+                    while (!Thread.interrupted()) {
                         try {
-                            launcherEntry.getValue().get(LAUNCHER_TIMEOUT, TimeUnit.MILLISECONDS);
-                            if (!launcherEntry.getKey().getValue().isVerified()) {
-                                pushToVerificationExceptionStack(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getKey().getSimpleName() + "!", launcherEntry.getKey().getValue().getVerificationFailedCause()));
+                            try {
+                                launcherEntry.getValue().getLauncherTask().get(LAUNCHER_TIMEOUT, TimeUnit.MILLISECONDS);
+                                if (!launcherEntry.getValue().isVerified()) {
+                                    pushToVerificationExceptionStack(application, new CouldNotPerformException("Could not verify " + launcherEntry.getKey().getSimpleName() + "!", launcherEntry.getValue().getVerificationFailedCause()));
+                                }
+                            } catch (CancellationException ex) {
+                                // cancellation means the complete launch was canceled anyway and no further steps are required.
+                            } catch (ExecutionException ex) {
+                                // recover Interrupted exception to avoid error printing during system shutdown
+                                Throwable initialCause = ExceptionProcessor.getInitialCause(ex);
+                                if (initialCause instanceof InterruptedException) {
+                                    throw (InterruptedException) initialCause;
+                                }
+                                throw ex;
                             }
-                        } catch (ExecutionException ex) {
-                            // recover Interrupted exception to avoid error printing during system shutdown
-                            Throwable initialCause = ExceptionProcessor.getInitialCause(ex);
-                            if(initialCause instanceof InterruptedException) {
-                                throw (InterruptedException) initialCause;
+                            break;
+                        } catch (TimeoutException ex) {
+                            ExceptionPrinter.printHistory(new CouldNotPerformException("Launcher " + launcherEntry.getKey().getSimpleName() + " startup delay detected!"), logger, LogLevel.WARN);
+                        } catch (InterruptedException ex) {
+                            // if a core launcher could not be started the whole startup failed so interrupt
+                            if (launcherEntry.getValue().isCoreLauncher()) {
+                                // shutdown all launcher
+                                forceStopLauncher(launcherMap);
+                                return null;
                             }
-                            throw ex;
-                        }
-                        break;
-                    } catch (InterruptedException ex) {
-                        launcherEntry.getValue().cancel(true);
-                        return null;
-                    } catch (TimeoutException ex) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Launcher " + launcherEntry.getKey().getKey().getSimpleName() + " startup delay detected!"), logger, LogLevel.WARN);
-                    } catch (Exception ex) {
-                        final CouldNotPerformException exx = new CouldNotPerformException("Could not launch " + launcherEntry.getKey().getKey().getSimpleName() + "!", ex);
 
-                        // if a core launcher could not be started the whole startup failed so interrupt
-                        if (launcherEntry.getKey().getValue().isCoreLauncher()) {
+                        } catch (Exception ex) {
+                            final CouldNotPerformException exx = new CouldNotPerformException("Could not launch " + launcherEntry.getKey().getSimpleName() + "!", ex);
+
+                            // if a core launcher could not be started the whole startup failed so interrupt
+                            if (launcherEntry.getValue().isCoreLauncher()) {
+                                pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
+
+                                // shutdown all launcher
+                                forceStopLauncher(launcherMap);
+                                return null;
+                            }
+
                             pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
-                            stopWaiting();
-                            return null;
                         }
-
-                        pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
-                        return null;
                     }
-                }
-                return null;
-            });
-            waitingTaskList.add(waitingTask);
+                    return null;
+                });
+                waitingTaskList.add(waitingTask);
+            }
         }
 
         try {
@@ -386,29 +426,30 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                 try {
                     waitingTask.get();
                 } catch (ExecutionException ex) {
-                    // these exception will be pushed to the error exception stack in printed in the summary
+                    // these exception will be pushed to the error exception stack anyway and printed in the summary
                 } catch (CancellationException ex) {
                     // if a core launcher fails a cancellation exception will be thrown
                     throw new InterruptedException();
                 }
             }
         } catch (InterruptedException ex) {
-            // kill all remaining waiting tasks
-            stopWaiting();
+
 
             // shutdown all launcher
-            for (Entry<?, AbstractLauncher> entry : launcherMap.entrySet()) {
-                entry.getValue().shutdown();
-            }
+            forceStopLauncher(launcherMap);
+
+            // recover interruption
+            Thread.currentThread().interrupt();
+
             // print a summary containing the exceptions
             printSummary(application, logger, JPService.getApplicationName() + " caught shutdown signal during startup phase!");
 
 //            TODO: remove after fixing https://github.com/openbase/bco.registry/issues/84
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException exx) {
-            }
-            System.exit(1);
+//            try {
+//                Thread.sleep(5000);
+//            } catch (InterruptedException exx) {
+//            }
+//            System.exit(1);
             return;
         }
         printSummary(application, logger, JPService.getApplicationName() + " was started with restrictions!");
@@ -416,7 +457,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     private static final SyncObject VERIFICATION_STACK_LOCK = new SyncObject("VerificationStackLock");
     private static final SyncObject ERROR_STACK_LOCK = new SyncObject("ErrorStackLock");
-    private static final SyncObject WAITING_STOP_LOCK = new SyncObject("WaitingStopLock");
+    private static final SyncObject WAITING_TASK_LIST_LOCK = new SyncObject("WaitingStopLock");
 
     private static void pushToVerificationExceptionStack(Object source, Exception ex) {
         synchronized (VERIFICATION_STACK_LOCK) {
@@ -431,12 +472,33 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     }
 
     private static void stopWaiting() {
-        synchronized (WAITING_STOP_LOCK) {
+        synchronized (WAITING_TASK_LIST_LOCK) {
             for (final Future waitingTask : waitingTaskList) {
                 if (!waitingTask.isDone()) {
                     waitingTask.cancel(true);
                 }
             }
+        }
+    }
+
+    private static void interruptLauncherBoot(final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap) {
+
+        // stop boot
+        stopWaiting();
+
+        // interrupt all launcher
+        for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntryToStop : launcherMap.entrySet()) {
+            launcherEntryToStop.getValue().interruptBoot();
+        }
+    }
+
+    private static void forceStopLauncher(final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap) {
+
+        interruptLauncherBoot(launcherMap);
+
+        // stop all launcher. This is done in an extra loop since stop can block if the launcher is not yet fully interrupted.
+        for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntryToStop : launcherMap.entrySet()) {
+            launcherEntryToStop.getValue().stop();
         }
     }
 

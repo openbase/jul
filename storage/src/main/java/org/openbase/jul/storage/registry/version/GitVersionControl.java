@@ -38,6 +38,7 @@ import org.openbase.jul.storage.registry.jp.JPDeveloperMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collections;
 
 /**
@@ -168,7 +169,7 @@ public class GitVersionControl {
                     throw ex;
                 }
             }
-        } catch (Exception ex) {
+        } catch (GitAPIException | CouldNotPerformException | IOException ex) {
             throw new CouldNotPerformException("Auto db update of "+ registry.getName()+" failed!", ex);
         }
     }
