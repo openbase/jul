@@ -65,8 +65,6 @@ public class SingleValueMultiFuture<R> extends CompletableFutureLite<R> {
     @Override
     public R get() throws InterruptedException, ExecutionException {
 
-        LOGGER.error("JOJO get");
-
         if (isDone()) {
             return super.get();
         }
@@ -96,8 +94,6 @@ public class SingleValueMultiFuture<R> extends CompletableFutureLite<R> {
 
     @Override
     public R get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-
-        LOGGER.error("JOJO get time");
 
         if (isDone()) {
             return super.get(timeout, unit);
