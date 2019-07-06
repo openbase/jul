@@ -110,9 +110,9 @@ public class ProtoBufFieldProcessor {
 
     public static void initRequiredFieldsWithDefault(final Message.Builder builder) {
         List<String> missingFieldList = builder.findInitializationErrors();
-        missingFieldList.stream().forEach((initError) -> {
+        for (String initError : missingFieldList) {
             initFieldWithDefault(builder, initError);
-        });
+        }
     }
 
     /**

@@ -215,7 +215,7 @@ public class DBVersionControl {
 
     private Map<String, Map<File, DatabaseEntryDescriptor>> loadGlobalDBSnapshots() {
         Map<String, Map<File, DatabaseEntryDescriptor>> globalDbSnapshotMap = new HashMap<>();
-        globalDatabaseDirectories.stream().forEach((globalDatabaseDirectory) -> {
+        for (File globalDatabaseDirectory : globalDatabaseDirectories) {
             try {
                 logger.warn("Test directory [" + globalDatabaseDirectory + "]");
                 if (!FileUtils.isSymlink(globalDatabaseDirectory)) {
@@ -230,7 +230,7 @@ public class DBVersionControl {
             } catch (IOException ex) {
                 ExceptionPrinter.printHistory("Could not check wether [" + globalDatabaseDirectory.getName() + "] is a symlink!", ex, logger);
             }
-        });
+        }
         return globalDbSnapshotMap;
     }
 

@@ -300,7 +300,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
         // register interruption of this thread as shutdown hook
         final Thread mainThread = Thread.currentThread();
-        Runtime.getRuntime().addShutdownHook(new Thread(mainThread::interrupt));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> mainThread.interrupt()));
 
         final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap = new HashMap<>();
         for (final Class<? extends AbstractLauncher> launcherClass : launchers) {

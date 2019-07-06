@@ -436,11 +436,11 @@ public class FutureProcessor {
                         }
                     } catch (InterruptedException ex) {
                         // cancel all pending actions.
-                        futureCollection.stream().forEach((future) -> {
+                        for (Future<?> future : futureCollection) {
                             if (!future.isDone()) {
                                 future.cancel(true);
                             }
-                        });
+                        }
                         throw ex;
                     }
                     if (!oneSuccessfullyFinished) {

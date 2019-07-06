@@ -21,6 +21,7 @@ package org.openbase.jul.extension.protobuf.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
 import java.lang.reflect.InvocationTargetException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -56,12 +57,14 @@ public class GenericMessageProcessor<M extends Message> implements MessageProces
         }
 
         builder.clear();
-        builder.getDescriptorForType().getFields().stream().forEach((fieldDescriptor) -> {
-            input.getAllFields().keySet().stream().filter((inputFieldDescriptor) -> (fieldDescriptor.getType().equals(inputFieldDescriptor.getType())
-                    && fieldDescriptor.getName().equals(inputFieldDescriptor.getName()))).forEach((inputFieldDescriptor) -> {
-                        builder.setField(fieldDescriptor, input.getField(inputFieldDescriptor));
-                    });
-        });
+        for (FieldDescriptor fieldDescriptor : builder.getDescriptorForType().getFields()) {
+            for (FieldDescriptor inputFieldDescriptor : input.getAllFields().keySet()) {
+                if ((fieldDescriptor.getType().equals(inputFieldDescriptor.getType())
+                        && fieldDescriptor.getName().equals(inputFieldDescriptor.getName()))) {
+                    builder.setField(fieldDescriptor, input.getField(inputFieldDescriptor));
+                }
+            }
+        }
         return (M) builder.build();
     }
 

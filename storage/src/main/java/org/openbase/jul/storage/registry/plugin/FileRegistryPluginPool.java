@@ -54,13 +54,13 @@ public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN
 
     @Override
     public void afterRegister(ENTRY entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-        pluginList.stream().forEach((plugin) -> {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.afterRegister(entry, fileSynchronizer);
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] registration!", ex), logger, LogLevel.ERROR);
             }
-        });
+        }
     }
 
     @Override
@@ -78,13 +78,13 @@ public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN
 
     @Override
     public void afterRemove(ENTRY entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-        pluginList.stream().forEach((plugin) -> {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.afterRemove(entry, fileSynchronizer);
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] removal!", ex), logger, LogLevel.ERROR);
             }
-        });
+        }
     }
 
     @Override
@@ -102,13 +102,13 @@ public class FileRegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN
 
     @Override
     public void afterUpdate(ENTRY entry, FileSynchronizer fileSynchronizer) throws CouldNotPerformException {
-         pluginList.stream().forEach((plugin) -> {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.afterUpdate(entry, fileSynchronizer);
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform RegistryPlugin[" + plugin + "] about successfully Entry[" + entry + "] update!", ex), logger, LogLevel.ERROR);
             }
-        });
+        }
     }
 
     @Override

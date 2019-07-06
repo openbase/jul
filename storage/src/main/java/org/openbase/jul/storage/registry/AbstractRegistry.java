@@ -629,7 +629,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     protected boolean isDependingOnConsistentRegistries() {
         dependingRegistryMapLock.readLock().lock();
         try {
-            return dependingRegistryMap.keySet().stream().noneMatch((registry) -> (!registry.isConsistent()));
+            for (Registry registry : dependingRegistryMap.keySet()) {
+                if (!registry.isConsistent()) {
+                    return false;
+                }
+            }
+            return true;
         } finally {
             dependingRegistryMapLock.readLock().unlock();
         }
@@ -722,9 +727,9 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             try {
                 List<Registry> dependingRegistryList = new ArrayList<>(dependingRegistryMap.keySet());
                 Collections.reverse(dependingRegistryList);
-                dependingRegistryList.stream().forEach((registry) -> {
+                for (Registry registry : dependingRegistryList) {
                     dependingRegistryMap.remove(registry).shutdown();
-                });
+                }
             } finally {
                 dependingRegistryMapLock.writeLock().unlock();
             }
@@ -1106,9 +1111,9 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 super.shutdown();
                 removeAllDependencies();
                 pluginPool.shutdown();
-                consistencyHandlerList.stream().forEach((consistencyHandler) -> {
+                for (ConsistencyHandler<KEY, ENTRY, MAP, REGISTRY> consistencyHandler : consistencyHandlerList) {
                     consistencyHandler.shutdown();
-                });
+                }
                 clear();
             } finally {
                 registryLock.writeLock().unlock();
@@ -1295,13 +1300,13 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
          * this one depends on have been unlocked. */
         registryLock.writeLock().lock();
         try {
-            lockedRegistries.stream().forEach((registry) -> {
+            for (Registry registry : lockedRegistries) {
                 if (registry instanceof RemoteRegistry) {
                     ((RemoteRegistry) registry).internalUnlockRegistry();
                 } else {
                     registry.unlockRegistry();
                 }
-            });
+            }
             lockedRegistries.clear();
         } finally {
             registryLock.writeLock().unlock();

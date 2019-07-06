@@ -65,9 +65,9 @@ public class ProtoBufMessageMapWrapper<KEY extends Comparable<KEY>, M extends Ab
     @Override
     public List<M> getMessages() throws CouldNotPerformException {
         ArrayList<M> list = new ArrayList<>();
-        values().stream().forEach((identifiableMessage) -> {
+        for (IdentifiableMessage<KEY, M, MB> identifiableMessage : values()) {
             list.add(identifiableMessage.getMessage());
-        });
+        }
         return list;
     }
 

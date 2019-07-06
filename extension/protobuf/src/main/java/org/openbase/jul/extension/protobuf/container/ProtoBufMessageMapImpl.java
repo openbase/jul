@@ -182,9 +182,9 @@ public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends Abstr
     @Override
     public List<M> getMessages() throws CouldNotPerformException {
         List<M> messageList = new ArrayList<>();
-        values().stream().forEach((messageContainer) -> {
+        for (IdentifiableMessage<KEY, M, MB> messageContainer : values()) {
             messageList.add(messageContainer.getMessage());
-        });
+        }
         return messageList;
     }
 

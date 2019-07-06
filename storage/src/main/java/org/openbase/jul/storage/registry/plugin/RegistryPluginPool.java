@@ -68,13 +68,13 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
 
     @Override
     public void shutdown() {
-        pluginList.stream().forEach((plugin) -> {
+        for (PLUGIN plugin : pluginList) {
             try {
                 plugin.shutdown();
             } catch (Exception ex) {
                 ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not shutdown RegistryPlugin[" + plugin + "]!", plugin, ex), logger, LogLevel.ERROR);
             }
-        });
+        }
     }
 
     public void addPlugin(final PLUGIN plugin) throws CouldNotPerformException, InterruptedException {
