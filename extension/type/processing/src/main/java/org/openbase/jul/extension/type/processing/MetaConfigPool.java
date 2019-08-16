@@ -27,28 +27,28 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.VariableProcessor;
 import org.openbase.jul.processing.VariableProvider;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class MetaConfigPool implements VariableProvider {
 
-    private final Collection<VariableProvider> variableProviderPool;
+    private final HashMap<String, VariableProvider> variableProviderPool;
 
-    public MetaConfigPool(final Collection<VariableProvider> variableProviderPool) {
-        this.variableProviderPool = new ArrayList<>(variableProviderPool);
+    public MetaConfigPool(final Collection<VariableProvider> variableProviders) {
+        this();
+        for (VariableProvider variableProvider : variableProviders) {
+            this.variableProviderPool.put(variableProvider.getName(), variableProvider);
+        }
     }
 
     public MetaConfigPool() {
-        this.variableProviderPool = new ArrayList<>();
+        this.variableProviderPool = new HashMap<>();
     }
 
     public void register(final VariableProvider provider) {
-        variableProviderPool.add(provider);
+        variableProviderPool.put(provider.getName(), provider);
     }
 
     /**
@@ -63,7 +63,7 @@ public class MetaConfigPool implements VariableProvider {
     @Override
     public String getValue(final String variable) throws NotAvailableException {
         try {
-            return VariableProcessor.resolveVariables(VariableProcessor.resolveVariable(variable, variableProviderPool), true, variableProviderPool);
+            return VariableProcessor.resolveVariables(VariableProcessor.resolveVariable(variable, variableProviderPool.values()), true, variableProviderPool.values());
         } catch (MultiException ex) {
             throw new NotAvailableException("Variable[" + variable + "]", ex);
         }
@@ -79,7 +79,7 @@ public class MetaConfigPool implements VariableProvider {
     @Override
     public Map<String, String> getValues(final String variableContains) {
         final Map<String, String> valueMap = new HashMap<>();
-        for (final VariableProvider variableProvider : variableProviderPool) {
+        for (final VariableProvider variableProvider : variableProviderPool.values()) {
             valueMap.putAll(variableProvider.getValues(variableContains));
         }
         return valueMap;
@@ -88,12 +88,19 @@ public class MetaConfigPool implements VariableProvider {
     @Override
     public String getName() {
         String provider = "";
-        for (VariableProvider variableProvider : variableProviderPool) {
+        for (VariableProvider variableProvider : variableProviderPool.values()) {
             if (!provider.isEmpty()) {
                 provider += ", ";
             }
             provider += variableProvider.getName();
         }
         return getClass().getSimpleName() + "[" + provider + "]";
+    }
+
+    /**
+     * Method clears the internal pool.
+     */
+    public void clear() {
+        variableProviderPool.clear();
     }
 }
