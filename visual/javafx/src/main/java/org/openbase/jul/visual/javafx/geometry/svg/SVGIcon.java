@@ -67,9 +67,9 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SVGIcon.class);
     private final SHAPE_PROVIDER shapeProvider;
-    private final double size;
     private final boolean styled;
     private final IconState iconState;
+    private double size;
     private Shape backgroundIcon;
     private Shape backgroundFadeIcon;
     private Shape foregroundIcon;
@@ -687,6 +687,7 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
     }
 
     public void setSize(final double size) {
+        this.size = size;
         if (backgroundIcon != null) {
             backgroundIcon = ShapeProcessor.resize(backgroundIcon, size);
         }
