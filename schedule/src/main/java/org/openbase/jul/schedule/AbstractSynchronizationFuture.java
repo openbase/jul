@@ -214,7 +214,8 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
 
             synchronized (CHECK_LOCK) {
                 while (!check(message)) {
-                    CHECK_LOCK.wait();
+                    // timeout used as fallback in case the observation task is not properly implemented.
+                    CHECK_LOCK.wait(2000);
                 }
             }
         } catch (final CouldNotPerformException ex) {
