@@ -21,6 +21,7 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPTestMode;
@@ -32,12 +33,12 @@ import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.LoggerFactory;
 
 /**
+ * @param <VALUE>
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- *
+ * <p>
  * RecurrenceEventFilter helps to filter high frequency events.
  * After a new incoming event is processed, all further incoming events are skipped except of the last event which is executed after the defined timeout is reached.
- * @param <VALUE>
  */
 public abstract class RecurrenceEventFilter<VALUE> {
 
@@ -90,7 +91,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     /**
      * This method triggers the relay if no trigger was relayed within the defined max frequency.
-     *
+     * <p>
      * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest event will relayed.
      *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
@@ -101,10 +102,11 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     /**
      * This method triggers the relay if no trigger was relayed within the defined max frequency.
-     *
+     * <p>
      * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest value will relayed.
      *
      * @param value the new value which should be published via the next relay.
+     *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
     public synchronized void trigger(final VALUE value) throws CouldNotPerformException {
@@ -113,10 +115,11 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     /**
      * This method triggers the relay if no trigger was relayed within the defined max frequency or the {@code immediately} flag was set.
-     *
+     * <p>
      * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest event will relayed.
      *
      * @param immediately this flag forces the trigger to relay immediately without respect to the defined max frequency.
+     *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
     public synchronized void trigger(final boolean immediately) throws CouldNotPerformException {
@@ -125,11 +128,12 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     /**
      * This method triggers the relay if no trigger was relayed within the defined max frequency or the {@code immediately} flag was set.
-     *
+     * <p>
      * Note: Triggers are maybe filtered but the last trigger call will always result in a relay to guarantee the latest value will relayed.
      *
-     * @param value the new value which should be published via the next relay.
+     * @param value       the new value which should be published via the next relay.
      * @param immediately this flag forces the trigger to relay immediately without respect to the defined max frequency.
+     *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
     public synchronized void trigger(final VALUE value, final boolean immediately) throws CouldNotPerformException {
@@ -165,6 +169,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
      * Method returns the latest triggered value.
      *
      * @return the last value or null if no last value is available
+     *
      * @deprecated since v2.0 and will be removed in v3.0. Please use {@code getLatestValue()} instead.
      */
     @Deprecated
@@ -180,6 +185,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
      * Method returns the latest triggered value.
      *
      * @return the latest value.
+     *
      * @throws NotAvailableException is thrown if a value was never triggered.
      */
     public VALUE getLatestValue() throws NotAvailableException {
@@ -188,6 +194,16 @@ public abstract class RecurrenceEventFilter<VALUE> {
         }
         return latestValue;
     }
+
+    /**
+     * Method checks if there was an event registered within the last filter period and the filter is therefore active.
+     *
+     * @return true if any new incoming event would be queued, otherwise false.
+     */
+    public boolean isFilterActive() {
+        return timeout.isActive();
+    }
+
 
     /**
      * Method returns if this instance was ever triggered since startup or since the last reset.
@@ -218,10 +234,11 @@ public abstract class RecurrenceEventFilter<VALUE> {
 
     /**
      * Method can be overwritten to get frequently informed about trigger actions and the related new value.
-     *
+     * <p>
      * Note: Be informed that by overwriting this method the default {@code relay()} will not be called anymore.
      *
      * @param value the latest value is passed via this argument.
+     *
      * @throws Exception can be thrown during the relay. The exception will just be printed on the error channel.
      */
     public void relay(final VALUE value) throws Exception {
