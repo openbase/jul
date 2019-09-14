@@ -520,7 +520,6 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         try {
             verifyID(key);
         } catch (VerificationFailedException ex) {
-            new FatalImplementationErrorException("Contains check failed because of an invalid key!", this, ex);
             return false;
         }
         return entryMap.containsKey(key);
