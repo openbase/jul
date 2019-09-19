@@ -21,6 +21,7 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -114,6 +115,11 @@ public final class VariableProcessor {
                 continue;
             }
         }
+
+        if(providers.length == 0) {
+            exceptionStack = MultiException.push(VariableProcessor.class, new InvalidStateException("No variable provider registered yet!"), exceptionStack);
+        }
+
         MultiException.checkAndThrow(() ->"Could not resolve Variable[" + variable + "]!", exceptionStack);
         throw new AssertionError("Fatal error during variable resolving.");
     }
