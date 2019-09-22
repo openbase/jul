@@ -25,14 +25,12 @@ package org.openbase.jul.extension.rsb.com.strategy;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.schedule.RecurrenceEventFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -190,7 +188,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy
                 for (final Handler handler : getHandlers()) {
 
                     // skip if task was interrupted.
-                    if(Thread.interrupted()) {
+                    if (Thread.interrupted()) {
                         return null;
                     }
                     // notify handler about new task
@@ -206,19 +204,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy
                 modificationLock.readLock().unlock();
 
                 // deregister task
-                if (!eventTaskMap.containsKey(this)) {
-
-                    // task execution was faster than registration, so wait for registration.
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ex) {
-                        // shutdown initiated so task will be removed anyway.
-                        return null;
-                    }
-                }
-                if(eventTaskMap.remove(this) == null) {
-                    LOGGER.warn("Unknown task detected!");
-                }
+                eventTaskMap.remove(this);
             }
             return null;
         }
@@ -235,17 +221,27 @@ public class ThreadPoolUnorderedEventReceivingStrategy
             }
 
             final DispatchTask dispatchTask = new DispatchTask(event);
-            final Future<Void> future = executorService.submit(dispatchTask);
 
-            eventTaskMap.put(dispatchTask, future);
+            try {
+                final Future<Void> future = executorService.submit(dispatchTask);
+                eventTaskMap.put(dispatchTask, future);
+
+                // handle if execution was faster than registration
+                if(future.isDone() && eventTaskMap.containsKey(dispatchTask)) {
+                    eventTaskMap.remove(dispatchTask);
+                }
+
+            } catch (RejectedExecutionException ex) {
+                ExceptionPrinter.printHistory("Event execution rejected! System is probably shutting down or executor service overload occurred.", ex, LOGGER, LogLevel.WARN);
+            }
         } finally {
             activationLock.readLock().unlock();
         }
 
         final int taskCounter = eventTaskMap.size();
-        if(taskCounter > 50) {
+        if (taskCounter > 50) {
             try {
-                logEventFilter.trigger("Participant["+event.getScope() + "/" + event.getMethod()+"] overload detected! Processing "+taskCounter+" tasks at once probably affects the application performance.");
+                logEventFilter.trigger("Participant[" + event.getScope() + "/" + event.getMethod() + "] overload detected! Processing " + taskCounter + " tasks at once probably affects the application performance.");
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory(ex, LOGGER);
             }
@@ -275,7 +271,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy
             active = false;
 
             for (final Future future : this.eventTaskMap.values()) {
-                if(!future.isDone()) {
+                if (!future.isDone()) {
                     future.cancel(true);
                 }
             }
