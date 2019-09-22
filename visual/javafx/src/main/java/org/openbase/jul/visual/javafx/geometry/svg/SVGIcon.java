@@ -688,6 +688,9 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
 
     public void setSize(final double size) {
         this.size = size;
+        setWidth(size);
+        setHeight(size);
+
         if (backgroundIcon != null) {
             backgroundIcon = ShapeProcessor.resize(backgroundIcon, size);
         }
@@ -700,6 +703,8 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
         if (foregroundFadeIcon != null) {
             foregroundFadeIcon = ShapeProcessor.resize(foregroundFadeIcon, size);
         }
+
+        requestLayout();
     }
 
     public enum Layer {
