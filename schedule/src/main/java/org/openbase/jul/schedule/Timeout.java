@@ -44,6 +44,10 @@ public abstract class Timeout {
 
     private final Object lock = new SyncObject("TimeoutLock");
     private Future timerTask;
+
+    /**
+     * The default time to wait in milliseconds.
+     */
     private long defaultWaitTime;
     private volatile boolean expired;
 
@@ -78,17 +82,30 @@ public abstract class Timeout {
     /**
      * Method restarts the timeout.
      *
-     * @param waitTime the new wait time to update.
+     * @param waitTime the new wait time to update in milliseconds.
      *
      * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart(final long waitTime) throws CouldNotPerformException {
+        restart(waitTime, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Method restarts the timeout.
+     *
+     * @param waitTime the new wait time to update.
+     * @param timeUnit the time unit of the wait time.
+     *
+     * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
+     */
+    public void restart(final long waitTime, final TimeUnit timeUnit) throws CouldNotPerformException {
         logger.debug("Reset timer.");
         try {
             synchronized (lock) {
                 cancel();
-                start(waitTime);
+                start(waitTime, timeUnit);
             }
         } catch (ShutdownInProgressException ex) {
             throw ex;
@@ -104,7 +121,7 @@ public abstract class Timeout {
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart() throws CouldNotPerformException {
-        restart(defaultWaitTime);
+        restart(defaultWaitTime, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -134,20 +151,33 @@ public abstract class Timeout {
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void start() throws CouldNotPerformException {
-        start(defaultWaitTime);
+        start(defaultWaitTime, TimeUnit.MILLISECONDS);
     }
 
     /**
      * Start the timeout with the given wait time. The default wait time is not modified and still the same as before.
      *
-     * @param waitTime The time to wait until the timeout is reached.
+     * @param waitTime the time to wait until the timeout is reached in milliseconds.
      *
      * @throws CouldNotPerformException is thrown in case the timeout could not be started.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void start(final long waitTime) throws CouldNotPerformException {
+        start(waitTime, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Start the timeout with the given wait time. The default wait time is not modified and still the same as before.
+     *
+     * @param waitTime the time to wait until the timeout is reached.
+     * @param timeUnit the time unit of the wait time.
+     *
+     * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
+     */
+    public void start(final long waitTime, final TimeUnit timeUnit) throws CouldNotPerformException {
         try {
-            internal_start(waitTime);
+            internal_start(waitTime, timeUnit);
         } catch (CouldNotPerformException | RejectedExecutionException ex) {
             if (ex instanceof RejectedExecutionException && GlobalScheduledExecutorService.getInstance().getExecutorService().isShutdown()) {
                 throw new ShutdownInProgressException("GlobalScheduledExecutorService");
@@ -160,11 +190,12 @@ public abstract class Timeout {
      * Internal synchronized start method.
      *
      * @param waitTime The time to wait until the timeout is reached.
+     * @param timeUnit the time unit of the wait time.
      *
      * @throws RejectedExecutionException is thrown if the timeout task could not be scheduled.
      * @throws CouldNotPerformException   is thrown in case the timeout could not be started.
      */
-    private void internal_start(final long waitTime) throws RejectedExecutionException, CouldNotPerformException {
+    private void internal_start(final long waitTime, final TimeUnit timeUnit) throws RejectedExecutionException, CouldNotPerformException {
         synchronized (lock) {
             if (isActive()) {
                 logger.debug("Reject start, not interrupted or expired.");
@@ -193,7 +224,7 @@ public abstract class Timeout {
                 }
                 logger.debug("Worker finished.");
                 return null;
-            }, waitTime, TimeUnit.MILLISECONDS);
+            }, waitTime, timeUnit);
         }
     }
 
