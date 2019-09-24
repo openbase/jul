@@ -118,7 +118,7 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
             return FutureProcessor.completedFuture(getData());
 
         } catch (CouldNotPerformException ex) {
-            CompletableFutureLite future = new CompletableFutureLite();
+            CompletableFutureLite<M> future = new CompletableFutureLite<>();
             future.completeExceptionally(ex);
             return future;
         }
