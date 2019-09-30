@@ -43,23 +43,20 @@ public class FXMLProcessor {
      * Method load the pane of the given fxml file.
      *
      * @param controllerClass the controller of the fxml pane.
-     *
      * @return the new pane.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static Pane loadFxmlPane(final Class<? extends AbstractFXController> controllerClass) throws CouldNotPerformException {
-        return loadFxmlPaneAndControllerPair(loadDefaultFXML(controllerClass), controllerClass, DEFAULT_CONTROLLER_FACTORY).getKey();
+    public static Pane loadFxmlPane(final Class<? extends AbstractFXController> controllerClass, final Class uriLoaderClass) throws CouldNotPerformException {
+        return loadFxmlPaneAndControllerPair(loadDefaultFXML(controllerClass), controllerClass, uriLoaderClass, DEFAULT_CONTROLLER_FACTORY).getKey();
     }
 
     /**
      * Method load the pane and controller of the given fxml file.
      *
      * @return an pair of the pane and its controller.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final Class<CONTROLLER> controllerClass) throws CouldNotPerformException {
+    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final Class<? extends CONTROLLER> controllerClass) throws CouldNotPerformException {
         return loadFxmlPaneAndControllerPair(loadDefaultFXML(controllerClass), controllerClass, controllerClass, DEFAULT_CONTROLLER_FACTORY);
     }
 
@@ -67,74 +64,64 @@ public class FXMLProcessor {
      * Method load the pane and controller of the given fxml file.
      *
      * @param controllerClass the class of the controller.
-     * @param clazz           the responsible class which is used for class path resolution.
+     * @param uriLoaderClass  the responsible class which is used for class path resolution.
      * @param <CONTROLLER>    the type of controller which is controlling the new pane.
-     *
      * @return an pair of the pane and its controller.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final Class<CONTROLLER> controllerClass, final Class clazz) throws CouldNotPerformException {
-        return loadFxmlPaneAndControllerPair(loadDefaultFXML(controllerClass), controllerClass, clazz);
+    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final Class<? extends CONTROLLER> controllerClass, final Class uriLoaderClass) throws CouldNotPerformException {
+        return loadFxmlPaneAndControllerPair(loadDefaultFXML(controllerClass), controllerClass, uriLoaderClass);
     }
 
     /**
      * Method load the pane and controller of the given fxml file.
      *
      * @param controllerClass   the class of the controller.
-     * @param clazz             the responsible class which is used for class path resolution.
+     * @param uriLoaderClass    the responsible class which is used for class path resolution.
      * @param controllerFactory the controller factory to use. Can be null if the default one should be used.
      * @param <CONTROLLER>      the type of controller which is controlling the new pane.
-     *
      * @return an pair of the pane and its controller.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final Class<CONTROLLER> controllerClass, final Class clazz, final Callback<Class<?>, Object> controllerFactory) throws CouldNotPerformException {
-        return loadFxmlPaneAndControllerPair(loadDefaultFXML(controllerClass), controllerClass, clazz, controllerFactory);
+    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final Class<? extends CONTROLLER> controllerClass, final Class uriLoaderClass, final Callback<Class<?>, Object> controllerFactory) throws CouldNotPerformException {
+        return loadFxmlPaneAndControllerPair(loadDefaultFXML(controllerClass), controllerClass, uriLoaderClass, controllerFactory);
     }
 
     /**
      * Method load the pane of the given fxml file.
      *
-     * @param fxmlFileUri the uri pointing to the fxml file within the classpath.
-     * @param clazz       the responsible class which is used for class path resolution.
-     *
+     * @param fxmlFileUri    the uri pointing to the fxml file within the classpath.
+     * @param uriLoaderClass the responsible class which is used for class path resolution.
      * @return the new pane.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static Pane loadFxmlPane(final String fxmlFileUri, final Class clazz) throws CouldNotPerformException {
-        return loadFxmlPaneAndControllerPair(fxmlFileUri, clazz, DEFAULT_CONTROLLER_FACTORY).getKey();
+    public static Pane loadFxmlPane(final String fxmlFileUri, final Class uriLoaderClass) throws CouldNotPerformException {
+        return loadFxmlPaneAndControllerPair(fxmlFileUri, uriLoaderClass, DEFAULT_CONTROLLER_FACTORY).getKey();
     }
 
     /**
      * Method load the pane and controller of the given fxml file.
      *
-     * @param fxmlFileUri the uri pointing to the fxml file within the classpath.
-     * @param clazz       the responsible class which is used for class path resolution.
-     *
+     * @param fxmlFileUri    the uri pointing to the fxml file within the classpath.
+     * @param uriLoaderClass the responsible class which is used for class path resolution.
      * @return an pair of the pane and its controller.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static Pair<Pane, AbstractFXController> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class clazz) throws CouldNotPerformException {
-        return loadFxmlPaneAndControllerPair(fxmlFileUri, clazz, DEFAULT_CONTROLLER_FACTORY);
+    public static Pair<Pane, AbstractFXController> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class uriLoaderClass) throws CouldNotPerformException {
+        return loadFxmlPaneAndControllerPair(fxmlFileUri, uriLoaderClass, DEFAULT_CONTROLLER_FACTORY);
     }
 
     /**
      * Method load the pane and controller of the given fxml file.
      *
      * @param fxmlFileUri       the uri pointing to the fxml file within the classpath.
-     * @param clazz             the responsible class which is used for class path resolution.
+     * @param uriLoaderClass    the responsible class which is used for class path resolution.
      * @param controllerFactory the controller factory to use. Can be null if the default one should be used.
-     *
      * @return an pair of the pane and its controller.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static Pair<Pane, AbstractFXController> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class clazz, final Callback<Class<?>, Object> controllerFactory) throws CouldNotPerformException {
-        return loadFxmlPaneAndControllerPair(fxmlFileUri, AbstractFXController.class, clazz, controllerFactory);
+    public static Pair<Pane, AbstractFXController> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class uriLoaderClass, final Callback<Class<?>, Object> controllerFactory) throws CouldNotPerformException {
+        return loadFxmlPaneAndControllerPair(fxmlFileUri, AbstractFXController.class, uriLoaderClass, controllerFactory);
     }
 
     /**
@@ -142,15 +129,13 @@ public class FXMLProcessor {
      *
      * @param fxmlFileUri     the uri pointing to the fxml file within the classpath.
      * @param controllerClass the class of the controller.
-     * @param clazz           the responsible class which is used for class path resolution.
+     * @param uriLoaderClass  the responsible class which is used for class path resolution.
      * @param <CONTROLLER>    the type of controller which is controlling the new pane.
-     *
      * @return an pair of the pane and its controller.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class<CONTROLLER> controllerClass, final Class clazz) throws CouldNotPerformException {
-        return loadFxmlPaneAndControllerPair(fxmlFileUri, controllerClass, clazz, null);
+    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class<? extends CONTROLLER> controllerClass, final Class uriLoaderClass) throws CouldNotPerformException {
+        return loadFxmlPaneAndControllerPair(fxmlFileUri, controllerClass, uriLoaderClass, null);
     }
 
     /**
@@ -158,22 +143,18 @@ public class FXMLProcessor {
      *
      * @param fxmlFileUri       the uri pointing to the fxml file within the classpath.
      * @param controllerClass   the class of the controller.
-     * @param clazz             the responsible class which is used for class path resolution.
+     * @param uriLoaderClass    the responsible class which is used for class path resolution.
      * @param controllerFactory the controller factory to use. Can be null if the default one should be used.
      * @param <CONTROLLER>      the type of controller which is controlling the new pane.
-     *
      * @return an pair of the pane and its controller.
-     *
      * @throws CouldNotPerformException is thrown if something went wrong like for example the fxml file does not exist.
      */
-    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class<CONTROLLER> controllerClass, final Class clazz, final Callback<Class<?>, Object> controllerFactory) throws CouldNotPerformException {
+    public static <CONTROLLER extends AbstractFXController> Pair<Pane, CONTROLLER> loadFxmlPaneAndControllerPair(final String fxmlFileUri, final Class<? extends CONTROLLER> controllerClass, final Class uriLoaderClass, final Callback<Class<?>, Object> controllerFactory) throws CouldNotPerformException {
         URL url;
         FXMLLoader loader;
         try {
-            url = clazz.getResource(fxmlFileUri);
-            if (url == null) {
-                throw new NotAvailableException(fxmlFileUri);
-            }
+            url = loadURL(fxmlFileUri, uriLoaderClass);
+
             loader = new FXMLLoader(url);
             if (controllerFactory != null) {
                 loader.setControllerFactory(controllerFactory);
@@ -183,44 +164,37 @@ public class FXMLProcessor {
 
             // validate controller
             CONTROLLER controller = loader.getController();
+
+            if (controller == null) {
+                throw new InvalidStateException("Controller[" + controllerClass.getSimpleName() + "] seems not to be declared in the FXML[" + fxmlFileUri + "] and is therefore not compatible!");
+            }
+
             if (!controllerClass.isInstance(controller)) {
-                throw new InvalidStateException("Controller[" + controller.getClass().getSimpleName() + "] is not compatible with given ControllerClass[" + controllerClass.getSimpleName() + "]!");
+                throw new InvalidStateException("Controller[" + controller.getClass().getSimpleName() + "] declared in FXML[" + fxmlFileUri + "] is not compatible with given ControllerClass[" + controllerClass.getSimpleName() + "]!");
             }
 
             return new Pair<>(pane, controller);
         } catch (NullPointerException | IOException | CouldNotPerformException ex) {
-            try {
-                url = clazz.getClassLoader().getResource(fxmlFileUri);
-                if (url == null) {
-                    throw new NotAvailableException(fxmlFileUri);
-                }
-                loader = new FXMLLoader(url);
-                if (controllerFactory != null) {
-                    loader.setControllerFactory(controllerFactory);
-                }
-
-                final Pane pane = loader.load();
-
-                // validate controller
-                CONTROLLER controller = loader.getController();
-                if (!controllerClass.isInstance(controller)) {
-                    throw new InvalidStateException("Controller[" + controller.getClass().getSimpleName() + "] is not compatible with given ControllerClass[" + controllerClass.getSimpleName() + "]!");
-                }
-                return new Pair<>(pane, controller);
-            } catch (NullPointerException | IOException | CouldNotPerformException exx) {
-                MultiException.ExceptionStack exceptionStack = new MultiException.ExceptionStack();
-                exceptionStack = MultiException.push(clazz, ex, exceptionStack);
-                exceptionStack = MultiException.push(clazz, exx, exceptionStack);
-                throw new MultiException("Could not load FXML[" + fxmlFileUri + "]", exceptionStack);
-            }
+            throw new MultiException("Could not load pain controller pair of [" + fxmlFileUri + "]", ex);
         }
+    }
+
+    private static URL loadURL(final String fxmlFileUri, final Class uriLoaderClass) throws NotAvailableException {
+        URL url = uriLoaderClass.getResource(fxmlFileUri);
+        if (url != null) {
+            return url;
+        }
+        url = uriLoaderClass.getClassLoader().getResource(fxmlFileUri);
+        if (url != null) {
+            return url;
+        }
+        throw new NotAvailableException(fxmlFileUri);
     }
 
     /**
      * Method returns an uri to the default fxml file to be loaded during application start.
      *
      * @param controllerClass the controller class of the fxml to load.
-     *
      * @return
      */
     public static String loadDefaultFXML(final Class<? extends AbstractFXController> controllerClass) {

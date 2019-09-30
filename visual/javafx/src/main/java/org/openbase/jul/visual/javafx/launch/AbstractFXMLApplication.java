@@ -55,7 +55,7 @@ public abstract class AbstractFXMLApplication extends AbstractFXApplication {
             // setup scene
             Scene scene;
             try {
-                scene = new Scene(FXMLProcessor.loadFxmlPane(FXMLProcessor.loadDefaultFXML(controllerClass), getClass()));
+                scene = new Scene(FXMLProcessor.loadFxmlPane(controllerClass, getClass()));
             } catch (final Exception ex) {
                 throw new CouldNotPerformException("Could not load fxml description!", ex);
             }
