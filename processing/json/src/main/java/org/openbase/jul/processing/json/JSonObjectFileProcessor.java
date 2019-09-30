@@ -51,6 +51,8 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
         this.jsonFactory = new JsonFactory();
         this.jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false); // disable auto-close of the outputStream
         this.mapper = new ObjectMapper(jsonFactory);
+        // replacing this with the new api recommendation does not work.
+        // we therefore use the deprecation until its not longer supported.
         this.mapper.enableDefaultTyping(); // default to using DefaultTyping.OBJECT_AND_NON_CONCRETE
         this.mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
         this.mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);  // paranoidly repeat ourselves
