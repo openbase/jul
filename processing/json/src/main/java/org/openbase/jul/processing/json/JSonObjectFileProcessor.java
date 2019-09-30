@@ -21,6 +21,8 @@ package org.openbase.jul.processing.json;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -36,9 +38,8 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <DT>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor<DT> {
 
@@ -51,8 +52,8 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
         this.jsonFactory = new JsonFactory();
         this.jsonFactory.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false); // disable auto-close of the outputStream
         this.mapper = new ObjectMapper(jsonFactory);
-        this.mapper.enableDefaultTyping(); // default to using DefaultTyping.OBJECT_AND_NON_CONCRETE
-        this.mapper.enableDefaultTyping(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT);
+        this.mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator());
+        this.mapper.activateDefaultTyping(mapper.getPolymorphicTypeValidator(), ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, JsonTypeInfo.As.WRAPPER_ARRAY);
         this.mapper.configure(JsonGenerator.Feature.AUTO_CLOSE_TARGET, false);  // paranoidly repeat ourselves
         this.mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         this.mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
