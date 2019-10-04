@@ -46,6 +46,9 @@ import java.util.concurrent.*;
  */
 public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipant {
 
+    // this log is used to not run into participant deactivation deadlocks.
+    protected static final SyncObject globalRSBLock = new SyncObject("rsb");
+
     private static final long DEACTIVATION_TIMEOUT = 10000;
     protected final SyncObject participantLock = new SyncObject("participant");
     protected final Scope scope;
@@ -197,7 +200,9 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                         deactivationFuture = GlobalCachedExecutorService.submit(() -> {
                             try {
                                 try {
-                                    tmpParticipant.deactivate();
+                                    synchronized (globalRSBLock) {
+                                        tmpParticipant.deactivate();
+                                    }
                                 } catch (RSBException ex) {
                                     throw new RSBResolvedException("Participant deactivation failed!", ex);
                                 }
