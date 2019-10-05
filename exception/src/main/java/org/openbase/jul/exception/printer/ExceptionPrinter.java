@@ -21,6 +21,7 @@ package org.openbase.jul.exception.printer;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -36,7 +37,6 @@ import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
 import org.slf4j.Logger;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ExceptionPrinter {
@@ -46,17 +46,36 @@ public class ExceptionPrinter {
     private static final ElementGenerator<Throwable> THROWABLE_ELEMENT_GENERATOR = new ThrowableElementGenerator();
     private static Boolean beQuiet = false;
 
+    /**
+     * If set to true, the exception printer will skip all prints.
+     * This is useful and only allowed for unit test when testing exception behaviour.
+     * <p>
+     * Note: This method has no effect when not called from unit test.
+     *
+     * @param beQuiet if true all message prints are skipped.
+     */
     public static void setBeQuit(Boolean beQuiet) {
-        ExceptionPrinter.beQuiet = beQuiet;
+        assert JPService.testMode();
+        ExceptionPrinter.beQuiet = beQuiet && JPService.testMode();
+    }
+
+    /**
+     * Returns if the printer is currently quiet.
+     *
+     * @return true if quiet.
+     */
+    public static boolean isQuiet() {
+        return ExceptionPrinter.beQuiet;
     }
 
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
-     * @param th exception stack to print.
+     * @param <T>    Exception type
+     * @param th     exception stack to print.
      * @param logger the logger used as message printer.
+     *
      * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final Logger logger) {
@@ -67,25 +86,27 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
      *
-     * @param <T> Exception type
-     * @param th exception stack to print.
+     * @param <T>    Exception type
+     * @param th     exception stack to print.
      * @param logger the logger used as message printer.
-     * @param level the logging level used for the print.
+     * @param level  the logging level used for the print.
+     *
      * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final Logger logger, final LogLevel level) {
         printHistory(th, new LogPrinter(logger, level));
         return th;
     }
-    
+
     /**
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param message the reason why this exception occurs.
-     * @param th exception stack to print.
-     * @param logger the logger used as message printer.
+     * @param th      exception stack to print.
+     * @param logger  the logger used as message printer.
+     *
      * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final String message, final T th, final Logger logger) {
@@ -96,11 +117,12 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param message the reason why this exception occurs.
-     * @param th exception stack to print.
-     * @param logger the logger used as message printer.
-     * @param level the logging level used for the print.
+     * @param th      exception stack to print.
+     * @param logger  the logger used as message printer.
+     * @param level   the logging level used for the print.
+     *
      * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final String message, final T th, final Logger logger, final LogLevel level) {
@@ -112,10 +134,10 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
+     * @param <T>    Exception type
      * @param logger the logger used as message printer.
-     * @param th exception stack to print.
-     * @param level the logging level used for the print.
+     * @param th     exception stack to print.
+     * @param level  the logging level used for the print.
      */
     public static <T extends Throwable> void printHistory(final T th, final Logger logger, final LogLevel level) {
         printHistory(th, new LogPrinter(logger, level));
@@ -125,11 +147,11 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param message the reason why this exception occurs.
-     * @param logger the logger used as message printer.
-     * @param th exception stack to print.
-     * @param level the logging level used for the print.
+     * @param logger  the logger used as message printer.
+     * @param th      exception stack to print.
+     * @param level   the logging level used for the print.
      */
     public static <T extends Throwable> void printHistory(final String message, final T th, final Logger logger, final LogLevel level) {
         printHistory(new CouldNotPerformException(message, th), new LogPrinter(logger, level));
@@ -139,8 +161,8 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error".
      *
-     * @param <T> Exception type
-     * @param th exception stack to print.
+     * @param <T>    Exception type
+     * @param th     exception stack to print.
      * @param logger
      */
     public static <T extends Throwable> void printHistory(final T th, final Logger logger) {
@@ -151,8 +173,8 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode and call system exit afterwards. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error". After printing the system exit routine with error code 255 is triggered.
      *
-     * @param <T> Exception type
-     * @param th exception stack to print.
+     * @param <T>    Exception type
+     * @param th     exception stack to print.
      * @param logger
      */
     public static <T extends Throwable> void printHistoryAndExit(final T th, final Logger logger) {
@@ -168,9 +190,9 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error". The given message and the exception are bundled as new CouldNotPerformException and further processed.
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param message the reason why this exception occurs.
-     * @param th exception cause.
+     * @param th      exception cause.
      * @param logger
      */
     public static <T extends Throwable> void printHistory(final String message, T th, final Logger logger) {
@@ -182,9 +204,9 @@ public class ExceptionPrinter {
      * -v) the stacktrace is printed in the end of history. The logging level is fixed to level "error". The given message and the exception are bundled as new CouldNotPerformException and further processed.
      * After printing the system exit routine with error code 255 is triggered.
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param message the reason why this exception occurs.
-     * @param th exception cause.
+     * @param th      exception cause.
      * @param logger
      */
     public static <T extends Throwable> void printHistoryAndExit(final String message, T th, final Logger logger) {
@@ -200,8 +222,8 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
-     * @param th the exception stack to print.
+     * @param <T>    Exception type
+     * @param th     the exception stack to print.
      * @param stream the stream used for printing the message history e.g. System.out or. System.err
      */
     public static <T extends Throwable> void printHistory(final T th, final PrintStream stream) {
@@ -212,8 +234,8 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode and call system exit afterwards. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. After printing the system exit routine with error code 255 is triggered.
      *
-     * @param <T> Exception type
-     * @param th the exception stack to print.
+     * @param <T>    Exception type
+     * @param th     the exception stack to print.
      * @param stream the stream used for printing the message history e.g. System.out or. System.err
      */
     public static <T extends Throwable> void printHistoryAndExit(final T th, final PrintStream stream) {
@@ -229,10 +251,10 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history. The given message and the exception are bundled as new CouldNotPerformException and further processed.
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param message the reason why this exception occurs.
-     * @param th the exception cause.
-     * @param stream the stream used for printing the message history e.g. System.out or. System.err
+     * @param th      the exception cause.
+     * @param stream  the stream used for printing the message history e.g. System.out or. System.err
      */
     public static <T extends Throwable> void printHistory(final String message, final T th, final PrintStream stream) {
         printHistory(new CouldNotPerformException(message, th), new SystemPrinter(stream));
@@ -243,10 +265,10 @@ public class ExceptionPrinter {
      * In verbose mode (app -v) the stacktrace is printed in the end of history. The given message and the exception are bundled as new CouldNotPerformException and further processed.
      * After printing the system exit routine with error code 255 is triggered.
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param message the reason why this exception occurs.
-     * @param th the exception cause.
-     * @param stream the stream used for printing the message history e.g. System.out or. System.err
+     * @param th      the exception cause.
+     * @param stream  the stream used for printing the message history e.g. System.out or. System.err
      */
     public static <T extends Throwable> void printHistoryAndExit(final String message, final T th, final PrintStream stream) {
         printHistory(new CouldNotPerformException(message, th), new SystemPrinter(stream));
@@ -268,10 +290,10 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
-     * @param th exception stack to print.
+     * @param <T>    Exception type
+     * @param th     exception stack to print.
      * @param stream the stream used for printing the message history e.g. System.out or. System.err
-     * * @return the related Throwable returned for further exception handling.
+     *               * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final PrintStream stream) {
         printHistory(th, new SystemPrinter(stream));
@@ -282,9 +304,10 @@ public class ExceptionPrinter {
      * Print Exception messages without stack trace in non debug mode. Method prints recursive all messages of the given exception stack to get a history overview of the causes. In verbose mode (app
      * -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
-     * @param th exception stack to print.
+     * @param <T>     Exception type
+     * @param th      exception stack to print.
      * @param printer the message printer to use.
+     *
      * @return the related Throwable returned for further exception handling.
      */
     public static <T extends Throwable> T printHistoryAndReturnThrowable(final T th, final Printer printer) {
@@ -296,9 +319,9 @@ public class ExceptionPrinter {
      * Prints a human readable Exception cause chain of the given Exception. Builds a human readable Exception Print Exception messages without StackTrace in non debug mode. Method prints recursive
      * all messages of the given exception stack to get a history overview of the causes. In verbose mode (app -v) the stacktrace is printed in the end of history.
      *
-     * @param <T> Exception type
+     * @param <T>     Exception type
      * @param printer the message printer to use.
-     * @param th exception stack to print.
+     * @param th      exception stack to print.
      */
     public static <T extends Throwable> void printHistory(final T th, final Printer printer) {
         if (beQuiet) {
@@ -318,6 +341,7 @@ public class ExceptionPrinter {
      * Generates a human readable Exception cause chain of the given Exception as String representation.
      *
      * @param th the Throwable to process the StackTrace.
+     *
      * @return A History description as String.
      */
     public static String getHistory(final Throwable th) {
@@ -343,13 +367,13 @@ public class ExceptionPrinter {
         while (throwable != null) {
 
             // Filter ExecutionException to avoid duplicated log entries.
-            if(throwable instanceof ExecutionException && throwable.getCause() != null) {
+            if (throwable instanceof ExecutionException && throwable.getCause() != null) {
                 throwable = throwable.getCause();
                 continue;
             }
 
             // Filter InvocationTargetException because message is just referring internal cause.
-            if(throwable instanceof InvocationTargetException && throwable.getCause() != null) {
+            if (throwable instanceof InvocationTargetException && throwable.getCause() != null) {
                 throwable = throwable.getCause();
                 continue;
             }
@@ -433,7 +457,7 @@ public class ExceptionPrinter {
      * Method prints the given message only in verbose mode on the INFO channel, otherwise the DEBUG channel is used for printing.
      *
      * @param message the message to print
-     * @param logger the logger which is used for the message logging.
+     * @param logger  the logger which is used for the message logging.
      */
     public static void printVerboseMessage(final String message, final Logger logger) {
         try {
