@@ -854,7 +854,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws NotInitializedException is thrown if the controller is not initialized.
      */
     public void validateInitialization() throws NotInitializedException {
-        manageLock.lockWrite(this);
+        manageLock.lockRead(this);
         try {
             if (!initialized) {
                 if (shutdownDaemon.isShutdownInProgress()) {
@@ -863,7 +863,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 throw new NotInitializedException("server");
             }
         } finally {
-            manageLock.unlockWrite(this);
+            manageLock.unlockRead(this);
         }
     }
 
