@@ -30,12 +30,16 @@ import org.openbase.type.vision.HSBColorType.HSBColor;
  */
 public class JFXColorToHSBColorTransformer {
 
-    public static Color transform(final HSBColor hsbColor) throws CouldNotTransformException {
+    public static Color transform(final HSBColor hsbColor, double opacity) throws CouldNotTransformException {
         try {
-            return Color.hsb(hsbColor.getHue(), hsbColor.getSaturation(), hsbColor.getBrightness());
+            return Color.hsb(hsbColor.getHue(), hsbColor.getSaturation(), hsbColor.getBrightness(), opacity);
         } catch (final IllegalArgumentException ex) {
             throw new CouldNotTransformException(hsbColor, Color.class, ex);
         }
+    }
+
+    public static Color transform(final HSBColor hsbColor) throws CouldNotTransformException {
+        return transform(hsbColor, 1.0);
     }
 
     public static HSBColor transform(final Color color) {
