@@ -23,6 +23,7 @@ package org.openbase.jul.extension.rsb.com;
  */
 
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.InvalidStateException;
 import rsb.Scope;
 import rsb.config.ParticipantConfig;
 import org.openbase.jul.extension.rsb.iface.RSBFactory;
@@ -32,7 +33,6 @@ import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
 
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class RSBFactoryImpl implements RSBFactory {
@@ -61,12 +61,20 @@ public class RSBFactoryImpl implements RSBFactory {
 
     @Override
     public <DT> RSBInformer<DT> createSynchronizedInformer(final String scope, final Class<DT> type) throws InstantiationException {
-        return new RSBSynchronizedInformer<>(new Scope(scope), type);
+        try {
+            return new RSBSynchronizedInformer<>(new Scope(scope), type);
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBInformer.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
     public <DT> RSBInformer<DT> createSynchronizedInformer(final String scope, final Class<DT> type, final ParticipantConfig config) throws InstantiationException {
-        return new RSBSynchronizedInformer<>(new Scope(scope), type);
+        try {
+            return new RSBSynchronizedInformer<>(new Scope(scope), type);
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBInformer.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
@@ -81,12 +89,20 @@ public class RSBFactoryImpl implements RSBFactory {
 
     @Override
     public RSBListener createSynchronizedListener(final String scope) throws InstantiationException {
-        return new RSBSynchronizedListener(new Scope(scope));
+        try {
+            return new RSBSynchronizedListener(new Scope(scope));
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBListener.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
     public RSBListener createSynchronizedListener(final String scope, final ParticipantConfig config) throws InstantiationException {
-        return new RSBSynchronizedListener(new Scope(scope), config);
+        try {
+            return new RSBSynchronizedListener(new Scope(scope), config);
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBListener.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
@@ -101,12 +117,20 @@ public class RSBFactoryImpl implements RSBFactory {
 
     @Override
     public RSBLocalServer createSynchronizedLocalServer(final String scope) throws InstantiationException {
-        return new RSBSynchronizedLocalServer(new Scope(scope));
+        try {
+            return new RSBSynchronizedLocalServer(new Scope(scope));
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBLocalServer.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
     public RSBLocalServer createSynchronizedLocalServer(final String scope, final ParticipantConfig config) throws InstantiationException {
-        return new RSBSynchronizedLocalServer(new Scope(scope), config);
+        try {
+            return new RSBSynchronizedLocalServer(new Scope(scope), config);
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBLocalServer.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
@@ -126,16 +150,28 @@ public class RSBFactoryImpl implements RSBFactory {
 
     @Override
     public RSBRemoteServer createSynchronizedRemoteServer(final String scope) throws InstantiationException {
-        return new RSBSynchronizedRemoteServer(new Scope(scope));
+        try {
+            return new RSBSynchronizedRemoteServer(new Scope(scope));
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBRemoteServer.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
     public RSBRemoteServer createSynchronizedRemoteServer(final String scope, final ParticipantConfig config) throws InstantiationException {
-        return new RSBSynchronizedRemoteServer(new Scope(scope), config);
+        try {
+            return new RSBSynchronizedRemoteServer(new Scope(scope), config);
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBRemoteServer.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 
     @Override
     public RSBRemoteServer createSynchronizedRemoteServer(final String scope, final Double timeout) throws InstantiationException {
-        return new RSBSynchronizedRemoteServer(new Scope(scope), timeout);
+        try {
+            return new RSBSynchronizedRemoteServer(new Scope(scope), timeout);
+        } catch (IllegalArgumentException ex) {
+            throw new InstantiationException(RSBRemoteServer.class, new InvalidStateException("Invalid Scope", ex));
+        }
     }
 }
