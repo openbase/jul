@@ -71,8 +71,11 @@ import static org.openbase.type.domotic.state.AvailabilityStateType.Availability
 
 public abstract class AbstractControllerServer<M extends AbstractMessage, MB extends M.Builder<MB>> implements MessageController<M, MB>, ScopeProvider, DataProvider<M>, Readyable, TransactionIdProvider {
 
-    public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope("/ctrl");
-    public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope("/status");
+    public final static String SCOPE_ELEMENT_SUFFIX_CONTROL = "/ctrl";
+    public final static String SCOPE_ELEMENT_SUFFIX_STATUS = "/status";
+
+    public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope(SCOPE_ELEMENT_SUFFIX_CONTROL);
+    public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope(SCOPE_ELEMENT_SUFFIX_STATUS);
 
     private static final long NOTIFICATILONG_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
 
