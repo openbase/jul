@@ -36,7 +36,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * A result processing multi future.
  *
- * @param <O> The output or result type of the futures provided by the future collection.
+ * @param <O> The output of the futures provided by the future collection.
  * @param <R> The result type of the future.
  */
 public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> {
@@ -47,7 +47,6 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
 
     final Processable<Collection<Future<O>>, R> resultProcessor;
     private MultiFuture<O> multiFuture;
-
 
     public ResultProcessingMultiFuture(final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureList) {
         this.multiFuture = new MultiFuture<>(futureList);
