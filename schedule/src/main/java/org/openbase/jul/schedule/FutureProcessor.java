@@ -295,6 +295,10 @@ public class FutureProcessor {
         }
     }
 
+    public static <I, R> Future<R> postProcess(final Processable<I, R> resultProcessor, final Future<I> future) {
+        return new ResultProcessingFuture<I, R>(resultProcessor, future);
+    }
+
     /**
      * Method generates a new futures which represents all futures provided by the futureCollection. If all futures are successfully finished the outer future will be completed with the result provided by the resultCallable.
      *
@@ -328,67 +332,6 @@ public class FutureProcessor {
     public static <O, R> Future<R> allOf(final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureCollection) {
         return new ResultProcessingMultiFuture<>(resultProcessor, futureCollection);
     }
-
-//    private static void internalAllOf(final Collection<? extends Future<?>> futureCollection, final Object source) throws CouldNotPerformException, InterruptedException, TimeoutException {
-//        internalAllOf(futureCollection, source, 0, null);
-//    }
-
-//    private static void internalAllOf(final Collection<? extends Future<?>> futureCollection, final Object source, long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException, TimeoutException {
-//        MultiException.ExceptionStack exceptionStack = null;
-//        try {
-//            // this does not work anymore since no extra thread is used.
-////            if (JPService.debugMode()) {
-////                int iteration = 0;
-////                Set<Future<?>> runningFutures = new HashSet<>(futureCollection);
-////                Set<Future<?>> finishedFutures = new HashSet<>();
-////                Set<Future<?>> failedFutures = new HashSet<>();
-////                while (runningFutures.size() != 0 && !Thread.currentThread().isInterrupted()) {
-////                    for (final Future future : new HashSet<>(runningFutures)) {
-////                        try {
-////                            future.get(timeout, timeUnit);
-////                            finishedFutures.add(future);
-////                            runningFutures.remove(future);
-////                        } catch (ExecutionException | CancellationException ex) {
-////                            failedFutures.add(future);
-////                            runningFutures.remove(future);
-////                            exceptionStack = MultiException.push(source, ex, exceptionStack);
-////                        } catch (TimeoutException ex) {
-////                            exceptionStack = MultiException.push(source, ex, exceptionStack);
-////                        }
-////                    }
-////                    try {
-////                        final int internalIteration = iteration;
-////                        MultiException.checkAndThrow(() -> "Multi task processing delayed! " + runningFutures.size() + " are still running while " + failedFutures.size() + " are failed and " + finishedFutures.size() + " are finished after " + internalIteration + " iterations.", exceptionStack);
-////                    } catch (CouldNotPerformException ex) {
-////                        ExceptionPrinter.printHistory(ex, LoggerFactory.getLogger(source.getClass()));
-////                    }
-////                    exceptionStack = null;
-////                    iteration++;
-////                }
-////            } else {
-//            for (final Future<?> future : futureCollection) {
-//                try {
-//                    if (timeUnit == null) {
-//                        future.get();
-//                    } else {
-//                        future.get(timeout, timeUnit);
-//                    }
-//                } catch (ExecutionException | CancellationException ex) {
-//                    exceptionStack = MultiException.push(source, ex, exceptionStack);
-//                }
-////                }
-//            }
-//        } catch (InterruptedException ex) {
-//            // cancel all pending actions.
-//            for (Future<?> future : futureCollection) {
-//                if (!future.isDone()) {
-//                    future.cancel(true);
-//                }
-//            }
-//            throw ex;
-//        }
-//        MultiException.checkAndThrow(() -> "Could not execute all tasks!", exceptionStack);
-//    }
 
     public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future<?>> futureCollection,
                                            final long timeout, final TimeUnit timeUnit) {
