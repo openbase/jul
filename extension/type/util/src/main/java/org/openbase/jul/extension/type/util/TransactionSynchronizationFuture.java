@@ -66,7 +66,13 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
      */
     @Override
     protected void beforeWaitForSynchronization(final T message) throws CouldNotPerformException {
+
+        if (message == null) {
+            throw new NotAvailableException("message");
+        }
+
         transactionIdField = ProtoBufFieldProcessor.getFieldDescriptor(message, TransactionIdProvider.TRANSACTION_ID_FIELD_NAME);
+
         if (transactionIdField == null) {
             throw new NotAvailableException("transaction id field for message[" + message.getClass().getSimpleName() + "]");
         }
