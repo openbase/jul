@@ -23,6 +23,7 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -52,12 +53,6 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     protected final Logger logger;
 
     private final SyncObject CHECK_LOCK = new SyncObject("WaitForUpdateLock");
-
-    private final Observer notifyChangeObserver = (Object source, Object data) -> {
-        synchronized (CHECK_LOCK) {
-            CHECK_LOCK.notifyAll();
-        }
-    };
 
     private final Future<T> internalFuture;
     private Future synchronisationFuture;
@@ -93,13 +88,22 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         // create a synchronisation task which makes sure that the change requested by
         // the internal future has at one time been synchronized to the remote
         synchronisationFuture = GlobalCachedExecutorService.submit(() -> {
+
+            final Observer notifyChangeObserver = (Object source, Object data) -> {
+                synchronized (CHECK_LOCK) {
+                    CHECK_LOCK.notifyAll();
+                }
+            };
+
             dataProvider.addDataObserver(notifyChangeObserver);
             try {
                 dataProvider.waitForData();
                 T result = internalFuture.get();
                 waitForSynchronization(result);
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
+                if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
+                }
             } finally {
                 dataProvider.removeDataObserver(notifyChangeObserver);
             }
