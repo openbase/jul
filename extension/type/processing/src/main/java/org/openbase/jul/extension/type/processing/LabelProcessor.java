@@ -205,6 +205,33 @@ public class LabelProcessor {
      * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
      * {@link Locale#getLanguage()}. If no label matches the languageCode, than the first label of any other provided language is returned.
      *
+     * @param languageCode the language tag from which a language code is extracted
+     * @param label  the label type which is searched for labels in the language
+     *
+     * @return the first label from the label type for the locale
+     *
+     * @throws NotAvailableException if no label is provided by the {@code label} argument.
+     */
+    public static String getBestMatch(final String languageCode, final LabelOrBuilder label) throws NotAvailableException {
+        try {
+            // resolve label via preferred locale.
+            return getLabelByLanguage(Locale.forLanguageTag(languageCode).getLanguage(), label);
+        } catch (NotAvailableException ex) {
+            try {
+                // resolve world language label.
+                return getLabelByLanguage(Locale.ENGLISH, label);
+            } catch (NotAvailableException exx) {
+                // resolve any label.
+                return getFirstLabel(label);
+            }
+        }
+    }
+
+    /**
+     * Get the first label for a languageCode from a label type. This is equivalent to calling
+     * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
+     * {@link Locale#getLanguage()}. If no label matches the languageCode, than the first label of any other provided language is returned.
+     *
      * @param locale the locale from which a language code is extracted
      * @param label  the label type which is searched for labels in the language
      *
