@@ -38,6 +38,9 @@ import java.util.concurrent.Future;
 /**
  * @param <S> the type of the data source
  * @param <T> the data type on whose changes is notified
+ *            <p>
+ *            This method implements the observable pattern in a more generic way then offered by the native java lib.
+ *            Note: Its recommended to encapsulate instances of this class and just passthrough observer registration and deregistration methods to avoid the access to management methods like reset() or shutdown().
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
@@ -158,10 +161,18 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
     /**
      * {@inheritDoc}
      * <p>
-     * Note: Ongoing notifications are skipped during shutdown.
+     * Note: Ongoing notifications are skipped during shutdown and instance can not be used for any further notification task.
      */
     @Override
     public void shutdown() {
+        shutdownInitiated = true;
+        reset();
+    }
+
+    /**
+     * Method removes all registered observers.
+     */
+    public void reset() {
         synchronized (OBSERVER_LOCK) {
             observers.clear();
         }
@@ -244,7 +255,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                 for (final Observer<S, T> observer : tempObserverList) {
 
                     // skip ongoing notifications if shutdown was initiated or the thread was interrupted.
-                    if (shutdownInitiated && Thread.currentThread().isInterrupted()) {
+                    if (shutdownInitiated || Thread.currentThread().isInterrupted()) {
                         latestValueHash = lastHashValue;
                         return false;
                     }
@@ -268,7 +279,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                             if (ex instanceof ClassCastException) {
                                 LOGGER.error("Probably defect Observer[{}] registered on {}", observer, this);
                             }
-                            exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer["+observer.getClass().getSimpleName()+"] update failed!", ex), exceptionStack);
+                            exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer[" + observer.getClass().getSimpleName() + "] update failed!", ex), exceptionStack);
                         }
                     } else {
                         // asynchronous notification
@@ -296,7 +307,7 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                         Thread.currentThread().interrupt();
                         return true;
                     } catch (Exception ex) {
-                        exceptionStack = MultiException.push(notificationFuture.getKey(), new CouldNotPerformException("Observer["+notificationFuture.getKey().getClass().getSimpleName()+"] update failed!", ex) , exceptionStack);
+                        exceptionStack = MultiException.push(notificationFuture.getKey(), new CouldNotPerformException("Observer[" + notificationFuture.getKey().getClass().getSimpleName() + "] update failed!", ex), exceptionStack);
                     }
                 }
             }
