@@ -23,6 +23,7 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.pattern.CompletableFutureLite;
@@ -79,10 +80,10 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
             try {
                 multiFuture.get();
                 complete(resultProcessor.process(multiFuture.getFutureList()));
-            } catch (CouldNotPerformException | InterruptedException | CancellationException ex) {
+            } catch (CouldNotPerformException | InterruptedException | ExecutionException | CancellationException ex) {
                 completeExceptionally(ex);
             } catch (Exception ex) {
-                completeExceptionally(ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LOGGER));
+                completeExceptionally(new FatalImplementationErrorException(this, ex));
             }
         } finally {
             updateComponentLock.writeLock().unlock();
