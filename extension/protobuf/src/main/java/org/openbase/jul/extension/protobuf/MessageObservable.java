@@ -39,36 +39,11 @@ import org.openbase.jul.pattern.ObservableImpl;
 public class MessageObservable<S, M extends Message> extends ObservableImpl<S, M> {
 
     public static final String TIMESTAMP_MESSAGE_NAME = "Timestamp";
-    public static final String RESOURCE_ALLOCATION_FIELD = "resource_allocation";
-
-//    private final DataProvider<M> dataProvider;
 
     public MessageObservable(final S source) {
         super(source);
-
-//        this.dataProvider = source;
         this.setHashGenerator((M value) -> removeTimestamps(value.toBuilder()).build().hashCode());
     }
-
-//    @Override
-//    public void waitForValue(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
-//        dataProvider.waitForData();
-//    }
-//
-//    @Override
-//    public M getValue() throws NotAvailableException {
-//        return dataProvider.getData();
-//    }
-//
-//    @Override
-//    public boolean isValueAvailable() {
-//        return dataProvider.isDataAvailable();
-//    }
-//
-//    @Override
-//    public Future<M> getValueFuture() {
-//        return dataProvider.getDataFuture();
-//    }
 
     /**
      * Recursively clear timestamp messages from a builder. For efficiency repeated fields are ignored.
@@ -79,20 +54,13 @@ public class MessageObservable<S, M extends Message> extends ObservableImpl<S, M
     public Builder removeTimestamps(final Builder builder) {
         final Descriptors.Descriptor descriptorForType = builder.getDescriptorForType();
         for (final Descriptors.FieldDescriptor field : descriptorForType.getFields()) {
+
             // if the field is not repeated, a message and a timestamp it is cleared
             if (!field.isRepeated() && field.getType() == Descriptors.FieldDescriptor.Type.MESSAGE) {
-                //===============================================================
-                //TODO: This is just a hack since states in units now contain action descriptions,
-                //      This line prevents resource allocations to be checked because they contain required fields
-                //      and thus if they are checked calling build on the builder afterwards fails.
-                //      can be removed after switching to protobuf 3 or replacing the resource allocation type
-                if (field.getName().equals(RESOURCE_ALLOCATION_FIELD)) {
-                    continue;
-                }
-                //===============================================================
                 if (field.getMessageType().getName().equals(TIMESTAMP_MESSAGE_NAME)) {
                     builder.clearField(field);
                 } else {
+
                     // skip checking recursively if the field is not even initialized
                     if (builder.hasField(field)) {
                         removeTimestamps(builder.getFieldBuilder(field));
