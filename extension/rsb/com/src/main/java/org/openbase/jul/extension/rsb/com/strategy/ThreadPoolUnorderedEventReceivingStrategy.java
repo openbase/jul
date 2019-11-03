@@ -227,7 +227,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy
                 eventTaskMap.put(dispatchTask, future);
 
                 // handle if execution was faster than registration
-                if(future.isDone() && eventTaskMap.containsKey(dispatchTask)) {
+                if (future.isDone() && eventTaskMap.containsKey(dispatchTask)) {
                     eventTaskMap.remove(dispatchTask);
                 }
 
@@ -241,7 +241,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy
         final int taskCounter = eventTaskMap.size();
         if (taskCounter > 50) {
             try {
-                logEventFilter.trigger("Participant[" + event.getScope() + "/" + event.getMethod() + "] overload detected! Processing " + taskCounter + " tasks at once probably affects the application performance.");
+                logEventFilter.trigger("Participant[" + event.getScope() + (event.getMethod() != null ? "/" + event.getMethod() : "") + "] overload detected! Processing " + taskCounter + " tasks at once probably affects the application performance.");
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory(ex, LOGGER);
             }
