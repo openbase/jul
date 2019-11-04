@@ -54,7 +54,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     private final DataProvider dataProvider;
     private boolean isActive = false;
     private final Observer observer;
-    private final RecurrenceEventFilter recurrenceSyncFilter;
+    private final RecurrenceEventFilter<Void> recurrenceSyncFilter;
 
     private boolean initialSync;
 
@@ -79,7 +79,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
             this.listDiff = new ListDiffImpl<>();
             this.dataProvider = dataProvider;
             this.currentEntryMap = new IdentifiableValueMap<>();
-            this.recurrenceSyncFilter = new RecurrenceEventFilter(maxFrequency) {
+            this.recurrenceSyncFilter = new RecurrenceEventFilter<Void>(maxFrequency) {
                 @Override
                 public void relay() throws Exception {
                     // skip relay if synchronizer is not active.
