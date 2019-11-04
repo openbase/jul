@@ -81,6 +81,8 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         }
     }
 
+    // todo: Improve performance by avoiding internal task and using the .get() caller thread for the synchronization purpose.
+
     /**
      * Start the internal synchronization task.
      */
