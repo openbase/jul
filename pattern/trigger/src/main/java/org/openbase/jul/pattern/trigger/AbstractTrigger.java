@@ -51,7 +51,7 @@ public abstract class AbstractTrigger implements Shutdownable, Trigger {
     }
 
     @Override
-    public ActivationState getActivationState() throws NotAvailableException {
+    public final ActivationState getActivationState() throws NotAvailableException {
         return triggerObservable.getValue();
     }
 

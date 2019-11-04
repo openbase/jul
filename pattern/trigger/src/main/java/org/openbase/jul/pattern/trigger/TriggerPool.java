@@ -21,8 +21,10 @@ package org.openbase.jul.pattern.trigger;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -33,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
 /**
- *
  * @author <a href="mailto:tmichalski@techfak.uni-bielefeld.de">Timo Michalski</a>
  */
 public class TriggerPool extends AbstractTrigger {
@@ -59,13 +60,7 @@ public class TriggerPool extends AbstractTrigger {
         };
 
         triggerOrObserver = (Trigger source, ActivationState data) -> {
-//            if (data.getValue().equals(ActivationState.State.ACTIVE)) {
-//                if (!getActivationState().getValue().equals(ActivationState.State.ACTIVE)) {
-//                    notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build()));
-//                }
-//            } else {
-                verifyCondition();
-//            }
+            verifyCondition();
         };
 
         try {
@@ -147,6 +142,7 @@ public class TriggerPool extends AbstractTrigger {
 
     /**
      * return the total amount of registered triggers.
+     *
      * @return the total amount of trigger.
      */
     public int getSize() {
@@ -155,10 +151,11 @@ public class TriggerPool extends AbstractTrigger {
 
     /**
      * Check if pool contains any trigger.
+     *
      * @return true if no trigger are registered.
      */
     public boolean isEmpty() {
-        return triggerListAND.isEmpty() &&  triggerListOR.isEmpty();
+        return triggerListAND.isEmpty() && triggerListOR.isEmpty();
     }
 
     @Override

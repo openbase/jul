@@ -34,9 +34,9 @@ import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
  */
 public interface Trigger extends Activatable {
 
-    void removeObserver(final Observer<Trigger, ActivationState> observer);
-
     ActivationStateType.ActivationState getActivationState() throws NotAvailableException;
+
+    void removeObserver(final Observer<Trigger, ActivationState> observer);
 
     void addObserver(final Observer<Trigger, ActivationState> observer);
 
