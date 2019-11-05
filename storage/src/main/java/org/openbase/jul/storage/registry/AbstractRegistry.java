@@ -608,6 +608,10 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     public void checkWriteAccess() throws RejectedException {
         logger.debug("checkWriteAccess of " + this);
 
+        if (isShutdownInitiated()) {
+            throw new RejectedException("Write access rejected because of registry shutdown!", new ShutdownInProgressException(this));
+        }
+
         if (!isDependingOnConsistentRegistries()) {
             throw new RejectedException("At least one depending registry is inconsistent!");
         }

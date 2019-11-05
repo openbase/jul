@@ -57,6 +57,7 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
  * @param <ENTRY>
  * @param <MAP>
  * @param <REGISTRY>
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, REGISTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
@@ -297,17 +298,11 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             return;
         }
 
-        try {
-            if (!JPService.getProperty(JPForce.class).getValue() && isReadOnly()) {
+        if (!JPService.getValue(JPForce.class, false) && isReadOnly()) {
+            if (!isShutdownInitiated()) {
                 logger.warn("Skipping save of Registry[" + getName() + "] because its read only.");
-                return;
             }
-        } catch (JPNotAvailableException ex) {
-            logger.error("Could not check JPFoceProperty!", ex);
-            if (isReadOnly()) {
-                logger.warn("Skipping save of Registry[" + getName() + "] because its read only.");
-                return;
-            }
+            return;
         }
 
         logger.debug("Save " + this + " into " + databaseDirectory + "...");

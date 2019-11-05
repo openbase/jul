@@ -39,6 +39,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @param <KEY>
  * @param <ENTRY>
  * @param <PLUGIN>
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN extends RegistryPlugin<KEY, ENTRY, REGISTRY>, REGISTRY extends Registry<KEY, ENTRY>> implements RegistryPlugin<KEY, ENTRY, REGISTRY> {
@@ -381,7 +382,9 @@ public class RegistryPluginPool<KEY, ENTRY extends Identifiable<KEY>, PLUGIN ext
                 } catch (RejectedException ex) {
                     throw ex;
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about finished consistency check!", plugin, ex), logger, LogLevel.ERROR);
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        ExceptionPrinter.printHistory(new FatalImplementationErrorException("Could not inform RegistryPlugin[" + plugin + "] about finished consistency check!", plugin, ex), logger, LogLevel.ERROR);
+                    }
                 }
             }
         } finally {
