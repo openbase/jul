@@ -232,9 +232,11 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                             logger.debug("trigger initial sync");
                             notifyChange();
                         } catch (InterruptedException ex) {
-                            logger.debug("Initial sync was skipped because of controller shutdown.");
+                            Thread.currentThread().interrupt();
                         } catch (CouldNotPerformException ex) {
-                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
+                            if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not trigger data sync!", ex), logger, LogLevel.ERROR);
+                            }
                         }
                     });
                 }
