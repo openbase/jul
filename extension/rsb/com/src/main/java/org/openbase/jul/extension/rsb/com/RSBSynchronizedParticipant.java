@@ -46,9 +46,6 @@ import java.util.concurrent.*;
  */
 public abstract class RSBSynchronizedParticipant<P extends Participant> implements RSBParticipant {
 
-    // this log is used to not run into participant deactivation deadlocks.
-    protected static final SyncObject globalRSBLock = new SyncObject("rsb");
-
     private static final long DEACTIVATION_TIMEOUT = 10000;
     protected final SyncObject participantLock = new SyncObject("participant");
     protected final Scope scope;
@@ -192,17 +189,20 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                     return;
                 }
 
+                // cache participant
+                final P tmpParticipant = getParticipant();
+
+                // clear global instance to avoid any further interaction and free the participantLock.
+                this.participant = null;
+
                 // deactivate
                 logger.debug("Participant[" + this + "] will be deactivated.");
-                final P tmpParticipant = getParticipant();
                 if (tmpParticipant.isActive()) {
                     try {
                         deactivationFuture = GlobalCachedExecutorService.submit(() -> {
                             try {
                                 try {
-                                    synchronized (globalRSBLock) {
-                                        tmpParticipant.deactivate();
-                                    }
+                                    tmpParticipant.deactivate();
                                 } catch (RSBException ex) {
                                     throw new RSBResolvedException("Participant deactivation failed!", ex);
                                 }
@@ -217,13 +217,10 @@ public abstract class RSBSynchronizedParticipant<P extends Participant> implemen
                         tmpParticipant.deactivate();
                     }
                 }
-
-                // clear global instance to avoid any further interaction and free the participantLock.
-                this.participant = null;
             }
 
             // wait for deactivation and handle error case
-            if(deactivationFuture != null) {
+            if (deactivationFuture != null) {
                 try {
                     deactivationFuture.get(DEACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS);
                     logger.debug("Participant[" + this + "] deactivated.");
