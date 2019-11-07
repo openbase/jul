@@ -31,6 +31,7 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.type.processing.TimestampProcessor;
 import org.openbase.jul.pattern.Observer;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
@@ -42,6 +43,8 @@ public class TriggerPool extends AbstractTrigger {
     public enum TriggerAggregation {
         AND, OR
     }
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(AbstractTrigger.class);
 
     private boolean active;
 
@@ -189,6 +192,18 @@ public class TriggerPool extends AbstractTrigger {
     @Override
     public boolean isActive() {
         return active;
+    }
+
+    public void forceNotification() throws CouldNotPerformException {
+        try {
+            if (verifyOrCondition() || verifyAndCondition()) {
+                notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.ACTIVE).build()));
+            } else {
+                notifyChange(TimestampProcessor.updateTimestampWithCurrentTime(ActivationState.newBuilder().setValue(ActivationState.State.INACTIVE).build()));
+            }
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not force notify trigger pool!", ex);
+        }
     }
 
     @Override
