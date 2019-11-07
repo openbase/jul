@@ -22,7 +22,6 @@ package org.openbase.jul.storage.registry.jp;
  * #L%
  */
 
-import org.openbase.jps.core.AbstractJavaProperty.ValueType;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.exception.JPValidationException;
@@ -44,6 +43,7 @@ public class JPResetDB extends AbstractJPBoolean {
 
     public JPResetDB() {
         super(COMMAND_IDENTIFIERS);
+        registerDependingProperty(JPTestMode.class);
     }
 
     @Override

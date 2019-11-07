@@ -22,7 +22,6 @@ package org.openbase.jul.storage.registry.jp;
  * #L%
  */
 
-import org.openbase.jps.core.AbstractJavaProperty.ValueType;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPBadArgumentException;
 import org.openbase.jps.exception.JPServiceException;
@@ -31,9 +30,6 @@ import org.openbase.jps.preset.AbstractJPBoolean;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-
-import java.io.Console;
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -46,6 +42,7 @@ public class JPRecoverDB extends AbstractJPBoolean {
 
     public JPRecoverDB() {
         super(COMMAND_IDENTIFIERS);
+        registerDependingProperty(JPTestMode.class);
     }
 
     @Override

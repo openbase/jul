@@ -24,15 +24,10 @@ package org.openbase.jul.storage.registry.jp;
 
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jps.exception.JPValidationException;
 import org.openbase.jps.preset.AbstractJPBoolean;
 import org.openbase.jps.preset.JPReset;
-import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-
-import java.io.IOException;
 
 /**
  *
@@ -44,6 +39,7 @@ public class JPDeveloperMode extends AbstractJPBoolean {
 
     public JPDeveloperMode() {
         super(COMMAND_IDENTIFIERS);
+        registerDependingProperty(JPReset.class);
     }
 
     @Override
