@@ -74,24 +74,34 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             public void expired() {
                 ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
 
-                // in test mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
-                if (JPService.testMode()) {
+                // in test or debug mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
+                if (JPService.testMode() || JPService.debugMode()) {
                     return;
                 }
-                unlockRead("TimeoutHandler");
+
+                try {
+                    unlockRead("TimeoutHandler");
+                } catch (IllegalMonitorStateException ex) {
+                    logger.warn("ReadLock recovery of " + builder.buildPartial().getClass().getSimpleName() + " was not successful!");
+                }
             }
         };
         this.writeLockTimeout = new Timeout(LOCK_TIMEOUT) {
 
             @Override
             public void expired() {
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!")), logger);
+                new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
 
-                // in test mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
-                if (JPService.testMode()) {
+                // in test or debug mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
+                if (JPService.testMode() || JPService.debugMode()) {
                     return;
                 }
-                unlockWrite();
+
+                try {
+                    unlockWrite();
+                } catch (IllegalMonitorStateException ex) {
+                    logger.warn("WriteLock recovery of " + builder.buildPartial().getClass().getSimpleName() + " was not successful!");
+                }
             }
         };
     }

@@ -132,7 +132,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
-            this.manageLock = new BundledReentrantReadWriteLock(dataLock, false, this);
+            this.manageLock = new BundledReentrantReadWriteLock(dataLock, false, true, this);
             this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
@@ -579,7 +579,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer) {
-        return new CloseableWriteLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
+        return new CloseableWriteLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, true, consumer));
     }
 
     /**
@@ -608,7 +608,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableReadLockWrapper getManageReadLock(final Object consumer) {
-        return new CloseableReadLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
+        return new CloseableReadLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, true, consumer));
     }
 
     /**

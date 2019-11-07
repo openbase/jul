@@ -37,7 +37,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * This lock can be used to bundle to locks into one.
+ * This lock can be used to bundle two locks into one.
  * <p>
  * The secondary lock will always be locked first and than the primary (mostly more important) one.
  * The unlock us performed in revise order.
@@ -60,59 +60,20 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
     private Object readLockConsumer;
     private Object writeLockConsumer;
     final boolean autoLockReleaseOnLongtermBlock;
+    final boolean independentPrimaryReadAccess;
 
     /**
      * Constructor creates a new bundled lock.
      *
      * @param secondaryLock                  a less important lock maybe used for frequently by notification purpose with is locked in advance.
      * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
+     * @param independentPrimaryReadAccess   flag defines if the primary read lock is independent from the secondary lock. If true, read action will not lock the secondary lock.
      * @param holder                         the instance holding the locks.
      */
-    public BundledReentrantReadWriteLock(final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
-        this(new ReentrantReadWriteLock(), secondaryLock, autoLockReleaseOnLongtermBlock, holder);
+    public BundledReentrantReadWriteLock(final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final boolean independentPrimaryReadAccess, final Object holder) {
+        this(new ReentrantReadWriteLock(), secondaryLock, autoLockReleaseOnLongtermBlock, independentPrimaryReadAccess, holder);
     }
 
-    /**
-     * Constructor creates a new bundled lock.
-     *
-     * @param primaryLock                    the more important lock used e.g. for configure or manage an instance.
-     * @param secondaryLock                  a less important lock maybe used for frequently by notification purpose with is locked in advance.
-     * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
-     * @param holder                         the instance holding the locks.
-     */
-    public BundledReentrantReadWriteLock(final ReentrantReadWriteLock primaryLock, final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
-        this.secondaryLock = secondaryLock;
-        this.primaryLock = primaryLock;
-        this.autoLockReleaseOnLongtermBlock = autoLockReleaseOnLongtermBlock;
-
-        this.holder = holder;
-        this.readLockTimeout = new Timeout(DEFAULT_LOCK_TIMEOUT) {
-
-            @Override
-            public void expired() {
-                if (JPService.getValue(JPTestMode.class, false)) {
-                    return;
-                }
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
-                if (autoLockReleaseOnLongtermBlock) {
-                    unlockRead("TimeoutHandler");
-                }
-            }
-        };
-        this.writeLockTimeout = new Timeout(DEFAULT_LOCK_TIMEOUT) {
-
-            @Override
-            public void expired() {
-                if (JPService.getValue(JPTestMode.class, false)) {
-                    return;
-                }
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!")), logger);
-                if (autoLockReleaseOnLongtermBlock) {
-                    unlockWrite("TimeoutHandler");
-                }
-            }
-        };
-    }
 
     /**
      * Kind of copy constructor which returns a new clone of the given lock.
@@ -125,8 +86,58 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
      * @param holder                         the instance holding the new lock.
      * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
      */
-    public BundledReentrantReadWriteLock(final BundledReentrantReadWriteLock lock, final boolean autoLockReleaseOnLongtermBlock, final Object holder) {
-        this(lock.primaryLock, lock.secondaryLock, true, holder);
+    public BundledReentrantReadWriteLock(final BundledReentrantReadWriteLock lock, final boolean autoLockReleaseOnLongtermBlock, final boolean independentPrimaryReadAccess, final Object holder) {
+        this(lock.primaryLock, lock.secondaryLock, autoLockReleaseOnLongtermBlock, independentPrimaryReadAccess, holder);
+    }
+
+    /**
+     * Constructor creates a new bundled lock.
+     *
+     * @param primaryLock                    the more important lock used e.g. for configure or manage an instance.
+     * @param secondaryLock                  a less important lock maybe used for frequently by notification purpose with is locked in advance.
+     * @param autoLockReleaseOnLongtermBlock if a consumer blocks the lock it longterm and this flag is true, than the lock will auto released after 1 minute.
+     * @param independentPrimaryReadAccess   flag defines if the primary read lock is independent from the secondary lock. If true, read action will not lock the secondary lock.
+     * @param holder                         the instance holding the locks.
+     */
+    public BundledReentrantReadWriteLock(final ReentrantReadWriteLock primaryLock, final ReentrantReadWriteLock secondaryLock, final boolean autoLockReleaseOnLongtermBlock, final boolean independentPrimaryReadAccess, final Object holder) {
+        this.secondaryLock = secondaryLock;
+        this.primaryLock = primaryLock;
+        this.autoLockReleaseOnLongtermBlock = autoLockReleaseOnLongtermBlock;
+        this.independentPrimaryReadAccess = independentPrimaryReadAccess;
+
+        this.holder = holder;
+        this.readLockTimeout = new Timeout(DEFAULT_LOCK_TIMEOUT) {
+
+            @Override
+            public void expired() {
+                new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
+
+                // in test or debug mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
+                if (JPService.testMode() || JPService.debugMode()) {
+                    return;
+                }
+
+                if (autoLockReleaseOnLongtermBlock) {
+                    unlockRead("TimeoutHandler");
+                }
+            }
+        };
+        this.writeLockTimeout = new Timeout(DEFAULT_LOCK_TIMEOUT) {
+
+            @Override
+            public void expired() {
+                new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
+
+                // in test or debug mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
+                if (JPService.testMode() || JPService.debugMode()) {
+                    return;
+                }
+
+                if (autoLockReleaseOnLongtermBlock) {
+                    unlockWrite("TimeoutHandler");
+                }
+            }
+        };
     }
 
     @Override
@@ -137,7 +148,9 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
     @Override
     public void lockRead(final Object consumer) {
         logger.debug("order lockRead by {}", consumer);
-        secondaryLock.readLock().lock();
+        if (!independentPrimaryReadAccess) {
+            secondaryLock.readLock().lock();
+        }
         primaryLock.readLock().lock();
         readLockConsumer = consumer;
         restartReadLockTimeout();
@@ -151,19 +164,28 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     @Override
     public boolean tryLockRead(final Object consumer) {
-        final boolean secondarySuccess = secondaryLock.readLock().tryLock();
 
-        if (secondarySuccess) {
+        if (independentPrimaryReadAccess) {
             final boolean primarySuccess = primaryLock.readLock().tryLock();
             if (primarySuccess) {
                 readLockConsumer = consumer;
                 restartReadLockTimeout();
-            } else {
-                secondaryLock.readLock().unlock();
             }
-            return primarySuccess && secondarySuccess;
+            return primarySuccess;
+        } else {
+            final boolean secondarySuccess = secondaryLock.readLock().tryLock();
+            if (secondarySuccess) {
+                final boolean primarySuccess = primaryLock.readLock().tryLock();
+                if (primarySuccess) {
+                    readLockConsumer = consumer;
+                    restartReadLockTimeout();
+                } else {
+                    secondaryLock.readLock().unlock();
+                }
+                return primarySuccess && secondarySuccess;
+            }
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -173,19 +195,28 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     @Override
     public boolean tryLockRead(final long time, final TimeUnit unit, final Object consumer) throws InterruptedException {
-        final boolean secondarySuccess = secondaryLock.readLock().tryLock(time, unit);
 
-        if (secondarySuccess) {
-            final boolean primarySuccess = primaryLock.readLock().tryLock(time, unit);
-            if (primarySuccess) {
+        if (independentPrimaryReadAccess) {
+            final boolean result = primaryLock.readLock().tryLock(time, unit);
+            if (result) {
                 readLockConsumer = consumer;
                 restartReadLockTimeout();
-            } else {
-                secondaryLock.readLock().unlock();
             }
-            return primarySuccess && secondarySuccess;
+            return result;
+        } else {
+            final boolean secondarySuccess = secondaryLock.readLock().tryLock(time, unit);
+            if (secondarySuccess) {
+                final boolean primarySuccess = primaryLock.readLock().tryLock(time, unit);
+                if (primarySuccess) {
+                    readLockConsumer = consumer;
+                    restartReadLockTimeout();
+                } else {
+                    secondaryLock.readLock().unlock();
+                }
+                return primarySuccess && secondarySuccess;
+            }
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -201,7 +232,10 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         }
         readLockTimeout.cancel();
         primaryLock.readLock().unlock();
-        secondaryLock.readLock().unlock();
+
+        if (!independentPrimaryReadAccess) {
+            secondaryLock.readLock().unlock();
+        }
         logger.debug("unlockRead by {}", consumer);
     }
 
