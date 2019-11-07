@@ -249,7 +249,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
                             logEventFilter.trigger("Participant[" + event.getScope() + (event.getMethod() != null ? "/" + event.getMethod() : "") + "] overload detected! Processing " + taskCounter + " tasks at once probably affects the application performance.");
                         } else {
                             if(JPService.verboseMode()) {
-                                logEventFilter.trigger("Cache incoming event of [" + event.toString() + "] for later execution, current cache size: " + eventTaskMap.size());
+                                logEventFilter.trigger("Cache incoming event of Participant[" + event.getScope() + (event.getMethod() != null ? "/" + event.getMethod() : "") + "] for later execution, current cache size: " + eventTaskMap.size());
                             }
                         }
                     } catch (CouldNotPerformException ex) {
