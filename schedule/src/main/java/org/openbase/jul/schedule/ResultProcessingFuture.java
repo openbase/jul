@@ -54,7 +54,7 @@ public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> {
     }
 
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
+    public boolean cancel(final boolean mayInterruptIfRunning) {
 
         // cancel multi future.
         future.cancel(true);
@@ -91,7 +91,7 @@ public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> {
     }
 
     @Override
-    public R get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public R get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         if (isDone()) {
             return super.get(timeout, unit);
         }
@@ -117,6 +117,6 @@ public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> {
             updateComponentLock.writeLock().unlock();
         }
 
-        return super.get();
+        return super.get(timeout, unit);
     }
 }
