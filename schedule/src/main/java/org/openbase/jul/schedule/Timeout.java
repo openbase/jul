@@ -50,6 +50,8 @@ public abstract class Timeout {
      */
     private long defaultWaitTime;
     private volatile boolean expired;
+    private long startTimestamp;
+    private long timeToWait;
 
     /**
      * Constructor creates a new Timeout instance. The default timeout can be configured via the given {@code defaultWaitTime} argument.
@@ -76,6 +78,15 @@ public abstract class Timeout {
      * @return the time in milliseconds.
      */
     public long getTimeToWait() {
+        return timeToWait;
+    }
+
+    /**
+     * Returns the currently configured default time to wait until the timeout is reached after start.
+     *
+     * @return the time in milliseconds.
+     */
+    public long getDefaultWaitTime() {
         return defaultWaitTime;
     }
 
@@ -202,6 +213,8 @@ public abstract class Timeout {
                 return;
             }
             expired = false;
+            startTimestamp = System.currentTimeMillis();
+            timeToWait = waitTime;
             timerTask = GlobalScheduledExecutorService.schedule((Callable<Void>) () -> {
                 synchronized (lock) {
                     try {
@@ -279,5 +292,21 @@ public abstract class Timeout {
     @Override
     public String toString() {
         return getClass().getSimpleName() + "[wait:" + defaultWaitTime + "]";
+    }
+
+    /**
+     * Returns the time left until the timeout will expire.
+     * @return time in milliseconds.
+     */
+    public long getTimeLeftUntilTimeout() {
+        return startTimestamp + timeToWait - System.currentTimeMillis();
+    }
+
+    /**
+     * Returns the time passed since this timer was started.
+     * @return time in milliseconds.
+     */
+    public long getTimePassedSinceStart() {
+        return System.currentTimeMillis() - startTimestamp;
     }
 }
