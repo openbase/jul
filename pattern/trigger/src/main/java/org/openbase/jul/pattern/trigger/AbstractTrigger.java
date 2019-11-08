@@ -66,9 +66,7 @@ public abstract class AbstractTrigger implements Shutdownable, Trigger {
     }
 
     protected void notifyChange(final ActivationState newState) throws CouldNotPerformException {
-        if (!triggerObservable.getValue().getValue().equals(newState.getValue())) {
-            triggerObservable.notifyObservers(newState);
-        }
+         triggerObservable.notifyObservers(newState);
     }
 
     @Override
