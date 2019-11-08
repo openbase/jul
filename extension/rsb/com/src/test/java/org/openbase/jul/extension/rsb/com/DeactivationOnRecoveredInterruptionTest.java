@@ -1,4 +1,4 @@
-package org.openbase.jul.extension.rsb.com.test;
+package org.openbase.jul.extension.rsb.com;
 
 import rsb.Event;
 import rsb.Factory;
