@@ -22,11 +22,8 @@ package org.openbase.jul.pattern;
  * #L%
  */
 
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.MultiException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
-import org.openbase.jul.exception.NotAvailableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +31,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
  * @param <S> the type of the data source
@@ -282,11 +280,15 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                             exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer[" + observer.getClass().getSimpleName() + "] update failed!", ex), exceptionStack);
                         }
                     } else {
-                        // asynchronous notification
-                        notificationFutureList.put(observer, executorService.submit(() -> {
-                            observer.update(source, observable);
-                            return null;
-                        }));
+                        try {
+                            // asynchronous notification
+                            notificationFutureList.put(observer, executorService.submit(() -> {
+                                observer.update(source, observable);
+                                return null;
+                            }));
+                        } catch (RejectedExecutionException ex) {
+                            exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer[" + observer.getClass().getSimpleName() + "] update failed!", new InvalidStateException("Executor service seems to be busy or offline.")), exceptionStack);
+                        }
                     }
                 }
             } finally {
