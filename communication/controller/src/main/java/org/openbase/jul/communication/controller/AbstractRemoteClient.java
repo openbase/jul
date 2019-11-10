@@ -1798,7 +1798,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     return null;
                 }
             } catch (CouldNotPerformException | CancellationException | RejectedExecutionException ex) {
-                if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED)) {
+                if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED) || ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
                 } else {
                     syncTask = sync();
