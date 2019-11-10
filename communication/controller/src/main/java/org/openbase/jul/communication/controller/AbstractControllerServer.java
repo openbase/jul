@@ -878,7 +878,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws InvalidStateException is thrown if the controller is not active.
      */
     public void validateActivation() throws InvalidStateException {
-        if (!isActive()) {
+        if (!isActive() || isShutdownInProgress()) {
             throw new InvalidStateException(this + " not activated!");
         }
     }
@@ -1068,6 +1068,13 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         synchronized (transactionIdLock) {
             setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
         }
+    }
+
+    /**
+     * Method returns true if this instance is currently shutting down.
+     */
+    public boolean isShutdownInProgress() {
+        return shutdownDaemon.isShutdownInProgress();
     }
 
     /**
