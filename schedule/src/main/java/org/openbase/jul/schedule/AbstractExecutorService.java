@@ -44,7 +44,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
     /**
      * Default shutdown delay in milliseconds.
      */
-    public static final long DEFAULT_SHUTDOWN_DELAY = 3000;
+    public static final long DEFAULT_SHUTDOWN_DELAY = 5000;
 
     /**
      * Default shutdown time in milliseconds.
@@ -93,6 +93,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
     final StableProvider<Integer> currentTaskCountProvider;
     final StableProvider<Integer> currentThreadCountProvider;
     final StableProvider<Integer> maxTaskCountProvider;
+    boolean shutdownInitiated = false;
 
     public AbstractExecutorService(final ES executorService, StableProvider<Integer> currentTaskCountProvider, StableProvider<Integer> maxTaskCountProvider, StableProvider<Integer> currentThreadCountProvider) throws CouldNotPerformException {
         this.executorService = executorService;
@@ -144,14 +145,23 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
     }
 
     public <T> Future<T> internalSubmit(Callable<T> task) {
+        if(shutdownInitiated) {
+            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutiorService"));
+        }
         return executorService.submit(task);
     }
 
     public Future<?> internalSubmit(Runnable task) {
+        if(shutdownInitiated) {
+            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutiorService"));
+        }
         return executorService.submit(task);
     }
 
     public void internalExecute(final Runnable runnable) {
+        if(shutdownInitiated) {
+            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutiorService"));
+        }
         executorService.execute(runnable);
     }
 
@@ -161,6 +171,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
 
     @Override
     public void shutdown() {
+        shutdownInitiated = true;
         smartShutdown();
     }
 
