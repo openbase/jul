@@ -23,6 +23,7 @@ package org.openbase.jul.extension.protobuf.processing;
  */
 
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
 import com.googlecode.protobuf.format.JsonFormat;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -40,8 +41,8 @@ import java.nio.charset.Charset;
 public class ProtoBufJSonProcessor {
 
     private static final String UTF8 = "UTF8";
-    private static final String EMPTY_MESSAGE = "{}";
     private static final String javaPrimitvePrefix = "java.lang.";
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final JsonFormat jsonFormat;
 
@@ -60,67 +61,46 @@ public class ProtoBufJSonProcessor {
      *
      * @throws org.openbase.jul.exception.InvalidStateException in case the given service argument does not contain any context.
      * @throws CouldNotPerformException                         in case the serialization failed.
-     *                                                          <p>
-     *                                                          TODO: release: change parameter type to message since java primitives cannot be de-/serialized anymore anyway
      */
-    public String serialize(final Object serviceState) throws InvalidStateException, CouldNotPerformException {
-        String jsonStringRep;
-        if (serviceState instanceof Message) {
-            try {
-                jsonStringRep = jsonFormat.printToString((Message) serviceState);
-            } catch (Exception ex) {
-                throw new CouldNotPerformException("Could not serialize service argument to string!", ex);
-            }
-        } else {
-            throw new InvalidStateException("Service attribute Class[" + serviceState.getClass().getSimpleName() + "] not a protobuf message!");
+    public String serialize(final Message serviceState) throws InvalidStateException, CouldNotPerformException {
+        try {
+            return jsonFormat.printToString(serviceState);
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not serialize service argument to string!", ex);
         }
-
-        return jsonStringRep;
     }
 
     /**
-     * Get the string representation for a given serviceState which can be a
-     * proto message, enumeration or a java primitive.
+     * Serialize a serviceStateBuilder which can be a proto message, enumeration or
+     * a java primitive to string. If its a primitive toString is called while
+     * messages or enumerations will be serialized into JSon
      *
-     * @param serviceState the serviceState
+     * @param serviceStateBuilder
      *
-     * @return a string representation of the serviceState type
+     * @return
      *
-     * @throws CouldNotPerformException
+     * @throws org.openbase.jul.exception.InvalidStateException in case the given service argument does not contain any context.
+     * @throws CouldNotPerformException                         in case the serialization failed.
      */
-    public String getServiceStateClassName(final Object serviceState) throws CouldNotPerformException {
-        // todo: move to dal or any bco component. Jul should be independent from bco architecture.
-        if (serviceState.getClass().getName().startsWith("org.openbase.type")) {
-            return serviceState.getClass().getName();
-        }
-
-        if (serviceState.getClass().isEnum()) {
-            logger.info(serviceState.getClass().getName());
-            return serviceState.getClass().getName();
-        }
-
-        logger.debug("Simple class name of attribute to upper case [" + serviceState.getClass().getSimpleName().toUpperCase() + "]");
-        JavaTypeToProto javaToProto;
+    public String serialize(final Message.Builder serviceStateBuilder) throws InvalidStateException, CouldNotPerformException {
         try {
-            javaToProto = JavaTypeToProto.valueOf(serviceState.getClass().getSimpleName().toUpperCase());
-        } catch (IllegalArgumentException ex) {
-            throw new CouldNotPerformException("ServiceState is not a supported java primitive nor a supported rst type", ex);
+            return jsonFormat.printToString(serviceStateBuilder.build());
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not serialize service argument to string!", ex);
         }
-        logger.debug("According proto type [" + javaToProto.getProtoType().name() + "]");
-        return javaToProto.getProtoType().name();
     }
 
     /**
      * Deserialise a JSon string representation for a protobuf message given the class of the type.
      *
-     * @param jsonStringRep the string representation of the rst value
-     * @param messageClassName  the message class name of the type to load the class.
+     * @param jsonStringRep    the string representation of the rst value
+     * @param messageClassName the message class name of the type to load the class.
      *
      * @return the deserialized message.
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the deserialization fails.
      */
-    public Message deserialize(String jsonStringRep, String messageClassName) throws CouldNotPerformException {
+    public Message deserialize(final String jsonStringRep, final String messageClassName) throws CouldNotPerformException {
         try {
             Class<? extends Message> messageClass = (Class<? extends Message>) Class.forName(messageClassName);
             if (messageClass.isEnum()) {
@@ -142,7 +122,7 @@ public class ProtoBufJSonProcessor {
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the deserialization fails.
      */
-    public <M extends Message> M deserialize(String jsonStringRep, Class<M> messageClass) throws CouldNotPerformException {
+    public <M extends Message> M deserialize(final String jsonStringRep, final Class<M> messageClass) throws CouldNotPerformException {
         try {
             try {
                 Message.Builder builder = (Message.Builder) messageClass.getMethod("newBuilder").invoke(null);
@@ -160,7 +140,7 @@ public class ProtoBufJSonProcessor {
         }
     }
 
-    public String getJavaPrimitiveClassName(Descriptors.FieldDescriptor.Type protoType) {
+    public String getJavaPrimitiveClassName(final FieldDescriptor.Type protoType) {
         switch (protoType.getJavaType()) {
             case INT:
                 return javaPrimitvePrefix + "Integer";
