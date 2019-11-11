@@ -140,10 +140,20 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             this.dataObserver.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
             this.initialized = false;
             this.destroyed = false;
-            this.shutdownDaemon = registerShutdownHook(this);
+            // todo: manage shutdown via unit controller registry to avoid multible thread creation during shutdown
+            this.shutdownDaemon = registerShutdownHook(this, getShutdownDelay());
         } catch (CouldNotPerformException ex) {
             throw new InstantiationException(this, ex);
         }
+    }
+
+    /**
+     * Method can be overwitten to delay the controller shutdown.
+     *
+     * @return the delay in milliseconds.
+     */
+    protected long getShutdownDelay() {
+        return 0;
     }
 
 
