@@ -50,7 +50,7 @@ import rsb.filter.Filter;
  */
 public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventReceivingStrategy {
 
-    public static final int MAX_PARALLEL_DISPATCH_TASK_COUNT = 10;
+    public static final int MAX_PARALLEL_DISPATCH_TASK_COUNT = 20;
 
     private static Logger LOGGER = LoggerFactory.getLogger(ThreadPoolUnorderedEventReceivingStrategy.class);
 
