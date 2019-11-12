@@ -49,6 +49,15 @@ public abstract class AbstractFXApplication extends Application {
         System.exit(0);
     }
 
+    @Override
+    public void init() throws Exception {
+        // setup java property service
+        JPService.setApplicationName(getClass());
+        registerProperties();
+        JPService.parseAndExitOnError(getParameters().getRaw());
+        super.init();
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -57,10 +66,6 @@ public abstract class AbstractFXApplication extends Application {
     @Override
     public void start(Stage stage) {
         try {
-            // setup java property service
-            JPService.setApplicationName(getClass());
-            registerProperties();
-            JPService.parseAndExitOnError(getParameters().getRaw());
             stage.setTitle(JPService.getApplicationName());
             stage.setScene(loadScene());
             stage.show();
