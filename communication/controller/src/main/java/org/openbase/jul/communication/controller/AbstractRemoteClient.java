@@ -714,7 +714,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             try {
                 this.connectionStateObservable.notifyObservers(connectionState);
             } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify ConnectionState[" + connectionState + "] change to all observers!", ex), logger);
+                if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify ConnectionState[" + connectionState + "] change to all observers!", ex), logger);
+                }
             }
         }
     }
