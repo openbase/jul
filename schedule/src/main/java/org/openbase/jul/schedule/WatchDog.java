@@ -166,8 +166,8 @@ public class WatchDog implements Activatable, Shutdownable {
                 }
 
                 // check if watchdog has been terminated via shutdown and this wait would never return.
-                if(this.serviceState == ServiceState.FINISHED) {
-                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service["+serviceName+"] is not running anymore!");
+                if (this.serviceState == ServiceState.FINISHED) {
+                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service[" + serviceName + "] is not running anymore!");
                 }
 
                 // skip if state is already passed.
@@ -181,7 +181,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 } else {
                     final long passedTime = System.currentTimeMillis() - requestTimestamp;
                     if (passedTime > timeUnit.toMillis(timeout)) {
-                        throw new TimeoutException("Still in State["+this.serviceState.name()+"] and timeout occurs before reaching State["+serviceState.name()+"].");
+                        throw new TimeoutException("Still in State[" + this.serviceState.name() + "] and timeout occurs before reaching State[" + serviceState.name() + "].");
                     }
                     STATE_LOCK.wait(timeUnit.toMillis(timeout) - passedTime);
                 }
@@ -266,7 +266,11 @@ public class WatchDog implements Activatable, Shutdownable {
                                     setServiceState(ServiceState.INTERRUPTED);
                                     throw new InterruptedException();
                                 }
-                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName +  "] try again in " + (getRate() / 1000) + " seconds...", ex), logger, LogLevel.WARN);
+                                if (future.isCancelled()) {
+                                    // interrupt if future was externally canceled.
+                                    throw new InterruptedException();
+                                }
+                                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not start Service[" + serviceName + "] try again in " + (getRate() / 1000) + " seconds...", ex), logger, LogLevel.WARN);
                                 setServiceState(ServiceState.FAILED);
                             }
                         } else {
@@ -308,7 +312,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 try {
                     try {
                         logger.debug("Minder deactivation initiated of Service[" + serviceName + "]...");
-                        service.deactivate();     
+                        service.deactivate();
                     } catch (IllegalStateException | CouldNotPerformException ex) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Could not deactivate Service[" + serviceName + "]!", ex), logger);
                     }
