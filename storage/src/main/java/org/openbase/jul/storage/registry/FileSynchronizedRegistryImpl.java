@@ -63,6 +63,7 @@ import org.openbase.jul.storage.registry.version.DBVersionControl;
 public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, MAP extends Map<KEY, ENTRY>, REGISTRY extends FileSynchronizedRegistry<KEY, ENTRY>> extends AbstractRegistry<KEY, ENTRY, MAP, REGISTRY, FileRegistryPlugin<KEY, ENTRY, REGISTRY>> implements FileSynchronizedRegistry<KEY, ENTRY> {
 
     private final File databaseDirectory;
+    // release todo: synchronize fileSynchronizerMap because otherwise sometimes occure concurrent modification exceptions. Use a lock not synchronize block to make parallel read access more reliable. Validate that the new lock does not cause into deadlocks because of the registry sync.
     private final Map<KEY, FileSynchronizer<ENTRY>> fileSynchronizerMap;
     private final FileProcessor<ENTRY> fileProcessor;
 
