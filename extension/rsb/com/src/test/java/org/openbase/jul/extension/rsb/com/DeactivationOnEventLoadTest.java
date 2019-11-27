@@ -38,11 +38,11 @@ import java.util.logging.Logger;
 public class DeactivationOnEventLoadTest {
 
     // ----- setup test parameter ---------------------------------------
-    public static final boolean EXIT_ON_ERROR               = false;
-    public static final boolean STOP_PRINT_ON_ERROR         = true;
-    public static final boolean ENABLE_CONNECTION_SHARING   = false;
-    public static final long    SLEEP_TIME_BETWEEN_MESSES   = 10;
-    public static final Level   LOG_LEVEL                   = Level.ALL;
+    public static final boolean EXIT_ON_ERROR = false;
+    public static final boolean STOP_PRINT_ON_ERROR = false;
+    public static final boolean ENABLE_CONNECTION_SHARING = true;
+    public static final long SLEEP_TIME_BETWEEN_MESSES = 10;
+    public static final Level LOG_LEVEL = Level.ALL;
     // ------------------------------------------------------------------
 
     // other static fields
@@ -92,14 +92,14 @@ public class DeactivationOnEventLoadTest {
                                 }
                             });
                             server.activate();
-                            shutdownHandler.activeParticipants++;
+                            shutdownHandler.increaseParticipantCounter();
 
                             while (!shutdownHandler.shutdown) {
                                 Thread.sleep(SLEEP_TIME_BETWEEN_MESSES);
                             }
 
                             server.deactivate();
-                            shutdownHandler.activeParticipants--;
+                            shutdownHandler.decreaseParticipantCounter();
                         } catch (RSBException | InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -116,7 +116,7 @@ public class DeactivationOnEventLoadTest {
                             RemoteServer remote = Factory.getInstance().createRemoteServer("/test/scope/" + id, participantConfig);
 
                             remote.activate();
-                            shutdownHandler.activeParticipants++;
+                            shutdownHandler.increaseParticipantCounter();
 
                             while (!shutdownHandler.shutdown) {
                                 remote.callAsync(METTHOD, new Event(Void.class, null));
@@ -124,7 +124,7 @@ public class DeactivationOnEventLoadTest {
                             }
 
                             remote.deactivate();
-                            shutdownHandler.activeParticipants--;
+                            shutdownHandler.decreaseParticipantCounter();
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -170,15 +170,32 @@ public class DeactivationOnEventLoadTest {
 
     static class ShutdownHandler {
         private boolean shutdown = false;
-        private transient int activeParticipants = 0;
+        private int activeParticipants = 0;
         private final int totalParticipantCount;
+
+        private static final Object COUNTER_LOCK = new Object();
 
         public ShutdownHandler(int totalParticipantCount) {
             this.totalParticipantCount = totalParticipantCount;
         }
 
+        public void increaseParticipantCounter() {
+            synchronized (COUNTER_LOCK) {
+                activeParticipants++;
+            }
+        }
+
+        public void decreaseParticipantCounter() {
+            synchronized (COUNTER_LOCK) {
+                activeParticipants--;
+            }
+        }
+
+
         public int getProgress() {
-            return (100 - (int) ((activeParticipants / (totalParticipantCount * 2d)) * 100d));
+            synchronized (COUNTER_LOCK) {
+                return (100 - (int) ((activeParticipants / (totalParticipantCount * 2d)) * 100d));
+            }
         }
     }
 }
