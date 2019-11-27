@@ -1133,6 +1133,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     }
 
     protected void setData(final M data) {
+
+        if(data == null) {
+            new FatalImplementationErrorException(this, new NotAvailableException("data"));
+        }
+
         this.data = data;
 
         // Notify data update
@@ -1313,6 +1318,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     }
 
     public void validateData() throws InvalidStateException {
+
+        if(shutdownInitiated) {
+            throw new InvalidStateException(new ShutdownInProgressException(this));
+        }
+
         if (!isDataAvailable()) {
             throw new InvalidStateException(this + " not synchronized yet!", new NotAvailableException("data"));
         }
@@ -1436,6 +1446,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @param data
      */
     private void applyDataUpdate(final M data) {
+
+        if(data == null) {
+            new FatalImplementationErrorException(this, new NotAvailableException("data"));
+        }
+
         this.data = data;
         CompletableFutureLite<M> currentSyncFuture = null;
         Future<M> currentSyncTask = null;
