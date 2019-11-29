@@ -23,8 +23,7 @@ package org.openbase.jul.storage.registry;
  */
 
 import org.openbase.jps.core.JPService;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.MultiException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.IdentifiableValueMap;
@@ -53,6 +52,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     private final ListDiffImpl<KEY, ENTRY> listDiff;
     private final DataProvider dataProvider;
     private boolean isActive = false;
+    private boolean shutdown = false;
     private final Observer observer;
     private final RecurrenceEventFilter<Void> recurrenceSyncFilter;
 
@@ -110,6 +110,8 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
         // add data observer
         dataProvider.addDataObserver(observer);
 
+        isActive = true;
+
         try {
             // trigger internal sync if data is available.
             if (dataProvider.isDataAvailable()) {
@@ -118,7 +120,6 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
         }
-        isActive = true;
     }
 
     @Override
@@ -137,6 +138,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     @Override
     public void shutdown() {
         try {
+            shutdown = true;
             deactivate();
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
@@ -147,9 +149,20 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
 
     private void internalSync() throws CouldNotPerformException, InterruptedException {
         synchronized (synchronizationLock) {
-            logger.debug("Perform sync...");
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.start();
+
+            if(!isActive) {
+                throw new InvalidStateException("Synchronizer not active!");
+            }
+
+            // handle time measuring in debug case
+            final Stopwatch stopwatch;
+            if (JPService.debugMode()) {
+                logger.info("Perform sync...");
+                stopwatch = new Stopwatch();
+                stopwatch.start();
+            } else {
+                stopwatch = null;
+            }
 
             try {
                 listDiff.diff(getEntries());
@@ -157,15 +170,21 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
 
                 MultiException.ExceptionStack removeExceptionStack = null;
                 for (ENTRY entry : listDiff.getRemovedValueMap().values()) {
+                    validateSynchronizerState();
                     try {
                         removeInternal(entry);
                     } catch (CouldNotPerformException ex) {
+                        if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                            // in case of a shutdown just exit method as fast as possible...
+                            throw ex;
+                        }
                         removeExceptionStack = MultiException.push(this, ex, removeExceptionStack);
                     }
                 }
 
                 MultiException.ExceptionStack updateExceptionStack = null;
                 for (ENTRY entry : listDiff.getUpdatedValueMap().values()) {
+                    validateSynchronizerState();
                     try {
                         if (isSupported(entry)) {
                             updateInternal(entry);
@@ -174,12 +193,17 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                             listDiff.getOriginalValueMap().removeValue(entry);
                         }
                     } catch (CouldNotPerformException ex) {
+                        if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                            // in case of a shutdown just exit method as fast as possible...
+                            throw ex;
+                        }
                         updateExceptionStack = MultiException.push(this, ex, updateExceptionStack);
                     }
                 }
 
                 MultiException.ExceptionStack registerExceptionStack = null;
                 for (ENTRY entry : listDiff.getNewValueMap().values()) {
+                    validateSynchronizerState();
                     try {
                         if (isSupported(entry)) {
                             registerInternal(entry);
@@ -187,6 +211,10 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                             skippedChanges++;
                         }
                     } catch (CouldNotPerformException ex) {
+                        if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                            // in case of a shutdown just exit method as fast as possible...
+                            throw ex;
+                        }
                         registerExceptionStack = MultiException.push(this, ex, registerExceptionStack);
                     }
                 }
@@ -204,6 +232,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 // build exception cause chain.
                 MultiException.ExceptionStack exceptionStack = null;
                 int counter;
+
                 try {
                     if (removeExceptionStack != null) {
                         counter = removeExceptionStack.size();
@@ -215,6 +244,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
+
                 try {
                     if (updateExceptionStack != null) {
                         counter = updateExceptionStack.size();
@@ -226,6 +256,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
+
                 try {
                     if (registerExceptionStack != null) {
                         counter = registerExceptionStack.size();
@@ -237,14 +268,17 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
+
                 MultiException.checkAndThrow(() ->"Could not sync all entries!", exceptionStack);
             } catch (CouldNotPerformException ex) {
 
-                if(!isActive) {
-                    // sync was canceled because of a system shutdown.
-                    // no need for printing any exceptions
-                    return;
+                if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                    // in case of a shutdown just exit method as fast as possible...
+                    throw ex;
                 }
+
+                // cancel sync in case of an shutdown
+                validateSynchronizerState();
 
                 CouldNotPerformException exx = new CouldNotPerformException("Entry registry sync failed!", ex);
                 if (JPService.testMode()) {
@@ -257,10 +291,19 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 initialSync = false;
             }
 
-            long time = stopwatch.stop();
-            if (time > 1000) {
-                logger.debug("Internal sync of synchronizer took: {}ms",time);
+            // handle time measuring in debug case
+            if(stopwatch != null) {
+                long time = stopwatch.stop();
+                if (time > 1000) {
+                    logger.info("Internal sync of {} took: {}ms", dataProvider, time);
+                }
             }
+        }
+    }
+
+    private void validateSynchronizerState() throws ShutdownInProgressException {
+        if(shutdown) {
+            throw new ShutdownInProgressException(this);
         }
     }
 

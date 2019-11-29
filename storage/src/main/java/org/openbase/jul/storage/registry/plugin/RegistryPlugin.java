@@ -21,6 +21,7 @@ package org.openbase.jul.storage.registry.plugin;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.RejectedException;
@@ -32,8 +33,8 @@ import org.openbase.jul.storage.registry.Registry;
 import java.io.File;
 
 /**
- *
  * * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
+ *
  * @param <KEY>
  * @param <ENTRY>
  */
@@ -47,6 +48,14 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY e
 
     void beforeUpdate(final ENTRY entry) throws RejectedException;
 
+    /**
+     * Method is called after each updated entry.
+     * Be aware that this method can be called multible times for the same update in case the entry is modified during the consistency check.
+     *
+     * @param entry the updated entry.
+     *
+     * @throws CouldNotPerformException can be thrown in case something went wrong during the plugin routine.
+     */
     void afterUpdate(final ENTRY entry) throws CouldNotPerformException;
 
     void beforeRemove(final ENTRY entry) throws RejectedException;
@@ -54,13 +63,13 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY e
     void afterRemove(final ENTRY entry) throws CouldNotPerformException;
 
     void afterConsistencyModification(final ENTRY entry) throws CouldNotPerformException;
-    
+
     void afterRegistryChange() throws CouldNotPerformException;
 
     void beforeConsistencyCheck() throws CouldNotPerformException;
 
     void afterConsistencyCheck() throws CouldNotPerformException;
-    
+
     void beforeClear() throws CouldNotPerformException;
 
     void beforeGet(final KEY key) throws RejectedException;
@@ -71,5 +80,5 @@ public interface RegistryPlugin<KEY, ENTRY extends Identifiable<KEY>, REGISTRY e
 
     @Override
     void init(REGISTRY registry) throws InitializationException, InterruptedException;
-    
+
 }
