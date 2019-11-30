@@ -111,7 +111,9 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
             try {
                 multiFuture.get(timeout, unit);
                 complete(resultProcessor.process(multiFuture.getFutureList()));
-            } catch (CouldNotPerformException | InterruptedException | CancellationException ex) {
+            }catch (InterruptedException | TimeoutException ex) {
+                throw ex;
+            } catch (CouldNotPerformException | CancellationException ex) {
                 completeExceptionally(ex);
             } catch (Exception ex) {
                 completeExceptionally(ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LOGGER));
