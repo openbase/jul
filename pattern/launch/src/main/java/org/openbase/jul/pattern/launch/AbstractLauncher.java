@@ -391,7 +391,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                             }
                             break;
                         } catch (TimeoutException ex) {
-                            ExceptionPrinter.printHistory(new CouldNotPerformException("Launcher " + launcherEntry.getKey().getSimpleName() + " startup delay detected!"), logger, LogLevel.WARN);
+                            logger.warn("Launcher " + launcherEntry.getKey().getSimpleName() + " startup delay detected!");
                         } catch (InterruptedException ex) {
                             // if a core launcher could not be started the whole startup failed so interrupt
                             if (launcherEntry.getValue().isCoreLauncher()) {
