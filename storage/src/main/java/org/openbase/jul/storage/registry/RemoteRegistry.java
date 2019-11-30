@@ -208,7 +208,7 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
         try {
             while (true) {
                 try {
-                    waitUntilReadyFuture().get((JPService.testMode() ? 4 : 300), TimeUnit.SECONDS);
+                    waitUntilReadyFuture().get((JPService.testMode() ? 5 : 300), TimeUnit.SECONDS);
                     break;
                 } catch (final TimeoutException ex) {
                     logger.warn("Still waiting for " + getName());
