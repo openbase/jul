@@ -25,6 +25,7 @@ package org.openbase.jul.communication.controller;
 import org.junit.*;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -451,7 +452,14 @@ public class AbstractControllerServerTest {
 
         communicationService.shutdown();
         remoteService.shutdown();
-        remoteService.reinit();
+
+
+        try {
+            remoteService.reinit();
+            Assert.fail("No exception occurred.");
+        } catch (CouldNotPerformException ex) {
+            // this should happen
+        }
     }
 
     public static class AbstractControllerServerImpl extends AbstractControllerServer<UnitRegistryData, Builder> {
