@@ -23,6 +23,7 @@ package org.openbase.jul.pattern.provider;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
@@ -82,5 +83,13 @@ public class ObservableDataProviderAdapter<D> implements DataProvider<D> {
     @Override
     public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         observable.waitForValue(timeout, timeUnit);
+    }
+
+    @Override
+    public void validateData() throws InvalidStateException {
+        if (observable.isValueAvailable()) {
+            throw new InvalidStateException(new NotAvailableException("Value"));
+        }
+
     }
 }

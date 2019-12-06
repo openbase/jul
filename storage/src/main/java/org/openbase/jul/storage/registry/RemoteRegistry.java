@@ -323,4 +323,13 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
         }
         return registryRemote.isDataAvailable();
     }
+
+    @Override
+    public void validateData() throws InvalidStateException {
+        registryRemote.validateData();
+
+        if (isDataAvailable()) {
+            throw new InvalidStateException(new NotAvailableException("Data"));
+        }
+    }
 }

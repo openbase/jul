@@ -1088,6 +1088,18 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         }
     }
 
+    @Override
+    public void validateData() throws InvalidStateException {
+
+        if (isShutdownInProgress()) {
+            throw new InvalidStateException(this + " not synchronized!", new ShutdownInProgressException(this));
+        }
+
+        if (!isDataAvailable()) {
+            throw new InvalidStateException(this + " not synchronized yet!", new NotAvailableException("data"));
+        }
+    }
+
     /**
      * Method returns true if this instance is currently shutting down.
      */

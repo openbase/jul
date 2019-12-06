@@ -23,6 +23,7 @@ package org.openbase.jul.pattern.provider;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observer;
 
@@ -41,6 +42,12 @@ public interface DataProvider<D> {
      * @return if data is available
      */
     boolean isDataAvailable();
+
+    /**
+     * Method validates if the registry data object.
+     * @throws InvalidStateException is thrown if the data object is not available or invalid.
+     */
+    void validateData() throws InvalidStateException;
 
     /**
      * Method returns the class of the data object.

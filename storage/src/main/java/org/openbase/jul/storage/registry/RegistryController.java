@@ -32,8 +32,4 @@ import org.openbase.jul.pattern.controller.Controller;
  */
 public interface RegistryController<M> extends Controller<M>, DefaultInitializable, RegistryService {
 
-    @Override
-    default void validateData() throws InvalidStateException {
-        // data is always valid for controller.
-    }
 }

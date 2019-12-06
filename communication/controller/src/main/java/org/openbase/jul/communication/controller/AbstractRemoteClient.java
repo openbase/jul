@@ -553,7 +553,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
         // to not reinit if shutdown is in progress!
         if (shutdownInitiated) {
-            return;
+            throw new ShutdownInProgressException(this);
         }
 
         final StackTraceElement[] stackTraceElement = Thread.currentThread().getStackTrace();

@@ -23,6 +23,7 @@ package org.openbase.jul.pattern.provider;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observer;
 
@@ -40,6 +41,11 @@ public class DataProviderProxy<D> implements DataProvider<D> {
     @Override
     public boolean isDataAvailable() {
         return internalDataProvider.isDataAvailable();
+    }
+
+    @Override
+    public void validateData() throws InvalidStateException {
+        internalDataProvider.validateData();
     }
 
     @Override

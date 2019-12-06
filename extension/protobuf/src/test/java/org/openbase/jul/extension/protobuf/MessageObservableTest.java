@@ -36,6 +36,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -156,6 +157,11 @@ public class MessageObservableTest {
 
         @Override
         public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
+        }
+
+        @Override
+        public void validateData() throws InvalidStateException {
+
         }
     }
 }

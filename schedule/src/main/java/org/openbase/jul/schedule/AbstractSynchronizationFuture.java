@@ -192,7 +192,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
      * @throws TimeoutException {@inheritDoc}
      */
     @Override
-    public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         // when get returns without an exception the synchronisation is complete
         // and else the exception will be thrown
         if (isInitialized()) {
@@ -210,7 +210,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         return internalFuture;
     }
 
-    private void waitForSynchronization(T message) throws CouldNotPerformException, InterruptedException {
+    private void waitForSynchronization(final T message) throws CouldNotPerformException, InterruptedException {
         try {
             try {
                 beforeWaitForSynchronization(message);
