@@ -346,7 +346,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
         logger.info("Start " + JPService.getApplicationName() + "...");
 
-        for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : launcherMap.entrySet()) {
+        for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : new HashSet<>(launcherMap.entrySet())) {
 
             // check if launcher was excluded
             boolean exclude = false;
@@ -362,6 +362,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             }
             if (exclude) {
                 logger.info(launcherEntry.getKey().getSimpleName() + " excluded from execution.");
+                launcherMap.remove(launcherEntry.getKey());
                 continue;
             }
 
