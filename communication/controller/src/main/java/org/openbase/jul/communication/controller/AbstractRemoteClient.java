@@ -82,8 +82,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     public static final long PING_TIMEOUT = 5;
     public static final long PING_TEST_TIMEOUT = 1;
     public static final long CONNECTION_TIMEOUT = 30000;
-    public static final long DATA_WAIT_TIMEOUT = 1000;
-    public static final long LOGGING_TIMEOUT = 15000;
+    public static final long RECONNECT_AFTER_CONNECTION_LOST_DELAY_OFFSET = 50;
+    public static final long RECONNECT_AFTER_CONNECTION_LOST_DELAY_SEED = 100;
     public static final long METHOD_CALL_START_TIMEOUT = 500;
     public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
     public static final long METHOD_CALL_MAX_TIMEOUT = 30000;
@@ -677,7 +677,15 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     // if disconnected before the data request is already initiated.
                     if (isActive() && oldConnectionState != DISCONNECTED) {
                         connectionFailure = true;
-                        requestData();
+
+                        // sleep some random time before starting a data request again
+                        // because if the reconnect is cause by middleware latencies its may not a good idea to further overload the connection.
+                        try {
+                            Thread.sleep((long) (JITTER_RANDOM.nextDouble() * RECONNECT_AFTER_CONNECTION_LOST_DELAY_SEED) + RECONNECT_AFTER_CONNECTION_LOST_DELAY_OFFSET);
+                            requestData();
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
                     }
                     break;
                 case CONNECTED:
@@ -714,7 +722,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             try {
                 this.connectionStateObservable.notifyObservers(connectionState);
             } catch (CouldNotPerformException ex) {
-                if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify ConnectionState[" + connectionState + "] change to all observers!", ex), logger);
                 }
             }
@@ -1134,7 +1142,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     protected void setData(final M data) {
 
-        if(data == null) {
+        if (data == null) {
             new FatalImplementationErrorException(this, new NotAvailableException("data"));
         }
 
@@ -1144,7 +1152,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         try {
             notifyPrioritizedObservers(data);
         } catch (CouldNotPerformException ex) {
-            if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+            if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
             }
         }
@@ -1152,7 +1160,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         try {
             dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
-            if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+            if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
             }
         }
@@ -1319,7 +1327,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     public void validateData() throws InvalidStateException {
 
-        if(shutdownInitiated) {
+        if (shutdownInitiated) {
             throw new InvalidStateException(new ShutdownInProgressException(this));
         }
 
@@ -1447,7 +1455,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      */
     private void applyDataUpdate(final M data) {
 
-        if(data == null) {
+        if (data == null) {
             new FatalImplementationErrorException(this, new NotAvailableException("data"));
         }
 
@@ -1541,7 +1549,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     public Future<Long> ping() {
         synchronized (pingLock) {
 
-            if(shutdownInitiated) {
+            if (shutdownInitiated) {
                 return FutureProcessor.canceledFuture(Long.class, new CouldNotPerformException("Ping canceled because of system shutdown!"));
             }
 
