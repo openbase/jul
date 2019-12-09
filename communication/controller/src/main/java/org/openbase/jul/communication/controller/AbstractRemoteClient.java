@@ -75,18 +75,15 @@ import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionStat
 //
 public abstract class AbstractRemoteClient<M extends Message> implements RSBRemote<M>, TransactionIdProvider {
 
-    public static final long REQUEST_TIMEOUT = 15000;
-    /**
-     * Timeout in seconds since this goes to a synchronous call where it is given in seconds :/.
-     */
-    public static final long PING_TIMEOUT = 5;
-    public static final long PING_TEST_TIMEOUT = 1;
-    public static final long CONNECTION_TIMEOUT = 30000;
+    public static final long REQUEST_TIMEOUT = TimeUnit.SECONDS.toMillis(15);;
+    public static final long PING_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
+    public static final long PING_TEST_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
+    public static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(60);
     public static final long RECONNECT_AFTER_CONNECTION_LOST_DELAY_OFFSET = 50;
     public static final long RECONNECT_AFTER_CONNECTION_LOST_DELAY_SEED = 100;
     public static final long METHOD_CALL_START_TIMEOUT = 500;
     public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
-    public static final long METHOD_CALL_MAX_TIMEOUT = 30000;
+    public static final long METHOD_CALL_MAX_TIMEOUT = TimeUnit.SECONDS.toMillis(30);;
     private static final Random JITTER_RANDOM = new Random();
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final Handler mainHandler;
@@ -1558,11 +1555,19 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     final ConnectionState.State previousConnectionState = connectionState;
                     try {
                         validateMiddleware();
-                        Long requestTime = remoteServer.call("ping", System.currentTimeMillis(), JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT);
-                        lastPingReceived = System.currentTimeMillis();
-                        connectionPing = lastPingReceived - requestTime;
-                        return connectionPing;
-                    } catch (TimeoutException ex) {
+                        Future<Long> internalTask = null;
+                        try {
+                            internalTask = remoteServer.callAsync("ping", System.currentTimeMillis());
+                            final Long requestTime = internalTask.get(JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT, TimeUnit.MILLISECONDS);
+                            lastPingReceived = System.currentTimeMillis();
+                            connectionPing = lastPingReceived - requestTime;
+                            return connectionPing;
+                        } finally {
+                            if (internalTask != null && !internalTask.isDone()) {
+                                internalTask.cancel(true);
+                            }
+                        }
+                    } catch (java.util.concurrent.TimeoutException ex) {
                         synchronized (connectionMonitor) {
                             /**
                              * After a ping timeout we should switch back to {@code connectionState == CONNECTING} because the controller is not reachable any longer.
@@ -1757,12 +1762,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                         }
 
                         try {
-                            try {
-                                ping().get(timeout, TimeUnit.MILLISECONDS);
-                            } catch (ExecutionException ex) {
-                                continue;
-                            }
-
+                            // get() is fine because ping task has internal timeout, so task will fail after timeout anyway.
+                            ping().get();
                             internalFuture = internalRequestStatus();
                             event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
@@ -1772,46 +1773,50 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                             break;
 
                         } catch (java.util.concurrent.TimeoutException | ExecutionException ex) {
+                            try {
 
-                            // handle interruption.
-                            if (ex.getCause() instanceof InterruptedException) {
-                                throw ex;
-                            }
+                                // handle interruption.
+                                if (ExceptionProcessor.isCausedByInterruption(ex)) {
+                                    throw new InterruptedException();
+                                }
 
-                            // cancel internal future because it will be recreated within the next iteration anyway.
-                            if (internalFuture != null) {
-                                internalFuture.cancel(true);
-                            }
+                                // cancel internal future because it will be recreated within the next iteration anyway.
+                                if (internalFuture != null) {
+                                    internalFuture.cancel(true);
+                                }
 
-                            // if sync was already performed by global data update skip sync
-                            if (isRelatedFutureCancelled()) {
-                                return data;
-                            }
+                                // if sync was already performed by global data update skip sync
+                                if (isRelatedFutureCancelled()) {
+                                    return data;
+                                }
 
-                            timeout = generateTimeout(timeout);
+                                // compute new timeout
+                                timeout = generateTimeout(timeout);
 
-                            // prevent rapid looping over the same exception
-                            if (ex instanceof ExecutionException) {
-                                if (lastException == null) {
-                                    lastException = (ExecutionException) ex;
-                                } else {
-                                    if (ExceptionProcessor.getInitialCauseMessage(ex).equals(ExceptionProcessor.getInitialCauseMessage(lastException))) {
-                                        new FatalImplementationErrorException("Sync task failed twice for the same reason", this, ex);
-                                        // for production mode wait, else the fatal implementation error will exit the process
-                                        Thread.sleep(timeout);
-                                    } else {
+                                // prevent rapid looping over the same exception which is not caused by an timeout.
+                                if (ex instanceof ExecutionException && !(ExceptionProcessor.getInitialCause(ex) instanceof java.util.concurrent.TimeoutException || ExceptionProcessor.getInitialCause(ex) instanceof TimeoutException)) {
+                                    if (lastException == null) {
                                         lastException = (ExecutionException) ex;
+                                    } else {
+                                        if (ExceptionProcessor.getInitialCauseMessage(ex).equals(ExceptionProcessor.getInitialCauseMessage(lastException))) {
+                                            new FatalImplementationErrorException("Sync task failed twice for the same reason", this, ex);
+                                        } else {
+                                            lastException = (ExecutionException) ex;
+                                        }
                                     }
                                 }
-                            }
 
-                            // only print warning if timeout is too long.
-                            if (timeout > 15000) {
-                                ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                                logger.warn("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
-                            } else {
-                                ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
-                                logger.debug("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond!  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                                // only print warning if timeout is too long.
+                                if (timeout > 15000) {
+                                    //ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
+                                    logger.warn("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond: " + ExceptionProcessor.getInitialCauseMessage(ex) + "  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                                } else {
+                                    //ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
+                                    logger.debug("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond: +ExceptionProcessor.getInitialCauseMessage(ex)+  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                                }
+                            } finally {
+                                // wait until controller is maybe available again
+                                Thread.sleep(timeout);
                             }
                         }
                     }
