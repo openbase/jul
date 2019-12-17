@@ -23,6 +23,9 @@ package org.openbase.jul.visual.javafx.launch;
  */
 
 import javafx.scene.Scene;
+import javafx.scene.layout.Pane;
+import javafx.stage.Stage;
+import javafx.util.Pair;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.visual.javafx.control.AbstractFXController;
 import org.openbase.jul.visual.javafx.fxml.FXMLProcessor;
@@ -50,12 +53,19 @@ public abstract class AbstractFXMLApplication extends AbstractFXApplication {
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    protected Scene loadScene() throws CouldNotPerformException {
+    protected Scene loadScene(Stage stage) throws CouldNotPerformException {
         try {
             // setup scene
             Scene scene;
             try {
-                scene = new Scene(FXMLProcessor.loadFxmlPane(controllerClass, getClass()));
+                // load controller pane pair
+                final Pair<Pane, ? extends AbstractFXController> panePair = FXMLProcessor.loadFxmlPaneAndControllerPair(controllerClass, getClass());
+
+                // setup stage
+                panePair.getValue().setStage(stage);
+
+                // register pane
+                scene = new Scene(panePair.getKey());
             } catch (final Exception ex) {
                 throw new CouldNotPerformException("Could not load fxml description!", ex);
             }

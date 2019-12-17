@@ -67,7 +67,7 @@ public abstract class AbstractFXApplication extends Application {
     public void start(Stage stage) {
         try {
             stage.setTitle(JPService.getApplicationName());
-            stage.setScene(loadScene());
+            stage.setScene(loadScene(stage));
             stage.show();
         } catch (Exception ex) {
             exit(1, new CouldNotPerformException("Could not start " + JPService.getApplicationName(), ex));
@@ -102,9 +102,10 @@ public abstract class AbstractFXApplication extends Application {
     /**
      * Method should return the default scene to configure during startup.
      *
+     * @param stage the stage of the application.
      * @return the default scene.
      *
      * @throws CouldNotPerformException is thrown in case the scene could not be loaded.
      */
-    protected abstract Scene loadScene() throws CouldNotPerformException;
+    protected abstract Scene loadScene(final Stage stage) throws CouldNotPerformException;
 }
