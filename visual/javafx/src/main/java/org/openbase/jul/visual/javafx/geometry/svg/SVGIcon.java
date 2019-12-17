@@ -707,6 +707,27 @@ public class SVGIcon<PROVIDER, SHAPE_PROVIDER extends ShapeProvider<PROVIDER>> e
         requestLayout();
     }
 
+    public void setSize(final double width, final double height) {
+        this.size = Math.max(width, height);
+        setWidth(width);
+        setHeight(height);
+
+        if (backgroundIcon != null) {
+            backgroundIcon = ShapeProcessor.resize(backgroundIcon, width, height);
+        }
+        if (backgroundFadeIcon != null) {
+            backgroundFadeIcon = ShapeProcessor.resize(backgroundFadeIcon, width, height);
+        }
+        if (foregroundIcon != null) {
+            foregroundIcon = ShapeProcessor.resize(foregroundIcon, width, height);
+        }
+        if (foregroundFadeIcon != null) {
+            foregroundFadeIcon = ShapeProcessor.resize(foregroundFadeIcon, width, height);
+        }
+
+        requestLayout();
+    }
+
     public enum Layer {
         FOREGROUND,
         BACKGROUND
