@@ -103,6 +103,8 @@ public class StateRunner implements Runnable, Initializable<Class<? extends Stat
                     return;
                 }
                 continue;
+            } catch (InterruptedException ex) {
+                return;
             } catch (Throwable t) {
                 ExceptionPrinter.printHistory("State failed: ", t, LOGGER);
                 change.firePropertyChange(STATE_ERROR, currentState.getClass(), t.getMessage());

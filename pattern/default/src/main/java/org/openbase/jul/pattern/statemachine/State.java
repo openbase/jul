@@ -54,5 +54,5 @@ public interface State extends Callable<Class<? extends State>> {
      * @throws CouldNotPerformException is thrown if the state execution has failed.
      */
     @Override
-    Class<? extends State> call() throws CouldNotPerformException;
+    Class<? extends State> call() throws CouldNotPerformException, InterruptedException;
 }
