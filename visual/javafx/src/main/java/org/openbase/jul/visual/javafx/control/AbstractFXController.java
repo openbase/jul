@@ -24,6 +24,7 @@ package org.openbase.jul.visual.javafx.control;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.stage.Stage;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.visual.javafx.iface.DynamicPane;
 import org.openbase.jul.visual.javafx.launch.AbstractFXApplication;
@@ -32,6 +33,8 @@ import java.net.URL;
 import java.util.ResourceBundle;
 
 public abstract class AbstractFXController implements Initializable, DynamicPane {
+
+    private Stage stage;
 
     /**
      * Initializes the controller class.
@@ -53,5 +56,13 @@ public abstract class AbstractFXController implements Initializable, DynamicPane
         } catch(Exception ex) {
             AbstractFXApplication.exit(10, new InitializationException(this, ex));
         }
+    }
+
+    public Stage getStage() {
+        return stage;
+    }
+
+    public void setStage(Stage stage) {
+        this.stage = stage;
     }
 }
