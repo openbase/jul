@@ -99,6 +99,7 @@ public class StateRunner implements Runnable, Initializable<Class<? extends Stat
                 nextStateClass = currentState.call();
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory("Something went wrong during state execution!", ex, LOGGER);
+                change.firePropertyChange(STATE_ERROR, currentState.getClass(), ex.getMessage());
                 if (Thread.currentThread().isInterrupted()) {
                     return;
                 }
