@@ -49,7 +49,7 @@ public class RSBSharedConnectionConfig {
 
         initInPusConnectorFactory();
 
-        // instruct the spread transport to use your newly registered factory
+        // instruct the spread transport to use the registered factory
         // for creating in push connector instances
         participantConfig.getOrCreateTransport("spread")
                 .getOptions()
@@ -80,6 +80,7 @@ public class RSBSharedConnectionConfig {
     }
 
     public static synchronized void reload() {
+        RSBDefaultConfig.reload();
         init = false;
         load();
     }
