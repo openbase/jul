@@ -54,8 +54,8 @@ public class TriggerPool extends AbstractTrigger {
     private final Observer<Trigger, ActivationState> triggerOrObserver;
 
     public TriggerPool() throws InstantiationException {
-        triggerListAND = new ArrayList();
-        triggerListOR = new ArrayList();
+        triggerListAND = new ArrayList<>();
+        triggerListOR = new ArrayList<>();
         active = false;
 
         triggerAndObserver = (Trigger source, ActivationState data) -> {

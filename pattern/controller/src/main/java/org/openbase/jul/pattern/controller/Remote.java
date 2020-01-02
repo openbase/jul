@@ -72,14 +72,14 @@ public interface Remote<M> extends Shutdownable, Activatable, Lockable, PingProv
      *
      * @param observer the observer added
      */
-    void addConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer);
+    void addConnectionStateObserver(final Observer<Remote<?>, ConnectionState.State> observer);
 
     /**
      * This method removes already registered connection state observers.
      *
      * @param observer the observer removed
      */
-    void removeConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer);
+    void removeConnectionStateObserver(final Observer<Remote<?>, ConnectionState.State> observer);
 
     /**
      * Method returns the class of the data object.

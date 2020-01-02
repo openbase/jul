@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Scope;
 import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
@@ -65,7 +66,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     public static final String SCOPE_PREFIX_LAUNCHER = Scope.COMPONENT_SEPARATOR + "launcher";
 
     private final Class<L> launchableClass;
-    private final Class applicationClass;
+    private final Class<?> applicationClass;
     private L launchable;
     private long launchTime = -1;
     private LauncherState state;
@@ -85,7 +86,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      *
      * @throws org.openbase.jul.exception.InstantiationException
      */
-    public AbstractLauncher(final Class applicationClass, final Class<L> launchableClass) throws InstantiationException {
+    public AbstractLauncher(final Class<?> applicationClass, final Class<L> launchableClass) throws InstantiationException {
         super(ActivationState.newBuilder());
         this.launchableClass = launchableClass;
         this.applicationClass = applicationClass;
@@ -139,8 +140,8 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      */
     protected L instantiateLaunchable() throws CouldNotPerformException {
         try {
-            return launchableClass.newInstance();
-        } catch (java.lang.InstantiationException | IllegalAccessException ex) {
+            return launchableClass.getConstructor().newInstance();
+        } catch (java.lang.InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException ex) {
             throw new CouldNotPerformException("Could not load launchable class!", ex);
         }
     }
@@ -294,7 +295,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     private static final List<Future> waitingTaskList = new ArrayList<>();
 
-    public static void main(final String[] args, final Class application, final Class<? extends AbstractLauncher>... launchers) {
+    public static void main(final String[] args, final Class<?> application, final Class<? extends AbstractLauncher>... launchers) {
         final Logger logger = LoggerFactory.getLogger(Launcher.class);
         JPService.setApplicationName(application);
 
@@ -305,8 +306,8 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap = new HashMap<>();
         for (final Class<? extends AbstractLauncher> launcherClass : launchers) {
             try {
-                launcherMap.put(launcherClass, launcherClass.newInstance());
-            } catch (java.lang.InstantiationException | IllegalAccessException ex) {
+                launcherMap.put(launcherClass, launcherClass.getConstructor().newInstance());
+            } catch (java.lang.InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException ex) {
                 errorExceptionStack = MultiException.push(application, new CouldNotPerformException("Could not load launcher class!", ex), errorExceptionStack);
             }
         }
@@ -435,7 +436,6 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             }
         } catch (InterruptedException ex) {
 
-
             // shutdown all launcher
             forceStopLauncher(launcherMap);
 
@@ -445,12 +445,6 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             // print a summary containing the exceptions
             printSummary(application, logger, JPService.getApplicationName() + " caught shutdown signal during startup phase!");
 
-//            TODO: remove after fixing https://github.com/openbase/bco.registry/issues/84
-//            try {
-//                Thread.sleep(5000);
-//            } catch (InterruptedException exx) {
-//            }
-//            System.exit(1);
             return;
         }
         printSummary(application, logger, JPService.getApplicationName() + " was started with restrictions!");
