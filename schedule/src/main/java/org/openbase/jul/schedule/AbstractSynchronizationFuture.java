@@ -106,6 +106,11 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
                 if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                     ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
                 }
+
+                // cancel internal future because it will not finish anyway.
+                if(!internalFuture.isDone()) {
+                    internalFuture.cancel(true);
+                }
             } finally {
                 dataProvider.removeDataObserver(notifyChangeObserver);
             }
@@ -220,6 +225,11 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
 
             synchronized (CHECK_LOCK) {
                 while (!check(message)) {
+
+                    if(internalFuture.isCancelled()) {
+                        throw new InvalidStateException("Internal future was canceled!");
+                    }
+
                     // timeout used as fallback in case the observation task is not properly implemented.
                     CHECK_LOCK.wait(2000);
                 }
