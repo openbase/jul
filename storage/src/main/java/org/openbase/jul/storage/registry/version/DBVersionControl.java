@@ -469,8 +469,11 @@ public class DBVersionControl {
                     converterClass = (Class<DBVersionConverter>) Class.forName(converterClassName);
                     converterConstructor = converterClass.getConstructor(DBVersionControl.class);
                     converterList.add(converterConstructor.newInstance(this));
-                } catch (ClassNotFoundException | NoSuchMethodException | SecurityException | InvocationTargetException ex) {
-                    logger.debug("Could not load Converter[" + converterClassName + "] so latest db version should be " + version + ".", ex);
+                } catch (ClassNotFoundException ex) {
+                    logger.debug("Detected " + version + " as latest db version.");
+                    break;
+                } catch (NoSuchMethodException | SecurityException | InvocationTargetException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not load Converter[" + converterClassName + "] so latest db version " + version + " is used!", ex), logger, LogLevel.ERROR);
                     break;
                 }
             }
