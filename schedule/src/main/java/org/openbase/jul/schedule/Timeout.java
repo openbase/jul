@@ -112,7 +112,7 @@ public abstract class Timeout {
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart(final long waitTime, final TimeUnit timeUnit) throws CouldNotPerformException {
-        logger.debug("Reset timer.");
+        logger.trace("Reset timer.");
         try {
             synchronized (lock) {
                 cancel();
@@ -218,12 +218,12 @@ public abstract class Timeout {
             timerTask = GlobalScheduledExecutorService.schedule((Callable<Void>) () -> {
                 synchronized (lock) {
                     try {
-                        logger.debug("Wait for timeout TimeOut interrupted.");
+                        logger.trace("Wait for timeout TimeOut interrupted.");
                         if (timerTask.isCancelled()) {
-                            logger.debug("TimeOut was canceled.");
+                            logger.trace("TimeOut was canceled.");
                             return null;
                         }
-                        logger.debug("Expire...");
+                        logger.trace("Expire...");
                         expired = true;
                     } finally {
                         timerTask = null;
@@ -235,7 +235,7 @@ public abstract class Timeout {
                 } catch (Exception ex) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
                 }
-                logger.debug("Worker finished.");
+                logger.trace("Worker finished.");
                 return null;
             }, waitTime, timeUnit);
         }
@@ -247,10 +247,10 @@ public abstract class Timeout {
      * Node: In case the timeout was never started this method does nothing.
      */
     public void cancel() {
-        logger.debug("try to cancel timer.");
+        logger.trace("try to cancel timer.");
         synchronized (lock) {
             if (timerTask != null) {
-                logger.debug("cancel timer.");
+                logger.trace("cancel timer.");
                 timerTask.cancel(false);
             }
         }
