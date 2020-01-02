@@ -37,6 +37,7 @@ import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
+import rsb.patterns.Callback;
 import rsb.patterns.Callback.UserCodeException;
 
 import java.lang.reflect.Method;
@@ -65,14 +66,8 @@ public class RPCHelper {
     public static <I, T extends I> void registerInterface(final Class<I> interfaceClass, final T instance, final RSBLocalServer server) throws CouldNotPerformException {
         for (final Method method : interfaceClass.getMethods()) {
             if (method.getAnnotation(RPCMethod.class) != null) {
-                boolean legacy = false;
-                try {
-                    legacy = JPService.getProperty(JPRSBLegacyMode.class).getValue();
-                } catch (JPNotAvailableException e) {
-                    // if not available just register legacy methods
-                }
                 // if legacy register always, else only register if not marked as legacy
-                if (legacy || !method.getAnnotation(RPCMethod.class).legacy()) {
+                if (JPService.getValue(JPRSBLegacyMode.class, false) || !method.getAnnotation(RPCMethod.class).legacy()) {
                     registerMethod(method, instance, server);
                 }
             }
@@ -151,6 +146,11 @@ public class RPCHelper {
                             resultFuture.cancel(true);
                         }
                         throw new CouldNotPerformException("Remote task was canceled!", ex);
+                    } catch (InterruptedException ex) {
+                        if (resultFuture != null && !resultFuture.isDone()) {
+                            resultFuture.cancel(true);
+                        }
+                        throw ex;
                     }
 
                     if (result == null) {
@@ -161,8 +161,6 @@ public class RPCHelper {
                     Event returnEvent = new Event(payloadType, result);
                     returnEvent.getMetaData().setUserTime(USER_TIME_KEY, System.nanoTime());
                     return returnEvent;
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
                 } catch (CouldNotPerformException | IllegalArgumentException | ExecutionException | CancellationException | RejectedExecutionException ex) {
                     final CouldNotPerformException exx = new CouldNotPerformException("Could not invoke Method[" + method.getReturnType().getClass().getSimpleName() + " " + method.getName() + "(" + eventDataToArgumentString(event) + ")] of " + instance + "!", ex);
 
@@ -171,12 +169,11 @@ public class RPCHelper {
                     }
                     throw new UserCodeException(exx);
                 }
-                return new Event(Void.class);
             });
         } catch (CouldNotPerformException ex) {
             if (ex.getCause() instanceof InvalidStateException) {
                 // method was already register
-                ExceptionPrinter.printHistory("Skip Method[" + method.getName() + "] registration on Scope[" + server.getScope() + "] of " + instance + " because message was already registered!", ex, logger, LogLevel.DEBUG);
+                ExceptionPrinter.printHistory("Skip Method[" + method.getName() + "] registration on Scope[" + server.getScope() + "] of " + instance + " because method was already registered!", ex, logger, LogLevel.DEBUG);
             } else {
                 throw new CouldNotPerformException("Could not register Method[" + method.getName() + "] on Scope[" + server.getScope() + "] of " + instance + "!", ex);
             }
@@ -199,7 +196,7 @@ public class RPCHelper {
         return internalCallRemoteMethod(argument, remote, returnClass);
     }
 
-    private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RSBRemote remote, final Class<? extends RETURN> returnClass)  {
+    private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RSBRemote remote, final Class<? extends RETURN> returnClass) {
 
         String methodName = "?";
         try {
