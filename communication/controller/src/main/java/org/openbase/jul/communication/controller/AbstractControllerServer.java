@@ -205,10 +205,12 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
 
             this.scope = scope;
-            rsb.Scope internalScope = new rsb.Scope(ScopeProcessor.generateStringRep(scope).toLowerCase());
+
+            final String scopeStringRep = ScopeProcessor.generateStringRep(scope).toLowerCase();
+            final rsb.Scope internalScope = new rsb.Scope(scopeStringRep);
 
             // init new instances.
-            logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + internalScope + ".");
+            logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
             informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
             informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
 
@@ -216,9 +218,19 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
 
             // register rpc methods.
-            RPCHelper.registerInterface(Pingable.class, this, server);
-            RPCHelper.registerInterface(Requestable.class, this, server);
             registerMethods(server);
+
+            // register default methods
+            try {
+                RPCHelper.registerInterface(Pingable.class, this, server);
+            } catch (InvalidStateException ex) {
+                // if already registered then everything is fine and we can continue...
+            }
+            try {
+                RPCHelper.registerInterface(Requestable.class, this, server);
+            } catch (InvalidStateException ex) {
+                // if already registered then everything is fine and we can continue...
+            }
 
             serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
 
@@ -696,12 +708,12 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                     waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
                     informer.publish(event);
                 } catch (TimeoutException ex) {
-                    if(ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         throw ex;
                     }
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Skip data update notification because middleware is not ready since " + TimeUnit.MILLISECONDS.toSeconds(NOTIFICATILONG_TIMEOUT) + " seconds of " + this + "!", ex), logger, LogLevel.WARN);
                 } catch (CouldNotPerformException ex) {
-                    if(ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         throw ex;
                     }
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform about data change of " + this + "!", ex), logger);

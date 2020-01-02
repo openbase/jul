@@ -92,7 +92,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
     private final SyncObject pingLock = new SyncObject("PingLock");
     private final Class<M> dataClass;
-    private final ObservableImpl<Remote, ConnectionState.State> connectionStateObservable = new ObservableImpl<>(this);
+    private final ObservableImpl<Remote<?>, ConnectionState.State> connectionStateObservable = new ObservableImpl<>(this);
     private final ObservableImpl<DataProvider<M>, M> internalPrioritizedDataObservable = new ObservableImpl<>(this);
     private final ObservableImpl<DataProvider<M>, M> dataObservable = new ObservableImpl<>(this);
     private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
@@ -241,17 +241,16 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
                 this.scope = scope;
 
-                rsb.Scope internalScope = new rsb.Scope(ScopeProcessor.generateStringRep(scope).toLowerCase());
-                logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + this.scope + ".");
+                final String scopeStringRep = ScopeProcessor.generateStringRep(scope).toLowerCase();
+                final rsb.Scope internalScope = new rsb.Scope(scopeStringRep);
 
+                // init new instances.
+                logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
                 initListener(internalScope, internalParticipantConfig);
                 initRemoteServer(internalScope, internalParticipantConfig);
-
                 addHandler(mainHandler, true);
-
                 postInit();
                 initialized = true;
-
 
                 // check if remote service was already activated before and recover state.
                 switch (getConnectionState()) {
@@ -1525,7 +1524,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * {@inheritDoc}
      */
     @Override
-    public void addConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer) {
+    public void addConnectionStateObserver(final Observer<Remote<?>, ConnectionState.State> observer) {
         connectionStateObservable.addObserver(observer);
     }
 
@@ -1533,7 +1532,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * {@inheritDoc}
      */
     @Override
-    public void removeConnectionStateObserver(final Observer<Remote, ConnectionState.State> observer) {
+    public void removeConnectionStateObserver(final Observer<Remote<?>, ConnectionState.State> observer) {
         connectionStateObservable.removeObserver(observer);
     }
 
@@ -1596,9 +1595,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                                 }
                         }
                         throw ex;
-                    } catch (CouldNotPerformException ex) {
-                        throw new CouldNotPerformException("ping failed", ex);
                     }
+//                    } catch (CouldNotPerformException ex) {
+//                        throw new CouldNotPerformException("ping failed", ex);
+//                    }
                 });
             }
             return pingTask;
@@ -1747,7 +1747,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                                 if (shutdownInitiated && syncFuture != null && !syncFuture.isDone()) {
                                     syncFuture.cancel(true);
                                 }
-                                throw new InvalidStateException("Remote service is not active within ConnectionState[\" + getConnectionState().name() + \"] and sync will be triggered after reactivation, so current sync is skipped.!");
+                                throw new InvalidStateException("Remote service is not active within ConnectionState[" + getConnectionState().name() + "] and sync will be triggered after reactivation, so current sync is skipped.!");
                             }
                         }
 
@@ -1829,7 +1829,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 }
             } catch (CouldNotPerformException | CancellationException | RejectedExecutionException ex) {
                 if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED) || ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex), logger, LogLevel.DEBUG);
+                    logger.debug("Sync aborted: "+ ExceptionProcessor.getInitialCauseMessage(ex));
+                    throw new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex);
                 } else {
                     syncTask = sync();
                     throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync failed of " + getScopeStringRep() + ". Try to recover...", ex), logger, LogLevel.WARN);
