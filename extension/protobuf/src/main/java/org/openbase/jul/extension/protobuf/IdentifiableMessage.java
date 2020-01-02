@@ -23,12 +23,10 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Message;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jps.preset.JPDebugMode;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.NotAvailableException.ContextType;
@@ -36,8 +34,10 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.container.MessageContainer;
 import org.openbase.jul.iface.Identifiable;
+import org.openbase.jul.iface.provider.LabelProvider;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.type.language.LabelType.Label;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,16 +51,6 @@ import org.slf4j.LoggerFactory;
 public class IdentifiableMessage<KEY, M extends AbstractMessage, MB extends M.Builder> implements Identifiable<KEY>, MessageContainer<M> {
 
     protected final static Logger logger = LoggerFactory.getLogger(IdentifiableMessage.class);
-    private static boolean debugMode;
-
-    static {
-        try {
-            debugMode = JPService.getProperty(JPDebugMode.class).getValue();
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not check debug mode state!", ex), logger, LogLevel.WARN);
-            debugMode = false;
-        }
-    }
 
     private M internalMessage;
     private ObservableImpl<Object, IdentifiableMessage<KEY, M, MB>> observable;
@@ -141,18 +131,45 @@ public class IdentifiableMessage<KEY, M extends AbstractMessage, MB extends M.Bu
     /**
      * Method generates a short string description of the given message. This description is bases on internal message fields like label or id provided by the message itself.
      * If non of this fields could be detected a ? char is returned.
-     * <p>
-     * //TODO: release: is it okay if this is now an alias, parsing the label is now quite difficult without access to the rst type
      *
      * @return a short description of the message as string.
      */
     public static String generateMessageDescription(final Message message) {
-//        if (message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL) != null) {
-//            if (message.hasField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL))) {
-//                return (String) message.getField(message.getDescriptorForType().findFieldByName(TYPE_FIELD_LABEL));
-//            }
-//        }
 
+        String label = null;
+        String alias = null;
+
+        // resolve label and return it as description of this message.
+        final FieldDescriptor labelFieldDescriptor = message.getDescriptorForType().findFieldByName(LabelProvider.TYPE_FIELD_LABEL);
+        if (labelFieldDescriptor != null) {
+            if (message.hasField(labelFieldDescriptor)) {
+                Label labelType = (Label) message.getField(labelFieldDescriptor);
+                if (labelType != null && labelType.getEntryCount() > 0 && labelType.getEntry(0).getValueCount() > 0) {
+                    label = labelType.getEntry(0).getValue(0);
+                }
+            }
+        }
+
+        // resolve alias and return it as description of this message.
+        final FieldDescriptor aliasFieldDescriptor = message.getDescriptorForType().findFieldByName("alias");
+        if (aliasFieldDescriptor != null) {
+            if (message.getRepeatedFieldCount(aliasFieldDescriptor) > 0) {
+                alias = (String) message.getRepeatedField(aliasFieldDescriptor, 0);
+            }
+        }
+
+        // generate description
+        if (label != null || alias != null) {
+            if (label == null) {
+                return alias;
+            } else if (alias == null) {
+                return label;
+            } else {
+                return alias + ":" + label;
+            }
+        }
+
+        // use id as fallback if available.
         try {
             return getId(message).toString();
         } catch (CouldNotPerformException ex) {
@@ -258,6 +275,7 @@ public class IdentifiableMessage<KEY, M extends AbstractMessage, MB extends M.Bu
     public M getMessage() {
         return internalMessage;
     }
+
     /**
      * Updates the message of this instance.
      *
@@ -290,7 +308,7 @@ public class IdentifiableMessage<KEY, M extends AbstractMessage, MB extends M.Bu
     }
 
     /**
-     * Method generates a short string description of the internal message. This description is bases on internal message fields like label or id provided by the message itself.
+     * Method generates a short string description of the internal message. This description is bases on internal message fields like alias or id provided by the message itself.
      * If non of this fields could be detected a ? char is returned.
      *
      * @return a short description of the message as string.
