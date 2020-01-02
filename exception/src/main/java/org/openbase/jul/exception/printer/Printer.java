@@ -93,4 +93,6 @@ public interface Printer {
             }
         }
     }
+
+    LogLevel getLogLevel();
 }

@@ -55,6 +55,7 @@ public class LogPrinter implements Printer {
                 JPService.verboseMode());
     }
 
+    @Override
     public LogLevel getLogLevel() {
         return logLevel;
     }

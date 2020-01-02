@@ -32,8 +32,14 @@ import java.io.PrintStream;
 public class SystemPrinter implements Printer {
 
     private final PrintStream printStream;
+    private final LogLevel logLevel;
 
-    public SystemPrinter(PrintStream printStream) {
+    public SystemPrinter(final PrintStream printStream) {
+        this(printStream, LogLevel.INFO);
+    }
+
+    public SystemPrinter(final PrintStream printStream, final LogLevel logLevel) {
+        this.logLevel = logLevel;
         this.printStream = printStream;
     }
 
@@ -53,5 +59,10 @@ public class SystemPrinter implements Printer {
         return (JPService.debugMode() ||
                 JPService.testMode()  ||
                 JPService.verboseMode());
+    }
+
+    @Override
+    public LogLevel getLogLevel() {
+        return logLevel;
     }
 }

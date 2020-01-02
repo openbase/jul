@@ -39,6 +39,15 @@ public class VariablePrinter implements Printer {
     private static final Logger logger = LoggerFactory.getLogger(VariablePrinter.class);
 
     private String messages = "";
+    private final LogLevel logLevel;
+
+    public VariablePrinter() {
+        this(LogLevel.INFO);
+    }
+
+    public VariablePrinter(final LogLevel logLevel) {
+        this.logLevel = logLevel;
+    }
 
     @Override
     public void print(final String message) {
@@ -69,5 +78,10 @@ public class VariablePrinter implements Printer {
 
     public String getMessages() {
         return messages;
+    }
+
+    @Override
+    public LogLevel getLogLevel() {
+        return logLevel;
     }
 }

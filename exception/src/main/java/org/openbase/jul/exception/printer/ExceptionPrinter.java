@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jps.preset.JPLogLevel;
 import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.MultiException;
@@ -331,8 +332,23 @@ public class ExceptionPrinter {
 
         // Print normal stacktrace in debug mode for all errors.
         if (printer.isDebugEnabled()) {
-            printer.print(SEPARATOR);
-            printer.print(getContext(th), th);
+            switch (printer.getLogLevel()) {
+                case TRACE:
+                case DEBUG:
+                case INFO:
+                    // only print stacktrace for those levels when trace level was declared.
+                    if (JPService.getValue(JPLogLevel.class, JPLogLevel.LogLevel.TRACE) == JPLogLevel.LogLevel.TRACE) {
+                        printer.print(SEPARATOR);
+                        printer.print(getContext(th), th);
+                    }
+                    break;
+                case WARN:
+                case ERROR:
+                default:
+                    printer.print(SEPARATOR);
+                    printer.print(getContext(th), th);
+                    break;
+            }
         }
         printer.print(SEPARATOR);
     }
