@@ -238,7 +238,9 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                 }
                 final int observableHash = hashGenerator.computeHash(observable);
                 if (unchangedValueFilter && isValueAvailable() && observableHash == latestValueHash) {
-                    LOGGER.debug("Skip notification because " + this + " has not been changed!");
+                    if (LOGGER.isDebugEnabled()) {
+                        LOGGER.trace("Skip notification because {} has not been changed!", this);
+                    }
                     return false;
                 }
 

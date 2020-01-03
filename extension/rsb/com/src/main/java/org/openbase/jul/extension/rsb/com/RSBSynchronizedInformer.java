@@ -87,7 +87,7 @@ public class RSBSynchronizedInformer<DT extends Object> extends RSBSynchronizedP
     @Override
     public Event publish(final Event event) throws CouldNotPerformException, InterruptedException {
         synchronized (participantLock) {
-            logger.debug("Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]");
+            //logger.debug("Event[scope=" + event.getScope() + ", type=" + event.getType() + ", metaData=" + event.getMetaData() + "]");
             try {
                 if (event == null) {
                     throw new NotAvailableException("event");

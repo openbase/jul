@@ -94,7 +94,7 @@ public abstract class TCPClientConnection extends TCPConnection {
             try {
                 parser.close();
             } catch (IOException ex) {
-                logger.debug("Could not close paser stream!", ex);
+                logger.debug("Could not close parser stream!", ex);
             }
             parser = null;
         }

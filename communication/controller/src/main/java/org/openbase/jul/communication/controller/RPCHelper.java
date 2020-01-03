@@ -108,7 +108,7 @@ public class RPCHelper {
 //
 //        }
         final Logger logger = LoggerFactory.getLogger(instance.getClass());
-        logger.debug("Register Method[" + method.getName() + "] on Scope[" + server.getScope() + "].");
+        logger.debug("Register Method[{}] on Scope[{}].", method.getName(), server.getScope());
         try {
             server.addMethod(method.getName(), event -> {
                 try {

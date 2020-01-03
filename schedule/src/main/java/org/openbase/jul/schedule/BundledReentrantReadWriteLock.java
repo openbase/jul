@@ -147,14 +147,14 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     @Override
     public void lockRead(final Object consumer) {
-        logger.debug("order lockRead by {}", consumer);
+        //logger.debug("order lockRead by {}", consumer);
         if (!independentPrimaryReadAccess) {
             secondaryLock.readLock().lock();
         }
         primaryLock.readLock().lock();
         readLockConsumer = consumer;
         restartReadLockTimeout();
-        logger.debug("lockRead by {}", consumer);
+        //logger.debug("lockRead by {}", consumer);
     }
 
     @Override
@@ -226,7 +226,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     @Override
     public void unlockRead(final Object consumer) {
-        logger.debug("order unlockRead by {}", consumer);
+        //logger.debug("order unlockRead by {}", consumer);
         if (readLockConsumer == consumer) {
             readLockConsumer = "Unknown";
         }
@@ -236,7 +236,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         if (!independentPrimaryReadAccess) {
             secondaryLock.readLock().unlock();
         }
-        logger.debug("unlockRead by {}", consumer);
+        //logger.debug("unlockRead by {}", consumer);
     }
 
     @Override
@@ -246,12 +246,12 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     @Override
     public void lockWrite(final Object consumer) {
-        logger.debug("order lockWrite by {}", consumer);
+        //logger.debug("order lockWrite by {}", consumer);
         secondaryLock.writeLock().lock();
         primaryLock.writeLock().lock();
         writeLockConsumer = consumer;
         restartWriteLockTimeout();
-        logger.debug("lockWrite by {}", consumer);
+        //logger.debug("lockWrite by {}", consumer);
     }
 
     @Override
@@ -300,12 +300,12 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
     @Override
     public void unlockWrite(final Object consumer) {
-        logger.debug("order write unlock by {}", consumer);
+        //logger.debug("order write unlock by {}", consumer);
         writeLockTimeout.cancel();
         primaryLock.writeLock().unlock();
         secondaryLock.writeLock().unlock();
         writeLockConsumer = "Unknown";
-        logger.debug("write unlocked by {}", consumer);
+        //logger.debug("write unlocked by {}", consumer);
     }
 
     private void restartReadLockTimeout() {

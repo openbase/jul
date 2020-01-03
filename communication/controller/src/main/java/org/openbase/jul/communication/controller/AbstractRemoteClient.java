@@ -1719,7 +1719,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             ExecutionException lastException = null;
             try {
                 try {
-                    logger.debug("call request");
+                    logger.debug("Request controller synchronization.");
 
                     long timeout = METHOD_CALL_START_TIMEOUT;
                     while (true) {

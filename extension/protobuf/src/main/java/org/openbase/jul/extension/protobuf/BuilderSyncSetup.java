@@ -114,11 +114,11 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     public void lockRead(final Object consumer) {
-        logger.debug("order lockRead by {}", consumer);
+        //logger.debug("order lockRead by {}", consumer);
         readLock.lock();
         readLockConsumer = consumer;
         restartReadLockTimeout();
-        logger.debug("lockRead by {}", consumer);
+        //logger.debug("lockRead by {}", consumer);
     }
 
     public boolean tryLockRead(final Object consumer) {
@@ -140,21 +140,21 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     }
 
     public void unlockRead(final Object consumer) {
-        logger.debug("order unlockRead by {}", consumer);
+        //logger.debug("order unlockRead by {}", consumer);
         if (readLockConsumer == consumer) {
             readLockConsumer = "Unknown";
         }
         readLockTimeout.cancel();
         readLock.unlock();
-        logger.debug("unlockRead by {}", consumer);
+        //logger.debug("unlockRead by {}", consumer);
     }
 
     public void lockWrite(final Object consumer) {
-        logger.debug("order lockWrite by {}", consumer);
+        //logger.debug("order lockWrite by {}", consumer);
         writeLock.lock();
         writeLockConsumer = consumer;
         restartWriteLockTimeout();
-        logger.debug("lockWrite by {}", consumer);
+        //logger.debug("lockWrite by {}", consumer);
     }
 
     public boolean tryLockWrite(final Object consumer) {
@@ -190,11 +190,11 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
      * @param notifyChange
      */
     public void unlockWrite(boolean notifyChange) {
-        logger.debug("order write unlock");
+        //logger.debug("order write unlock");
         writeLockTimeout.cancel();
         writeLock.unlock();
         writeLockConsumer = "Unknown";
-        logger.debug("write unlocked");
+        //logger.debug("write unlocked");
         if (notifyChange) {
             try {
                 try {
