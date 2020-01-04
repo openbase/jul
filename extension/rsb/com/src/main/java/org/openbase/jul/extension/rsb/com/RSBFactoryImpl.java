@@ -56,7 +56,7 @@ public class RSBFactoryImpl implements RSBFactory {
 
     @Override
     public <DT> RSBInformer<DT> createSynchronizedInformer(final Scope scope, final Class<DT> type, final ParticipantConfig config) throws InstantiationException {
-        return new RSBSynchronizedInformer<>(scope, type);
+        return new RSBSynchronizedInformer<>(scope, type, config);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class RSBFactoryImpl implements RSBFactory {
     @Override
     public <DT> RSBInformer<DT> createSynchronizedInformer(final String scope, final Class<DT> type, final ParticipantConfig config) throws InstantiationException {
         try {
-            return new RSBSynchronizedInformer<>(new Scope(scope), type);
+            return new RSBSynchronizedInformer<>(new Scope(scope), type, config);
         } catch (IllegalArgumentException ex) {
             throw new InstantiationException(RSBInformer.class, new InvalidStateException("Invalid Scope", ex));
         }
