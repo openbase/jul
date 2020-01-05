@@ -342,7 +342,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws CouldNotPerformException {@inheritDoc}
      */
     @Override
-    public synchronized void deactivate() throws InterruptedException, CouldNotPerformException {
+    public void deactivate() throws InterruptedException, CouldNotPerformException {
         manageLock.lockWrite(this);
         try {
             try {
