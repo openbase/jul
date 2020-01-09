@@ -124,7 +124,7 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
             }
 
             if (JPService.debugMode() || overload) {
-                logger.info("Executor load " + getExecutorLoad() + "% [" + currentTaskCountProvider  + " tasks are processed by " + currentThreadCountProvider.get() + " threads].");
+                logger.info("Executor load " + getExecutorLoad() + "% (" + currentTaskCountProvider.get()  + " tasks are processed by " + currentThreadCountProvider.get() + " threads).");
             }
         };
         final ScheduledExecutorService scheduledExecutorService;
@@ -146,21 +146,21 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
 
     public <T> Future<T> internalSubmit(Callable<T> task) {
         if(shutdownInitiated) {
-            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutiorService"));
+            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutorService"));
         }
         return executorService.submit(task);
     }
 
     public Future<?> internalSubmit(Runnable task) {
         if(shutdownInitiated) {
-            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutiorService"));
+            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutorService"));
         }
         return executorService.submit(task);
     }
 
     public void internalExecute(final Runnable runnable) {
         if(shutdownInitiated) {
-            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutiorService"));
+            throw new RejectedExecutionException(new ShutdownInProgressException("ExecutorService"));
         }
         executorService.execute(runnable);
     }
