@@ -23,13 +23,11 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -78,10 +76,12 @@ public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> {
             // handle completion
             try {
                 complete(resultProcessor.process(future.get()));
-            } catch (CouldNotPerformException | InterruptedException | CancellationException ex) {
+            } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
                 completeExceptionally(ex);
+            } catch (InterruptedException ex) {
+                throw ex;
             } catch (Exception ex) {
-                completeExceptionally(ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LOGGER));
+                completeExceptionally(new FatalImplementationErrorException(this, ex));
             }
         } finally {
             updateComponentLock.writeLock().unlock();
@@ -108,10 +108,12 @@ public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> {
             // handle completion
             try {
                 complete(resultProcessor.process(future.get(timeout, unit)));
-            } catch (CouldNotPerformException | InterruptedException | CancellationException ex) {
+            } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
                 completeExceptionally(ex);
+            } catch (InterruptedException ex) {
+                throw ex;
             } catch (Exception ex) {
-                completeExceptionally(ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LOGGER));
+                completeExceptionally(new FatalImplementationErrorException(this, ex));
             }
         } finally {
             updateComponentLock.writeLock().unlock();

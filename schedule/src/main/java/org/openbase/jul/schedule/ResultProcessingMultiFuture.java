@@ -24,7 +24,6 @@ package org.openbase.jul.schedule;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.slf4j.Logger;
@@ -80,8 +79,10 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
             try {
                 multiFuture.get();
                 complete(resultProcessor.process(multiFuture.getFutureList()));
-            } catch (CouldNotPerformException | InterruptedException | ExecutionException | CancellationException ex) {
+            } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
                 completeExceptionally(ex);
+            } catch (InterruptedException ex) {
+                throw ex;
             } catch (Exception ex) {
                 completeExceptionally(new FatalImplementationErrorException(this, ex));
             }
@@ -111,12 +112,12 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
             try {
                 multiFuture.get(timeout, unit);
                 complete(resultProcessor.process(multiFuture.getFutureList()));
-            }catch (InterruptedException | TimeoutException ex) {
+            } catch (InterruptedException | TimeoutException ex) {
                 throw ex;
-            } catch (CouldNotPerformException | CancellationException ex) {
+            } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
                 completeExceptionally(ex);
             } catch (Exception ex) {
-                completeExceptionally(ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LOGGER));
+                completeExceptionally(new FatalImplementationErrorException(this, ex));
             }
         } finally {
             updateComponentLock.writeLock().unlock();
