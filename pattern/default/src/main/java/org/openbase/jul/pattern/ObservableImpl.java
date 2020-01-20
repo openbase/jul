@@ -103,6 +103,7 @@ public class ObservableImpl<S, T> extends AbstractObservable<S, T> {
                 return;
             }
             // if 0 wait forever like the default java wait() implementation.
+            // todo maybe thing about this solution because its kind of critical if a timeout is recomputed and then equals zero.
             if (timeUnit.toMillis(timeout) == 0) {
                 VALUE_LOCK.wait();
             } else {

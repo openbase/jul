@@ -54,7 +54,7 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
      * @param dataProvider   the data provider
      */
     public TransactionSynchronizationFuture(final Future<T> internalFuture, final REMOTE dataProvider) {
-        super(internalFuture, dataProvider, true);
+        super(internalFuture, dataProvider);
     }
 
     /**

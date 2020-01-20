@@ -25,7 +25,7 @@ package org.openbase.jul.iface;
 import org.openbase.jul.exception.CouldNotPerformException;
 
 /**
- * Interface is used to process any
+ * Interface is used to process any data of type {@code <I>} into data of type {@code <O>}.
  *
  * @param <I> Input type needed for processing.
  * @param <O> Output type defining the process result.
@@ -33,6 +33,15 @@ import org.openbase.jul.exception.CouldNotPerformException;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface Processable<I, O> {
+
+    /**
+     * @param input the input data to process.
+     *
+     * @return the result.
+     *
+     * @throws CouldNotPerformException is thrown if the processing failed.
+     * @throws InterruptedException     is thrown if the thread was externally interrupted.
+     */
     O process(final I input) throws CouldNotPerformException, InterruptedException;
 
 }

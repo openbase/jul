@@ -29,10 +29,12 @@ import org.openbase.jul.pattern.Observer;
 
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <D>
+ *
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public interface DataProvider<D> {
 
@@ -45,6 +47,7 @@ public interface DataProvider<D> {
 
     /**
      * Method validates if the registry data object.
+     *
      * @throws InvalidStateException is thrown if the data object is not available or invalid.
      */
     void validateData() throws InvalidStateException;
@@ -55,30 +58,31 @@ public interface DataProvider<D> {
      * @return the class of the data object
      */
     Class<D> getDataClass();
-    
+
     /**
      * Method returns the data object of this instance.
-     *
+     * <p>
      * In case the data is not available a NotAvailableException is thrown.
      *
      * @return the data object.
+     *
      * @throws NotAvailableException is thrown in case the data is not available.
      */
     D getData() throws NotAvailableException;
 
-    
+
     /**
      * Returns a future of the data object. The future can be used to wait for the data object.
      *
      * @return a future object delivering the data if available.
      */
     Future<D> getDataFuture();
-    
+
     /**
      * This method allows the registration of data observers to get informed about current data updates.
      * Current data changes means that this method is only notified if the current service state has changed.
      * Changes not affecting the current state like requested state changes, action scheduling changes are not notified via this observer.
-     *
+     * <p>
      * Note: To get informed about any state data changes use the UNKNOWN tempus as wildcard.
      *
      * @param observer the observer added
@@ -91,22 +95,23 @@ public interface DataProvider<D> {
      * @param observer the observer removed
      */
     void removeDataObserver(final Observer<DataProvider<D>, D> observer);
-    
+
     /**
      * Method blocks until an initial data is available.
      *
      * @throws CouldNotPerformException is thrown if any error occurs.
-     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     * @throws InterruptedException     is thrown in case the thread is externally interrupted.
      */
     void waitForData() throws CouldNotPerformException, InterruptedException;
 
     /**
      * Method blocks until an initial data is available or the given timeout is reached.
      *
-     * @param timeout maximal time to wait for the data. After the timeout is reached a NotAvailableException is thrown which is caused by a TimeoutException.
+     * @param timeout  maximal time to wait for the data. After the timeout is reached a NotAvailableException is thrown which is caused by a TimeoutException.
      * @param timeUnit the time unit of the timeout.
+     *
      * @throws NotAvailableException is thrown in case the any error occurs, or if the given timeout is reached. In this case a TimeoutException is thrown.
-     * @throws InterruptedException is thrown in case the thread is externally interrupted.
+     * @throws InterruptedException  is thrown in case the thread is externally interrupted.
      */
     void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException;
 }

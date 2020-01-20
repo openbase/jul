@@ -25,6 +25,7 @@ package org.openbase.jul.schedule;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.iface.Processable;
+import org.openbase.jul.iface.TimedProcessable;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,10 +46,10 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
 
     private final ReentrantReadWriteLock updateComponentLock = new ReentrantReadWriteLock();
 
-    final Processable<Collection<Future<O>>, R> resultProcessor;
+    final TimedProcessable<Collection<Future<O>>, R> resultProcessor;
     private MultiFuture<O> multiFuture;
 
-    public ResultProcessingMultiFuture(final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureList) {
+    public ResultProcessingMultiFuture(final TimedProcessable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureList) {
         this.multiFuture = new MultiFuture<>(futureList);
         this.resultProcessor = resultProcessor;
     }

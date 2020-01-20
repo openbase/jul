@@ -27,6 +27,8 @@ import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.iface.TimedProcessable;
+import org.openbase.jul.pattern.CompletableFutureLite;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.slf4j.Logger;
@@ -40,182 +42,73 @@ import java.util.concurrent.TimeoutException;
 /**
  * This abstract future can be wrapped around another future to guarantee that changes caused by the internal future
  * have at one time been synchronized to a data provider.
- * To do this a task is started that calls get on the internal future and registers an observer on the data provider.
+ * To do this an observer is registered on the data provider.
  * When the data provider notifies a change the method {@link #check(Object)} is called. This method returns true
  * if the data change caused by the internal future has been synchronized. This future only returns on get if this
  * synchronization check finished.
  *
  * @param <T> The return type of the internal future.
+ *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> implements Future<T>, FutureWrapper<T> {
+public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends DataProvider<?>> extends ResultProcessingFuture<T, T> {
 
     protected final Logger logger;
 
     private final SyncObject CHECK_LOCK = new SyncObject("WaitForUpdateLock");
 
-    private final Future<T> internalFuture;
-    private Future synchronisationFuture;
-
     protected final DATA_PROVIDER dataProvider;
+
+    protected final TimedProcessable resultProcessor;
 
     /**
      * Create a new abstract synchronization future.
-     * <p>
-     * Note: If the initTask parameter is false the implementation of this future should call {@link #init()} at
-     * the end of its constructor. It should be false if you need to initialize more variables inside the constructor
-     * which have to be available during the {@link #check(Object)} and {@link #beforeWaitForSynchronization(Object)} methods.
-     * Otherwise these values could be null if the internal task is too fast.
      *
      * @param internalFuture the internal future
      * @param dataProvider   the data provider
-     * @param initTask       value indicating if the internal task should already be started
      */
-    public AbstractSynchronizationFuture(final Future<T> internalFuture, final DATA_PROVIDER dataProvider, final boolean initTask) {
+    public AbstractSynchronizationFuture(final Future<T> internalFuture, final DATA_PROVIDER dataProvider) {
+
+        super(internalFuture);
         this.logger = LoggerFactory.getLogger(dataProvider.getClass());
-        this.internalFuture = internalFuture;
         this.dataProvider = dataProvider;
 
-        if (initTask) {
-            init();
-        }
+        this.resultProcessor = (TimedProcessable<T, T>) (input, timeout, timeUnit) -> performInternalSync(input, timeout, timeUnit);
+        this.init(resultProcessor);
     }
 
-    // todo: Improve performance by avoiding internal task and using the .get() caller thread for the synchronization purpose.
-
-    /**
-     * Start the internal synchronization task.
-     */
-    protected void init() {
-        // create a synchronisation task which makes sure that the change requested by
-        // the internal future has at one time been synchronized to the remote
-        synchronisationFuture = GlobalCachedExecutorService.submit(() -> {
-
-            final Observer notifyChangeObserver = (Object source, Object data) -> {
-                synchronized (CHECK_LOCK) {
-                    CHECK_LOCK.notifyAll();
-                }
-            };
-
-            dataProvider.addDataObserver(notifyChangeObserver);
-            try {
-                dataProvider.waitForData();
-                T result = internalFuture.get();
-                waitForSynchronization(result);
-            } catch (CouldNotPerformException ex) {
-                if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                    ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
-                }
-
-                // cancel internal future because it will not finish anyway.
-                if(!internalFuture.isDone()) {
-                    internalFuture.cancel(true);
-                }
-            } finally {
-                dataProvider.removeDataObserver(notifyChangeObserver);
+    private T performInternalSync(final T input, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException, TimeoutException {
+        final Observer notifyChangeObserver = (Object source, Object data) -> {
+            synchronized (CHECK_LOCK) {
+                CHECK_LOCK.notifyAll();
             }
-            return null;
-        });
-    }
+        };
 
-    private void validateInitialization() throws InvalidStateException {
-        if (synchronisationFuture == null) {
-            throw new InvalidStateException(this + " not initialized!");
-        }
-    }
-
-    private boolean isInitialized() {
+        dataProvider.addDataObserver(notifyChangeObserver);
         try {
-            validateInitialization();
-        } catch (InvalidStateException ex) {
-            ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, ex), logger);
-            return false;
+            // todo split timeout
+            dataProvider.waitForData(timeout, timeUnit);
+            // todo split timeout
+            final T result = getInternalFuture().get(timeout, timeUnit);
+            return waitForSynchronization(result, timeout, timeUnit);
+        } catch (CouldNotPerformException | ExecutionException ex) {
+            if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
+            }
+
+            // handle timeout exception
+            final Throwable initialCause = ExceptionProcessor.getInitialCause(ex);
+            if (initialCause instanceof TimeoutException || initialCause instanceof org.openbase.jul.exception.TimeoutException) {
+                throw new TimeoutException();
+            }
+
+            throw new CouldNotPerformException("Could not validate future synchronisation!", ex);
+        } finally {
+            dataProvider.removeDataObserver(notifyChangeObserver);
         }
-        return true;
     }
 
-    /**
-     * {@inheritDoc}
-     * @param mayInterruptIfRunning {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        if (!isInitialized()) {
-            return internalFuture.cancel(mayInterruptIfRunning);
-        }
-        return synchronisationFuture.cancel(mayInterruptIfRunning) && internalFuture.cancel(mayInterruptIfRunning);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public boolean isCancelled() {
-        if (!isInitialized()) {
-            return internalFuture.isCancelled();
-        }
-        return synchronisationFuture.isCancelled() && internalFuture.isCancelled();
-    }
-
-    /**
-     * {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public boolean isDone() {
-        if (!isInitialized()) {
-            return internalFuture.isDone();
-        }
-        return synchronisationFuture.isDone() && internalFuture.isDone();
-    }
-
-    /**
-     * {@inheritDoc}
-     * @return {@inheritDoc}
-     * @throws InterruptedException {@inheritDoc}
-     * @throws ExecutionException {@inheritDoc}
-     */
-    @Override
-    public T get() throws InterruptedException, ExecutionException {
-        // when get returns without an exception the synchronisation is complete
-        // and else the exception will be thrown
-        if (isInitialized()) {
-            synchronisationFuture.get();
-        }
-        return internalFuture.get();
-    }
-
-    /**
-     * {@inheritDoc}
-     * @param timeout {@inheritDoc}
-     * @param unit {@inheritDoc}
-     * @return {@inheritDoc}
-     * @throws InterruptedException {@inheritDoc}
-     * @throws ExecutionException {@inheritDoc}
-     * @throws TimeoutException {@inheritDoc}
-     */
-    @Override
-    public T get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        // when get returns without an exception the synchronisation is complete
-        // and else the exception will be thrown
-        if (isInitialized()) {
-            synchronisationFuture.get(timeout, unit);
-        }
-        return internalFuture.get(timeout, unit);
-    }
-
-    /**
-     * {@inheritDoc}
-     * @return {@inheritDoc}
-     */
-    @Override
-    public Future<T> getInternalFuture() {
-        return internalFuture;
-    }
-
-    private void waitForSynchronization(final T message) throws CouldNotPerformException, InterruptedException {
+    private T waitForSynchronization(final T message, final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException, TimeoutException {
         try {
             try {
                 beforeWaitForSynchronization(message);
@@ -223,17 +116,25 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
                 throw new CouldNotPerformException("Pre execution task failed!", ex);
             }
 
+            long endTimestamp = System.currentTimeMillis() + timeUnit.toMillis(timeout);
+
             synchronized (CHECK_LOCK) {
                 while (!check(message)) {
 
-                    if(internalFuture.isCancelled()) {
-                        throw new InvalidStateException("Internal future was canceled!");
+                    if (getInternalFuture().isCancelled() || isCancelled()) {
+                        throw new InvalidStateException("Future was canceled!");
+                    }
+
+                    if(endTimestamp <= System.currentTimeMillis()) {
+                        throw new TimeoutException();
                     }
 
                     // timeout used as fallback in case the observation task is not properly implemented.
-                    CHECK_LOCK.wait(2000);
+                    CHECK_LOCK.wait(Math.max(0, Math.min(2000, endTimestamp - System.currentTimeMillis())));
                 }
             }
+
+            return message;
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not wait for synchronization!", ex);
         }
@@ -256,7 +157,9 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
      * Called inside of the synchronization loop to check if the synchronization is complete.
      *
      * @param message the return value of the internal future
+     *
      * @return true if the synchronization is complete and else false
+     *
      * @throws CouldNotPerformException if something goes wrong in the check
      */
     protected abstract boolean check(final T message) throws CouldNotPerformException;

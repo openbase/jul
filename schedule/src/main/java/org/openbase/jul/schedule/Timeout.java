@@ -27,6 +27,7 @@ import org.openbase.jul.exception.ShutdownException;
 import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.iface.TimedProcessable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +40,12 @@ import java.util.concurrent.TimeUnit;
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public abstract class Timeout {
+
+    /**
+     * Using Long.MAX_VALUE as infinity timeout is not practical because in any calculations using this timeout like adding +1 causes a value overrun.
+     * Therefore, this constant is introduced to use a infinity timeout which represents in fact 3170 years which should covers at least some human generations ;)
+     */
+    public static final long INFINITY_TIMEOUT = TimedProcessable.INFINITY_TIMEOUT;
 
     private static final Logger logger = LoggerFactory.getLogger(Timeout.class);
 

@@ -29,6 +29,7 @@ import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Processable;
+import org.openbase.jul.iface.TimedProcessable;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.slf4j.LoggerFactory;
 
@@ -258,8 +259,8 @@ public class FutureProcessor {
         return applyErrorHandling(future, errorProcessor, timeout, timeUnit, getInstance().getExecutorService());
     }
 
-    public static <I, R> Future<R> allOf(final Collection<I> inputList, final Processable<I, Future<R>> taskProcessor) {
-        return allOf(inputList, (Collection<Future<R>> input) -> null, taskProcessor);
+    public static <I, R> Future<Void> allOf(final Collection<I> inputList, final TimedProcessable<I, Future<R>> taskProcessor) {
+        return allOf(inputList, (input, time, timeUnit) -> null, taskProcessor);
     }
 
     public static Future<Void> allOf(final Future<?>... futures) {
@@ -287,7 +288,7 @@ public class FutureProcessor {
         return allOf(returnValue, futureCollection);
     }
 
-    public static <I, O, R> Future<R> allOf(final Collection<I> inputList, final Processable<Collection<Future<O>>, R> resultProcessor, final Processable<I, Future<O>> taskProcessor) {
+    public static <I, O, R> Future<R> allOf(final Collection<I> inputList, final TimedProcessable<Collection<Future<O>>, R> resultProcessor, final TimedProcessable<I, Future<O>> taskProcessor) {
         try {
             return new ResultProcessingMultiFuture<>(resultProcessor, buildFutureCollection(inputList, taskProcessor));
         } catch (CouldNotPerformException ex) {
@@ -295,7 +296,7 @@ public class FutureProcessor {
         }
     }
 
-    public static <I, R> Future<R> postProcess(final Processable<I, R> resultProcessor, final Future<I> future) {
+    public static <I, R> Future<R> postProcess(final TimedProcessable<I, R> resultProcessor, final Future<I> future) {
         return new ResultProcessingFuture<I, R>(resultProcessor, future);
     }
 
@@ -329,7 +330,7 @@ public class FutureProcessor {
      *
      * @return the outer future.
      */
-    public static <O, R> Future<R> allOf(final Processable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureCollection) {
+    public static <O, R> Future<R> allOf(final TimedProcessable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureCollection) {
         return new ResultProcessingMultiFuture<>(resultProcessor, futureCollection);
     }
 
