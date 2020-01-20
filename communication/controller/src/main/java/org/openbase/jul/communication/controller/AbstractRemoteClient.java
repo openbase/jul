@@ -1247,7 +1247,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             dataObservable.waitForValue(partialTimeout, TimeUnit.MILLISECONDS);
         } catch (java.util.concurrent.TimeoutException | CouldNotPerformException | ExecutionException | CancellationException ex) {
             if (shutdownInitiated) {
-                throw new InterruptedException("Interrupt request because system shutdown was initiated!");
+                throw new ShutdownInProgressException(this);
             }
             throw new NotAvailableException("Data is not yet available!", ex);
         }
