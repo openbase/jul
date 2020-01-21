@@ -130,7 +130,7 @@ public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> imple
                 complete(resultProcessor.process(internalFuture.get(timeout, unit), timeout, unit));
             } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
                 completeExceptionally(ex);
-            } catch (InterruptedException ex) {
+            } catch (InterruptedException | TimeoutException ex) {
                 throw ex;
             } catch (Exception ex) {
                 completeExceptionally(new FatalImplementationErrorException(this, ex));
