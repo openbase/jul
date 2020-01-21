@@ -69,6 +69,19 @@ public class ExceptionProcessor {
     }
 
     /**
+     * Set the given {@code initialCause} as initial cause of the given {@code throwable}.
+     *
+     * @param throwable    the throwable to extend.
+     * @param initialCause the new initial cause.
+     *
+     * @return the new cause chain.
+     */
+    public static Throwable setInitialCause(final Throwable throwable, final Throwable initialCause) {
+        getInitialCause(throwable).initCause(initialCause);
+        return throwable;
+    }
+
+    /**
      * Method checks if the initial cause of the given throwable is related to any system shutdown routine.
      * In more detail, an initial cause is related to the system shutdown when it is an instance of the {@code ShutdownInProgressException} class.
      *
@@ -96,14 +109,14 @@ public class ExceptionProcessor {
         Throwable cause = throwable;
 
         // initial check
-        if(cause instanceof InterruptedException) {
+        if (cause instanceof InterruptedException) {
             return true;
         }
 
         // check causes
         while (cause.getCause() != null) {
             cause = cause.getCause();
-            if(cause instanceof InterruptedException) {
+            if (cause instanceof InterruptedException) {
                 return true;
             }
         }
