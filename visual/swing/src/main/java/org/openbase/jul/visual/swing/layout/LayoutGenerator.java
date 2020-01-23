@@ -98,7 +98,9 @@ public final class LayoutGenerator {
                     runnable.run();
                 });
             }
-        } catch (InterruptedException | InvocationTargetException ex) {
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        } catch (InvocationTargetException ex) {
             ExceptionPrinter.printHistory(ex, LOGGER, LogLevel.WARN);
         }
         return listLayout;
