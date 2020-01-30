@@ -22,8 +22,6 @@ package org.openbase.jul.exception;
  * #L%
  */
 
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +41,6 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
     public FatalImplementationErrorException(final String message, final Object source) {
         super("Fatal implementation error in or by using " + source + ": " + message);
         ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source)));
-        assert ExceptionPrinter.isQuiet();
     }
 
     /**
@@ -58,7 +55,6 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
     public FatalImplementationErrorException(final String message, final Object source, final Throwable cause) {
         super("Fatal implementation error in or by using " + source + ": " + message, cause);
         ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source)));
-        assert ExceptionPrinter.isQuiet();
     }
 
     /**
@@ -72,7 +68,6 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
     public FatalImplementationErrorException(final Object source, final Throwable cause) {
         super("Fatal implementation error in or by using " + source + "!", cause);
         ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source)));
-        assert ExceptionPrinter.isQuiet();
     }
 
     /**

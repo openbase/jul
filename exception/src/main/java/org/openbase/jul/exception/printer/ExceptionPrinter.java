@@ -33,6 +33,7 @@ import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPLogLevel;
 import org.openbase.jps.preset.JPVerbose;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
 import org.slf4j.Logger;
@@ -330,8 +331,13 @@ public class ExceptionPrinter {
         }
         printHistory(th, printer, "", "");
 
-        // Print normal stacktrace in debug mode for all errors.
-        if (printer.isDebugEnabled()) {
+        if (th instanceof FatalImplementationErrorException) {
+            // throw assertion error in case FatalImplementationErrorException was detected.
+            printer.print(SEPARATOR);
+            printer.print(getContext(th), th);
+            assert ExceptionPrinter.isQuiet() : "Assert because FatalImplementationException was thrown!";
+        } else if (printer.isDebugEnabled()) {
+            // Print normal stacktrace in debug mode for all errors.
             switch (printer.getLogLevel()) {
                 case TRACE:
                 case DEBUG:
