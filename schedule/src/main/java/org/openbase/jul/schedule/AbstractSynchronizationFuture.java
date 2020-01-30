@@ -73,12 +73,12 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         this.logger = LoggerFactory.getLogger(dataProvider.getClass());
         this.dataProvider = dataProvider;
 
-        this.resultProcessor = (TimedProcessable<T, T>) (input, timeout, timeUnit) -> performInternalSync(input, timeout, timeUnit);
+        this.resultProcessor = (TimedProcessable<T, T>) (input, timeout, timeUnit) -> performInternalSync(timeout, timeUnit);
         this.init(resultProcessor);
     }
 
-    private T performInternalSync(final T input, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException, TimeoutException {
-        // release todo: why is the input not used?
+    private T performInternalSync(final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException, TimeoutException {
+
         final TimeoutSplitter timeSplit = new TimeoutSplitter(timeout, timeUnit);
 
         final Observer notifyChangeObserver = (Object source, Object data) -> {
@@ -91,7 +91,6 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         try {
             dataProvider.waitForData(timeSplit.getTime(), TimeUnit.MILLISECONDS);
             final T result = getInternalFuture().get(timeSplit.getTime(), TimeUnit.MILLISECONDS);
-
             return waitForSynchronization(result, timeSplit.getTime(), TimeUnit.MILLISECONDS);
         } catch (CouldNotPerformException | ExecutionException ex) {
             if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
