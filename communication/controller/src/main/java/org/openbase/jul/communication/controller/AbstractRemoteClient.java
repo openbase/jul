@@ -75,7 +75,8 @@ import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionStat
 //
 public abstract class AbstractRemoteClient<M extends Message> implements RSBRemote<M>, TransactionIdProvider {
 
-    public static final long REQUEST_TIMEOUT = TimeUnit.SECONDS.toMillis(15);;
+    public static final long REQUEST_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
+    ;
     public static final long PING_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     public static final long PING_TEST_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
     public static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(60);
@@ -83,8 +84,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     public static final long RECONNECT_AFTER_CONNECTION_LOST_DELAY_SEED = 100;
     public static final long METHOD_CALL_START_TIMEOUT = 500;
     public static final double METHOD_CALL_TIMEOUT_MULTIPLIER = 1.2;
-    public static final long METHOD_CALL_MAX_TIMEOUT = TimeUnit.SECONDS.toMillis(30);;
+    public static final long METHOD_CALL_MAX_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
     private static final Random JITTER_RANDOM = new Random();
+
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final Handler mainHandler;
     private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
@@ -1481,12 +1483,14 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
         // Notify data update
         try {
+            //logger.trace("Notify prioritized data observers...");
             notifyPrioritizedObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
         }
 
         try {
+            //logger.trace("Notify data observers...");
             dataObservable.notifyObservers(data);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update to all observer!", ex), logger);
@@ -1829,7 +1833,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 }
             } catch (CouldNotPerformException | CancellationException | RejectedExecutionException ex) {
                 if (shutdownInitiated || !active || getConnectionState().equals(DISCONNECTED) || ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                    logger.debug("Sync aborted: "+ ExceptionProcessor.getInitialCauseMessage(ex));
+                    logger.debug("Sync aborted: " + ExceptionProcessor.getInitialCauseMessage(ex));
                     throw new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex);
                 } else {
                     syncTask = sync();
