@@ -78,6 +78,9 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
     }
 
     private T performInternalSync(final T input, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException, TimeoutException {
+        // release todo: why is the input not used?
+        final TimeoutSplitter timeSplit = new TimeoutSplitter(timeout, timeUnit);
+
         final Observer notifyChangeObserver = (Object source, Object data) -> {
             synchronized (CHECK_LOCK) {
                 CHECK_LOCK.notifyAll();
@@ -86,11 +89,10 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
 
         dataProvider.addDataObserver(notifyChangeObserver);
         try {
-            // todo split timeout
-            dataProvider.waitForData(timeout, timeUnit);
-            // todo split timeout
-            final T result = getInternalFuture().get(timeout, timeUnit);
-            return waitForSynchronization(result, timeout, timeUnit);
+            dataProvider.waitForData(timeSplit.getTime(), TimeUnit.MILLISECONDS);
+            final T result = getInternalFuture().get(timeSplit.getTime(), TimeUnit.MILLISECONDS);
+
+            return waitForSynchronization(result, timeSplit.getTime(), TimeUnit.MILLISECONDS);
         } catch (CouldNotPerformException | ExecutionException ex) {
             if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                 ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
