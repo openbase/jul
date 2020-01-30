@@ -24,6 +24,7 @@ package org.openbase.jul.pattern;
 
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @param <S> the type of the data source
@@ -220,115 +222,125 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
      * @throws CouldNotPerformException thrown if the hash computation fails
      */
     public boolean notifyObservers(final S source, final T observable) throws MultiException, CouldNotPerformException {
-        synchronized (NOTIFICATION_MESSAGE_LOCK) {
-            long wholeTime = System.currentTimeMillis();
-            if (observable == null) {
-                LOGGER.debug("Skip notification because observable is null!");
-                return false;
-            }
-
-            ExceptionStack exceptionStack = null;
-            final Map<Observer<S, T>, Future<Void>> notificationFutureList = new HashMap<>();
-
-            final ArrayList<Observer<S, T>> tempObserverList;
-
-            try {
-                synchronized (NOTIFICATION_PROGRESS_LOCK) {
-                    notificationInProgress = true;
-                }
-                final int observableHash = hashGenerator.computeHash(observable);
-                if (unchangedValueFilter && isValueAvailable() && observableHash == latestValueHash) {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.trace("Skip notification because {} has not been changed!", this);
-                    }
+        try {
+            synchronized (NOTIFICATION_MESSAGE_LOCK) {
+                long wholeTime = System.currentTimeMillis();
+                if (observable == null) {
+                    LOGGER.debug("Skip notification because observable is null!");
                     return false;
                 }
 
-                applyValueUpdate(observable);
-                final int lastHashValue = latestValueHash;
-                latestValueHash = observableHash;
+                ExceptionStack exceptionStack = null;
+                final Map<Observer<S, T>, Future<Void>> notificationFutureList = new HashMap<>();
 
-                synchronized (OBSERVER_LOCK) {
-                    tempObserverList = new ArrayList<>(observers);
-                }
+                final ArrayList<Observer<S, T>> tempObserverList;
 
-                for (final Observer<S, T> observer : tempObserverList) {
-
-                    // skip ongoing notifications if shutdown was initiated or the thread was interrupted.
-                    if (shutdownInitiated || Thread.currentThread().isInterrupted()) {
-                        latestValueHash = lastHashValue;
+                try {
+                    synchronized (NOTIFICATION_PROGRESS_LOCK) {
+                        notificationInProgress = true;
+                    }
+                    final int observableHash = hashGenerator.computeHash(observable);
+                    if (unchangedValueFilter && isValueAvailable() && observableHash == latestValueHash) {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.trace("Skip notification because {} has not been changed!", this);
+                        }
                         return false;
                     }
 
-                    if (executorService == null) {
+                    applyValueUpdate(observable);
+                    final int lastHashValue = latestValueHash;
+                    latestValueHash = observableHash;
 
-                        // synchronous notification
-                        long time = System.currentTimeMillis();
-                        try {
-                            observer.update(source, observable);
-                            time = System.currentTimeMillis() - time;
-                            if (time > 500) {
-                                LOGGER.debug("Notification to observer[{}] took: {}ms", observer, time);
-                            }
-                        } catch (InterruptedException ex) {
+                    synchronized (OBSERVER_LOCK) {
+                        tempObserverList = new ArrayList<>(observers);
+                    }
+
+                    for (final Observer<S, T> observer : tempObserverList) {
+
+                        // skip ongoing notifications if shutdown was initiated or the thread was interrupted.
+                        if (shutdownInitiated || Thread.currentThread().isInterrupted()) {
                             latestValueHash = lastHashValue;
-                            Thread.currentThread().interrupt();
                             return false;
-                        } catch (Exception ex) {
-                            //TODO I do not know if this is useful generally, but it helps debugging if invalid service state observers are registered on a unit
-                            if (ex instanceof ClassCastException) {
-                                LOGGER.error("Probably defect Observer[{}] registered on {}", observer, this);
-                            }
-                            exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer[" + observer.getClass().getSimpleName() + "] update failed!", ex), exceptionStack);
                         }
-                    } else {
-                        try {
-                            // asynchronous notification
-                            notificationFutureList.put(observer, executorService.submit(() -> {
+
+                        if (executorService == null) {
+
+                            // synchronous notification
+                            long time = System.currentTimeMillis();
+                            try {
                                 observer.update(source, observable);
-                                return null;
-                            }));
-                        } catch (RejectedExecutionException ex) {
-                            exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer[" + observer.getClass().getSimpleName() + "] update failed!", new InvalidStateException("Executor service seems to be busy or offline.")), exceptionStack);
+                                time = System.currentTimeMillis() - time;
+                                if (time > 500) {
+                                    LOGGER.debug("Notification to observer[{}] took: {}ms", observer, time);
+                                }
+                            } catch (InterruptedException ex) {
+                                latestValueHash = lastHashValue;
+                                Thread.currentThread().interrupt();
+                                return false;
+                            } catch (Exception ex) {
+                                // inform about invalid registered observer
+                                if (ex instanceof ClassCastException) {
+                                    LOGGER.error("Probably defect Observer[{}] registered on {}", observer, this);
+                                }
+                                exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer[" + observer.getClass().getSimpleName() + "] update failed!", ex), exceptionStack);
+                            }
+                        } else {
+                            try {
+                                // asynchronous notification
+                                notificationFutureList.put(observer, executorService.submit(() -> {
+                                    observer.update(source, observable);
+                                    return null;
+                                }));
+                            } catch (RejectedExecutionException ex) {
+                                exceptionStack = MultiException.push(observer, new CouldNotPerformException("Observer[" + observer.getClass().getSimpleName() + "] update failed!", new InvalidStateException("Executor service seems to be busy or offline.")), exceptionStack);
+                            }
                         }
                     }
-                }
-            } finally {
-                assert observable != null;
-                synchronized (NOTIFICATION_PROGRESS_LOCK) {
-                    notificationInProgress = false;
-                    NOTIFICATION_PROGRESS_LOCK.notifyAll();
-                }
-            }
-
-            //TODO: this check is wrong -> != but when implemented correctly leads bco not starting
-            // handle exeception printing for async variant
-            if (executorService == null) {
-                for (final Entry<Observer<S, T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
-                    try {
-                        notificationFuture.getValue().get();
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                        return true;
-                    } catch (Exception ex) {
-                        exceptionStack = MultiException.push(notificationFuture.getKey(), new CouldNotPerformException("Observer[" + notificationFuture.getKey().getClass().getSimpleName() + "] update failed!", ex), exceptionStack);
+                } finally {
+                    assert observable != null;
+                    synchronized (NOTIFICATION_PROGRESS_LOCK) {
+                        notificationInProgress = false;
+                        NOTIFICATION_PROGRESS_LOCK.notifyAll();
                     }
                 }
-            }
 
-            MultiException.checkAndThrow(() -> {
-                String stringRep = observable.toString();
-                if (stringRep.length() > 80) {
-                    stringRep = stringRep.substring(0, 80) + " [...]";
+
+                // handle exception printing for async variant
+                // todo: Many notifications are failing if enabled. There seems to be any lock issue
+//            if (executorService != null) {
+//                for (final Entry<Observer<S, T>, Future<Void>> notificationFuture : notificationFutureList.entrySet()) {
+//                    try {
+//                        notificationFuture.getValue().get(1, TimeUnit.SECONDS);
+//                    } catch (InterruptedException ex) {
+//                        Thread.currentThread().interrupt();
+//                        return true;
+//                    } catch (Exception ex) {
+//                        if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+//                            exceptionStack = MultiException.push(notificationFuture.getKey(), new CouldNotPerformException("Observer[" + notificationFuture.getKey().getClass().getSimpleName() + "] update failed!", ex), exceptionStack);
+//                        }
+//                    }
+//                }
+//            }
+
+                MultiException.checkAndThrow(() -> {
+                    // limit exception method length because notified data can be huge.
+                    String stringRep = observable.toString();
+                    if (stringRep.length() > 80) {
+                        stringRep = stringRep.substring(0, 80) + " [...]";
+                    }
+                    return "Could not notify Data[" + stringRep + "] to all observer!";
+                }, exceptionStack);
+
+                wholeTime = System.currentTimeMillis() - wholeTime;
+                if (wholeTime > 500) {
+                    LOGGER.debug("Notification on observable[{}] took: {}ms", observable.getClass().getName(), wholeTime);
                 }
-                return "Could not notify Data[" + stringRep + "] to all observer!";
-            }, exceptionStack);
-
-            wholeTime = System.currentTimeMillis() - wholeTime;
-            if (wholeTime > 500) {
-                LOGGER.debug("Notification on observable[{}] took: {}ms", observable.getClass().getName(), wholeTime);
+                return true;
             }
-            return true;
+        } catch (Throwable ex) {
+            // Because we have no idea which code segments are executed by the observers, we need to handle the Throwable as well.
+            // This is especially helpful to identify and find issues in unit test because those used assertion errors can not be caught by default exception handling.
+            throw new CouldNotPerformException(new FatalImplementationErrorException(this, ex));
         }
     }
 
