@@ -47,8 +47,8 @@ public class WatchDog implements Activatable, Shutdownable {
     private final Object EXECUTION_LOCK;
     private final SyncObject STATE_LOCK;
 
-    private static final long RUNNING_DELAY = 60000;
-    private static final long DEFAULT_DELAY = 5000;
+    private static final long RUNNING_DELAY = 120000;
+    private static final long DEFAULT_DELAY = 60000;
     private static final long TEST_DELAY = 10;
 
     public enum ServiceState {
@@ -169,12 +169,6 @@ public class WatchDog implements Activatable, Shutdownable {
                 if (this.serviceState == ServiceState.FINISHED) {
                     throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because watchdog of Service[" + serviceName + "] is not running anymore!");
                 }
-
-                // skip if state is already passed.
-                //TODO: validate that this new strategy with allowing the one who waits to guarantee that he does not wait indefinitely works
-//                if (minder.getFuture().isDone() && (serviceState == ServiceState.RUNNING || serviceState == ServiceState.INITIALIZING)) {
-//                    throw new CouldNotPerformException("Could not wait for ServiceState[" + serviceState.name() + "] because Service["+serviceName+"] is already done!");
-//                }
 
                 if (timeout <= 0) {
                     STATE_LOCK.wait();
