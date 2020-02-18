@@ -1399,9 +1399,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         }
     }
 
-    private void failOnShutdown(String message) throws InvalidStateException {
+    private void failOnShutdown(String message) throws ShutdownInProgressException {
         if (this.shutdownInitiated) {
-            throw new InvalidStateException(message);
+            throw new ShutdownInProgressException(message);
         }
     }
 
