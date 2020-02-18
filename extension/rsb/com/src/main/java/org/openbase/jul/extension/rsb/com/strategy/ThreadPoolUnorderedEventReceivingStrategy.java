@@ -62,7 +62,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
     private final ExecutorService executorService;
 
     private final ArrayList<Event> eventCache = new ArrayList<>();
-    private final SyncObject eventCacheLock = new SyncObject("EventCacheLock");
+    private final SyncObject eventListLock = new SyncObject("EventCacheLock");
 
     private volatile boolean active = false;
 
@@ -182,39 +182,41 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
         @Override
         public Void call() {
 
-            modificationLock.readLock().lock();
             try {
-                // match
-                for (final Filter filter : getFilters()) {
-                    if (!filter.match(eventToDispatch)) {
-                        return null;
+                modificationLock.readLock().lock();
+                try {
+                    // match
+                    for (final Filter filter : getFilters()) {
+                        if (!filter.match(eventToDispatch)) {
+                            return null;
+                        }
                     }
-                }
 
-                // dispatch
-                for (final Handler handler : getHandlers()) {
+                    // dispatch
+                    for (final Handler handler : getHandlers()) {
 
-                    // skip if task was interrupted.
-                    if (Thread.interrupted()) {
-                        return null;
+                        // skip if task was interrupted.
+                        if (Thread.interrupted()) {
+                            return null;
+                        }
+                        // notify handler about new task
+                        try {
+                            handler.internalNotify(eventToDispatch);
+                        } catch (InterruptedException e) {
+                            return null;
+                        }
                     }
-                    // notify handler about new task
-                    try {
-                        handler.internalNotify(eventToDispatch);
-                    } catch (InterruptedException e) {
-                        return null;
-                    }
+                } finally {
+
+                    // unlock modification lock
+                    modificationLock.readLock().unlock();
                 }
             } finally {
+                synchronized (eventListLock) {
+                    // deregister task
+                    eventTaskMap.remove(this);
 
-                // unlock modification lock
-                modificationLock.readLock().unlock();
-
-                // deregister task
-                eventTaskMap.remove(this);
-
-                // if events are cached then we execute the next one.
-                synchronized (eventCacheLock) {
+                    // if events are cached then we execute the next one.
                     if (!eventCache.isEmpty()) {
                         handle(eventCache.remove(0));
                     }
@@ -236,7 +238,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
             }
 
             // in case we are handling to many events, we cache them for later handling.
-            synchronized (eventCacheLock) {
+            synchronized (eventListLock) {
                 if (eventTaskMap.size() > MAX_PARALLEL_DISPATCH_TASK_COUNT) {
 
                     // cache event
@@ -246,9 +248,9 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
                     try {
                         final int taskCounter = eventTaskMap.size() + eventCache.size();
                         if (taskCounter > 50) {
-                            logEventFilter.trigger("Participant[" + event.getScope() + (event.getMethod() != null ? "/" + event.getMethod() : "") + "] overload detected! Processing " + taskCounter + " tasks at once probably affects the application performance.");
+                            logEventFilter.trigger("Participant[" + event.getScope() + (event.getMethod() != null ? "/" + event.getMethod() : "") + "] overload detected! Processing " + taskCounter + " tasks (processing: " + eventTaskMap.size() + " and cached: " + eventCache.size() + ") at once probably affects the application performance.");
                         } else {
-                            if(JPService.verboseMode()) {
+                            if (JPService.verboseMode()) {
                                 logEventFilter.trigger("Cache incoming event of Participant[" + event.getScope() + (event.getMethod() != null ? "/" + event.getMethod() : "") + "] for later execution, current cache size: " + eventTaskMap.size());
                             }
                         }
@@ -258,20 +260,26 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
 
                     return;
                 }
-            }
 
-            // dispatch new task
-            try {
-                final DispatchTask dispatchTask = new DispatchTask(event);
-                final Future<Void> future = executorService.submit(dispatchTask);
-                eventTaskMap.put(dispatchTask, future);
+                // dispatch new task
+                try {
+                    final DispatchTask dispatchTask = new DispatchTask(event);
+                    final Future<Void> future = executorService.submit(dispatchTask);
+                    eventTaskMap.put(dispatchTask, future);
 
-                // handle if execution was faster than registration
-                if (future.isDone() && eventTaskMap.containsKey(dispatchTask)) {
-                    eventTaskMap.remove(dispatchTask);
+                    // handle if execution was faster than registration
+                    if (future.isDone() && eventTaskMap.containsKey(dispatchTask)) {
+                        eventTaskMap.remove(dispatchTask);
+                    }
+                } catch (RejectedExecutionException ex) {
+                    if (executorService.isShutdown()) {
+                        // force participant deactivation
+                        LOGGER.debug("force participant deactivation and skip Event[" + event.toString() + "] because executor service is already down.");
+                        deactivate();
+                    }
+
+                    ExceptionPrinter.printHistory("Event[" + event.toString() + "] execution rejected! System is probably shutting down or executor service overload occurred.", ex, LOGGER, LogLevel.WARN);
                 }
-            } catch (RejectedExecutionException ex) {
-                ExceptionPrinter.printHistory("Event[" + event.toString() + "] execution rejected! System is probably shutting down or executor service overload occurred.", ex, LOGGER, LogLevel.WARN);
             }
 
         } finally {
@@ -293,7 +301,7 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
     }
 
     @Override
-    public void deactivate() throws InterruptedException {
+    public void deactivate() {
         activationLock.writeLock().lock();
         try {
             if (!active) {
@@ -301,12 +309,17 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
             }
             active = false;
 
-            for (final Future future : this.eventTaskMap.values()) {
-                if (!future.isDone()) {
-                    future.cancel(true);
+
+            synchronized (eventListLock) {
+                for (final Future future : this.eventTaskMap.values()) {
+                    if (!future.isDone()) {
+                        future.cancel(true);
+                    }
                 }
+
+                this.eventTaskMap.clear();
+                this.eventCache.clear();
             }
-            this.eventTaskMap.clear();
 
         } finally {
             activationLock.writeLock().unlock();
