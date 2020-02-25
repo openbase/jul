@@ -22,20 +22,16 @@ package org.openbase.jul.schedule;
  * #L%
  */
 
-import org.openbase.jps.core.JPService;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.TimedProcessable;
-import org.openbase.jul.pattern.CompletableFutureLite;
+import org.openbase.jul.schedule.MultiFuture.AggregationStrategy;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.TimeoutException;
 
 import static org.openbase.jul.schedule.GlobalScheduledExecutorService.getInstance;
 
@@ -334,14 +330,19 @@ public class FutureProcessor {
         return new ResultProcessingMultiFuture<>(resultProcessor, futureCollection);
     }
 
-    public static <R> Future<R> atLeastOne(final R returnValue, final Collection<Future<?>> futureCollection,
-                                           final long timeout, final TimeUnit timeUnit) {
-        return atLeastOne(() -> returnValue, futureCollection, timeout, timeUnit);
-    }
-
-    public static <R> Future<R> atLeastOne(final Callable<R> resultCallable,
-                                           final Collection<Future<?>> futureCollection, final long timeout, final TimeUnit timeUnit) {
-        return atLeastOne(getInstance().getExecutorService(), resultCallable, futureCollection, timeout, timeUnit);
+    /**
+     * Method generates a new futures which represents all futures provided by the futureCollection.
+     * If at least one future successfully finishes the outer future will be completed with the {@code resultValue}.
+     *
+     * @param <R>              The result type of the outer future.
+     * @param <O>              The future type of the sub futures.
+     * @param returnValue      Value is used to complete the outer future when at least one task is done.
+     * @param futureCollection the inner future collection.
+     *
+     * @return the outer future.
+     */
+    public static <O, R> Future<R> anyOf(final R returnValue, final Collection<Future<O>> futureCollection) {
+        return anyOf((input, timeout, timeUnit) -> returnValue, futureCollection);
     }
 
     /**
@@ -349,58 +350,14 @@ public class FutureProcessor {
      * If at least one future successfully finishes the outer future will be completed with the result provided by the resultCallable.
      *
      * @param <R>              The result type of the outer future.
-     * @param executorService  the execution service which is used for the outer future execution.
-     * @param resultCallable   the callable which provides the result of the outer future.
-     * @param futureCollection the inner future collect
-     * @param timeout
-     * @param timeUnit
+     * @param <O>              The future type of the sub futures.
+     * @param resultProcessor  the callable which provides the result of the outer future.
+     * @param futureCollection the inner future collection.
      *
      * @return the outer future.
      */
-    public static <R> Future<R> atLeastOne(final ExecutorService executorService,
-                                           final Callable<R> resultCallable, final Collection<Future<?>> futureCollection, final long timeout,
-                                           final TimeUnit timeUnit) {
-        // todo: implement as single threaded like the allOff to improve performance
-        return executorService.submit(new Callable<R>() {
-            @Override
-            public R call() throws Exception {
-                try {
-                    MultiException.ExceptionStack exceptionStack = null;
-                    boolean oneSuccessfullyFinished = false;
-
-                    try {
-                        for (final Future future : futureCollection) {
-                            try {
-                                // todo: implement timeout splitting
-                                future.get(timeout, timeUnit);
-                                oneSuccessfullyFinished = true;
-                            } catch (ExecutionException | TimeoutException ex) {
-                                exceptionStack = MultiException.push(this, ex, exceptionStack);
-                            }
-                        }
-                    } catch (InterruptedException ex) {
-                        // cancel all pending actions.
-                        for (Future<?> future : futureCollection) {
-                            if (!future.isDone()) {
-                                future.cancel(true);
-                            }
-                        }
-                        throw ex;
-                    }
-                    if (!oneSuccessfullyFinished) {
-                        MultiException.checkAndThrow(() -> "Could not execute all tasks!", exceptionStack);
-                    }
-                    if (resultCallable == null) {
-                        throw new NotAvailableException("resultCallable");
-                    }
-                    return resultCallable.call();
-                } catch (CouldNotPerformException | InterruptedException ex) {
-                    throw ex;
-                } catch (Exception ex) {
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Task execution failed!", ex), LoggerFactory.getLogger(AbstractExecutorService.class));
-                }
-            }
-        });
+    public static <O, R> Future<R> anyOf(final TimedProcessable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureCollection) {
+        return new ResultProcessingMultiFuture<O, R>(resultProcessor, futureCollection, AggregationStrategy.ANY_OF);
     }
 
     /**
@@ -424,7 +381,9 @@ public class FutureProcessor {
                 try {
                     futureList.add(taskProcessor.process(input));
                 } catch (final CouldNotPerformException ex) {
-                    exceptionStack = MultiException.push(AbstractExecutorService.class, ex, exceptionStack);
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        exceptionStack = MultiException.push(AbstractExecutorService.class, ex, exceptionStack);
+                    }
                 }
             }
             MultiException.checkAndThrow(() -> "Could not execute all tasks!", exceptionStack);

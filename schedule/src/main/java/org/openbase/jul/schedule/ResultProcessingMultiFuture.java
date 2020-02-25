@@ -24,9 +24,9 @@ package org.openbase.jul.schedule;
 
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.iface.Processable;
 import org.openbase.jul.iface.TimedProcessable;
 import org.openbase.jul.pattern.CompletableFutureLite;
+import org.openbase.jul.schedule.MultiFuture.AggregationStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,12 +46,25 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
 
     private final ReentrantReadWriteLock updateComponentLock = new ReentrantReadWriteLock();
 
-    final TimedProcessable<Collection<Future<O>>, R> resultProcessor;
-    private MultiFuture<O> multiFuture;
+    private final TimedProcessable<Collection<Future<O>>, R> resultProcessor;
+    private final MultiFuture<O> multiFuture;
 
     public ResultProcessingMultiFuture(final TimedProcessable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureList) {
-        this.multiFuture = new MultiFuture<>(futureList);
+        this(resultProcessor, futureList, AggregationStrategy.ALL_OF);
+    }
+
+    public ResultProcessingMultiFuture(final TimedProcessable<Collection<Future<O>>, R> resultProcessor, final Collection<Future<O>> futureList, final AggregationStrategy aggregationStrategy) {
         this.resultProcessor = resultProcessor;
+
+        // initiate multi future related to aggregation strategy
+        switch (aggregationStrategy) {
+            case ANY_OF:
+                this.multiFuture = new AnyOfMultiFuture<>(futureList);
+                break;
+            case ALL_OF:
+            default:
+                this.multiFuture = new MultiFuture<>(futureList);
+        }
     }
 
     @Override
@@ -64,66 +77,49 @@ public class ResultProcessingMultiFuture<O, R> extends CompletableFutureLite<R> 
 
     @Override
     public R get() throws InterruptedException, ExecutionException {
-
-        if (isDone()) {
-            return super.get();
-        }
-
-        updateComponentLock.writeLock().lock();
         try {
-            // this is important because in the mean time the task can be done.
-            if (isDone()) {
-                return super.get();
-            }
-
-            // handle completion
-            try {
-                multiFuture.get();
-                complete(resultProcessor.process(multiFuture.getFutureList()));
-            } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
-                completeExceptionally(ex);
-            } catch (InterruptedException ex) {
-                throw ex;
-            } catch (Exception ex) {
-                completeExceptionally(new FatalImplementationErrorException(this, ex));
-            }
-        } finally {
-            updateComponentLock.writeLock().unlock();
+            return get(Timeout.INFINITY_TIMEOUT, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException ex) {
+            throw new ExecutionException(new FatalImplementationErrorException("Timeout exception occurred on infinity timeout!", this, ex));
         }
-
-        return super.get();
     }
 
     @Override
-    public R get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        if (isDone()) {
-            return super.get(timeout, unit);
-        }
+    public R get(final long timeout, final TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
+        final TimeoutSplitter timeoutSplitter = new TimeoutSplitter(timeout, timeUnit);
+        try {
+            if (isDone()) {
+                return super.get(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit());
+            }
 
-        if (!updateComponentLock.writeLock().tryLock(timeout, unit)) {
+            if (!updateComponentLock.writeLock().tryLock(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit())) {
+                throw new TimeoutException();
+            }
+            try {
+                // this is important because in the mean time the task can be done.
+                if (isDone()) {
+                    return super.get(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit());
+                }
+
+                // handle completion
+                try {
+                    multiFuture.get(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit());
+                    complete(resultProcessor.process(multiFuture.getFutureList()));
+                } catch (InterruptedException | TimeoutException ex) {
+                    throw ex;
+                } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
+                    completeExceptionally(ex);
+                } catch (Exception ex) {
+                    completeExceptionally(new FatalImplementationErrorException(this, ex));
+                }
+            } finally {
+                updateComponentLock.writeLock().unlock();
+            }
+
+            return super.get(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit());
+
+        } catch (org.openbase.jul.exception.TimeoutException ex) {
             throw new TimeoutException();
         }
-        try {
-            // this is important because in the mean time the task can be done.
-            if (isDone()) {
-                return super.get(timeout, unit);
-            }
-
-            // handle completion
-            try {
-                multiFuture.get(timeout, unit);
-                complete(resultProcessor.process(multiFuture.getFutureList()));
-            } catch (InterruptedException | TimeoutException ex) {
-                throw ex;
-            } catch (CouldNotPerformException | ExecutionException | CancellationException ex) {
-                completeExceptionally(ex);
-            } catch (Exception ex) {
-                completeExceptionally(new FatalImplementationErrorException(this, ex));
-            }
-        } finally {
-            updateComponentLock.writeLock().unlock();
-        }
-
-        return super.get(timeout, unit);
     }
 }

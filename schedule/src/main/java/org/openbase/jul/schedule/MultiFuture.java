@@ -39,10 +39,15 @@ import java.util.concurrent.TimeoutException;
  */
 public class MultiFuture<FUTURE_TYPE> implements Future<List<FUTURE_TYPE>> {
 
-    private final List<Future<FUTURE_TYPE>> futureList;
+    public enum AggregationStrategy {
+        ANY_OF,
+        ALL_OF
+    }
 
-    public MultiFuture(final Collection<Future<FUTURE_TYPE>> futureList) {
-        this.futureList = new ArrayList<>(futureList);
+    protected final List<Future<FUTURE_TYPE>> futureList;
+
+    public MultiFuture(final Collection<Future<FUTURE_TYPE>> futureCollection) {
+        this.futureList = new ArrayList<>(futureCollection);
     }
 
     /**
@@ -125,10 +130,14 @@ public class MultiFuture<FUTURE_TYPE> implements Future<List<FUTURE_TYPE>> {
      */
     @Override
     public List<FUTURE_TYPE> get(long timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
-        // todo implement timestamp split.
+        final TimeoutSplitter timeoutSplitter = new TimeoutSplitter(timeout, timeUnit);
         final List<FUTURE_TYPE> resultList = new ArrayList<>();
         for (Future<FUTURE_TYPE> future : futureList) {
-            resultList.add(future.get(timeout, timeUnit));
+            try {
+                resultList.add(future.get(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit()));
+            } catch (org.openbase.jul.exception.TimeoutException ex) {
+                throw new TimeoutException();
+            }
         }
         return resultList;
     }
