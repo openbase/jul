@@ -41,6 +41,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class TimeoutSplitter {
 
+    public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
+
     /**
      * In milliseconds
      */
@@ -52,7 +54,7 @@ public class TimeoutSplitter {
     private final long timeout;
 
     /**
-     * @param timeout the total max time to wait.
+     * @param timeout  the total max time to wait.
      * @param timeUnit the time unit of the given {@code timeout}.
      */
     public TimeoutSplitter(final long timeout, final TimeUnit timeUnit) {
@@ -73,5 +75,15 @@ public class TimeoutSplitter {
             throw new TimeoutException();
         }
         return time;
+    }
+
+    /**
+     * This method returns time unit of the {@code getTime()} method returned value, which is milliseconds by default.
+     * For details checkout {@code TimeoutSplitter.DEFAULT_TIME_UNIT}.
+     *
+     * @return the millisecond time unit.
+     */
+    public TimeUnit getTimeUnit() {
+        return DEFAULT_TIME_UNIT;
     }
 }
