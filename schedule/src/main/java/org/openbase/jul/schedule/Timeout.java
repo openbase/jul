@@ -102,7 +102,7 @@ public abstract class Timeout {
      *
      * @param waitTime the new wait time to update in milliseconds.
      *
-     * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     * @throws CouldNotPerformException    is thrown in case the timeout could not be restarted.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart(final long waitTime) throws CouldNotPerformException {
@@ -115,7 +115,7 @@ public abstract class Timeout {
      * @param waitTime the new wait time to update.
      * @param timeUnit the time unit of the wait time.
      *
-     * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     * @throws CouldNotPerformException    is thrown in case the timeout could not be restarted.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart(final long waitTime, final TimeUnit timeUnit) throws CouldNotPerformException {
@@ -135,7 +135,7 @@ public abstract class Timeout {
     /**
      * Method restarts the timeout.
      *
-     * @throws CouldNotPerformException is thrown in case the timeout could not be restarted.
+     * @throws CouldNotPerformException    is thrown in case the timeout could not be restarted.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void restart() throws CouldNotPerformException {
@@ -165,7 +165,7 @@ public abstract class Timeout {
     /**
      * Start the timeout with the default wait time.
      *
-     * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     * @throws CouldNotPerformException    is thrown in case the timeout could not be started.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void start() throws CouldNotPerformException {
@@ -177,7 +177,7 @@ public abstract class Timeout {
      *
      * @param waitTime the time to wait until the timeout is reached in milliseconds.
      *
-     * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     * @throws CouldNotPerformException    is thrown in case the timeout could not be started.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void start(final long waitTime) throws CouldNotPerformException {
@@ -190,7 +190,7 @@ public abstract class Timeout {
      * @param waitTime the time to wait until the timeout is reached.
      * @param timeUnit the time unit of the wait time.
      *
-     * @throws CouldNotPerformException is thrown in case the timeout could not be started.
+     * @throws CouldNotPerformException    is thrown in case the timeout could not be started.
      * @throws ShutdownInProgressException is thrown in case the the system is currently shutting down.
      */
     public void start(final long waitTime, final TimeUnit timeUnit) throws CouldNotPerformException {
@@ -303,6 +303,7 @@ public abstract class Timeout {
 
     /**
      * Returns the time left until the timeout will expire.
+     *
      * @return time in milliseconds.
      */
     public long getTimeLeftUntilTimeout() {
@@ -311,9 +312,23 @@ public abstract class Timeout {
 
     /**
      * Returns the time passed since this timer was started.
+     *
      * @return time in milliseconds.
      */
     public long getTimePassedSinceStart() {
         return System.currentTimeMillis() - startTimestamp;
+    }
+
+    /**
+     * Method returns an huge timeout which will never expire
+     * Using Long.MAX_VALUE as infinity timeout is not practical because in any calculations using this timeout like adding +1 causes a value overrun.
+     * Therefore, this method delivers a infinity timeout which represents in fact 3170 years which should covers at least some human generations ;)
+     *
+     * @param timeUnit the time unit used for the timeout to return.
+     *
+     * @return the timeout.
+     */
+    public static long getInfinityTimeout(final TimeUnit timeUnit) {
+        return timeUnit.convert(INFINITY_TIMEOUT, TimeUnit.MILLISECONDS);
     }
 }
