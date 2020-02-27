@@ -298,7 +298,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public void verifyMaintainability() throws VerificationFailedException {
         if (isLocked()) {
-            throw new VerificationFailedException("Manipulation of " + this + "is currently not valid because the maintains is protected by another instance! "
+            throw new VerificationFailedException("Manipulation of " + this + " is currently not valid because the maintains is protected by another instance! "
                     + "Did you try to modify an instance which is locked by a managed instance pool?");
         }
     }
