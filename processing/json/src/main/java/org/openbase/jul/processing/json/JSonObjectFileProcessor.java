@@ -73,7 +73,7 @@ public class JSonObjectFileProcessor<DT extends Object> implements FileProcessor
     }
 
     @Override
-    public DT deserialize(File file, DT message) throws CouldNotPerformException {
+    public DT deserialize(final File file, DT message) throws CouldNotPerformException {
         return deserialize(file);
     }
 
