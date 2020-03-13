@@ -117,9 +117,10 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
                     return;
                 }
 
-                if (autoLockReleaseOnLongtermBlock) {
-                    unlockRead("TimeoutHandler");
-                }
+                // todo: the following code can not work since its not the same thread which unlocks the lock and therefore an illegal monitor state exception is always throws without any effect.
+//                if (autoLockReleaseOnLongtermBlock) {
+//                    unlockRead("TimeoutHandler");
+//                }
             }
         };
         this.writeLockTimeout = new Timeout(DEFAULT_LOCK_TIMEOUT) {
@@ -133,9 +134,10 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
                     return;
                 }
 
-                if (autoLockReleaseOnLongtermBlock) {
-                    unlockWrite("TimeoutHandler");
-                }
+                // todo: the following code can not work since its not the same thread which unlocks the lock and therefore an illegal monitor state exception is always throws without any effect.
+//                if (autoLockReleaseOnLongtermBlock) {
+//                    unlockWrite("TimeoutHandler");
+//                }
             }
         };
     }

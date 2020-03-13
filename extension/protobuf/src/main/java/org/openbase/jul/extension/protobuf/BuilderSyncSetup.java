@@ -76,11 +76,12 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                     return;
                 }
 
-                try {
-                    unlockRead("TimeoutHandler");
-                } catch (IllegalMonitorStateException ex) {
+                // todo: the following code can not work since its not the same thread which unlocks the lock and therefore an illegal monitor state exception is always throws without any effect.
+//                try {
+//                    unlockRead("TimeoutHandler");
+//                } catch (IllegalMonitorStateException ex) {
                     logger.warn("ReadLock recovery of " + builder.buildPartial().getClass().getSimpleName() + " was not successful!");
-                }
+//                }
             }
         };
         this.writeLockTimeout = new Timeout(LOCK_TIMEOUT) {
