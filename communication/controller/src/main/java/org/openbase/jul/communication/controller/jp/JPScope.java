@@ -73,6 +73,15 @@ public class JPScope extends AbstractJavaProperty<Scope> {
         return args;
     }
 
+    @Override
+    public String getDefaultExample() {
+        try {
+            return this.propertyIdentifiers[0] + " " + ScopeProcessor.generateStringRep(getDefaultValue());
+        } catch (JPNotAvailableException | CouldNotPerformException ex) {
+            return this.propertyIdentifiers[0];
+        }
+    }
+
     public static String convertIntoValidScopeComponent(String scopeComponent) {
         return StringProcessor.transformToIdString(scopeComponent.toLowerCase()).replaceAll("_", "");
     }
