@@ -78,8 +78,8 @@ public interface Shutdownable {
 
         private Shutdownable shutdownable;
         private final long delay;
-        private boolean canceled;
-        private boolean shutdown;
+        private transient boolean canceled;
+        private transient boolean shutdown;
 
         private ShutdownDaemon(final Shutdownable shutdownable, final long delay) throws CouldNotPerformException {
             super(ShutdownDaemon.class.getSimpleName() + "[" + shutdownable + "]");
