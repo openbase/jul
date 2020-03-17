@@ -23,7 +23,7 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.ShutdownException;
+import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -239,8 +239,12 @@ public abstract class Timeout {
 
                 try {
                     expired();
+                } catch (InterruptedException ex) {
+                    // just finish task on interruption
                 } catch (Exception ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
+                    if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
+                    }
                 }
                 logger.trace("Worker finished.");
                 return null;
