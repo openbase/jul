@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Factory;
 import rsb.config.ParticipantConfig;
 import rsb.config.TransportConfig;
+import rsb.introspection.LacksOsInformationException;
 
 /**
  *
@@ -55,7 +56,13 @@ public class RSBDefaultConfig {
         if (init) {
             return;
         }
-        participantConfig = Factory.getInstance().getDefaultParticipantConfig();
+
+        try {
+            participantConfig = Factory.getInstance().getDefaultParticipantConfig();
+        } catch (Exception ex) {
+            ExceptionPrinter.printHistory("Could not load rsb default configuration based on system information. Configure by jps only instead.", ex, LOGGER, LogLevel.WARN);
+            participantConfig = new ParticipantConfig();
+        }
 
         try {
             // activate transport communication set by the JPRSBTransport property.
