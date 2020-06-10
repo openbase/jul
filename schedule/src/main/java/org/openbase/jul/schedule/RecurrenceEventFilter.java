@@ -26,6 +26,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.ShutdownInProgressException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -228,7 +229,11 @@ public abstract class RecurrenceEventFilter<VALUE> {
         try {
             relay(latestValue);
         } catch (Exception ex) {
-            ExceptionPrinter.printHistory(ex, LOGGER, LogLevel.ERROR);
+            if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                LOGGER.trace("Relay skipped because of system shutdown.");
+            } else {
+                ExceptionPrinter.printHistory(ex, LOGGER, LogLevel.ERROR);
+            }
         }
     }
 
