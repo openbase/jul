@@ -23,12 +23,6 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.AbstractMessage.Builder;
-
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -39,6 +33,10 @@ import org.openbase.jul.pattern.ChangeListener;
 import org.openbase.jul.schedule.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @param <MB>
@@ -69,19 +67,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!")), logger);
-
-                // in test or debug mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
-                if (JPService.testMode() || JPService.debugMode()) {
-                    return;
-                }
-
-                // todo: the following code can not work since its not the same thread which unlocks the lock and therefore an illegal monitor state exception is always throws without any effect.
-//                try {
-//                    unlockRead("TimeoutHandler");
-//                } catch (IllegalMonitorStateException ex) {
-                    logger.warn("ReadLock recovery of " + builder.buildPartial().getClass().getSimpleName() + " was not successful!");
-//                }
+                new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
             }
         };
         this.writeLockTimeout = new Timeout(LOCK_TIMEOUT) {
@@ -89,17 +75,6 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             @Override
             public void expired() {
                 new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
-
-                // in test or debug mode we want to skip the unlock since its only a fallback strategy during 24/7 operation.
-                if (JPService.testMode() || JPService.debugMode()) {
-                    return;
-                }
-
-                try {
-                    unlockWrite();
-                } catch (IllegalMonitorStateException ex) {
-                    logger.warn("WriteLock recovery of " + builder.buildPartial().getClass().getSimpleName() + " was not successful!");
-                }
             }
         };
     }
