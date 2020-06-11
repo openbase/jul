@@ -132,7 +132,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             this.dataLock = new ReentrantReadWriteLock();
             this.dataBuilderReadLock = dataLock.readLock();
             this.dataBuilderWriteLock = dataLock.writeLock();
-            this.manageLock = new BundledReentrantReadWriteLock(dataLock, false, true, this);
+            this.manageLock = new BundledReentrantReadWriteLock(dataLock, true, this);
             this.messageClass = detectDataClass();
             this.server = new NotInitializedRSBLocalServer();
             this.informer = new NotInitializedRSBInformer<>();
@@ -601,7 +601,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer) {
-        return new CloseableWriteLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, true, consumer));
+        return new CloseableWriteLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
     }
 
     /**
@@ -630,7 +630,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableReadLockWrapper getManageReadLock(final Object consumer) {
-        return new CloseableReadLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, true, consumer));
+        return new CloseableReadLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
     }
 
     /**
@@ -723,14 +723,36 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             manageLock.unlockWrite(this);
         }
 
-        // Notify data update
+        // validate that no locks are locked during notification in order to avoid deadlocks.
+        final boolean dataBuilderLocked = dataBuilderReadLock.tryLock();
         try {
-            notifyDataUpdate(newData);
-        } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
-        }
+            final boolean manageLockLocked = manageLock.tryLockRead();
+            try {
 
-        dataObserver.notifyObservers(newData);
+                if(!manageLockLocked) {
+                    logger.warn("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
+                }
+
+                // Notify data update internally
+                try {
+                    notifyDataUpdate(newData);
+                } catch (CouldNotPerformException ex) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
+                }
+
+                // Notify data update to all observer
+                dataObserver.notifyObservers(newData);
+
+            } finally {
+                if (manageLockLocked) {
+                    manageLock.unlockRead();
+                }
+            }
+        } finally {
+            if(dataBuilderLocked) {
+                dataBuilderReadLock.unlock();
+            }
+        }
     }
 
     /**
