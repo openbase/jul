@@ -114,12 +114,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private boolean initialized;
     private MessageProcessor<Message, M> messageProcessor;
     private Set<StackTraceElement[]> reinitStackTraces = new HashSet<>();
-    private boolean shutdownInitiated;
+    private volatile boolean shutdownInitiated;
     private long newestEventTime = 0;
     private long newestEventTimeNano = 0;
     private boolean connectionFailure = false;
     private Future<Long> pingTask = null;
-    private long transactionId = -1;
+    private volatile long transactionId = -1;
 
 
     public AbstractRemoteClient(final Class<M> dataClass) {

@@ -101,13 +101,12 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     private final SyncObject controllerAvailabilityMonitor = new SyncObject("ControllerAvailabilityMonitor");
     private AvailabilityState.State availabilityState;
-    private boolean initialized, destroyed;
+    private volatile boolean initialized, destroyed;
 
     private final MessageObservable dataObserver;
     private Future initialDataSyncFuture;
 
-
-    long transaction_id = 0;
+    private volatile long transaction_id = 0;
 
     /**
      * Create a communication service.
