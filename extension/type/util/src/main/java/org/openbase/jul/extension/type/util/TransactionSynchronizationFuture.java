@@ -103,7 +103,6 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
             return true;
         }
 
-//        logger.warn("Check {} - {} of {}", transactionId, dataProvider.getTransactionId(), dataProvider.toString());
         // check that the received transaction id has been reached by the provider
         return dataProvider.getTransactionId() >= transactionId;
     }

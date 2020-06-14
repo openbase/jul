@@ -24,32 +24,30 @@ package org.openbase.jul.communication.controller;
 
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Descriptors;
-import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
-import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
-import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
+import org.openbase.jul.extension.protobuf.*;
 import org.openbase.jul.extension.rsb.com.*;
 import org.openbase.jul.extension.rsb.iface.RSBInformer;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.extension.type.processing.ScopeProcessor;
-import org.openbase.jul.pattern.controller.MessageController;
-import org.openbase.jul.extension.protobuf.MessageObservable;
 import org.openbase.jul.extension.type.iface.ScopeProvider;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.iface.Requestable;
 import org.openbase.jul.pattern.Observer;
+import org.openbase.jul.pattern.controller.MessageController;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.*;
+import org.openbase.type.communication.ScopeType.Scope;
 import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Event;
 import rsb.config.ParticipantConfig;
-import org.openbase.type.communication.ScopeType.Scope;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -59,7 +57,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
-
 import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
 
 /**
@@ -485,7 +482,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 // notify remotes about controller shutdown
                 if (availabilityState.equals(DEACTIVATING)) {
                     try {
-                        logger.debug("Notify data change of " + this);
                         validateInitialization();
                         if (!informer.isActive()) {
                             logger.debug("Skip update notification because connection not established.");
@@ -683,7 +679,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public void notifyChange() throws CouldNotPerformException, InterruptedException {
-        logger.debug("Notify data change of " + this);
+        logger.debug("Notify data change of {}", this);
         // synchronized by manageable lock to prevent reinit between validateInitialization and publish
         M newData;
         manageLock.lockWrite(this);
@@ -729,7 +725,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             final boolean manageLockLocked = manageLock.tryLockRead();
             try {
 
-                if(!manageLockLocked) {
+                if (!manageLockLocked) {
                     logger.warn("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
                 }
 
@@ -749,7 +745,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 }
             }
         } finally {
-            if(dataBuilderLocked) {
+            if (dataBuilderLocked) {
                 dataBuilderReadLock.unlock();
             }
         }

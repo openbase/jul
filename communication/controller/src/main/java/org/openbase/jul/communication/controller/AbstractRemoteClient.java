@@ -1600,9 +1600,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                         }
                         throw ex;
                     }
-//                    } catch (CouldNotPerformException ex) {
-//                        throw new CouldNotPerformException("ping failed", ex);
-//                    }
                 });
             }
             return pingTask;
