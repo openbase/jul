@@ -232,7 +232,7 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
         try {
             return getRegistryRemote().waitUntilReadyFuture();
         } catch (NotAvailableException ex) {
-            return FutureProcessor.canceledFuture(null, ex);
+            return FutureProcessor.canceledFuture(Void.class, ex);
         }
     }
 

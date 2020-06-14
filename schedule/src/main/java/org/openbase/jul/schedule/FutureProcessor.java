@@ -288,7 +288,7 @@ public class FutureProcessor {
         try {
             return new ResultProcessingMultiFuture<>(resultProcessor, buildFutureCollection(inputList, taskProcessor));
         } catch (CouldNotPerformException ex) {
-            return FutureProcessor.canceledFuture(ex);
+            return (Future<R>) FutureProcessor.canceledFuture(ex);
         }
     }
 
@@ -308,7 +308,7 @@ public class FutureProcessor {
     public static <R> Future<R> allOf(final Callable<R> resultCallable, final Collection<? extends Future<?>> futureCollection) {
 
         if (resultCallable == null) {
-            FutureProcessor.canceledFuture(new NotAvailableException("resultCallable"));
+            return (Future<R>) FutureProcessor.canceledFuture(new NotAvailableException("resultCallable"));
         }
 
         return new SingleValueMultiFuture<>(resultCallable, futureCollection);

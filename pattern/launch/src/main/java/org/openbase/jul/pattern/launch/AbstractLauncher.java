@@ -180,7 +180,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     public Future<Void> launch() {
 
         if (launcherTask != null && !launcherTask.isDone()) {
-            return FutureProcessor.canceledFuture(new InvalidStateException("Could not launch " + getName() + "! Application still running!"));
+            return FutureProcessor.canceledFuture(Void.class, new InvalidStateException("Could not launch " + getName() + "! Application still running!"));
         }
 
         launcherTask = GlobalCachedExecutorService.submit(() -> {

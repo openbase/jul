@@ -965,10 +965,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 waitForMiddleware(1, TimeUnit.SECONDS);
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
-                FutureProcessor.canceledFuture(ex);
+                FutureProcessor.canceledFuture(Long.class, ex);
             } catch (CouldNotPerformException ex) {
                 // controller not ready to respond.
-                FutureProcessor.canceledFuture(ex);
+                FutureProcessor.canceledFuture(Long.class, ex);
             }
         }
         return FutureProcessor.completedFuture(timestamp);

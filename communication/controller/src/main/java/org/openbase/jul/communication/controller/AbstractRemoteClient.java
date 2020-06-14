@@ -869,7 +869,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         try {
             validateMiddleware();
         } catch (InvalidStateException ex) {
-            return FutureProcessor.canceledFuture(ex);
+            return (Future<R>) FutureProcessor.canceledFuture(ex);
         }
 
         return GlobalCachedExecutorService.submit(new Callable<R>() {
@@ -996,7 +996,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 return syncFuture;
             }
         } catch (CouldNotPerformException ex) {
-            return FutureProcessor.canceledFuture(new CouldNotPerformException("Could not request data!", ex));
+            return FutureProcessor.canceledFuture(getDataClass(), new CouldNotPerformException("Could not request data!", ex));
         }
     }
 
@@ -1021,7 +1021,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 throw new CouldNotPerformException("Could not request the current status.", ex);
             }
         } catch (CouldNotPerformException ex) {
-            return FutureProcessor.canceledFuture(ex);
+            return (Future<M>) FutureProcessor.canceledFuture(ex);
         }
     }
 

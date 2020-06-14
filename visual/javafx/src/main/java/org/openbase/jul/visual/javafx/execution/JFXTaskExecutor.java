@@ -82,9 +82,9 @@ public class JFXTaskExecutor {
             }
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            return FutureProcessor.canceledFuture(ex);
+            return (Future<V>) FutureProcessor.canceledFuture(ex);
         } catch (Exception ex) {
-            return FutureProcessor.canceledFuture(ex);
+            return (Future<V>) FutureProcessor.canceledFuture(ex);
         }
     }
 }
