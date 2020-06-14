@@ -1185,6 +1185,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             if (newTransactionId < transactionId && transactionId != 0) {
                 logger.warn("RemoteService {} received a data object with an older transaction id {} than {}", this, newTransactionId, transactionId);
             }
+
+            logger.trace("update transaction id from {} to {}", transactionId, newTransactionId);
             transactionId = newTransactionId;
         }
     }

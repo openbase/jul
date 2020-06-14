@@ -1102,6 +1102,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     public long generateTransactionId() {
         synchronized (transactionIdLock) {
             // Transaction id should never be 0 because thats the builder default value.
+            logger.trace("increment transaction id from {} to {}", transaction_id, (transaction_id + 1));
             return ++transaction_id;
         }
     }
@@ -1112,8 +1113,14 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws CouldNotPerformException
      */
     public void updateTransactionId() throws CouldNotPerformException {
-        synchronized (transactionIdLock) {
-            setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
+        // we need to lock the data builder lock first to avoid deadlocks because its needed anyway when the id is updated.
+        dataBuilderWriteLock.lock();
+        try {
+            synchronized (transactionIdLock) {
+                setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
+            }
+        } finally {
+            dataBuilderWriteLock.unlock();
         }
     }
 

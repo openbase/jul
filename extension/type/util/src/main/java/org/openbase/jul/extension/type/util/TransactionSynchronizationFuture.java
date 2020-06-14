@@ -104,6 +104,12 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
         }
 
         // check that the received transaction id has been reached by the provider
-        return dataProvider.getTransactionId() >= transactionId;
+        final boolean result = dataProvider.getTransactionId() >= transactionId;
+
+        if (!result) {
+            logger.debug("Transition check failed, received {} but waiting for {} of {}", dataProvider.getTransactionId(), transactionId, dataProvider);
+        }
+
+        return result;
     }
 }
