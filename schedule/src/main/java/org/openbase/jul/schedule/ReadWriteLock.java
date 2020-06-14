@@ -29,6 +29,10 @@ public interface ReadWriteLock {
 
     void lockRead(Object consumer);
 
+    void lockReadInterruptibly() throws InterruptedException;
+
+    void lockReadInterruptibly(Object consumer) throws InterruptedException;
+
     boolean tryLockRead();
 
     boolean tryLockRead(Object consumer);
@@ -44,6 +48,10 @@ public interface ReadWriteLock {
     void lockWrite();
 
     void lockWrite(Object consumer);
+
+    void lockWriteInterruptibly() throws InterruptedException;
+
+    void lockWriteInterruptibly(Object consumer) throws InterruptedException;
 
     boolean tryLockWrite(Object consumer);
 

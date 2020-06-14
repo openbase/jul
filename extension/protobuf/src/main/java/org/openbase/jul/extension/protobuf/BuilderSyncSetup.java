@@ -97,6 +97,14 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         //logger.debug("lockRead by {}", consumer);
     }
 
+    public void lockReadInterruptibly(final Object consumer) throws InterruptedException{
+        //logger.debug("order lockRead by {}", consumer);
+        readLock.lockInterruptibly();
+        readLockConsumer = consumer;
+        restartReadLockTimeout();
+        //logger.debug("lockRead by {}", consumer);
+    }
+
     public boolean tryLockRead(final Object consumer) {
         boolean success = readLock.tryLock();
         if (success) {
@@ -128,6 +136,14 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     public void lockWrite(final Object consumer) {
         //logger.debug("order lockWrite by {}", consumer);
         writeLock.lock();
+        writeLockConsumer = consumer;
+        restartWriteLockTimeout();
+        //logger.debug("lockWrite by {}", consumer);
+    }
+
+    public void lockWriteInterruptibly(final Object consumer) throws InterruptedException {
+        //logger.debug("order lockWrite by {}", consumer);
+        writeLock.lockInterruptibly();
         writeLockConsumer = consumer;
         restartWriteLockTimeout();
         //logger.debug("lockWrite by {}", consumer);

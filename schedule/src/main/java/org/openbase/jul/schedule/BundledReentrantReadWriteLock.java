@@ -133,6 +133,31 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
     }
 
     @Override
+    public void lockReadInterruptibly() throws InterruptedException {
+        lockReadInterruptibly(holder);
+    }
+
+    @Override
+    public void lockReadInterruptibly(final Object consumer) throws InterruptedException {
+        //logger.debug("order lockRead by {}", consumer);
+        if (!independentPrimaryReadAccess) {
+            secondaryLock.readLock().lockInterruptibly();
+        }
+
+        try {
+            primaryLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            // in case th primary lock could not be locked, than we have to release the secondary lock again.
+            secondaryLock.readLock().unlock();
+            throw ex;
+        }
+
+        readLockConsumer = consumer;
+        restartReadLockTimeout();
+        //logger.debug("lockRead by {}", consumer);
+    }
+
+    @Override
     public boolean tryLockRead() {
         return tryLockRead(holder);
     }
@@ -224,6 +249,28 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         //logger.debug("order lockWrite by {}", consumer);
         secondaryLock.writeLock().lock();
         primaryLock.writeLock().lock();
+        writeLockConsumer = consumer;
+        restartWriteLockTimeout();
+        //logger.debug("lockWrite by {}", consumer);
+    }
+
+    @Override
+    public void lockWriteInterruptibly() throws InterruptedException {
+        lockWriteInterruptibly(holder);
+    }
+
+    @Override
+    public void lockWriteInterruptibly(final Object consumer) throws InterruptedException {
+        //logger.debug("order lockWrite by {}", consumer);
+        secondaryLock.writeLock().lockInterruptibly();
+
+        try {
+            primaryLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            // release secondary lock in case primary could not be locked.
+            secondaryLock.writeLock().unlock();
+        }
+
         writeLockConsumer = consumer;
         restartWriteLockTimeout();
         //logger.debug("lockWrite by {}", consumer);

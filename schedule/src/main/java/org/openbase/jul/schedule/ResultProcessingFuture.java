@@ -75,7 +75,7 @@ public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> imple
             return super.get();
         }
 
-        updateComponentLock.writeLock().lock();
+        updateComponentLock.writeLock().lockInterruptibly();
         try {
             // this is important because in the mean time the task can be done.
             if (isDone()) {

@@ -22,13 +22,6 @@ package org.openbase.jul.extension.rsb.com.strategy;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Map;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -41,6 +34,13 @@ import rsb.Event;
 import rsb.Handler;
 import rsb.eventprocessing.AbstractEventReceivingStrategy;
 import rsb.filter.Filter;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * An {@link rsb.eventprocessing.EventReceivingStrategy} that uses a thread pool for all handlers.
@@ -180,10 +180,10 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
         }
 
         @Override
-        public Void call() {
+        public Void call() throws InterruptedException {
 
             try {
-                modificationLock.readLock().lock();
+                modificationLock.readLock().lockInterruptibly();
                 try {
                     // match
                     for (final Filter filter : getFilters()) {
@@ -229,7 +229,13 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
     @Override
     public void handle(final Event event) {
 
-        activationLock.readLock().lock();
+        try {
+            activationLock.readLock().lockInterruptibly();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
         try {
 
             if (!active) {
@@ -275,7 +281,12 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
                     if (executorService.isShutdown()) {
                         // force participant deactivation
                         LOGGER.debug("force participant deactivation and skip Event[" + event.toString() + "] because executor service is already down.");
-                        deactivate();
+                        try {
+                            deactivate();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                            // just continue since method will return now anyway...
+                        }
                     }
 
                     ExceptionPrinter.printHistory("Event[" + event.toString() + "] execution rejected! System is probably shutting down or executor service overload occurred.", ex, LOGGER, LogLevel.WARN);
@@ -289,7 +300,14 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
 
     @Override
     public void activate() {
-        activationLock.writeLock().lock();
+
+        try {
+            activationLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
         try {
             if (active) {
                 throw new IllegalStateException("Already activated.");
@@ -301,8 +319,8 @@ public class ThreadPoolUnorderedEventReceivingStrategy extends AbstractEventRece
     }
 
     @Override
-    public void deactivate() {
-        activationLock.writeLock().lock();
+    public void deactivate() throws InterruptedException {
+        activationLock.writeLock().lockInterruptibly();
         try {
             if (!active) {
                 throw new IllegalStateException("Already deactivated.");

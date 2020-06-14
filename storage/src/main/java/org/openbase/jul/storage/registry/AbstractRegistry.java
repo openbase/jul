@@ -682,7 +682,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      * @throws InterruptedException     if the activation is interrupted
      */
     public void activateDependencies() throws CouldNotPerformException, InterruptedException {
-        dependingRegistryMapLock.readLock().lock();
+        dependingRegistryMapLock.readLock().lockInterruptibly();
         try {
             for (final DependencyConsistencyCheckTrigger dependencyConsistencyCheckTrigger : dependingRegistryMap.values()) {
                 dependencyConsistencyCheckTrigger.activate();
@@ -838,7 +838,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         final ArrayList<Registry> dependingRegistries;
 
         // copy dep list to avoid locking while wait.
-        dependingRegistryMapLock.readLock().lock();
+        dependingRegistryMapLock.readLock().lockInterruptibly();
         try {
             dependingRegistries = new ArrayList<>(dependingRegistryMap.keySet());
         } finally {

@@ -228,6 +228,8 @@ public abstract class RecurrenceEventFilter<VALUE> {
     private void callRelay() {
         try {
             relay(latestValue);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
         } catch (Exception ex) {
             if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                 LOGGER.trace("Relay skipped because of system shutdown.");

@@ -185,7 +185,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws InterruptedException
      */
     public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        manageLock.lockWrite(this);
+        manageLock.lockWriteInterruptibly(this);
         try {
             final boolean alreadyActivated = isActive();
             ParticipantConfig internalParticipantConfig = participantConfig;
@@ -317,7 +317,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public void activate() throws InterruptedException, CouldNotPerformException {
-        manageLock.lockWrite(this);
+        manageLock.lockWriteInterruptibly(this);
         try {
             validateInitialization();
             logger.debug("Activate AbstractControllerServer for: " + this);
@@ -339,7 +339,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public void deactivate() throws InterruptedException, CouldNotPerformException {
-        manageLock.lockWrite(this);
+        manageLock.lockWriteInterruptibly(this);
         try {
             try {
                 validateInitialization();
@@ -454,7 +454,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         try {
             return FutureProcessor.completedFuture(getData());
         } catch (NotAvailableException ex) {
-            CompletableFuture future = new CompletableFuture();
+            CompletableFuture<M> future = new CompletableFuture<>();
             future.completeExceptionally(ex);
             return future;
         }
@@ -555,7 +555,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
-        return new ClosableDataBuilder<>(getBuilderSetup(), consumer);
+        return new ClosableDataBuilderImpl<>(getBuilderSetup(), consumer);
     }
 
     /**
@@ -567,7 +567,31 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange) {
-        return new ClosableDataBuilder<>(getBuilderSetup(), consumer, notifyChange);
+        return new ClosableDataBuilderImpl<>(getBuilderSetup(), consumer, notifyChange);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param consumer {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
+    @Override
+    public ClosableDataBuilder<MB> getDataBuilderInterruptible(final Object consumer) throws InterruptedException {
+        return new ClosableInterruptibleDataBuilderImpl<>(getBuilderSetup(), consumer);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param consumer {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     */
+    @Override
+    public ClosableDataBuilder<MB> getDataBuilderInterruptible(final Object consumer, final boolean notifyChange) throws InterruptedException {
+        return new ClosableInterruptibleDataBuilderImpl<>(getBuilderSetup(), consumer, notifyChange);
     }
 
     /**
@@ -681,7 +705,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         logger.debug("Notify data change of {}", this);
         // synchronized by manageable lock to prevent reinit between validateInitialization and publish
         M newData;
-        manageLock.lockWrite(this);
+        manageLock.lockWriteInterruptibly(this);
         try {
             try {
                 validateInitialization();

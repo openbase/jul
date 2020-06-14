@@ -1,6 +1,6 @@
 package org.openbase.jul.extension.protobuf;
 
-/*-
+/*
  * #%L
  * JUL Extension Protobuf
  * %%
@@ -21,13 +21,35 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 import com.google.protobuf.AbstractMessage.Builder;
 import org.openbase.jul.exception.CouldNotPerformException;
 
-public interface ClosableDataBuilder<MB extends Builder<MB>> extends AutoCloseable {
-    MB getInternalBuilder();
+/**
+ *
+ * @param <MB>
+ */
+public class ClosableDataBuilderImpl<MB extends Builder<MB>> implements ClosableDataBuilder<MB> {
+
+    private final BuilderSyncSetup<MB> builderSetup;
+    private final boolean notifyChange;
+
+    public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer) {
+        this(builderSetup, consumer, true);
+    }
+
+    public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final boolean notifyChange) {
+        this.builderSetup = builderSetup;
+        builderSetup.lockWrite(consumer);
+        this.notifyChange = notifyChange;
+    }
 
     @Override
-    void close() throws CouldNotPerformException;
+    public MB getInternalBuilder() {
+        return builderSetup.getBuilder();
+    }
+
+    @Override
+    public void close() throws CouldNotPerformException {
+        builderSetup.unlockWrite(notifyChange);
+    }
 }
