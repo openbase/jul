@@ -22,6 +22,7 @@ package org.openbase.jul.schedule;
  * #L%
  */
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Activatable;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -136,12 +137,14 @@ public class WatchDogTest {
 
             @Override
             public void run() {
+                ExceptionPrinter.setBeQuit(true);
                 try {
                     Thread.sleep(50);
                     watchDog.deactivate();
                     assertEquals(false, watchDog.isActive());
                 } catch (InterruptedException ex) {
                 }
+                ExceptionPrinter.setBeQuit(false);
             }
         };
         disableTask.start();
