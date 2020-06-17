@@ -123,8 +123,6 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      * By default the application name is the name of the given application class name.
      *
      * @return the name as string.
-     *
-     * @throws NotAvailableException
      */
     @Override
     public String getName() {

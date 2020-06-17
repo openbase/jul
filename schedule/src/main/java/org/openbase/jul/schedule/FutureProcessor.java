@@ -371,7 +371,6 @@ public class FutureProcessor {
      * @return the collection of all builded future instances.
      *
      * @throws CouldNotPerformException is thrown if the future collection could not be generated.
-     * @throws InterruptedException     is thrown if the thread was externally interrupted.
      */
     public static <I, O> Collection<Future<O>> buildFutureCollection(final Collection<I> inputList, final Processable<I, Future<O>> taskProcessor) throws CouldNotPerformException {
         try {

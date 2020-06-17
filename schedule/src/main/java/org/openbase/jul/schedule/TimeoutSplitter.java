@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
  * waitForA(timeSplit.getTime(), TimeUnit.MILLISECONDS);
  * waitForB(timeSplit.getTime(), TimeUnit.MILLISECONDS);
  * C.wait(timeSplit.getTime());
- * }
+ * }}
  */
 public class TimeoutSplitter {
 

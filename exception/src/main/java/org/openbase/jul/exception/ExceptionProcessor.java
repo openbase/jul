@@ -126,12 +126,12 @@ public class ExceptionProcessor {
     }
 
     /**
-     * Method throws an interrupted exception if the given {@code throwable) is caused by a system shutdown.
+     * Method throws an interrupted exception if the given {@code throwable} is caused by a system shutdown.
      *
      * @param throwable the throwable to check.
-     * @param <T>       the type of the {@code throwable)
+     * @param <T>       the type of the {@code throwable}
      *
-     * @return the bypassed {@code throwable)
+     * @return the bypassed {@code throwable}
      *
      * @throws InterruptedException is thrown if the system shutdown was initiated.
      */
