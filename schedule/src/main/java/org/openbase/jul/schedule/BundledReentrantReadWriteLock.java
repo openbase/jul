@@ -269,6 +269,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         } catch (InterruptedException ex) {
             // release secondary lock in case primary could not be locked.
             secondaryLock.writeLock().unlock();
+            throw ex;
         }
 
         writeLockConsumer = consumer;
