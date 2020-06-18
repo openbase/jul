@@ -94,8 +94,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     private final ReentrantReadWriteLock dataLock;
     private final BundledReentrantReadWriteLock manageLock;
-    private final ReadLock dataBuilderReadLock;
-    private final WriteLock dataBuilderWriteLock;
+    private final ReentrantReadWriteLock.ReadLock dataBuilderReadLock;
+    private final ReentrantReadWriteLock.WriteLock dataBuilderWriteLock;
 
     protected Scope scope;
 
@@ -423,6 +423,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             validateInitialization();
         } catch (InvalidStateException ex) {
             return false;
+        }catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return false;
         }
         return informerWatchDog.isActive() && serverWatchDog.isActive();
     }
@@ -705,7 +708,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         logger.debug("Notify data change of {}", this);
         // synchronized by manageable lock to prevent reinit between validateInitialization and publish
         M newData;
-        manageLock.lockWriteInterruptibly(this);
+        manageLock.lockReadInterruptibly(this);
         try {
             try {
                 validateInitialization();
@@ -722,6 +725,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             Event event = new Event(informer.getScope(), newData.getClass(), newData);
             event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
 
+            // only publish if controller is active
             if (isActive()) {
                 try {
                     waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
@@ -738,39 +742,24 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform about data change of " + this + "!", ex), logger);
                 }
             }
-        } finally {
-            manageLock.unlockWrite(this);
-        }
 
-        // validate that no locks are locked during notification in order to avoid deadlocks.
-        final boolean dataBuilderLocked = dataBuilderReadLock.tryLock();
-        try {
-            final boolean manageLockLocked = manageLock.tryLockRead();
+            // validate that no locks are write locked by the same thread during notification in order to avoid deadlocks.
+            if (manageLock.isAnyWriteLockHeldByCurrentThread()) {
+                logger.error("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
+                StackTracePrinter.printStackTrace(logger);
+            }
+
+            // Notify data update internally
             try {
-
-                if (!manageLockLocked) {
-                    logger.warn("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
-                }
-
-                // Notify data update internally
-                try {
-                    notifyDataUpdate(newData);
-                } catch (CouldNotPerformException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
-                }
-
-                // Notify data update to all observer
-                dataObserver.notifyObservers(newData);
-
-            } finally {
-                if (manageLockLocked) {
-                    manageLock.unlockRead();
-                }
+                notifyDataUpdate(newData);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify data update!", ex), logger);
             }
+
+            // Notify data update to all observer
+            dataObserver.notifyObservers(newData);
         } finally {
-            if (dataBuilderLocked) {
-                dataBuilderReadLock.unlock();
-            }
+            manageLock.unlockRead(this);
         }
     }
 
@@ -926,9 +915,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * This method validates the controller initialisation.
      *
      * @throws NotInitializedException is thrown if the controller is not initialized.
+     * @throws InterruptedException is thrown in case the thread was externally interrupted.
      */
-    public void validateInitialization() throws NotInitializedException {
-        manageLock.lockRead(this);
+    public void validateInitialization() throws NotInitializedException, InterruptedException {
+        manageLock.lockReadInterruptibly(this);
         try {
             if (!initialized) {
                 if (shutdownDaemon.isShutdownInProgress()) {
@@ -1056,7 +1046,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             validateActivation();
             validateMiddleware();
             return true;
-        } catch (InvalidStateException e) {
+        } catch (InvalidStateException ex) {
+            return false;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
             return false;
         }
     }
