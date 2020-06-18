@@ -21,26 +21,35 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import com.google.protobuf.AbstractMessage.Builder;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.extension.protobuf.BuilderSyncSetup.NotificationStrategy;
 
 /**
- *
  * @param <MB>
  */
 public class ClosableDataBuilderImpl<MB extends Builder<MB>> implements ClosableDataBuilder<MB> {
 
     private final BuilderSyncSetup<MB> builderSetup;
-    private final boolean notifyChange;
+    private final NotificationStrategy notificationStrategy;
 
     public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer) {
-        this(builderSetup, consumer, true);
+        this(builderSetup, consumer, NotificationStrategy.AFTER_LAST_RELEASE);
     }
 
+    @Deprecated
     public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final boolean notifyChange) {
         this.builderSetup = builderSetup;
-        builderSetup.lockWrite(consumer);
-        this.notifyChange = notifyChange;
+        this.builderSetup.lockWrite(consumer);
+        this.notificationStrategy = notifyChange ? NotificationStrategy.FORCE : NotificationStrategy.SKIP;
+        ;
+    }
+
+    public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final NotificationStrategy notificationStrategy) {
+        this.builderSetup = builderSetup;
+        this.builderSetup.lockWrite(consumer);
+        this.notificationStrategy = notificationStrategy;
     }
 
     @Override
@@ -50,6 +59,6 @@ public class ClosableDataBuilderImpl<MB extends Builder<MB>> implements Closable
 
     @Override
     public void close() throws CouldNotPerformException {
-        builderSetup.unlockWrite(notifyChange);
+        builderSetup.unlockWrite(notificationStrategy);
     }
 }

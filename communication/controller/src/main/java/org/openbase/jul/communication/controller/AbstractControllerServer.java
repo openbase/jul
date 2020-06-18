@@ -29,6 +29,7 @@ import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.*;
+import org.openbase.jul.extension.protobuf.BuilderSyncSetup.NotificationStrategy;
 import org.openbase.jul.extension.rsb.com.*;
 import org.openbase.jul.extension.rsb.iface.RSBInformer;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
@@ -53,8 +54,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.ReadLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 
 import static org.openbase.jul.iface.Shutdownable.registerShutdownHook;
 import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
@@ -423,7 +422,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             validateInitialization();
         } catch (InvalidStateException ex) {
             return false;
-        }catch (InterruptedException ex) {
+        } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             return false;
         }
@@ -564,13 +563,14 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     /**
      * {@inheritDoc}
      *
-     * @param consumer {@inheritDoc}
+     * @param consumer             {@inheritDoc}
+     * @param notificationStrategy {@inheritDoc}
      *
      * @return {@inheritDoc}
      */
     @Override
-    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange) {
-        return new ClosableDataBuilderImpl<>(getBuilderSetup(), consumer, notifyChange);
+    public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final NotificationStrategy notificationStrategy) {
+        return new ClosableDataBuilderImpl<>(getBuilderSetup(), consumer, notificationStrategy);
     }
 
     /**
@@ -588,13 +588,14 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     /**
      * {@inheritDoc}
      *
-     * @param consumer {@inheritDoc}
+     * @param consumer             {@inheritDoc}
+     * @param notificationStrategy {@inheritDoc}
      *
      * @return {@inheritDoc}
      */
     @Override
-    public ClosableDataBuilder<MB> getDataBuilderInterruptible(final Object consumer, final boolean notifyChange) throws InterruptedException {
-        return new ClosableInterruptibleDataBuilderImpl<>(getBuilderSetup(), consumer, notifyChange);
+    public ClosableDataBuilder<MB> getDataBuilderInterruptible(final Object consumer, final NotificationStrategy notificationStrategy) throws InterruptedException {
+        return new ClosableInterruptibleDataBuilderImpl<>(getBuilderSetup(), consumer, notificationStrategy);
     }
 
     /**
@@ -745,8 +746,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
             // validate that no locks are write locked by the same thread during notification in order to avoid deadlocks.
             if (manageLock.isAnyWriteLockHeldByCurrentThread()) {
-                logger.error("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
-                StackTracePrinter.printStackTrace(logger);
+                throw new VerificationFailedException("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
             }
 
             // Notify data update internally
@@ -915,7 +915,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * This method validates the controller initialisation.
      *
      * @throws NotInitializedException is thrown if the controller is not initialized.
-     * @throws InterruptedException is thrown in case the thread was externally interrupted.
+     * @throws InterruptedException    is thrown in case the thread was externally interrupted.
      */
     public void validateInitialization() throws NotInitializedException, InterruptedException {
         manageLock.lockReadInterruptibly(this);
@@ -960,6 +960,17 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         validateActivation();
         informerWatchDog.waitForServiceActivation(timeSplit.getTime(), TimeUnit.MILLISECONDS);
         serverWatchDog.waitForServiceActivation(timeSplit.getTime(), TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Method checks if the requesting thread holds the data builder write lock of this unit.
+     * This check can help to decide if a notification should be performed or not since releasing
+     * the write lock mostly notifies anyway depending on the selected notification strategy.
+     *
+     * @return true if the current thread hold the builder write lock, otherwise false.
+     */
+    public boolean isDataBuilderWriteLockedByCurrentThread() {
+        return dataBuilderWriteLock.isHeldByCurrentThread();
     }
 
     /**

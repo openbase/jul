@@ -24,6 +24,7 @@ package org.openbase.jul.extension.protobuf.iface;
 
 import com.google.protobuf.AbstractMessage;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
+import org.openbase.jul.extension.protobuf.BuilderSyncSetup.NotificationStrategy;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 
 /**
@@ -87,11 +88,11 @@ public interface DataBuilderProvider<M extends AbstractMessage, MB extends M.Bui
      * in background after leaving the try brackets.
      *
      * @param consumer
-     * @param notifyChange this flag defines if notifyChange is done after unlocking.
+     * @param notificationStrategy the notification strategy to follow after unlocking the data lock.
      *
      * @return a new builder wrapper with a locked builder instance.
      */
-    ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final boolean notifyChange);
+    ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final NotificationStrategy notificationStrategy);
 
     /**
      * This method generates a closable data builder wrapper including the
@@ -144,11 +145,11 @@ public interface DataBuilderProvider<M extends AbstractMessage, MB extends M.Bui
      * in background after leaving the try brackets.
      *
      * @param consumer
-     * @param notifyChange this flag defines if notifyChange is done after unlocking.
+     * @param notificationStrategy the notification strategy to follow after unlocking the data lock.
      *
      * @return a new builder wrapper with a locked builder instance.
      *
      * @throws InterruptedException is thrown in case the thread is externally interrupted while waiting for the builder lock.
      */
-    ClosableDataBuilder<MB> getDataBuilderInterruptible(final Object consumer, final boolean notifyChange) throws InterruptedException;
+    ClosableDataBuilder<MB> getDataBuilderInterruptible(final Object consumer, final NotificationStrategy notificationStrategy) throws InterruptedException;
 }

@@ -23,6 +23,7 @@ package org.openbase.jul.extension.protobuf.container;
  */
 
 import com.google.protobuf.AbstractMessage;
+import org.openbase.jul.extension.protobuf.BuilderSyncSetup.NotificationStrategy;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.AbstractMessage.Builder;
@@ -144,7 +145,8 @@ public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends Abstr
                     builder.addRepeatedField(fieldDescriptor, value.getMessage());
                 }
             } finally {
-                builderSetup.unlockWrite(false);
+                // todo: validate why is the notification always skipped here?
+                builderSetup.unlockWrite(NotificationStrategy.SKIP);
             }
         }
     }

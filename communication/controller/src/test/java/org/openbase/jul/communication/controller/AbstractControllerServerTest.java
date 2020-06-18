@@ -29,6 +29,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -435,7 +436,8 @@ public class AbstractControllerServerTest {
             try {
                 future.get(15, TimeUnit.SECONDS);
             } catch (TimeoutException ex) {
-                StackTracePrinter.printStackTrace(AbstractControllerServerTest.class);
+                //StackTracePrinter.printAllStackTrace(AbstractControllerServerTest.class);
+                StackTracePrinter.detectDeadLocksAndPrintStackTraces(AbstractControllerServerTest.class);
                 Assert.fail("Reint took too long! Please analyse deadlock in stacktrace...");
             }
         }
