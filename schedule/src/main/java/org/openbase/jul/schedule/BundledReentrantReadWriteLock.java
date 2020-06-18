@@ -350,4 +350,16 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
             ExceptionPrinter.printHistory("Could not setup builder write lock fallback timeout!", ex, logger, LogLevel.WARN);
         }
     }
+
+    public boolean isPrimaryWriteLockHeldByCurrentThread() {
+        return primaryLock.isWriteLockedByCurrentThread();
+    }
+
+    public boolean isSecondaryWriteLockHeldByCurrentThread() {
+        return secondaryLock.isWriteLockedByCurrentThread();
+    }
+
+    public boolean isAnyWriteLockHeldByCurrentThread() {
+        return isPrimaryWriteLockHeldByCurrentThread() || isSecondaryWriteLockHeldByCurrentThread();
+    }
 }
