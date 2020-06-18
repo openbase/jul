@@ -178,7 +178,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
      * Method unlocks the write lock and notifies the change to the internal data holder.
      * In case the thread is externally interrupted, no InterruptedException is thrown but instead the interrupted flag is set for the corresponding thread.
      * Please use the service method Thread.currentThread().isInterrupted() to get informed about any external interruption.
-     *
+     * <p>
      * Note: Be aware that the read lock is will be locked during the notification process if the {@code notifyChange} flag is set.
      *
      * @param notifyChange
@@ -208,6 +208,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                         holder.notifyChange();
                     } catch (InterruptedException ex) {
                         Thread.currentThread().interrupt();
+                        return;
                     }
                 } catch (CouldNotPerformException ex) {
                     // only print error if the exception was not caused by a system shutdown.
@@ -241,5 +242,14 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not setup builder write lock fallback timeout!", ex, logger, LogLevel.WARN);
         }
+    }
+
+    /**
+     * Method checks if the write lock of this builder is hold by the current thread.
+     *
+     * @return true if hold, otherwise false.
+     */
+    public boolean isWriteLockHeldByCurrentThread() {
+        return writeLock.isHeldByCurrentThread();
     }
 }

@@ -86,4 +86,12 @@ public class TimeoutSplitter {
     public TimeUnit getTimeUnit() {
         return DEFAULT_TIME_UNIT;
     }
+
+    /**
+     * Returns the timestamp of when this object was created.
+     * @return the timestamp in ms.
+     */
+    public long getTimestamp() {
+        return timestamp;
+    }
 }
