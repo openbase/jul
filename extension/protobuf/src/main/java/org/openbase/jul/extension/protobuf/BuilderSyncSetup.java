@@ -97,7 +97,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         //logger.debug("lockRead by {}", consumer);
     }
 
-    public void lockReadInterruptibly(final Object consumer) throws InterruptedException{
+    public void lockReadInterruptibly(final Object consumer) throws InterruptedException {
         //logger.debug("order lockRead by {}", consumer);
         readLock.lockInterruptibly();
         readLockConsumer = consumer;
@@ -179,26 +179,46 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
      * In case the thread is externally interrupted, no InterruptedException is thrown but instead the interrupted flag is set for the corresponding thread.
      * Please use the service method Thread.currentThread().isInterrupted() to get informed about any external interruption.
      *
+     * Note: Be aware that the read lock is will be locked during the notification process if the {@code notifyChange} flag is set.
+     *
      * @param notifyChange
      */
-    public void unlockWrite(boolean notifyChange) {
+    public void unlockWrite(final boolean notifyChange) {
         //logger.debug("order write unlock");
         writeLockTimeout.cancel();
-        writeLock.unlock();
-        writeLockConsumer = "Unknown";
-        //logger.debug("write unlocked");
+
+        // we have to make sure the write lock is really held by the current thread, otherwise the bad monitor state exception
+        // would possibly not be thrown in case the read lock can not be locked.
+        if (!writeLock.isHeldByCurrentThread()) {
+            new FatalImplementationErrorException("Thread needs to hold the write lock in order to unlock it!", this);
+        }
+
+        // in case we plan to notify the data modification we should make sure the read lock is hold until the notification is done
+        // in order to guarantee that the new data is accessible during the notification process.
         if (notifyChange) {
-            try {
+            readLock.lock();
+        }
+        try {
+            writeLock.unlock();
+            writeLockConsumer = "Unknown";
+            //logger.debug("write unlocked");
+            if (notifyChange) {
                 try {
-                    holder.notifyChange();
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
+                    try {
+                        holder.notifyChange();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                } catch (CouldNotPerformException ex) {
+                    // only print error if the exception was not caused by a system shutdown.
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
+                    }
                 }
-            } catch (CouldNotPerformException ex) {
-                // only print error if the exception was not caused by a system shutdown.
-                if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
-                }
+            }
+        } finally {
+            if (notifyChange) {
+                readLock.unlock();
             }
         }
     }
