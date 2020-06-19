@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 public class FatalImplementationErrorException extends CouldNotPerformException {
 
     /**
-     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer. *
+     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer.
      * <p>
      * Note: In case assertions are enabled this instantiation directly results in an assertion exception.
      *
@@ -47,7 +47,7 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
     }
 
     /**
-     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer. *
+     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer.
      * <p>
      * Note: In case assertions are enabled this instantiation directly results in an assertion exception.
      *
@@ -63,7 +63,7 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
     }
 
     /**
-     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer. *
+     * Constructor creates an new FatalImplementationErrorException and prints the exception stack via the jul exception printer.
      * <p>
      * Note: In case assertions are enabled this instantiation directly results in an assertion exception.
      *
