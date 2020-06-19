@@ -23,6 +23,7 @@ package org.openbase.jul.exception;
  */
 
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -40,7 +41,9 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
      */
     public FatalImplementationErrorException(final String message, final Object source) {
         super("Fatal implementation error in or by using " + source + ": " + message);
-        ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source)));
+        final Logger logger = LoggerFactory.getLogger(detectClass(source));
+        ExceptionPrinter.printHistory(this, logger);
+        StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
     }
 
     /**
@@ -54,7 +57,9 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
      */
     public FatalImplementationErrorException(final String message, final Object source, final Throwable cause) {
         super("Fatal implementation error in or by using " + source + ": " + message, cause);
-        ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source)));
+        final Logger logger = LoggerFactory.getLogger(detectClass(source));
+        ExceptionPrinter.printHistory(this, logger);
+        StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
     }
 
     /**
@@ -67,7 +72,9 @@ public class FatalImplementationErrorException extends CouldNotPerformException 
      */
     public FatalImplementationErrorException(final Object source, final Throwable cause) {
         super("Fatal implementation error in or by using " + source + "!", cause);
-        ExceptionPrinter.printHistory(this, LoggerFactory.getLogger(detectClass(source)));
+        final Logger logger = LoggerFactory.getLogger(detectClass(source));
+        ExceptionPrinter.printHistory(this, logger);
+        StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
     }
 
     /**
