@@ -400,8 +400,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     public void shutdown() {
         try {
             deactivate();
-        } catch (CouldNotPerformException | InterruptedException ex) {
+        } catch (final CouldNotPerformException ex) {
             ExceptionPrinter.printHistory("Could not deactivate " + this + " during shutdown!", ex, logger);
+        } catch (final InterruptedException ex) {
+            logger.debug("Deactivation of " + this + " skipped because of interruption. Shutdown will be continued...");
         }
         reset();
         destroyed = true;
