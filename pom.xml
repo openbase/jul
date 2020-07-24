@@ -221,7 +221,8 @@
         <!--dependency.org.eclipse.jgit.version>[5.1,5.2-alpha)</dependency.org.eclipse.jgit.version-->
         <dependency.org.eclipse.jgit.version>[5.1.7,5.1.8-alpha)</dependency.org.eclipse.jgit.version>
 
-        <dependency.jps.version>[3.4,3.5-alpha)</dependency.jps.version>
+<!--        <dependency.jps.version>[3.4,3.5-alpha)</dependency.jps.version>-->
+        <dependency.jps.version>3.4-SNAPSHOT</dependency.jps.version>
 
         <dependency.openbase.type.version>1.0-SNAPSHOT</dependency.openbase.type.version>
 
