@@ -22,12 +22,15 @@ package org.openbase.jul.pattern.launch;
  * #L%
  */
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+import ch.qos.logback.core.util.StatusPrinter;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.communication.controller.AbstractIdentifiableController;
 import org.openbase.jul.communication.controller.RPCHelper;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
@@ -36,8 +39,7 @@ import org.openbase.jul.iface.Launchable;
 import org.openbase.jul.iface.VoidInitializable;
 import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.pattern.Launcher;
-import org.openbase.jul.pattern.launch.jp.JPExcludeLauncher;
-import org.openbase.jul.pattern.launch.jp.JPPrintLauncher;
+import org.openbase.jul.pattern.launch.jp.*;
 import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
@@ -47,6 +49,7 @@ import org.slf4j.LoggerFactory;
 import rsb.Scope;
 import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.Map.Entry;
@@ -293,8 +296,73 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     private static final List<Future> waitingTaskList = new ArrayList<>();
 
+
+    private static void loadCustomLoggerSettings() throws CouldNotPerformException {
+        // assume SLF4J is bound to logback in the current environment
+        final LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+
+        final File defaultLoggerConfig;
+        final File debugLoggerConfig;
+        try {
+            defaultLoggerConfig = JPService.getValue(JPLoggerConfigFile.class, JPService.getValue(JPLoggerDebugConfigFile.class));
+            debugLoggerConfig = JPService.getValue(JPLoggerDebugConfigFile.class);
+        } catch (JPNotAvailableException ex) {
+            // no logger config set so just skip custom configuration.
+            return;
+        }
+
+        final File loggerConfig;
+
+        if(debugLoggerConfig.exists() && JPService.debugMode()) {
+            // prefer debug config when available and debug mode was enabled.
+            loggerConfig = debugLoggerConfig;
+        } else if (defaultLoggerConfig.exists()) {
+            // use default config
+            loggerConfig = defaultLoggerConfig;
+        } else if (debugLoggerConfig.exists()) {
+            // if default config does not exist just use any available debug config
+            loggerConfig = debugLoggerConfig;
+        } else {
+            // skip if no logger configuration files could be found.
+            return;
+        }
+
+        // reconfigure logger
+        try {
+            JoranConfigurator configurator = new JoranConfigurator();
+            configurator.setContext(context);
+            // clear any previous configuration
+            context.reset();
+
+            // prepare props
+            loadProperties(context);
+
+            // configure
+            configurator.doConfigure(loggerConfig);
+
+            // print warning in case of syntax errors
+            StatusPrinter.printInCaseOfErrorsOrWarnings(context);
+        } catch (JoranException ex) {
+            // print warning in case of syntax errors
+            StatusPrinter.printInCaseOfErrorsOrWarnings(context);
+
+            throw new CouldNotPerformException("Could not load logger settings!", ex);
+        }
+    }
+
+    private static void loadProperties(final LoggerContext context) {
+        // store some variables
+        context.putProperty("APPLICATION_NAME", JPService.getApplicationName());
+        try {
+            context.putProperty("LOGGER_TARGET_DIR", JPService.getValue(JPLogDirectory.class).getAbsolutePath());
+        } catch (JPNotAvailableException e) {
+            // just store nothing if the propertie could not be loaded.
+            System.out.println("could not load target dir");
+        }
+    }
+
     public static void main(final String[] args, final Class<?> application, final Class<? extends AbstractLauncher>... launchers) {
-        final Logger logger = LoggerFactory.getLogger(Launcher.class);
+
         JPService.setApplicationName(application);
 
         // register interruption of this thread as shutdown hook
@@ -317,8 +385,22 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         // register launcher jps
         JPService.registerProperty(JPPrintLauncher.class);
         JPService.registerProperty(JPExcludeLauncher.class);
+        JPService.registerProperty(JPLoggerConfigDirectory.class);
+        JPService.registerProperty(JPLoggerConfigFile.class);
+        JPService.registerProperty(JPLoggerDebugConfigFile.class);
+        JPService.registerProperty(JPLogDirectory.class);
 
+        // parse properties
         JPService.parseAndExitOnError(args);
+
+        // load custom logger settings
+        try {
+            loadCustomLoggerSettings();
+        } catch (CouldNotPerformException e) {
+            System.exit(2);
+            return;
+        }
+        final Logger logger = LoggerFactory.getLogger(Launcher.class);
 
         // print launcher end exit
         try {
