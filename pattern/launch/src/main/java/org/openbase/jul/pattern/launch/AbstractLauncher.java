@@ -10,12 +10,12 @@ package org.openbase.jul.pattern.launch;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -28,11 +28,11 @@ import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
-import org.openbase.jul.exception.*;
-import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.communication.controller.AbstractIdentifiableController;
 import org.openbase.jul.communication.controller.RPCHelper;
+import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.*;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Launchable;
@@ -44,17 +44,17 @@ import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
+import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rsb.Scope;
-import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * @param <L> the launchable to launch by this launcher.
@@ -313,7 +313,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
         final File loggerConfig;
 
-        if(debugLoggerConfig.exists() && JPService.debugMode()) {
+        if (debugLoggerConfig.exists() && JPService.debugMode()) {
             // prefer debug config when available and debug mode was enabled.
             loggerConfig = debugLoggerConfig;
         } else if (defaultLoggerConfig.exists()) {
@@ -355,9 +355,10 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         context.putProperty("APPLICATION_NAME", JPService.getApplicationName());
         try {
             context.putProperty("LOGGER_TARGET_DIR", JPService.getValue(JPLogDirectory.class).getAbsolutePath());
+            // inform user about log redirection
+            System.out.println("Logs can be found in: " + JPService.getValue(JPLogDirectory.class).getAbsolutePath());
         } catch (JPNotAvailableException e) {
             // just store nothing if the propertie could not be loaded.
-            System.out.println("could not load target dir");
         }
     }
 
