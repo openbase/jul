@@ -57,7 +57,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
     private final Timeout writeLockTimeout;
     private Object readLockConsumer;
     private Object writeLockConsumer;
-    final boolean independentPrimaryReadAccess;
+    private final boolean independentPrimaryReadAccess;
 
     /**
      * Constructor creates a new bundled lock.
@@ -147,8 +147,10 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
         try {
             primaryLock.readLock().lockInterruptibly();
         } catch (InterruptedException ex) {
-            // in case th primary lock could not be locked, than we have to release the secondary lock again.
-            secondaryLock.readLock().unlock();
+            if (!independentPrimaryReadAccess) {
+                // in case th primary lock could not be locked, then we have to release the secondary lock again.
+                secondaryLock.readLock().unlock();
+            }
             throw ex;
         }
 
