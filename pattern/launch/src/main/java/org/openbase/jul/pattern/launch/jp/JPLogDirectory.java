@@ -39,7 +39,7 @@ public class JPLogDirectory extends AbstractJPDirectory {
     public final static String[] COMMAND_IDENTIFIERS = {"--log-dir"};
 
     public JPLogDirectory() {
-        super(COMMAND_IDENTIFIERS, ExistenceHandling.Must, AutoMode.Off);
+        super(COMMAND_IDENTIFIERS, ExistenceHandling.CanExist, AutoMode.Off);
     }
 
     @Override
