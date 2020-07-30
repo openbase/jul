@@ -353,6 +353,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     private static void loadProperties(final LoggerContext context) {
         // store some variables
         context.putProperty("APPLICATION_NAME", JPService.getApplicationName());
+        context.putProperty("SUBMODULE_NAME", JPService.getSubmoduleName());
         try {
             context.putProperty("LOGGER_TARGET_DIR", JPService.getValue(JPLogDirectory.class).getAbsolutePath());
             // inform user about log redirection
@@ -362,8 +363,19 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         }
     }
 
+    public static void main(final String[] args, final Class<?> application, final Class<?> submodule, final Class<? extends AbstractLauncher>... launchers) {
+        JPService.setSubmoduleName(submodule);
+        main(args, application, launchers);
+    }
+
+    public static void main(final String[] args, final Class<?> application, final String submoduleName, final Class<? extends AbstractLauncher>... launchers) {
+        JPService.setSubmoduleName(submoduleName);
+        main(args, application, launchers);
+    }
+
     public static void main(final String[] args, final Class<?> application, final Class<? extends AbstractLauncher>... launchers) {
 
+        // setup application
         JPService.setApplicationName(application);
 
         // register interruption of this thread as shutdown hook
