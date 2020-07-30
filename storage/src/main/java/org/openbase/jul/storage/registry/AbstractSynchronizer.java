@@ -118,7 +118,9 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                 internalSync();
             }
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
+            if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Initial sync failed!", ex), logger, LogLevel.ERROR);
+            }
         }
     }
 
@@ -150,7 +152,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     private void internalSync() throws CouldNotPerformException, InterruptedException {
         synchronized (synchronizationLock) {
 
-            if(!isActive) {
+            if (!isActive) {
                 throw new InvalidStateException("Synchronizer not active!");
             }
 
@@ -174,7 +176,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                     try {
                         removeInternal(entry);
                     } catch (CouldNotPerformException ex) {
-                        if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                        if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                             // in case of a shutdown just exit method as fast as possible...
                             throw ex;
                         }
@@ -193,7 +195,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                             listDiff.getOriginalValueMap().removeValue(entry);
                         }
                     } catch (CouldNotPerformException ex) {
-                        if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                        if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                             // in case of a shutdown just exit method as fast as possible...
                             throw ex;
                         }
@@ -211,7 +213,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                             skippedChanges++;
                         }
                     } catch (CouldNotPerformException ex) {
-                        if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                        if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                             // in case of a shutdown just exit method as fast as possible...
                             throw ex;
                         }
@@ -240,7 +242,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                         counter = 0;
                     }
                     final int internalCounter = counter;
-                    MultiException.checkAndThrow(() ->"Could not remove " + internalCounter + " entries!", removeExceptionStack);
+                    MultiException.checkAndThrow(() -> "Could not remove " + internalCounter + " entries!", removeExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
@@ -252,7 +254,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                         counter = 0;
                     }
                     final int internalCounter = counter;
-                    MultiException.checkAndThrow(() ->"Could not update " + internalCounter + " entries!", updateExceptionStack);
+                    MultiException.checkAndThrow(() -> "Could not update " + internalCounter + " entries!", updateExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
@@ -264,15 +266,15 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
                         counter = 0;
                     }
                     final int internalCounter = counter;
-                    MultiException.checkAndThrow(() ->"Could not register " + internalCounter + " entries!", registerExceptionStack);
+                    MultiException.checkAndThrow(() -> "Could not register " + internalCounter + " entries!", registerExceptionStack);
                 } catch (CouldNotPerformException ex) {
                     exceptionStack = MultiException.push(this, ex, exceptionStack);
                 }
 
-                MultiException.checkAndThrow(() ->"Could not sync all entries!", exceptionStack);
+                MultiException.checkAndThrow(() -> "Could not sync all entries!", exceptionStack);
             } catch (CouldNotPerformException ex) {
 
-                if(ExceptionProcessor.isCausedBySystemShutdown(ex)){
+                if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                     // in case of a shutdown just exit method as fast as possible...
                     throw ex;
                 }
@@ -292,7 +294,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
             }
 
             // handle time measuring in debug case
-            if(stopwatch != null) {
+            if (stopwatch != null) {
                 long time = stopwatch.stop();
                 if (time > 1000) {
                     logger.info("Internal sync of {} took: {}ms", dataProvider, time);
@@ -302,7 +304,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
     }
 
     private void validateSynchronizerState() throws ShutdownInProgressException {
-        if(shutdown) {
+        if (shutdown) {
             throw new ShutdownInProgressException(this);
         }
     }
@@ -336,6 +338,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
      * implement a custom verification just overwrite this method.
      *
      * @param entry the entry which is tested
+     *
      * @return true if the entry should be synchronized
      */
     public boolean isSupported(final ENTRY entry) {
