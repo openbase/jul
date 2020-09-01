@@ -208,7 +208,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
                     setState(LauncherState.ERROR);
                     launchable.shutdown();
                     if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                        ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("could not launch " + getName(), ex), logger);
+                        ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not launch " + getName(), ex), logger);
                     }
                 }
                 return null;
