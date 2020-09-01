@@ -97,7 +97,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
      *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
-    public synchronized void trigger() throws CouldNotPerformException {
+    public void trigger() throws CouldNotPerformException {
         trigger(latestValue, false);
     }
 
@@ -110,7 +110,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
      *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
-    public synchronized void trigger(final VALUE value) throws CouldNotPerformException {
+    public void trigger(final VALUE value) throws CouldNotPerformException {
         trigger(value, false);
     }
 
@@ -123,7 +123,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
      *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
-    public synchronized void trigger(final boolean immediately) throws CouldNotPerformException {
+    public void trigger(final boolean immediately) throws CouldNotPerformException {
         trigger(latestValue, immediately);
     }
 
@@ -134,7 +134,6 @@ public abstract class RecurrenceEventFilter<VALUE> {
      *
      * @param value       the new value which should be published via the next relay.
      * @param immediately this flag forces the trigger to relay immediately without respect to the defined max frequency.
-     *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
     public synchronized void trigger(final VALUE value, final boolean immediately) throws CouldNotPerformException {
@@ -156,6 +155,25 @@ public abstract class RecurrenceEventFilter<VALUE> {
             // just skip trigger when shutdown is in progress
         } catch (final CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not trigger " + this, ex);
+        }
+    }
+
+    /**
+     * Method can be used to trigger a delayed relay call.
+     * Note: in case there is already a delayed trigger registered, this method has no effect.
+     *
+     * @throws CouldNotPerformException is thrown if the timeout could not be set.
+     */
+    public synchronized void triggerDelayed() throws CouldNotPerformException {
+        changeDetected = true;
+        if (!timeout.isActive()) {
+            try {
+                timeout.start();
+            } catch (final ShutdownInProgressException ex) {
+                // just skip trigger when shutdown is in progress
+            } catch (final CouldNotPerformException ex) {
+                throw new CouldNotPerformException("Could not trigger " + this, ex);
+            }
         }
     }
 
