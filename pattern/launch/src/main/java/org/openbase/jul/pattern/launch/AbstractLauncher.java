@@ -363,17 +363,29 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         }
     }
 
-    public static void main(final String[] args, final Class<?> application, final Class<?> submodule, final Class<? extends AbstractLauncher>... launchers) {
-        JPService.setSubmoduleName(submodule);
-        main(args, application, launchers);
-    }
-
-    public static void main(final String[] args, final Class<?> application, final String submoduleName, final Class<? extends AbstractLauncher>... launchers) {
-        JPService.setSubmoduleName(submoduleName);
-        main(args, application, launchers);
-    }
-
+    /**
+     *
+     * @param args
+     * @param application
+     * @param launchers
+     * @deprecated please use {@code main(final Class<?> application, final String[] args, final Class<? extends AbstractLauncher>... launchers)} instead.
+     */
+    @Deprecated
     public static void main(final String[] args, final Class<?> application, final Class<? extends AbstractLauncher>... launchers) {
+        main(application, args, launchers);
+    }
+
+    public static void main(final Class<?> application, final Class<?> submodule, final String[] args, final Class<? extends AbstractLauncher>... launchers) {
+        JPService.setSubmoduleName(submodule);
+        main(application, args, launchers);
+    }
+
+    public static void main(final Class<?> application, final String submoduleName, final String[] args, final Class<? extends AbstractLauncher>... launchers) {
+        JPService.setSubmoduleName(submoduleName);
+        main(application, args, launchers);
+    }
+
+    public static void main(final Class<?> application, final String[] args, final Class<? extends AbstractLauncher>... launchers) {
 
         // setup application
         JPService.setApplicationName(application);
