@@ -397,4 +397,31 @@ public class ProtoBufFieldProcessor {
         }
         return list;
     }
+
+    /**
+     * Clear all fields in a builder recursively by name.
+     *
+     * @param builder the builder.
+     * @param fieldName the name of the field.
+     */
+    public static void recursiveClearField(final Message.Builder builder, final String fieldName) {
+        for (final FieldDescriptor fieldDescriptor : builder.getAllFields().keySet()) {
+            if (fieldDescriptor.getName().equals(fieldName)) {
+                builder.clearField(fieldDescriptor);
+                continue;
+            }
+
+            if (fieldDescriptor.getType() == FieldDescriptor.Type.MESSAGE) {
+                if (fieldDescriptor.isRepeated()) {
+                    for (int i = 0; i < builder.getRepeatedFieldCount(fieldDescriptor); i++) {
+                        recursiveClearField(builder.getRepeatedFieldBuilder(fieldDescriptor, i), fieldName);
+                    }
+                    continue;
+                } else if(builder.hasField(fieldDescriptor)) {
+                    recursiveClearField(builder.getFieldBuilder(fieldDescriptor), fieldName);
+                }
+                continue;
+            }
+        }
+    }
 }
