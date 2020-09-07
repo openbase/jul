@@ -45,10 +45,7 @@ import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.controller.Remote;
 import org.openbase.jul.pattern.provider.DataProvider;
-import org.openbase.jul.schedule.FutureProcessor;
-import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import org.openbase.jul.schedule.SyncObject;
-import org.openbase.jul.schedule.WatchDog;
+import org.openbase.jul.schedule.*;
 import org.openbase.jul.schedule.WatchDog.ServiceState;
 import org.openbase.type.communication.ScopeType.Scope;
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
@@ -1347,6 +1344,20 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
         listenerWatchDog.waitForServiceActivation();
         remoteServerWatchDog.waitForServiceActivation();
+    }
+
+    public void waitForMiddleware(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
+        if (listenerWatchDog == null) {
+            throw new NotAvailableException("listenerWatchDog");
+        }
+
+        if (remoteServerWatchDog == null) {
+            throw new NotAvailableException("remoteServiceWatchDog");
+        }
+
+        final TimeoutSplitter timeoutSplitter = new TimeoutSplitter(timeout, timeUnit);
+        listenerWatchDog.waitForServiceActivation(timeoutSplitter.getTime(), TimeUnit.MILLISECONDS);
+        remoteServerWatchDog.waitForServiceActivation(timeoutSplitter.getTime(), TimeUnit.MILLISECONDS);
     }
 
     /**
