@@ -35,7 +35,7 @@ public class SystemPrinter implements Printer {
     private final LogLevel logLevel;
 
     public SystemPrinter(final PrintStream printStream) {
-        this(printStream, LogLevel.INFO);
+        this(printStream, getDefaultLogLevel(printStream));
     }
 
     public SystemPrinter(final PrintStream printStream, final LogLevel logLevel) {
@@ -64,5 +64,15 @@ public class SystemPrinter implements Printer {
     @Override
     public LogLevel getLogLevel() {
         return logLevel;
+    }
+
+    private static LogLevel getDefaultLogLevel(final PrintStream printStream) {
+
+        // if std out than use info, otherwise the error channel as default.
+        if(printStream.equals(System.out)) {
+            return LogLevel.INFO;
+        } else {
+            return LogLevel.ERROR;
+        }
     }
 }
