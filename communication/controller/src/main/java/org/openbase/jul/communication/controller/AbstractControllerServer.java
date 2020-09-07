@@ -1040,11 +1040,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public boolean isDataAvailable() {
-        try {
-            return getData().isInitialized();
-        } catch (NotAvailableException ex) {
-            return false;
-        }
+        // for controllers the data object is always available since it is created during startup.
+        return true;
     }
 
     /**
