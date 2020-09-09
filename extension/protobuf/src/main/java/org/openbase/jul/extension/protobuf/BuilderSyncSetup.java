@@ -46,6 +46,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class BuilderSyncSetup<MB extends Builder<MB>> {
 
     public static final long LOCK_TIMEOUT = 10000;
+    public static final String NOT_LOCKED = "Unknown";
 
     public enum NotificationStrategy {
         SKIP,
@@ -132,7 +133,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
     public void unlockRead(final Object consumer) {
         //logger.debug("order unlockRead by {}", consumer);
         if (readLockConsumer == consumer) {
-            readLockConsumer = "Unknown";
+            readLockConsumer = NOT_LOCKED;
         }
         readLockTimeout.cancel();
         readLock.unlock();
@@ -193,31 +194,20 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             new FatalImplementationErrorException("Thread needs to hold the write lock in order to unlock it!", this);
         }
 
-        // in case we plan to notify the data modification we should make sure the read lock is hold until the notification is done
-        // in order to guarantee that the new data is accessible during the notification process.
+        writeLock.unlock();
+        writeLockConsumer = NOT_LOCKED;
+        //logger.debug("write unlocked");
         if (notifyChange) {
-            readLock.lock();
-        }
-        try {
-            writeLock.unlock();
-            writeLockConsumer = "Unknown";
-            //logger.debug("write unlocked");
-            if (notifyChange) {
-                try {
-                    holder.notifyChange();
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                    return;
-                } catch (CouldNotPerformException ex) {
-                    // only print error if the exception was not caused by a system shutdown.
-                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
-                    }
+            try {
+                holder.notifyChange();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
+            } catch (CouldNotPerformException ex) {
+                // only print error if the exception was not caused by a system shutdown.
+                if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
                 }
-            }
-        } finally {
-            if (notifyChange) {
-                readLock.unlock();
             }
         }
     }
@@ -252,41 +242,30 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
             new FatalImplementationErrorException("Thread needs to hold the write lock in order to unlock it!", this);
         }
 
-        // in case we plan to notify the data modification we should make sure the read lock is hold until the notification is done
-        // in order to guarantee that the new data is accessible during the notification process.
-        if (notificationStrategy != NotificationStrategy.SKIP) {
-            readLock.lock();
-        }
-        try {
-            writeLock.unlock();
-            writeLockConsumer = "Unknown";
-            //logger.debug("write unlocked");
+        writeLock.unlock();
+        writeLockConsumer = NOT_LOCKED;
+        //logger.debug("write unlocked");
 
-            switch (notificationStrategy) {
-                case SKIP:
+        switch (notificationStrategy) {
+            case SKIP:
+                return;
+            case AFTER_LAST_RELEASE:
+                // if write hold still hold by current thread than we skip the update.
+                if (writeLock.isHeldByCurrentThread()) {
                     return;
-                case AFTER_LAST_RELEASE:
-                    // if write hold still hold by current thread than we skip the update.
-                    if (writeLock.isHeldByCurrentThread()) {
-                        return;
+                }
+            case FORCE:
+                try {
+                    holder.notifyChange();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    return;
+                } catch (CouldNotPerformException ex) {
+                    // only print error if the exception was not caused by a system shutdown.
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
                     }
-                case FORCE:
-                    try {
-                        holder.notifyChange();
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                        return;
-                    } catch (CouldNotPerformException ex) {
-                        // only print error if the exception was not caused by a system shutdown.
-                        if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
-                        }
-                    }
-            }
-        } finally {
-            if (notificationStrategy != NotificationStrategy.SKIP) {
-                readLock.unlock();
-            }
+                }
         }
     }
 
