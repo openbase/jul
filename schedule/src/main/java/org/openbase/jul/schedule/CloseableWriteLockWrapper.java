@@ -22,32 +22,24 @@ package org.openbase.jul.schedule;
  * #L%
  */
 
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.preset.JPTestMode;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.exception.printer.LogLevel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 /**
- *
  * Can be used to make the @{Closeable} interface available to any @{ReadWriteLock} instance.
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class CloseableWriteLockWrapper implements java.lang.AutoCloseable {
 
-    private final ReadWriteLock lock;
+    protected final ReadWriteLock lock;
 
     public CloseableWriteLockWrapper(final ReadWriteLock lock) {
+        this(lock, true);
+    }
+
+    public CloseableWriteLockWrapper(final ReadWriteLock lock, final boolean allocate) {
         this.lock = lock;
-        this.lock.lockWrite();
+        if (allocate) {
+            this.lock.lockWrite();
+        }
     }
 
     @Override

@@ -30,11 +30,18 @@ package org.openbase.jul.schedule;
  */
 public class CloseableReadLockWrapper implements AutoCloseable {
 
-    private final ReadWriteLock lock;
+    protected final ReadWriteLock lock;
 
     public CloseableReadLockWrapper(final ReadWriteLock lock) {
+        this(lock, true);
+    }
+
+    protected CloseableReadLockWrapper(final ReadWriteLock lock, final boolean allocate) {
         this.lock = lock;
-        this.lock.lockRead();
+
+        if(allocate) {
+            this.lock.lockRead();
+        }
     }
 
     @Override
