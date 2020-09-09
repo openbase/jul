@@ -71,7 +71,7 @@ public class TimeoutSplitter {
      */
     public long getTime() throws TimeoutException {
         final long time = timeout - (System.currentTimeMillis() - timestamp);
-        if (time < 0) {
+        if (time <= 0) {
             throw new TimeoutException();
         }
         return time;
