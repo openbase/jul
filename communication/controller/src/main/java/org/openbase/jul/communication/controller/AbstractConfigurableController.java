@@ -66,7 +66,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
         try {
-            try(final CloseableWriteLockWrapper ignored = getManageWriteLock(this)) {
+            try (final CloseableWriteLockWrapper ignored = getManageWriteLockInterruptible(this)) {
                 if (config == null) {
                     throw new NotAvailableException("config");
                 }
@@ -91,25 +91,22 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        try {
+        try (final CloseableWriteLockWrapper ignored = getManageWriteLockInterruptible(this)) {
             boolean scopeChanged;
-            try(final CloseableWriteLockWrapper ignored = getManageWriteLock(this)) {
-                this.config = config;
 
-                if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
-                    setDataField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
-                }
+            this.config = config;
 
-                if (supportsDataField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
-                    setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
-                }
-
-                scopeChanged = !currentScope.equals(detectScope(config));
-                currentScope = detectScope();
+            if (supportsDataField(TYPE_FIELD_ID) && hasConfigField(TYPE_FIELD_ID)) {
+                setDataField(TYPE_FIELD_ID, getConfigField(TYPE_FIELD_ID));
             }
 
-            // detect scope change if instance is already active and reinit if needed.
-            // this needs to be done without holding the config lock to avoid a deadlock with the server manageable lock.
+            if (supportsDataField(TYPE_FIELD_LABEL) && hasConfigField(TYPE_FIELD_LABEL)) {
+                setDataField(TYPE_FIELD_LABEL, getConfigField(TYPE_FIELD_LABEL));
+            }
+
+            scopeChanged = !currentScope.equals(detectScope(config));
+            currentScope = detectScope();
+
             try {
                 if (isActive() && scopeChanged) {
                     super.init(currentScope);
@@ -133,19 +130,19 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     }
 
     private Scope detectScope() throws NotAvailableException {
-        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+        try (final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             return detectScope(getConfig());
         }
     }
 
     protected final Object getConfigField(String name) throws CouldNotPerformException {
-        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+        try (final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             return getConfigField(name, getConfig());
         }
     }
 
     protected final Object getConfigField(String name, final CONFIG config) throws CouldNotPerformException {
-        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+        try (final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             try {
                 Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
                 if (findFieldByName == null) {
@@ -159,7 +156,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     }
 
     protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
-        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+        try (final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             try {
                 Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
                 if (findFieldByName == null) {
@@ -173,7 +170,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
     }
 
     protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
-        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+        try (final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             try {
                 Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
                 return findFieldByName != null;
@@ -185,7 +182,7 @@ public abstract class AbstractConfigurableController<M extends AbstractMessage, 
 
     @Override
     public CONFIG getConfig() throws NotAvailableException {
-        try(final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
+        try (final CloseableReadLockWrapper ignored = getManageReadLock(this)) {
             if (config == null) {
                 throw new NotAvailableException("config");
             }
