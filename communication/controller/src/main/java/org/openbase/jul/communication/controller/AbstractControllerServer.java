@@ -659,6 +659,66 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     }
 
     /**
+     * This method generates a closable manager lock wrapper.
+     * Be informed that the controller and all its services are
+     * directly locked and internal builder operations are queued. Therefore please
+     * call the close method soon as possible to release the lock after
+     * you are done, otherwise the overall processing pipeline is delayed.
+     * <p>
+     * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
+     * This is a recovering feature but should never be used by design!
+     *
+     *
+     * <pre>
+     * {@code Usage Example:
+     *
+     *     try(final CloseableInterruptibleWriteLockWrapper ignored = getManageWriteLock(this)) {
+     *         // do important stuff...
+     *     }
+     * }
+     * </pre> In this example the CloseableWriteLockWrapper.close method is be called
+     * in background after leaving the try brackets.
+     *
+     * @param consumer a responsible instance which consumes the lock.
+     *
+     * @return a new builder wrapper which already locks the manage lock.
+     * @throws InterruptedException in case the thread was externally interrupted during the locking.
+     */
+    protected CloseableWriteLockWrapper getManageWriteLockInterruptible(final Object consumer) throws InterruptedException {
+        return new CloseableInterruptibleWriteLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
+    }
+
+    /**
+     * This method generates a closable manager lock wrapper.
+     * Be informed that the controller and all its services are
+     * directly locked and internal builder operations are queued. Therefore please
+     * call the close method soon as possible to release the lock after
+     * you are done, otherwise the overall processing pipeline is delayed.
+     * <p>
+     * Note: Be aware that your access is time limited an the lock will auto released if locked in longer term.
+     * This is a recovering feature but should never be used by design!
+     *
+     *
+     * <pre>
+     * {@code Usage Example:
+     *
+     *     try(final CloseableInterruptibleReadLockWrapper ignored = getManageReadLock(this)) {
+     *         // do important stuff...
+     *     }
+     * }
+     * </pre> In this example the CloseableWriteLockWrapper.close method is be called
+     * in background after leaving the try brackets.
+     *
+     * @param consumer a responsible instance which consumes the lock.
+     *
+     * @return a new builder wrapper which already locks the manage lock.
+     * @throws InterruptedException in case the thread was externally interrupted during the locking.
+     */
+    protected CloseableReadLockWrapper getManageReadLockInterruptible(final Object consumer) throws InterruptedException {
+        return new CloseableInterruptibleReadLockWrapper(new BundledReentrantReadWriteLock(manageLock, true, consumer));
+    }
+
+    /**
      * This method generates a closable lock provider.
      * Be informed that the controller and all its services are
      * directly locked and internal builder operations are queued. Therefore please
@@ -711,7 +771,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         logger.debug("Notify data change of {}", this);
         // synchronized by manageable lock to prevent reinit between validateInitialization and publish
         M newData;
-        manageLock.lockReadInterruptibly(this);
+        manageLock.lockWriteInterruptibly(this);
         try {
             try {
                 validateInitialization();
@@ -746,10 +806,11 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 }
             }
 
+            // this is disabled because the order is mixed up and its not true!
             // validate that no locks are write locked by the same thread during notification in order to avoid deadlocks.
-            if (manageLock.isAnyWriteLockHeldByCurrentThread()) {
-                throw new VerificationFailedException("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
-            }
+//            if (manageLock.isAnyWriteLockHeldByCurrentThread()) {
+//                throw new VerificationFailedException("Could not guarantee controller state read access during notification. This can potentially lead to deadlocks during the notification process in case controller states are accessed by any observation routines!");
+//            }
 
             // Notify data update internally
             try {
@@ -761,7 +822,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             // Notify data update to all observer
             dataObserver.notifyObservers(newData);
         } finally {
-            manageLock.unlockRead(this);
+            manageLock.unlockWrite(this);
         }
     }
 
