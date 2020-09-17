@@ -516,10 +516,12 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
                                 // shutdown all launcher
                                 forceStopLauncher(launcherMap);
-                                return null;
                             }
 
                             pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
+
+                            // finish launcher
+                            return null;
                         }
                     }
                     return null;
