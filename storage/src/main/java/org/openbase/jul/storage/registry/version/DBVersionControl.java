@@ -227,8 +227,6 @@ public class DBVersionControl {
                 }
             } catch (CouldNotPerformException ex) {
                 ExceptionPrinter.printHistory("Could not load db entries out of " + globalDatabaseDirectory.getAbsolutePath(), ex, logger);
-            } catch (IOException ex) {
-                ExceptionPrinter.printHistory("Could not check wether [" + globalDatabaseDirectory.getName() + "] is a symlink!", ex, logger);
             }
         }
         return globalDbSnapshotMap;
