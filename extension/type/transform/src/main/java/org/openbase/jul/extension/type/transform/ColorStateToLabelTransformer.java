@@ -10,12 +10,12 @@ package org.openbase.jul.extension.type.transform;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -246,7 +246,7 @@ public class ColorStateToLabelTransformer {
      *
      * @return the label of the matching color.
      */
-    public Label computeColorLabelFromHex(int hexColor) {
+    public static Label computeColorLabelFromHex(int hexColor) {
         float r = (hexColor & 0xFF0000) >> 16;
         float g = (hexColor & 0xFF00) >> 8;
         float b = (hexColor & 0xFF);
@@ -260,7 +260,7 @@ public class ColorStateToLabelTransformer {
      *
      * @return the label of the matching color.
      */
-    public Label computeColorLabelFromColorState(final ColorState colorState) throws NotAvailableException {
+    public static Label computeColorLabelFromColorState(final ColorState colorState) throws NotAvailableException {
         return computeColorLabelFromColor(colorState.getColor());
     }
 
@@ -271,18 +271,18 @@ public class ColorStateToLabelTransformer {
      *
      * @return the label of the matching color.
      */
-    public Label computeColorLabelFromColor(final Color color) throws NotAvailableException {
+    public static Label computeColorLabelFromColor(final Color color) throws NotAvailableException {
         try {
             switch (color.getType()) {
                 case HSB:
                     final RGBColor rgbColor = HSBColorToRGBColorTransformer.transform(color.getHsbColor());
-                    return computeColorLabelFromRgb(rgbColor.getRed(), rgbColor.getGreen(), rgbColor.getBlue());
+                    return computeColorLabelFromRgb(rgbColor.getRed() * 256, rgbColor.getGreen() * 256, rgbColor.getBlue() * 256);
                 case RGB:
-                    return computeColorLabelFromRgb(color.getRgbColor().getRed(), color.getRgbColor().getGreen(), color.getRgbColor().getBlue());
+                    return computeColorLabelFromRgb(color.getRgbColor().getRed() * 256, color.getRgbColor().getGreen() * 256, color.getRgbColor().getBlue() * 256);
                 case RGB24:
                     return computeColorLabelFromRgb(color.getRgb24Color().getRed(), color.getRgb24Color().getGreen(), color.getRgb24Color().getBlue());
                 default:
-                    throw new EnumNotSupportedException(color.getType(), this);
+                    throw new EnumNotSupportedException(color.getType(), ColorStateToLabelTransformer.class);
             }
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("Color Label", ex);
@@ -297,7 +297,7 @@ public class ColorStateToLabelTransformer {
         public float red;
         public float green;
         public float blue;
-        public Label.Builder labelBuilder;
+        public final Label.Builder labelBuilder;
 
         public ColorLabelEntry(final Locale languageCode, final String label, final int red, final int green, final int blue) {
             this(languageCode, label, (float) red, (float) green, (float) blue);
@@ -307,15 +307,16 @@ public class ColorStateToLabelTransformer {
             this.red = red;
             this.green = green;
             this.blue = blue;
+            this.labelBuilder = Label.newBuilder();
             this.addLabel(languageCode, label);
         }
 
         /**
          * Compute Mean squared error between to colors which can be seen as color distance.
          *
-         * @param red the red color ratio.
+         * @param red   the red color ratio.
          * @param green the green color ratio.
-         * @param blue the blue color ratio.
+         * @param blue  the blue color ratio.
          *
          * @return the mean squared error
          */
