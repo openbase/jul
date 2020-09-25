@@ -43,7 +43,10 @@ import java.util.Locale;
  */
 public class LabelProcessor {
 
+    public static final Label UNKNOWN_LABEL = LabelProcessor.addLabel(Label.newBuilder(), Locale.ENGLISH, "?").build();
+
     private static final Logger LOGGER = LoggerFactory.getLogger(LabelProcessor.class);
+
 
     /**
      * Test if a label contains a label string. This test iterates over all languages and all
