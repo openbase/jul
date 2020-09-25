@@ -45,18 +45,6 @@ public class TimeoutTest {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of getTimeToWait method, of class Timeout.
      */

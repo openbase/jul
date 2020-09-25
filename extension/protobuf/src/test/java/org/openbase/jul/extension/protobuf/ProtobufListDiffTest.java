@@ -60,13 +60,7 @@ public class ProtobufListDiffTest {
         currentContext.clear();
     }
 
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
+    
 
     /**
      * Test of getNewMessages method, of class ProtobufListDiff.

@@ -37,22 +37,6 @@ public class ExceptionProcessorTest {
     
     public ExceptionProcessorTest() {
     }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
     @Test
     public void getFromNested() throws Exception {

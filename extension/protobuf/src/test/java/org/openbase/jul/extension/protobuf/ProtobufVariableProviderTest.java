@@ -46,18 +46,6 @@ public class ProtobufVariableProviderTest {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of getName method, of class ProtobufVariableProvider.
      */

@@ -46,18 +46,6 @@ public class QuaternionTransformTest {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of transformTaitBryanToQuaternion method, of class
      * QuaternionTransform.

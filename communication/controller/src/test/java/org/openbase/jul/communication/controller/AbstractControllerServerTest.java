@@ -71,18 +71,6 @@ public class AbstractControllerServerTest {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     private boolean firstSync = false;
     private boolean secondSync = false;
     private AbstractControllerServer communicationService;

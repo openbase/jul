@@ -63,14 +63,6 @@ public class RemoteRegistryTest {
         }
     }
 
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     /**
      * Test of notifyRegistryUpdate method, of class RemoteRegistry.
      *

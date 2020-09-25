@@ -61,9 +61,7 @@ public class FutureCancelTest implements Requestable<Object> {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-    }
+
 
     @Override
     public Object requestStatus() throws CouldNotPerformException {

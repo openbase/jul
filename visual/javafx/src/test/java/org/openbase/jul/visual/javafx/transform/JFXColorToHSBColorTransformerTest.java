@@ -38,22 +38,6 @@ public class JFXColorToHSBColorTransformerTest {
     
     public JFXColorToHSBColorTransformerTest() {
     }
-    
-    @BeforeClass
-    public static void setUpClass() {
-    }
-    
-    @AfterClass
-    public static void tearDownClass() {
-    }
-    
-    @Before
-    public void setUp() {
-    }
-    
-    @After
-    public void tearDown() {
-    }
 
     /**
      * Test of transform method, of class JFXColorToHSBColorTransformer.

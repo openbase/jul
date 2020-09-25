@@ -41,18 +41,6 @@ public class StringProcessorTest {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     @Test(timeout = 5000)
     public void testFormatHumanReadable() {
         System.out.println("insertSpaceBetweenPascalCase");

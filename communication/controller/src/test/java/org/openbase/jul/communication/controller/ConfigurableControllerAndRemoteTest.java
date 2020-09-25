@@ -57,18 +57,6 @@ public class ConfigurableControllerAndRemoteTest {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
     @Test(timeout = 30000)
     public void initTest() throws Exception {
         System.out.println("initTest");
