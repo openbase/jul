@@ -41,6 +41,8 @@ public interface TimedProcessable<I, O> extends Processable<I, O> {
     /**
      * Using Long.MAX_VALUE as infinity timeout is not practical because in any calculations using this timeout like adding +1 causes a value overrun.
      * Therefore, this constant is introduced to use a infinity timeout which represents in fact 3170 years which should covers at least some human generations ;)
+     *
+     * The unit of the {@code INFINITY_TIMEOUT} is in milliseconds.
      */
     long INFINITY_TIMEOUT = 100000000000000L;
 
