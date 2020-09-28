@@ -354,6 +354,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         // store some variables
         context.putProperty("APPLICATION_NAME", JPService.getApplicationName());
         context.putProperty("SUBMODULE_NAME", JPService.getSubmoduleName());
+        context.putProperty("MODULE_SEPARATOR", JPService.getSubmoduleName().isEmpty() ? "" : "-");
         try {
             context.putProperty("LOGGER_TARGET_DIR", JPService.getValue(JPLogDirectory.class).getAbsolutePath());
             // inform user about log redirection
