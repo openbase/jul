@@ -337,6 +337,9 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
                 }
                 return true;
             }
+        } catch (CouldNotPerformException ex) {
+            // just pass through normal exceptions.
+            throw ex;
         } catch (Throwable ex) {
             // Because we have no idea which code segments are executed by the observers, we need to handle the Throwable as well.
             // This is especially helpful to identify and find issues in unit test because those used assertion errors can not be caught by default exception handling.
