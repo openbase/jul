@@ -307,6 +307,9 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
     }
 
     // todo: Protect this method because external manipulation would be really bad.
+    // However when initializing this remove via the constructor we end up in an mess of generic
+    // type missmatches since some generics seems to be mixed up and hase to be resolved.
+    // This will definitly change some registry api.
     public void setRegistryRemote(final RegistryRemote<?> remote) {
         this.registryRemote = remote;
     }
