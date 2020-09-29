@@ -56,14 +56,23 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
      * <p>
      * Note: The message type {@code M} of the RegistryRemote can be different from the message type {@code M} of this class. Thats why it is marked as unknown.
      */
-    private RegistryRemote<?> registryRemote;
+    private final RegistryRemote<?> registryRemote;
 
     public RemoteRegistry() throws InstantiationException {
-        this(new HashMap<>());
+        this(null, new HashMap<>());
     }
 
     public RemoteRegistry(final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
+        this(null, internalMap);
+    }
+
+    public RemoteRegistry(final RegistryRemote<?> registryRemote) throws InstantiationException {
+        this(registryRemote, new HashMap<>());
+    }
+
+    public RemoteRegistry(final RegistryRemote<?> registryRemote, final Map<KEY, IdentifiableMessage<KEY, M, MB>> internalMap) throws InstantiationException {
         super(internalMap);
+        this.registryRemote = registryRemote;
     }
 
     public synchronized void notifyRegistryUpdate(final Collection<M> values) throws CouldNotPerformException {
@@ -304,14 +313,6 @@ public class RemoteRegistry<KEY, M extends AbstractMessage, MB extends M.Builder
             throw new NotAvailableException("RegistryRemote");
         }
         return registryRemote;
-    }
-
-    // todo: Protect this method because external manipulation would be really bad.
-    // However when initializing this remove via the constructor we end up in an mess of generic
-    // type missmatches since some generics seems to be mixed up and hase to be resolved.
-    // This will definitly change some registry api.
-    public void setRegistryRemote(final RegistryRemote<?> remote) {
-        this.registryRemote = remote;
     }
 
     /**
