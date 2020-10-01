@@ -136,6 +136,14 @@ public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> 
                 new InvalidStateException("File["+file.getAbsolutePath()+"] does not provide write access!");
             }
 
+            // make sure files are only written in case the content has changed,
+            // otherwise skip write because this action is especially critical during shutdown where an interrupted write can cause into corrupted files.
+            // Therefore, only write things back that has really changed.
+            if (fileProcessor.deserialize(file).equals(data)) {
+                return file;
+            }
+
+            // perform the file sync.
             return fileProcessor.serialize(data, file);
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not save " + data + "!", ex);
