@@ -59,10 +59,10 @@ public class LabelProcessor {
      * @return if the labelString is contained in the label type
      */
     public static boolean contains(final Label label, final String labelString) {
-        final String withoutWhite = StringProcessor.removeWhiteSpaces(labelString);
+        final String withoutWhite = StringProcessor.removeWhiteSpaces(format(labelString));
         for (final Label.MapFieldEntry entry : label.getEntryList()) {
             for (final String value : entry.getValueList()) {
-                if (StringProcessor.removeWhiteSpaces(value).equalsIgnoreCase(withoutWhite)) {
+                if (StringProcessor.removeWhiteSpaces(format(value)).equalsIgnoreCase(withoutWhite)) {
                     return true;
                 }
             }
