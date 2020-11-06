@@ -60,7 +60,7 @@ public abstract class AbstractJPGitDatabaseDirectory extends AbstractJPDatabaseD
 
             if (getValue().list().length > 0) {
                 if(JPService.getValue(JPRecoverDB.class, false)) {
-                    System.err.println("Invalid database detected at "+ getValue()+" try to recover...");
+                    logger.error("Invalid database detected at "+ getValue()+" try to recover...");
                     setExistenceHandling(ExistenceHandling.MustBeNew);
                     super.validate();
                 } else {
