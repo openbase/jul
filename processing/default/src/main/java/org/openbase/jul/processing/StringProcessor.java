@@ -202,6 +202,11 @@ public class StringProcessor {
      */
     public static <ENTRY>  String transformCollectionToString(final Collection<ENTRY> collection, final String separator, final Filter<ENTRY> ... filters) {
         String stringRepresentation = "";
+
+        if(collection == null) {
+            return stringRepresentation;
+        }
+
         for (ENTRY entry : collection) {
 
             if (entry == null) {
