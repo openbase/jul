@@ -38,31 +38,31 @@ class ColorStateToLabelTransformerTest {
 
     @Test
     void computeColorLabelFromColor() throws NotAvailableException {
+
         final Builder colorBuilder = Color.newBuilder().setType(Type.HSB);
         colorBuilder.getHsbColorBuilder().setHue(0d);
         colorBuilder.getHsbColorBuilder().setSaturation(1.0d);
         colorBuilder.getHsbColorBuilder().setBrightness(1.0d);
-        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "Red");
+        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "red");
 
         colorBuilder.getHsbColorBuilder().setHue(0d);
         colorBuilder.getHsbColorBuilder().setSaturation(0.5d);
         colorBuilder.getHsbColorBuilder().setBrightness(1.0d);
-        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "Salmon");
+        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "salmon");
 
         colorBuilder.getHsbColorBuilder().setHue(0d);
         colorBuilder.getHsbColorBuilder().setSaturation(1.0d);
         colorBuilder.getHsbColorBuilder().setBrightness(0.5d);
-        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "Maroon");
+        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "maroon");
 
         colorBuilder.getHsbColorBuilder().setHue(50d);
         colorBuilder.getHsbColorBuilder().setSaturation(1.0d);
         colorBuilder.getHsbColorBuilder().setBrightness(1.0d);
-        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "Gold");
+        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "gold");
 
         colorBuilder.getHsbColorBuilder().setHue(150d);
         colorBuilder.getHsbColorBuilder().setSaturation(1.0d);
         colorBuilder.getHsbColorBuilder().setBrightness(1.0d);
-        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "SpringGreen");
-
+        Assert.assertEquals("Color Label does not match!", LabelProcessor.getBestMatch(Locale.ENGLISH, ColorStateToLabelTransformer.computeColorLabelFromColor(colorBuilder.build())), "spring green");
     }
 }
