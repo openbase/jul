@@ -26,6 +26,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.EnumNotSupportedException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.extension.type.processing.LabelProcessor;
+import org.openbase.jul.processing.StringProcessor;
 import org.openbase.type.domotic.state.ColorStateType.ColorState;
 import org.openbase.type.language.LabelType.Label;
 import org.openbase.type.vision.ColorType.Color;
@@ -306,7 +307,7 @@ public class ColorStateToLabelTransformer {
             this.green = green;
             this.blue = blue;
             this.labelBuilder = Label.newBuilder();
-            this.addLabel(languageCode, label);
+            this.addLabel(languageCode, StringProcessor.formatHumanReadable(label).toLowerCase());
         }
 
         /**
