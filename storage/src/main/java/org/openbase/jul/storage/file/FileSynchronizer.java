@@ -139,8 +139,12 @@ public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> 
             // make sure files are only written in case the content has changed,
             // otherwise skip write because this action is especially critical during shutdown where an interrupted write can cause into corrupted files.
             // Therefore, only write things back that has really changed.
-            if (fileProcessor.deserialize(file).equals(data)) {
-                return file;
+            try {
+                if (fileProcessor.deserialize(file).equals(data)) {
+                    return file;
+                }
+            } catch (CouldNotPerformException ex) {
+                // in case the file could not be deserialized, we better perform the write back.
             }
 
             // perform the file sync.
