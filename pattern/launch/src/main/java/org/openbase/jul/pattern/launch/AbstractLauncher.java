@@ -129,7 +129,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      */
     @Override
     public String getName() {
-        return applicationClass.getSimpleName();
+        return generateName();
     }
 
     /**
@@ -365,10 +365,10 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     }
 
     /**
-     *
      * @param args
      * @param application
      * @param launchers
+     *
      * @deprecated please use {@code main(final Class<?> application, final String[] args, final Class<? extends AbstractLauncher>... launchers)} instead.
      */
     @Deprecated
@@ -377,18 +377,26 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     }
 
     public static void main(final Class<?> application, final Class<?> submodule, final String[] args, final Class<? extends AbstractLauncher>... launchers) {
-        JPService.setSubmoduleName(submodule);
+
+        // setup application names
+        JPService.setApplicationName(application);
+        JPService.setSubmoduleName(submodule); // requires the application name to be set
+
         main(application, args, launchers);
     }
 
     public static void main(final Class<?> application, final String submoduleName, final String[] args, final Class<? extends AbstractLauncher>... launchers) {
-        JPService.setSubmoduleName(submoduleName);
+
+        // setup application names
+        JPService.setApplicationName(application);
+        JPService.setSubmoduleName(submoduleName); // requires the application name to be set
+
         main(application, args, launchers);
     }
 
     public static void main(final Class<?> application, final String[] args, final Class<? extends AbstractLauncher>... launchers) {
 
-        // setup application
+        // setup application names
         JPService.setApplicationName(application);
 
         // register interruption of this thread as shutdown hook
@@ -432,7 +440,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         try {
             if (JPService.getProperty(JPPrintLauncher.class).getValue()) {
                 if (launcherMap.isEmpty()) {
-                    System.out.println(JPService.getApplicationName() + " does not provide any launcher!");
+                    System.out.println(generateName() + " does not provide any launcher!");
                     System.exit(255);
                 }
                 System.out.println("Available launcher:");
@@ -451,7 +459,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             ExceptionPrinter.printHistory("Could not check if launcher should be printed.", ex, logger);
         }
 
-        logger.info("Start " + JPService.getApplicationName() + "...");
+        logger.info("Start " + generateName() + "...");
 
         for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : new HashSet<>(launcherMap.entrySet())) {
 
@@ -551,11 +559,11 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             Thread.currentThread().interrupt();
 
             // print a summary containing the exceptions
-            printSummary(application, logger, JPService.getApplicationName() + " caught shutdown signal during startup phase!");
+            printSummary(application, logger, generateName() + " caught shutdown signal during startup phase!");
 
             return;
         }
-        printSummary(application, logger, JPService.getApplicationName() + " was started with restrictions!");
+        printSummary(application, logger, generateName() + " was started with restrictions!");
     }
 
     private static final SyncObject VERIFICATION_STACK_LOCK = new SyncObject("VerificationStackLock");
@@ -605,11 +613,16 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         }
     }
 
+    private static String generateName() {
+        return JPService.getApplicationName() + (JPService.getSubmoduleName().isEmpty() ? "" : "-" + JPService.getSubmoduleName());
+    }
+
     private static void printSummary(final Class application, final Logger logger, final String errorMessage) {
         try {
             MultiException.ExceptionStack exceptionStack = null;
             try {
                 MultiException.checkAndThrow(() -> "Errors during startup phase!", errorExceptionStack);
+
             } catch (MultiException ex) {
                 exceptionStack = MultiException.push(application, ex, exceptionStack);
             }
@@ -620,12 +633,12 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             }
 
             if (Thread.currentThread().isInterrupted()) {
-                logger.info(JPService.getApplicationName() + " was interrupted.");
+                logger.info(generateName() + " was interrupted.");
                 return;
             }
 
             MultiException.checkAndThrow(() -> errorMessage, exceptionStack);
-            logger.info(JPService.getApplicationName() + " successfully started.");
+            logger.info(generateName()+" successfully started.");
 
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger);
