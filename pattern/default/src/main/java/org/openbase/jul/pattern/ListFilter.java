@@ -44,4 +44,21 @@ public interface ListFilter<T> extends Filter<T> {
         }
         return list;
     }
+
+    /**
+     * Let all object pass that mach the filter and remove the rest..
+     *
+     * @param list the list which is filtered
+     * @return a filtered list
+     * @throws CouldNotPerformException if an error occurs while filtering
+     */
+    default List<T> pass(List<T> list) throws CouldNotPerformException {
+        for (int i = 0; i < list.size(); i++) {
+            if (pass(list.get(i))) {
+                list.remove(i);
+                i--;
+            }
+        }
+        return list;
+    }
 }
