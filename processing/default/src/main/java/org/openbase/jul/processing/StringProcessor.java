@@ -85,6 +85,10 @@ public class StringProcessor {
         return transformUpperCaseToPascalCase(transformToUpperCase(replaceHyphenWithUnderscore(input)));
     }
 
+    public static String transformToCamelCase(final String input) {
+        return transformFirstCharToLowerCase(transformToPascalCase(input));
+    }
+
     public static String transformToKebabCase(final String input) {
         return transformToUpperCase(replaceHyphenWithUnderscore(input)).replace("_", "-").toLowerCase();
     }
@@ -112,6 +116,17 @@ public class StringProcessor {
             return input.toUpperCase();
         }
         return input.substring(0, 1).toUpperCase() + input.substring(1);
+    }
+
+    public static String transformFirstCharToLowerCase(final String input) {
+        if (input.isEmpty()) {
+            return "";
+        }
+
+        if (input.length() == 1) {
+            return input.toLowerCase();
+        }
+        return input.substring(0, 1).toLowerCase() + input.substring(1);
     }
 
     /**
