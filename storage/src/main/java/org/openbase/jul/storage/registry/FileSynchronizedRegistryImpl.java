@@ -22,24 +22,15 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPReadOnly;
 import org.openbase.jps.preset.JPShareDirectory;
-import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.MultiException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
@@ -51,6 +42,12 @@ import org.openbase.jul.storage.registry.jp.JPResetDB;
 import org.openbase.jul.storage.registry.plugin.FileRegistryPlugin;
 import org.openbase.jul.storage.registry.plugin.FileRegistryPluginPool;
 import org.openbase.jul.storage.registry.version.DBVersionControl;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * @param <KEY>
@@ -225,7 +222,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
             } catch (CouldNotPerformException ex) {
                 databaseState = DatabaseState.OUTDATED;
                 if (!JPService.getValue(JPForce.class, false)) {
-                    throw new CouldNotPerformException("Registry is not up-to-date! To fix registry manually start the registry in force mode", ex);
+                    throw new CouldNotPerformException(getName() + " is not up-to-date! To fix registry manually start the registry in force mode", ex);
                 }
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Registry is not up-to-date but force mode is enabled so you are able to apply manual fixes via the registry editor.", ex), logger);
             }
