@@ -151,7 +151,7 @@ public class AbstractControllerServerTest {
         remoteService.waitForConnectionState(CONNECTED);
         remoteService.shutdown();
         communicationService.shutdown();
-        assertEquals("Communication Service is not offline after shutdown!", OFFLINE, communicationService.getAvailabilityState());
+        assertEquals("Communication Service is not offline after shutdown!", OFFLINE, communicationService.getControllerAvailabilityState());
         assertEquals("Remote is not disconnected after shutdown!", DISCONNECTED, remoteService.getConnectionState());
     }
 

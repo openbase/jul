@@ -52,7 +52,7 @@ public interface Controller<M> extends Shutdownable, Activatable, ChangeListener
      *
      * @return OFFLINE / ONLINE
      */
-    AvailabilityState.State getAvailabilityState();
+    AvailabilityState.State getControllerAvailabilityState();
 
     /**
      * Wait until the controller reached a given availability state.

@@ -969,7 +969,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return {@inheritDoc}
      */
     @Override
-    public AvailabilityState.State getAvailabilityState() {
+    public AvailabilityState.State getControllerAvailabilityState() {
         return availabilityState;
     }
 
