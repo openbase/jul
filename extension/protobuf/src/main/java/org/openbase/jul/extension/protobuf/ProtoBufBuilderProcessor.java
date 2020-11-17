@@ -22,15 +22,18 @@ package org.openbase.jul.extension.protobuf;
  * #L%
  */
 
-import com.google.protobuf.*;
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.Message;
+import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
+
 import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- *
  * * @author DivineThreepwood
  */
 public class ProtoBufBuilderProcessor {
@@ -105,8 +108,9 @@ public class ProtoBufBuilderProcessor {
 
     /**
      * Method adds a new default message instance to the repeated field and return it's builder instance.
+     *
      * @param repeatedFieldNumber The field number of the repeated field.
-     * @param builder The builder instance of the message which contains the repeated field.
+     * @param builder             The builder instance of the message which contains the repeated field.
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
@@ -116,8 +120,9 @@ public class ProtoBufBuilderProcessor {
 
     /**
      * Method adds a new default message instance to the repeated field and return it's builder instance.
+     *
      * @param repeatedFieldDescriptor The field descriptor of the repeated field.
-     * @param builder The builder instance of the message which contains the repeated field.
+     * @param builder                 The builder instance of the message which contains the repeated field.
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
@@ -130,8 +135,9 @@ public class ProtoBufBuilderProcessor {
 
     /**
      * Method adds a new default message instance to the repeated field and return it's builder instance.
+     *
      * @param repeatedFieldName The name of the repeated field.
-     * @param builder The builder instance of the message which contains the repeated field.
+     * @param builder           The builder instance of the message which contains the repeated field.
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
@@ -229,8 +235,9 @@ public class ProtoBufBuilderProcessor {
 
     /**
      * Method adds a new default message instance to the repeated field and return it's builder instance.
+     *
      * @param repeatedFieldNumber The field number of the repeated field.
-     * @param builder The builder instance of the message which contains the repeated field.
+     * @param builder             The builder instance of the message which contains the repeated field.
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
@@ -240,8 +247,9 @@ public class ProtoBufBuilderProcessor {
 
     /**
      * Method adds a new default message instance to the repeated field and return it's builder instance.
+     *
      * @param repeatedFieldDescriptor The field descriptor of the repeated field.
-     * @param builder The builder instance of the message which contains the repeated field.
+     * @param builder                 The builder instance of the message which contains the repeated field.
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
@@ -254,8 +262,9 @@ public class ProtoBufBuilderProcessor {
 
     /**
      * Method adds a new default message instance to the repeated field and return it's builder instance.
+     *
      * @param repeatedFieldName The name of the repeated field.
-     * @param builder The builder instance of the message which contains the repeated field.
+     * @param builder           The builder instance of the message which contains the repeated field.
      * @return The builder instance of the new added message is returned.
      * @throws CouldNotPerformException
      */
@@ -279,5 +288,29 @@ public class ProtoBufBuilderProcessor {
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could add default instance to repeated Field[" + repeatedFieldName + "] of Builder[" + builder.getClass().getName() + "]!", ex);
         }
+    }
+
+    /**
+     * Merge the values of a message or builder into another message.
+     * This method accepts message of different types and tries to merge all fields
+     * which have the same field name in both types.
+     *
+     * @param mergedInto the builder into which new values are merged
+     * @param toMerge    the message or builder from which values are merged
+     * @return the builder merged into
+     */
+    public static Message.Builder merge(final Message.Builder mergedInto, final MessageOrBuilder toMerge) {
+        for (final Descriptors.FieldDescriptor toMergeField : toMerge.getAllFields().keySet()) {
+            // Note: getAllFields return only the fields which are not empty
+
+            for (final Descriptors.FieldDescriptor mergedIntoField : mergedInto.getDescriptorForType().getFields()) {
+                if (mergedIntoField.getName().equals(toMergeField.getName())) {
+                    mergedInto.setField(mergedIntoField, toMerge.getField(toMergeField));
+                    break;
+                }
+            }
+        }
+
+        return mergedInto;
     }
 }
