@@ -92,6 +92,11 @@ public class MockRegistrySandbox<KEY, ENTRY extends Identifiable<KEY>, MAP exten
     }
 
     @Override
+    public List<ENTRY> removeAllByKey(Collection<KEY> key) throws MultiException {
+        return null;
+    }
+
+    @Override
     public ENTRY remove(KEY entry) throws CouldNotPerformException {
         return null;
     }

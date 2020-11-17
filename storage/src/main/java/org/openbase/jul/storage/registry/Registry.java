@@ -77,6 +77,15 @@ public interface Registry<KEY, ENTRY extends Identifiable<KEY>> extends Writable
      */
     List<ENTRY> removeAll(Collection<ENTRY> entries) throws MultiException, InvalidStateException;
 
+    /**
+     * Removes the given set of entries from the registry that are referred by their key..
+     * @param keys the keys of the entries to remove.
+     * @return
+     * @throws MultiException is thrown in case at least one transaction was not be performed.
+     * @throws InvalidStateException is thrown in case the registry is shutting down.
+     */
+    List<ENTRY> removeAllByKey(Collection<KEY> keys) throws MultiException, InvalidStateException;
+
     ENTRY get(final KEY key) throws CouldNotPerformException;
 
     default ENTRY get(final ENTRY entry) throws CouldNotPerformException {

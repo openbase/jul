@@ -36,10 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.exception.RejectedException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.extension.protobuf.IdentifiableMessage;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -285,6 +282,11 @@ public class TransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public List<IdentifiableMessage<String, UnitConfig, Builder>> removeAll(Collection<IdentifiableMessage<String, UnitConfig, Builder>> identifiableMessages) throws MultiException {
+                    throw new UnsupportedOperationException("Not supported yet.");
+                }
+
+                @Override
+                public List<IdentifiableMessage<String, UnitConfig, Builder>> removeAllByKey(Collection<String> strings) throws MultiException, InvalidStateException {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 

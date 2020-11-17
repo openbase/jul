@@ -359,12 +359,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      * @throws InvalidStateException {@inheritDoc}
      */
     @Override
-    public List<ENTRY> removeAll(Collection<ENTRY> entries) throws MultiException, InvalidStateException {
+    public List<ENTRY> removeAll(final Collection<ENTRY> entries) throws MultiException, InvalidStateException {
         final List<ENTRY> removedEntries = new ArrayList<>();
         ExceptionStack exceptionStack = null;
         registryLock.writeLock().lock();
         try {
-            for (ENTRY entry : entries) {
+            for (final ENTRY entry : entries) {
 
                 // shutdown check is needed because this is not a atomic transaction.
                 if (shutdownInitiated) {
@@ -380,6 +380,45 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 }
             }
             MultiException.checkAndThrow(() -> "Could not remove all entries!", exceptionStack);
+        } finally {
+            registryLock.writeLock().unlock();
+        }
+        return removedEntries;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param keys {@inheritDoc}
+     *
+     * @return {@inheritDoc}
+     *
+     * @throws MultiException        {@inheritDoc}
+     * @throws InvalidStateException {@inheritDoc}
+     */
+    @Override
+    public List<ENTRY> removeAllByKey(final Collection<KEY> keys) throws MultiException, InvalidStateException {
+        final List<ENTRY> removedEntries = new ArrayList<>();
+        ExceptionStack exceptionStack = null;
+        registryLock.writeLock().lock();
+
+        try {
+            for (final KEY key : keys) {
+
+                // shutdown check is needed because this is not a atomic transaction.
+                if (shutdownInitiated) {
+                    throw new InvalidStateException("Entry removal canceled because registry is shutting down!");
+                }
+
+                try {
+                    if (contains(key)) {
+                        removedEntries.add(remove(key));
+                    }
+                } catch (CouldNotPerformException ex) {
+                    exceptionStack = MultiException.push(this, ex, exceptionStack);
+                }
+            }
+            MultiException.checkAndThrow(() -> "Could not remove all keys!", exceptionStack);
         } finally {
             registryLock.writeLock().unlock();
         }
