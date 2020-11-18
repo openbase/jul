@@ -24,12 +24,12 @@ package org.openbase.jul.extension.type.processing;
 
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.openbase.type.language.LabelType.Label;
 import org.openbase.type.language.LabelType.Label.Builder;
 import org.openbase.type.language.LabelType.Label.MapFieldEntry;
 import org.openbase.type.language.LabelType.LabelOrBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -209,7 +209,7 @@ public class LabelProcessor {
      * {@link Locale#getLanguage()}. If no label matches the languageCode, than the first label of any other provided language is returned.
      *
      * @param languageCode the language tag from which a language code is extracted
-     * @param label  the label type which is searched for labels in the language
+     * @param label        the label type which is searched for labels in the language
      *
      * @return the first label from the label type for the locale
      *
@@ -270,6 +270,48 @@ public class LabelProcessor {
      */
     public static String getBestMatch(final LabelOrBuilder label) throws NotAvailableException {
         return getBestMatch(Locale.getDefault(), label);
+    }
+
+    /**
+     * Get the first label for a languageCode from a label type. This is equivalent to calling
+     * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
+     * {@link Locale#getLanguage()}. If no label matches the languageCode, than the first label of any other provided language is returned.
+     *
+     * @param languageCode the language tag from which a language code is extracted
+     * @param label        the label type which is searched for labels in the language
+     * @param alternative an alternative string which is returned in error case.
+     *
+     * @return the first label from the label type for the locale
+     *
+     * @throws NotAvailableException if no label is provided by the {@code label} argument.
+     */
+    public static String getBestMatch(final String languageCode, final LabelOrBuilder label, final String alternative) {
+        try {
+            return getBestMatch(languageCode, label);
+        } catch (NotAvailableException e) {
+            return alternative;
+        }
+    }
+
+    /**
+     * Get the first label for a languageCode from a label type. This is equivalent to calling
+     * {@link #getLabelByLanguage(String, LabelOrBuilder)} but the language code is extracted from the locale by calling
+     * {@link Locale#getLanguage()}. If no label matches the languageCode, than the first label of any other provided language is returned.
+     *
+     * @param locale the locale from which a language code is extracted
+     * @param label  the label type which is searched for labels in the language
+     * @param alternative an alternative string which is returned in error case.
+     *
+     * @return the first label from the label type for the locale
+     *
+     * @throws NotAvailableException if no label is provided by the {@code label} argument.
+     */
+    public static String getBestMatch(final Locale locale, final LabelOrBuilder label, final String alternative) {
+        try {
+            return getBestMatch(locale, label);
+        } catch (NotAvailableException e) {
+            return alternative;
+        }
     }
 
     /**
@@ -417,10 +459,10 @@ public class LabelProcessor {
         if (label.isEmpty()) {
             return label;
         }
-        if(Character.isDigit(label.charAt(label.length()-1))) {
+        if (Character.isDigit(label.charAt(label.length() - 1))) {
             for (int i = label.length(); i > 0; i--) {
-                if(!Character.isDigit(label.charAt(i-1))) {
-                    if(!Character.isLowerCase(label.charAt(i-1))) {
+                if (!Character.isDigit(label.charAt(i - 1))) {
+                    if (!Character.isLowerCase(label.charAt(i - 1))) {
                         break;
                     }
                     label = label.substring(0, i) + " " + label.substring(i);
