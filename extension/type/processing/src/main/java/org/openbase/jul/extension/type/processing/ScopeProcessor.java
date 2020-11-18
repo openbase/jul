@@ -48,6 +48,12 @@ public class ScopeProcessor {
         try {
             String stringRep = COMPONENT_SEPARATOR;
             for (String component : components) {
+
+                // merge to components in case they are connected by an empty one
+                if(component.isEmpty()) {
+                    continue;
+                }
+
                 stringRep += component;
                 stringRep += COMPONENT_SEPARATOR;
             }

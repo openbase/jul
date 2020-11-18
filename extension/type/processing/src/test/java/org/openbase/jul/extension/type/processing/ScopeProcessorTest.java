@@ -49,6 +49,7 @@ public class ScopeProcessorTest {
         this.components = new ArrayList<String>();
         this.components.add("home");
         this.components.add("kitchen");
+        this.components.add(""); // test if empty component is handeled correctly
         this.components.add("table");
         this.scopeStringRep = "/home/kitchen/table/";
     }
@@ -107,6 +108,7 @@ public class ScopeProcessorTest {
         assertEquals("Scope component invalid!", "qijijs", ScopeProcessor.convertIntoValidScopeComponent("qi_____jijs"));
         assertEquals("Scope component invalid!", "quejsss", ScopeProcessor.convertIntoValidScopeComponent("qüjßs"));
         assertEquals("Scope component invalid!", "mycomponent", ScopeProcessor.convertIntoValidScopeComponent("_myComponent__"));
+        assertEquals("Scope component invalid!", "mysweet", ScopeProcessor.convertIntoValidScopeComponent("/my/sweet❤️"));
 
     }
 }
