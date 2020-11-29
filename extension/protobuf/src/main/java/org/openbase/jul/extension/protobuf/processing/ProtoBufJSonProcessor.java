@@ -37,10 +37,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class ProtoBufJSonProcessor {
 
-    private static final String UTF8 = "UTF8";
     private static final String javaPrimitvePrefix = "java.lang.";
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -126,7 +126,7 @@ public class ProtoBufJSonProcessor {
         try {
             try {
                 Message.Builder builder = (Message.Builder) messageClass.getMethod("newBuilder").invoke(null);
-                jsonFormat.merge(new ByteArrayInputStream(jsonStringRep.getBytes(Charset.forName(UTF8))), builder);
+                jsonFormat.merge(new ByteArrayInputStream(jsonStringRep.getBytes(StandardCharsets.UTF_8)), builder);
                 return (M) builder.build();
             } catch (IOException ex) {
                 throw new CouldNotPerformException("Could not merge [" + jsonStringRep + "] into builder", ex);
