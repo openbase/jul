@@ -1210,11 +1210,20 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public void waitForData() throws CouldNotPerformException, InterruptedException {
         try {
+
+            // if available just return
             if (isDataAvailable()) {
                 return;
             }
+
+            // wait for middleware
+            waitForMiddleware();
+
             logger.debug("Wait for " + this.toString() + " data...");
+            // wait for data
             getDataFuture().get();
+
+            // wait for data sync
             dataObservable.waitForValue();
         } catch (ExecutionException | CancellationException ex) {
             if (shutdownInitiated) {
@@ -1236,16 +1245,22 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public void waitForData(long timeout, TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
         try {
+
+            // if available just return
             if (isDataAvailable()) {
                 return;
             }
-            long startTime = System.currentTimeMillis();
+
+            final TimeoutSplitter timeoutSplitter = new TimeoutSplitter(timeout, timeUnit);
+
+            // wait for middleware
+            waitForMiddleware(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit());
+
+            // wait for data
             getDataFuture().get(timeout, timeUnit);
-            long partialTimeout = timeUnit.toMillis(timeout) - (System.currentTimeMillis() - startTime);
-            if (partialTimeout <= 0) {
-                throw new java.util.concurrent.TimeoutException("Data timeout is reached!");
-            }
-            dataObservable.waitForValue(partialTimeout, TimeUnit.MILLISECONDS);
+
+            // wait for data sync
+            dataObservable.waitForValue(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit());
         } catch (java.util.concurrent.TimeoutException | CouldNotPerformException | ExecutionException | CancellationException ex) {
             if (shutdownInitiated) {
                 throw new ShutdownInProgressException(this);
