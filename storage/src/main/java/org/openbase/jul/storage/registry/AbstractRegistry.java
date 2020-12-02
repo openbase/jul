@@ -1279,9 +1279,6 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         boolean successfullyLocked;
         try {
             while (true) {
-//                if (!this.isSandbox()) {
-//                    logger.info("Lock registry [" + this + "]");
-//                }
                 /* Acquire the write lock first before recursively locking because the set used for it
                  * is the same for different threads. Else while one thread is currently recursively locking
                  * another can call the same method which will return true because the set already contains
@@ -1315,10 +1312,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
 
                 // sleep for a random time before trying to lock again
                 try {
-                    long sleepTime = 20 + randomJitter.nextInt(50);
-//                    if (!this.isSandbox()) {
-//                        logger.info("Could not lock this so sleep for [" + sleepTime + "][" + this + "]");
-//                    }
+                    long sleepTime = 5 + randomJitter.nextInt(10);
                     Thread.sleep(sleepTime);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
