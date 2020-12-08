@@ -863,9 +863,16 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) {
 
+        //todo: refactor this section by implementing a PreFutureHandler, so a future object can directly be returned.
+        //      Both, the waitForMiddleware and the method call future should be encapsulated in the PreFutureHandler
+        //      but the method call task should only be generated in case the middleware is ready, otherwise no new thread should be consumed.
         try {
+            waitForMiddleware(1000, TimeUnit.SECONDS);
             validateMiddleware();
-        } catch (InvalidStateException ex) {
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return (Future<R>) FutureProcessor.canceledFuture(ex);
+        } catch (CouldNotPerformException ex) {
             return (Future<R>) FutureProcessor.canceledFuture(ex);
         }
 
