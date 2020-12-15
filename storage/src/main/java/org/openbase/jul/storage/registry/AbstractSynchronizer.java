@@ -159,7 +159,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
             // handle time measuring in debug case
             final Stopwatch stopwatch;
             if (JPService.debugMode()) {
-                logger.info("Perform sync...");
+                logger.debug("Perform sync...");
                 stopwatch = new Stopwatch();
                 stopwatch.start();
             } else {
@@ -297,7 +297,7 @@ public abstract class AbstractSynchronizer<KEY, ENTRY extends Identifiable<KEY>>
             if (stopwatch != null) {
                 long time = stopwatch.stop();
                 if (time > 1000) {
-                    logger.info("Internal sync of {} took: {}ms", dataProvider, time);
+                    logger.debug("Internal sync of {} took: {}ms", dataProvider, time);
                 }
             }
         }
