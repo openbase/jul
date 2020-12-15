@@ -282,8 +282,6 @@ public class LabelProcessor {
      * @param alternative an alternative string which is returned in error case.
      *
      * @return the first label from the label type for the locale
-     *
-     * @throws NotAvailableException if no label is provided by the {@code label} argument.
      */
     public static String getBestMatch(final String languageCode, final LabelOrBuilder label, final String alternative) {
         try {
@@ -303,8 +301,6 @@ public class LabelProcessor {
      * @param alternative an alternative string which is returned in error case.
      *
      * @return the first label from the label type for the locale
-     *
-     * @throws NotAvailableException if no label is provided by the {@code label} argument.
      */
     public static String getBestMatch(final Locale locale, final LabelOrBuilder label, final String alternative) {
         try {
