@@ -28,6 +28,7 @@ import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
+import org.openbase.jul.extension.protobuf.processing.ProtoBufFieldProcessor;
 import org.openbase.jul.processing.StringProcessor;
 
 import java.lang.reflect.Method;
@@ -312,5 +313,13 @@ public class ProtoBufBuilderProcessor {
         }
 
         return mergedInto;
+    }
+
+    public static <MB> MB getBuilder(final Message.Builder builder, final String fieldName, Class<MB> builderClass) throws NotAvailableException {
+        try {
+            return (MB) builder.getFieldBuilder(ProtoBufFieldProcessor.getFieldDescriptor(builder, fieldName));
+        } catch (Exception ex) {
+            throw new NotAvailableException("Builder[" + fieldName + "]", ex);
+        }
     }
 }
