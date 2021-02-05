@@ -27,7 +27,6 @@ import com.google.protobuf.Descriptors.EnumValueDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.google.protobuf.Descriptors.FieldDescriptor.JavaType;
 import com.google.protobuf.Message;
-import com.google.protobuf.Message.Builder;
 import com.google.protobuf.MessageOrBuilder;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -35,7 +34,6 @@ import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.iface.Identifiable;
-import org.openbase.jul.iface.provider.LabelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,17 +80,21 @@ public class ProtoBufFieldProcessor {
 
     public static Descriptors.FieldDescriptor getFieldDescriptor(final MessageOrBuilder msg, final String fieldName) throws NotAvailableException {
         final FieldDescriptor descriptor = msg.getDescriptorForType().findFieldByName(fieldName);
-        if(descriptor == null) {
+        if (descriptor == null) {
             throw new NotAvailableException("Field", fieldName);
         }
         return descriptor;
     }
 
-    public static String getId(final Message msg) throws CouldNotPerformException {
-        return getId(msg.toBuilder());
+    public static Object getFieldValue(final MessageOrBuilder msg, final String fieldName) throws NotAvailableException {
+        try {
+            return msg.getField(getFieldDescriptor(msg, fieldName));
+        } catch (Exception ex) {
+            throw new NotAvailableException("Field[" + fieldName + "]", ex);
+        }
     }
 
-    public static String getId(final Builder msg) throws CouldNotPerformException {
+    public static String getId(final MessageOrBuilder msg) throws CouldNotPerformException {
         try {
             return (String) msg.getField(getFieldDescriptor(msg, Identifiable.TYPE_FIELD_ID));
         } catch (Exception ex) {
@@ -100,7 +102,7 @@ public class ProtoBufFieldProcessor {
         }
     }
 
-    public static String getDescription(final Message.Builder msg) throws CouldNotPerformException {
+    public static String getDescription(final MessageOrBuilder msg) throws CouldNotPerformException {
         try {
             return (String) msg.getField(getFieldDescriptor(msg, "description"));
         } catch (Exception ex) {
@@ -137,7 +139,7 @@ public class ProtoBufFieldProcessor {
 
         String[] fields = fieldPath.split("\\.");
         for (int i = 0; i < fields.length - 1; ++i) {
-            try{
+            try {
                 if (fields[i].endsWith("]")) {
                     String fieldName = fields[i].split("\\[")[0];
                     int number = Integer.parseInt(fields[i].split("\\[")[1].split("\\]")[0]);
@@ -373,9 +375,12 @@ public class ProtoBufFieldProcessor {
 
     /**
      * Extracts the repeated field values out of the given message or builder instance.
-     * @param repeatedFieldName the name of the repeated field.
+     *
+     * @param repeatedFieldName     the name of the repeated field.
      * @param repeatedFieldProvider the message holding the repeated field.
+     *
      * @return a list of values of the repeated field.
+     *
      * @throws NotAvailableException is thrown if the repeated field is not available.
      */
     public static ArrayList getRepeatedFieldList(final String repeatedFieldName, MessageOrBuilder repeatedFieldProvider) throws NotAvailableException {
@@ -384,8 +389,10 @@ public class ProtoBufFieldProcessor {
 
     /**
      * Extracts the repeated field values out of the given message or builder instance.
+     *
      * @param repeatedFieldDescriptor the descriptor of the repeated field.
-     * @param repeatedFieldProvider the message holding the repeated field.
+     * @param repeatedFieldProvider   the message holding the repeated field.
+     *
      * @return a list of values of the repeated field.
      */
     public static ArrayList getRepeatedFieldList(final FieldDescriptor repeatedFieldDescriptor, MessageOrBuilder repeatedFieldProvider) {
@@ -401,7 +408,7 @@ public class ProtoBufFieldProcessor {
     /**
      * Clear all fields in a builder recursively by name.
      *
-     * @param builder the builder.
+     * @param builder   the builder.
      * @param fieldName the name of the field.
      */
     public static void recursiveClearField(final Message.Builder builder, final String fieldName) {
@@ -417,7 +424,7 @@ public class ProtoBufFieldProcessor {
                         recursiveClearField(builder.getRepeatedFieldBuilder(fieldDescriptor, i), fieldName);
                     }
                     continue;
-                } else if(builder.hasField(fieldDescriptor)) {
+                } else if (builder.hasField(fieldDescriptor)) {
                     recursiveClearField(builder.getFieldBuilder(fieldDescriptor), fieldName);
                 }
                 continue;
