@@ -57,6 +57,27 @@ public class TimestampProcessor {
     }
 
     /**
+     * Method updates the timestamp field of the given message with the current time if the timestamp is not yet set.
+     *
+     * @param <M>              the message type of the message to update.
+     * @param messageOrBuilder the message
+     *
+     * @return the updated message
+     *
+     * @throws CouldNotPerformException is thrown in case the copy could not be performed e.g. because of a missing timestamp field.
+     */
+    public static <M extends MessageOrBuilder> M updateTimestampWithCurrentTimeIfMissing(final M messageOrBuilder) throws CouldNotPerformException {
+
+        // skip update if timestamp was already set
+        if (hasTimestamp(messageOrBuilder)) {
+            return messageOrBuilder;
+        }
+
+        // update timestamp
+        return updateTimestamp(System.currentTimeMillis(), messageOrBuilder);
+    }
+
+    /**
      * Method updates the timestamp field of the given message with the current time.
      *
      * @param <M>              the message type of the message to update.
