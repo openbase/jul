@@ -22,6 +22,7 @@ package org.openbase.jul.schedule;
  * #L%
  */
 
+import lombok.NonNull;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Processable;
@@ -68,6 +69,9 @@ public class FutureProcessor {
     /**
      * Method returns a future which is already canceled by the given cause.
      *
+     * Note: In case an interrupted exception is passed as cause,
+     * the interruption is handled by interrupting the current thread.
+     *
      * @param <T>        the type of the future
      * @param futureType the type class of the future
      * @param cause      the reason why the future was canceled.
@@ -75,6 +79,12 @@ public class FutureProcessor {
      * @return the canceled future.
      */
     public static <T> Future<T> canceledFuture(final Class<T> futureType, final Exception cause) {
+
+        // handle interruption before encapsulating an interrupted exception.
+        if(cause instanceof InterruptedException) {
+            Thread.currentThread().interrupt();
+        }
+
         return new Future<T>() {
             @Override
             public boolean cancel(boolean mayInterruptIfRunning) {
@@ -292,7 +302,7 @@ public class FutureProcessor {
         }
     }
 
-    public static <I, R> Future<R> postProcess(final TimedProcessable<I, R> resultProcessor, final Future<I> future) {
+    public static <I, R> Future<R> postProcess(@NonNull final TimedProcessable<I, R> resultProcessor, @NonNull final Future<I> future) {
         return new ResultProcessingFuture<I, R>(resultProcessor, future);
     }
 
