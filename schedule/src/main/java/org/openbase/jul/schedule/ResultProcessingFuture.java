@@ -22,6 +22,7 @@ package org.openbase.jul.schedule;
  * #L%
  */
 
+import lombok.NonNull;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.iface.Initializable;
 import org.openbase.jul.iface.TimedProcessable;
@@ -38,26 +39,27 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @param <I> The output or result type of the futures provided by the future collection.
  * @param <R> The result type of the future.
  */
+
 public class ResultProcessingFuture<I, R> extends CompletableFutureLite<R> implements Initializable<TimedProcessable<I, R>>, FutureWrapper<I>{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResultProcessingMultiFuture.class);
 
     private final ReentrantReadWriteLock updateComponentLock = new ReentrantReadWriteLock();
 
-    private TimedProcessable<I, R> resultProcessor;
-    private final Future<I> internalFuture;
+    private @NonNull TimedProcessable<I, R> resultProcessor;
+    private @NonNull final Future<I> internalFuture;
 
-    public ResultProcessingFuture(final TimedProcessable<I, R> resultProcessor, final Future<I> internalFuture) {
+    public ResultProcessingFuture(@NonNull final TimedProcessable<I, R> resultProcessor, @NonNull final Future<I> internalFuture) {
         this.internalFuture = internalFuture;
         this.init(resultProcessor);
     }
 
-    protected ResultProcessingFuture(final Future<I> internalFuture) {
+    protected ResultProcessingFuture(@NonNull final Future<I> internalFuture) {
         this.internalFuture = internalFuture;
     }
 
     @Override
-    public void init(final TimedProcessable<I, R> resultProcessor) {
+    public void init(@NonNull final TimedProcessable<I, R> resultProcessor) {
         this.resultProcessor = resultProcessor;
     }
 
