@@ -27,4 +27,16 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <!-- its not required by the sourcecode of this package, however its a set of useful java annotations -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.18</version>
+        </dependency>
+
+    </dependencies>
+
 </project>

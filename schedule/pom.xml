@@ -31,6 +31,11 @@
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
+            <artifactId>jul.annotation</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
             <artifactId>jul.pattern</artifactId>
             <version>${project.version}</version>
         </dependency>
