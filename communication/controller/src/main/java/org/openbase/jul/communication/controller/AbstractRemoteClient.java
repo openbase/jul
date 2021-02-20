@@ -1869,7 +1869,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     throw new CouldNotPerformException("Sync aborted of " + getScopeStringRep(), ex);
                 } else {
                     syncTask = sync();
-                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync failed of " + getScopeStringRep() + ". Try to recover...", ex), logger, LogLevel.WARN);
+                    // this can happen when login changed during the sync.
+                    throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Sync failed of " + getScopeStringRep() + ". Try to recover...", ex), logger, LogLevel.DEBUG);
                 }
             } catch (Exception ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
