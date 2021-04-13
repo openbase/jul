@@ -119,7 +119,7 @@ public class RSBSynchronizedLocalServer extends RSBSynchronizedServer<LocalServe
                     getParticipant().addMethod(name, callback);
                 }
             } catch (NotAvailableException ex) {
-                logger.debug("Method[" + name + "] is cached and will be registered during init phase of local server.");
+                logger.trace("Method[{}] is cached and will be registered during init phase of local server.", name);
             }
         } catch (Exception ex) {
             throw new CouldNotPerformException("Could not add Method[" + name + "]!", ex);
