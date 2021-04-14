@@ -1284,7 +1284,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             }
             return getData().getField(findFieldByName);
         } catch (Exception ex) {
-            throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this, ex);
+            throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this.getClass().getSimpleName(), ex);
         }
     }
 

@@ -1070,7 +1070,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public M requestStatus() throws CouldNotPerformException {
-        logger.debug("requestStatus of " + this);
+        logger.debug("requestStatus of {}", this);
         try {
             return getData();
         } catch (RuntimeException ex) {
