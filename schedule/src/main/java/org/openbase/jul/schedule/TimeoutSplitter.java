@@ -23,7 +23,11 @@ package org.openbase.jul.schedule;
  */
 
 import org.openbase.jul.exception.TimeoutException;
+import org.openbase.jul.pattern.provider.Provider;
+import org.openbase.jul.pattern.provider.StableProvider;
+import org.openbase.jul.pattern.provider.StringProvider;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -60,6 +64,21 @@ public class TimeoutSplitter {
     public TimeoutSplitter(final long timeout, final TimeUnit timeUnit) {
         this.timestamp = System.currentTimeMillis();
         this.timeout = timeUnit.toMillis(timeout);
+    }
+
+    /**
+     * The time left.
+     *
+     * @return the time in milliseconds.
+     *
+     * @throws TimeoutException is thrown when the timeout is reached.
+     */
+    public long getTime(StableProvider<String> timeoutMessage) throws TimeoutException {
+        final long time = timeout - (System.currentTimeMillis() - timestamp);
+        if (time <= 0) {
+            throw new TimeoutException(timeoutMessage.get());
+        }
+        return time;
     }
 
     /**
