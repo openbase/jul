@@ -67,6 +67,7 @@ class InternalSubscriber implements Consumer<Mqtt5Publish> {
             try {
                 //TODO call method as defined in request.getMethodName();
                 request.getMethodName();
+                responseBuilder.setStatus(ResponseType.Response.Status.FINISHED);
                 responseBuilder.setResult(ByteString.copyFrom(request.getMethodName().getBytes(StandardCharsets.UTF_8)));
             } catch (Exception ex) {
                 responseBuilder.setStatus(ResponseType.Response.Status.FINISHED);

@@ -19,7 +19,9 @@ public class RPCRemote {
 
     public void callMethod(final String methodName) throws ExecutionException, InterruptedException {
         final String id = UUID.randomUUID().toString();
+        System.out.println("Generate id " + id);
 
+        System.out.println("Subscribe to topic...");
         mqttClient.subscribeWith()
                 .topicFilter(this.topic + "/" + id)
                 .qos(MqttQos.EXACTLY_ONCE)
@@ -33,10 +35,12 @@ public class RPCRemote {
                     System.out.println("Received response: " + response.getStatus().name());
                 }).send().get();
 
+        System.out.println("Build request");
         RequestType.Request.Builder requestBuilder = RequestType.Request.newBuilder();
         requestBuilder.setId(id);
         requestBuilder.setMethodName(methodName);
         //TODO set params
+        System.out.println("Send request: " + requestBuilder.build() + " to " + topic);
         mqttClient.publishWith()
                 .topic(this.topic)
                 .qos(MqttQos.EXACTLY_ONCE)
