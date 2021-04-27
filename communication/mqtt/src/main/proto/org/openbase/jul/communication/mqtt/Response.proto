@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package org.openbase.jul.communication.mqtt;
+
+option java_package = "org.openbase.jul.communication.mqtt";
+option java_outer_classname = "ResponseType";
+
+/**
+ * Description of an MQTT RPC response.
+ */
+message Response {
+
+  /**
+   * Enum of status values of the request.
+   */
+  enum Status {
+    ACKNOWLEDGED = 0;
+    PROGRESSING = 1;
+    FINISHED = 2;
+  }
+
+  /**
+   * The id of the request.
+   */
+  string id = 1;
+
+  /**
+   * The status of the request.
+   */
+  Status status = 2;
+
+  /**
+   * The result of the request.
+   * Only set if status is FINISHED and no error occurred.
+   */
+  bytes result = 3;
+
+  /**
+   * An error if one occurs.
+   * Only set if status is FINISHED and an error occurred.
+   */
+  string error = 4;
+
+}
+
