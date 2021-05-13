@@ -2,6 +2,7 @@ package org.openbase.jul.communication.mqtt
 
 import com.google.protobuf.Message
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.type.communication.mqtt.PrimitiveType
 import com.google.protobuf.Any as protoAny
 import java.lang.reflect.Method
 import java.util.*
@@ -30,7 +31,6 @@ fun anyToProtoAny(clazz: Class<*>): (Any) -> protoAny {
         Long::class.java -> { msg: Any -> protoAny.pack(PrimitiveType.Primitive.newBuilder().setLong(msg as Long).build()); }
         String::class.java -> { msg: Any -> protoAny.pack(PrimitiveType.Primitive.newBuilder().setString(msg as String).build()); }
         Boolean::class.java -> { msg: Any -> protoAny.pack(PrimitiveType.Primitive.newBuilder().setBoolean(msg as Boolean).build()); }
-
 
         else -> throw Exception("Cannot parse class ${clazz.name} into proto any!");
     }

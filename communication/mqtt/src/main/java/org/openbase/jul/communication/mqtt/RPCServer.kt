@@ -5,6 +5,8 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import org.openbase.jul.schedule.GlobalCachedExecutorService
+import org.openbase.type.communication.mqtt.RequestType
+import org.openbase.type.communication.mqtt.ResponseType
 import java.lang.reflect.Method
 import java.util.function.Consumer
 

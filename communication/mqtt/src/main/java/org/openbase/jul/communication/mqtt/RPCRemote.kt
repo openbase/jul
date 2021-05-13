@@ -10,6 +10,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import kotlin.Any
 import com.google.protobuf.Any as protoAny
+import org.openbase.type.communication.mqtt.RequestType
+import org.openbase.type.communication.mqtt.ResponseType
 
 class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
 
