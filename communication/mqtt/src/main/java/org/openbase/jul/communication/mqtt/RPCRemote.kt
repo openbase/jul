@@ -4,6 +4,7 @@ import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.schedule.GlobalCachedExecutorService
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
@@ -64,6 +65,7 @@ class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
                     println("Received RPC Update ${response.status}")
                 }
             }
+            .executor(GlobalCachedExecutorService.getInstance().executorService)
             .send()
             .whenComplete { _, throwable ->
                 if (throwable != null) {

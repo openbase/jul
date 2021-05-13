@@ -99,6 +99,11 @@
             <artifactId>jul.exception</artifactId>
             <version>${version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.schedule</artifactId>
+            <version>${version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.protobuf</groupId>
