@@ -95,6 +95,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.exception</artifactId>
+            <version>${version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
             <version>3.4.0</version>
@@ -105,6 +111,7 @@
             <artifactId>hivemq-mqtt-client</artifactId>
             <version>1.2.2</version>
         </dependency>
+
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
