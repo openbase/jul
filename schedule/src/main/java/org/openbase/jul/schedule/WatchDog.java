@@ -154,7 +154,7 @@ public class WatchDog implements Activatable, Shutdownable {
     }
 
     public void waitForServiceState(final ServiceState serviceState, final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
-        long requestTimestamp = System.currentTimeMillis();
+        final TimeoutSplitter timeoutSplitter = new TimeoutSplitter(timeout, timeUnit);
         synchronized (STATE_LOCK) {
             while (true) {
                 if (Thread.interrupted()) {
@@ -173,11 +173,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 if (timeout <= 0) {
                     STATE_LOCK.wait();
                 } else {
-                    final long passedTime = System.currentTimeMillis() - requestTimestamp;
-                    if (passedTime > timeUnit.toMillis(timeout)) {
-                        throw new TimeoutException("Still in State[" + this.serviceState.name() + "] and timeout occurs before reaching State[" + serviceState.name() + "].");
-                    }
-                    STATE_LOCK.wait(timeUnit.toMillis(timeout) - passedTime);
+                    STATE_LOCK.wait(timeoutSplitter.getTime(() -> "Still in State[" + this.serviceState.name() + "] and timeout occurs before reaching State[" + serviceState.name() + "]."));
                 }
             }
         }
@@ -301,6 +297,19 @@ public class WatchDog implements Activatable, Shutdownable {
             if (future != null) {
                 future.cancel(true);
             }
+
+
+            if (getServiceState() == ServiceState.INITIALIZING) {
+                try {
+                    waitForServiceState(ServiceState.RUNNING, 200, TimeUnit.MILLISECONDS) ;
+                } catch (InterruptedException e) {
+                    // continue shutdown
+                } catch (CouldNotPerformException e) {
+                    // continue shutdown
+                }
+            }
+
+
             if (service.isActive()) {
                 setServiceState(ServiceState.TERMINATING);
                 try {

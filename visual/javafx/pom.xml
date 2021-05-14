@@ -33,7 +33,7 @@
 		<repository>
 			<id>maven2-repository.netbeans.maven2</id>
 			<name>Netbeans Maven Repository</name>
-			<url>http://bits.netbeans.org/maven2/</url>
+			<url>https://bits.netbeans.org/maven2/</url>
 			<layout>default</layout>
 		</repository> 
 	</repositories>
