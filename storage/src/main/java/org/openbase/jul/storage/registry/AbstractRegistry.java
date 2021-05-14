@@ -949,10 +949,14 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
 
                             // handle handler interference
                             maxConsistencyChecks = consistencyHandlerList.size() * entryMap.size() * 2;
-                            if (iterationCounter > maxConsistencyChecks) {
+                            if (iterationCounter > maxConsistencyChecks && MultiException.size(exceptionStack) > 0) {
                                 final int stackSize = MultiException.size(exceptionStack);
-                                MultiException.checkAndThrow(() -> stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
-                                throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
+
+                                try {
+                                    MultiException.checkAndThrow(() -> stackSize + " error" + (stackSize == 1 ? "" : "s") + " occurred during processing!", exceptionStack);
+                                } catch (MultiException ex) {
+                                    throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!", ex);
+                                }
                             }
 
                             // prepare for next iteration
@@ -1011,7 +1015,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
 
                                 // inform about modifications
                                 try {
-                                    if (JPService.getProperty(JPVerbose.class).getValue() && !JPService.getProperty(JPTestMode.class).getValue()) {
+                                    if (iterationCounter > (maxConsistencyChecks * 0.9) || JPService.getProperty(JPVerbose.class).getValue() && !JPService.getProperty(JPTestMode.class).getValue()) {
                                         log("Consistency modification applied: " + ex.getMessage());
                                     } else {
                                         logger.debug("Consistency modification applied: " + ex.getMessage());
@@ -1021,6 +1025,11 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                                 }
                                 pluginPool.afterConsistencyModification((ENTRY) ex.getEntry());
                                 modificationCounter++;
+
+                                if (iterationCounter > maxConsistencyChecks && MultiException.size(exceptionStack) == 0) {
+                                    throw new InvalidStateException("ConsistencyHandler" + Arrays.toString(consistencyHandlerQueue.toArray()) + " interference detected!");
+                                }
+
                                 continue;
                             } catch (Throwable ex) {
                                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new InvalidStateException("Fatal error occurred during consistency check!", ex), logger);
