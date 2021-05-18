@@ -5,13 +5,13 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.schedule.GlobalCachedExecutorService
+import org.openbase.type.communication.mqtt.RequestType
+import org.openbase.type.communication.mqtt.ResponseType
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import kotlin.Any
 import com.google.protobuf.Any as protoAny
-import org.openbase.type.communication.mqtt.RequestType
-import org.openbase.type.communication.mqtt.ResponseType
 
 class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
 
@@ -22,16 +22,12 @@ class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
 
     fun <RETURN> callMethod(methodName: String, return_clazz: Class<RETURN>, vararg parameters: Any): Future<RETURN> {
         // lazily register parse methods for parameters and return type
-        if (methodName !in resultParserMap) {
-            resultParserMap[methodName] = protoAnyToAny(return_clazz)
-        }
-        val resultParser = resultParserMap[methodName]!!
-        if (methodName !in parameterParserMap) {
-            parameterParserMap[methodName] = parameters
+        val resultParser = resultParserMap.getOrPut(methodName) { RPCMethod.protoAnyToAny(return_clazz) }
+        val parameterParser = parameterParserMap.getOrPut(methodName) {
+            parameters
                 .map { param -> param::class.java }
-                .map { param_clazz -> anyToProtoAny(param_clazz) }
+                .map { param_clazz -> RPCMethod.anyToProtoAny(param_clazz) }
         }
-        val parameterParser = parameterParserMap[methodName]!!
 
         println("Build request")
         // create request

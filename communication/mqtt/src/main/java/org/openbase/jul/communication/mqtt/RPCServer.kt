@@ -3,20 +3,14 @@ package org.openbase.jul.communication.mqtt
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
-import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
 import java.lang.reflect.Method
-import java.util.function.Consumer
 
 class RPCServer(private val mqttClient: Mqtt5AsyncClient, topic: String) {
+
     private val topic: String = "$topic/rpc"
-
-    //private val activationFuture: CompletableFuture<Mqtt5SubAck>? = null;
-
-    //private val active get() = activationFuture != null && activationFuture.isDone
-
     private var methods: HashMap<String, RPCMethod> = HashMap();
 
     fun activate() {
