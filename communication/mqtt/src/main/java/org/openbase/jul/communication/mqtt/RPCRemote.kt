@@ -69,7 +69,6 @@ class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
                 if (throwable != null) {
                     future.completeExceptionally(throwable)
                 } else {
-                    println("Send request: $request to $topic")
                     mqttClient.publishWith()
                         .topic(topic)
                         .qos(MqttQos.EXACTLY_ONCE)
