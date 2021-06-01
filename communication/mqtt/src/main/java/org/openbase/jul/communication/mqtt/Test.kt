@@ -24,6 +24,7 @@ object Test {
             .useMqttVersion5()
             .buildAsync()
         client.connect()[1, TimeUnit.SECONDS]
+        println("Client connected!")
 
         val topic = "/asdkjaflasjdhalsk/test"
         val rpcServer = RPCServer(client, topic)
