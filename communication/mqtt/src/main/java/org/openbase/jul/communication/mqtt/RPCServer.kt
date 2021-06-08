@@ -5,9 +5,11 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
+import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
+import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.util.*
 
@@ -51,8 +53,6 @@ class RPCServer(private val mqttClient: Mqtt5AsyncClient, topic: String) {
             .topic(requestTopic)
             .qos(MqttQos.EXACTLY_ONCE)
 
-        println("Server received request\n$request")
-
         responseBuilder.status = ResponseType.Response.Status.ACKNOWLEDGED
         responseBuilder.id = request.id
         mqttClient.publish(
@@ -76,16 +76,17 @@ class RPCServer(private val mqttClient: Mqtt5AsyncClient, topic: String) {
         val method = methods[request.methodName]!!;
 
         //TODO open thread to send PROGRESSING message periodically
+        responseBuilder.status = ResponseType.Response.Status.FINISHED
         try {
             val result = method.invoke(request.paramsList);
-            println("Internal invoke returned $result");
-            responseBuilder.status = ResponseType.Response.Status.FINISHED
             responseBuilder.result = result
+        } catch (ex: InvocationTargetException) {
+            responseBuilder.error = ex.cause!!.message //TODO: build message accordingly from stackstrace...
+        } catch (ex: CouldNotPerformException) {
+            responseBuilder.error = ex.message
         } catch (ex: Exception) {
-            responseBuilder.status = ResponseType.Response.Status.FINISHED
-            responseBuilder.error = ex.message //TODO: build message accordingly from stackstrace...
+            responseBuilder.error = "Server error ${ex.message}"
         }
-        println("Return response: ${responseBuilder.build()}")
 
         mqttClient.publish(
             mqttResponseBuilder

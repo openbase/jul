@@ -154,6 +154,8 @@ internal class RPCServerTest {
 
     @Nested
     inner class TestRequestHandling {
+        //TODO: the tests in this nested class could be improved, e.g. by mocking the rpcMethod and its
+        // invokation
 
         inner class Adder {
             fun add(a: Int, b: Int): Int {
@@ -170,6 +172,10 @@ internal class RPCServerTest {
         private var mqtt5Publish = mockk<Mqtt5Publish>()
         private var request = RequestType.Request.newBuilder()
             .setId(requestId)
+        private var acknowledgedResponse = ResponseType.Response.newBuilder()
+            .setId(requestId)
+            .setStatus(ResponseType.Response.Status.ACKNOWLEDGED)
+            .build()
 
         lateinit var callback: Consumer<Mqtt5Publish>
 
@@ -197,10 +203,6 @@ internal class RPCServerTest {
 
             callback.accept(mqtt5Publish)
 
-            val ackResponse = ResponseType.Response.newBuilder()
-                .setId(requestId)
-                .setStatus(ResponseType.Response.Status.ACKNOWLEDGED)
-                .build()
             val expectedErrorResponse = ResponseType.Response.newBuilder()
                 .setId(requestId)
                 .setStatus(ResponseType.Response.Status.FINISHED)
@@ -211,7 +213,71 @@ internal class RPCServerTest {
                 mqttClient.publish(Mqtt5Publish.builder()
                     .topic("$baseTopic/rpc/$requestId")
                     .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(ackResponse.toByteArray())
+                    .payload(acknowledgedResponse.toByteArray())
+                    .build())
+                mqttClient.publish(Mqtt5Publish.builder()
+                    .topic("$baseTopic/rpc/$requestId")
+                    .qos(MqttQos.EXACTLY_ONCE)
+                    .payload(expectedErrorResponse.toByteArray())
+                    .build())
+            }
+        }
+
+        @Test
+        fun `test error in invoked method`() {
+            request.methodName = "add"
+            val args = arrayOf(12, 5)
+            val argsAsProtoAny = args
+                .map { arg -> RPCMethod.anyToProtoAny(arg::class.java) }
+                .zip(args)
+                .map { (toProtoAny, arg) -> toProtoAny(arg) }
+
+            request.addAllParams(argsAsProtoAny)
+            callback.accept(mqtt5Publish)
+
+            val expectedErrorResponse = ResponseType.Response.newBuilder()
+                .setId(requestId)
+                .setStatus(ResponseType.Response.Status.FINISHED)
+                .setError("Number too high")
+                .build()
+
+            verifyOrder {
+                mqttClient.publish(Mqtt5Publish.builder()
+                    .topic("$baseTopic/rpc/$requestId")
+                    .qos(MqttQos.EXACTLY_ONCE)
+                    .payload(acknowledgedResponse.toByteArray())
+                    .build())
+                mqttClient.publish(Mqtt5Publish.builder()
+                    .topic("$baseTopic/rpc/$requestId")
+                    .qos(MqttQos.EXACTLY_ONCE)
+                    .payload(expectedErrorResponse.toByteArray())
+                    .build())
+            }
+        }
+
+        @Test
+        fun `test erroneous parameter count`() {
+            request.methodName = "add"
+            val args = arrayOf(12, 5, 6)
+            val argsAsProtoAny = args
+                .map { arg -> RPCMethod.anyToProtoAny(arg::class.java) }
+                .zip(args)
+                .map { (toProtoAny, arg) -> toProtoAny(arg) }
+
+            request.addAllParams(argsAsProtoAny)
+            callback.accept(mqtt5Publish)
+
+            val expectedErrorResponse = ResponseType.Response.newBuilder()
+                .setId(requestId)
+                .setStatus(ResponseType.Response.Status.FINISHED)
+                .setError("Invalid number of arguments! Expected 2 but got ${args.size}")
+                .build()
+
+            verifyOrder {
+                mqttClient.publish(Mqtt5Publish.builder()
+                    .topic("$baseTopic/rpc/$requestId")
+                    .qos(MqttQos.EXACTLY_ONCE)
+                    .payload(acknowledgedResponse.toByteArray())
                     .build())
                 mqttClient.publish(Mqtt5Publish.builder()
                     .topic("$baseTopic/rpc/$requestId")
@@ -224,7 +290,35 @@ internal class RPCServerTest {
         @Test
         fun `test successful method request`() {
             request.methodName = "add"
+            val args = arrayOf(6, 5)
+            val argsAsProtoAny = args
+                .map { arg -> RPCMethod.anyToProtoAny(arg::class.java) }
+                .zip(args)
+                .map { (toProtoAny, arg) -> toProtoAny(arg) }
 
+            request.addAllParams(argsAsProtoAny)
+            callback.accept(mqtt5Publish)
+
+            val expectedResult = adder.add(args[0], args[1])
+            val expectedResultProto = RPCMethod.anyToProtoAny(Int::class.java)(expectedResult)
+            val expectedResponse = ResponseType.Response.newBuilder()
+                .setId(requestId)
+                .setStatus(ResponseType.Response.Status.FINISHED)
+                .setResult(expectedResultProto)
+                .build()
+
+            verifyOrder {
+                mqttClient.publish(Mqtt5Publish.builder()
+                    .topic("$baseTopic/rpc/$requestId")
+                    .qos(MqttQos.EXACTLY_ONCE)
+                    .payload(acknowledgedResponse.toByteArray())
+                    .build())
+                mqttClient.publish(Mqtt5Publish.builder()
+                    .topic("$baseTopic/rpc/$requestId")
+                    .qos(MqttQos.EXACTLY_ONCE)
+                    .payload(expectedResponse.toByteArray())
+                    .build())
+            }
         }
     }
 }
