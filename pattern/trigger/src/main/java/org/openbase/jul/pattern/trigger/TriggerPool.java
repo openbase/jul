@@ -126,21 +126,32 @@ public class TriggerPool extends AbstractTrigger {
     }
 
     private boolean verifyAndCondition() throws CouldNotPerformException {
-        for (Trigger trigger : triggerListAND) {
-            if (!trigger.getActivationState().getValue().equals(ActivationState.State.ACTIVE) && !trigger.getActivationState().getValue().equals(ActivationState.State.UNKNOWN)) {
-                return false;
-            }
+
+        if(triggerListAND.isEmpty()) {
+            return false;
         }
-        return !triggerListAND.isEmpty();
+
+        return triggerListAND
+                .stream()
+                .allMatch(trigger -> {
+                    try {
+                        return trigger.getActivationState().getValue() == ActivationState.State.ACTIVE;
+                    } catch (NotAvailableException exception) {
+                        return false;
+                    }
+                });
     }
 
     private boolean verifyOrCondition() throws CouldNotPerformException {
-        for (Trigger trigger : triggerListOR) {
-            if (trigger.getActivationState().getValue().equals(ActivationState.State.ACTIVE)) {
-                return true;
-            }
-        }
-        return false;
+        return triggerListOR
+                .stream()
+                .anyMatch(trigger -> {
+                    try {
+                        return trigger.getActivationState().getValue() == ActivationState.State.ACTIVE;
+                    } catch (NotAvailableException exception) {
+                        return false;
+                    }
+                });
     }
 
     /**
