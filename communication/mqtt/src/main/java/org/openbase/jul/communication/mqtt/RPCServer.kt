@@ -12,14 +12,23 @@ import org.openbase.type.communication.mqtt.ResponseType
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.util.*
+import java.util.concurrent.Future
+import java.util.function.BiConsumer
 
 class RPCServer(private val mqttClient: Mqtt5AsyncClient, topic: String) {
 
     private val topic: String = "$topic/rpc"
-    private var methods: HashMap<String, RPCMethod> = HashMap();
+    private val methods: HashMap<String, RPCMethod> = HashMap()
 
-    fun activate() {
-        mqttClient.subscribe(
+    private var activationFuture: Future<out Any>? = null
+    val isActive: Boolean = (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
+
+    fun activate(): Future<out Any> {
+        if (activationFuture != null && !activationFuture!!.isDone) {
+            return activationFuture!!
+        }
+
+        activationFuture = mqttClient.subscribe(
             Mqtt5Subscribe.builder()
                 .topicFilter(topic)
                 .qos(MqttQos.EXACTLY_ONCE)
@@ -27,14 +36,15 @@ class RPCServer(private val mqttClient: Mqtt5AsyncClient, topic: String) {
             { mqtt5Publish -> handleRemoteCall(mqtt5Publish) },
             GlobalCachedExecutorService.getInstance().executorService
         )
+        return activationFuture!!
     }
 
-    fun deactivate() {
-        mqttClient.unsubscribe(
+    fun deactivate(): Future<out Any> {
+        return mqttClient.unsubscribe(
             Mqtt5Unsubscribe.builder()
                 .topicFilter(topic)
                 .build()
-        )//TODO call get to make sure it is inactive?
+        )
     }
 
     fun addMethod(method: Method, instance: Any) {
