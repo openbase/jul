@@ -32,6 +32,7 @@
         <module>default</module>
         <module>tcp</module>
         <module>controller</module>
+        <module>mqtt</module>
     </modules>
     
     <dependencies>
