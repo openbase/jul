@@ -3,6 +3,7 @@ package org.openbase.jul.communication.mqtt
 import com.google.protobuf.Message
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
+import java.lang.Class
 import java.lang.reflect.Method
 import kotlin.Any
 import kotlin.Boolean
@@ -28,12 +29,12 @@ class RPCMethod(private val method: Method, private val instance: Any) {
                 return { msg: Any -> protoAny.pack(msg as Message) }
             }
 
-            //TODO: how can you check if a class is void?
+            // Note: if a method is resolved via reflections Void::class.java does not match
+            //       therefore, we perform a string comparison here
             if (clazz.name == "void") {
                 return { _: Any -> protoAny.getDefaultInstance() }
             }
 
-            java.lang.Integer::class.java
             return when (clazz) {
                 Int::class.java, java.lang.Integer::class.java -> { msg: Any ->
                     protoAny.pack(Primitive.newBuilder().setInt(msg as Int).build());
@@ -73,7 +74,7 @@ class RPCMethod(private val method: Method, private val instance: Any) {
             return when (clazz) {
                 Int::class.java, java.lang.Integer::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).int }
                 Float::class, java.lang.Float::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).float }
-                Double::class.java, java.lang.Double::class.java -> { msg: protoAny    -> msg.unpack(Primitive::class.java).double }
+                Double::class.java, java.lang.Double::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).double }
                 Long::class.java, java.lang.Long::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).long }
                 String::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).string }
                 Boolean::class.java, java.lang.Boolean::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).boolean }
