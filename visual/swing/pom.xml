@@ -55,5 +55,23 @@
             <artifactId>jul.extension.type.interface</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${dependency.openjfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${dependency.openjfx.version}</version>
+            <classifier>mac</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${dependency.openjfx.version}</version>
+            <classifier>linux</classifier>
+        </dependency>
     </dependencies>
 </project>

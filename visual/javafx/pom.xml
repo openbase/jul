@@ -91,6 +91,14 @@
             <classifier>linux</classifier>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-media -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${dependency.openjfx.version}</version>
+            <classifier>linux</classifier>
+        </dependency>
+
         <!-- ##################### windows ######################################## -->
 
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-base -->
@@ -125,6 +133,14 @@
             <classifier>win</classifier>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-media -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${dependency.openjfx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+
         <!-- ##################### macos ####################################### -->
 
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-base -->
@@ -155,6 +171,14 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-media</artifactId>
+            <version>${dependency.openjfx.version}</version>
+            <classifier>mac</classifier>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-media -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
             <version>${dependency.openjfx.version}</version>
             <classifier>mac</classifier>
         </dependency>
