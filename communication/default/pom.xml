@@ -29,11 +29,20 @@
     </build>
 
     <dependencies>
-        <!--dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>type</artifactId>
+            <version>${dependency.openbase.type.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.openbase</groupId>
             <artifactId>jul.interface</artifactId>
-            <version>${project.version}</version>
-            <type>jar</type>
-        </dependency-->
+            <version>${version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.exception</artifactId>
+            <version>${version}</version>
+        </dependency>
     </dependencies>
 </project>

@@ -125,6 +125,30 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <jvmTarget>1.8</jvmTarget>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -237,7 +261,8 @@
         <dependency.jps.version>[3.5,3.6-alpha)</dependency.jps.version>
 <!--        <dependency.jps.version>3.4-SNAPSHOT</dependency.jps.version>-->
 
-        <dependency.openbase.type.version>[1.0,1.1-alpha)</dependency.openbase.type.version>
+
+        <dependency.openbase.type.version>1.1-SNAPSHOT</dependency.openbase.type.version>
 
         <dependency.rsx.version>[0.18,0.19-alpha)</dependency.rsx.version>
         <!--dependency.rsx.version>0.18-SNAPSHOT</dependency.rsx.version-->
@@ -250,6 +275,7 @@
         <dependency.de.jensd.fontawesomefx.version>[8.9,8.10-alpha)</dependency.de.jensd.fontawesomefx.version>
         <dependency.com.jfoenix.version>[9.0,9.1-alpha)</dependency.com.jfoenix.version>
         <dependency.org.junit.jupiter.version>[5.6,5.7-alpha)</dependency.org.junit.jupiter.version>
+        <kotlin.version>1.5.20</kotlin.version>
     </properties>
     
     <repositories>
@@ -293,6 +319,17 @@
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
             <version>${dependency.org.junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib-jdk8</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

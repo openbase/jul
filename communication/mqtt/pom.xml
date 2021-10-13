@@ -88,7 +88,7 @@
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.exception</artifactId>
+            <artifactId>jul.communication</artifactId>
             <version>${version}</version>
         </dependency>
         <dependency>
@@ -97,23 +97,10 @@
             <version>${version}</version>
         </dependency>
         <dependency>
-            <groupId>org.openbase</groupId>
-            <artifactId>type</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>3.4.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.hivemq</groupId>
             <artifactId>hivemq-mqtt-client</artifactId>
             <version>1.2.2</version>
         </dependency>
-
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib-jdk8</artifactId>
@@ -125,8 +112,6 @@
             <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
-
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
