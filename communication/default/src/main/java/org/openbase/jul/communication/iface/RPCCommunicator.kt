@@ -1,4 +1,12 @@
-package org.openbase.jul.communication.iface;
+package org.openbase.jul.communication.iface
+
+import org.openbase.jul.communication.iface.Communicator
+import java.lang.InterruptedException
+import org.openbase.jul.communication.iface.RPCCommunicator
+import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.iface.RPCClient
+import org.openbase.jul.exception.NotAvailableException
+import java.lang.reflect.Method
 
 /*
  * #%L
@@ -20,25 +28,9 @@ package org.openbase.jul.communication.iface;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.NotAvailableException;
-
-import java.util.Iterator;
-import java.util.List;
-
-/**
+ */ /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * * @author Divine [Divine](mailto:DivineThreepwood@gmail.com)
+ *
  */
-public interface Subscriber extends Communicator {
-
-//    List<Handler> getHandlers() throws NotAvailableException;
-//
-//    Iterator<Handler> getHandlerIterator() throws CouldNotPerformException;
-//
-//    void addHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
-//
-//    void removeHandler(Handler handler, boolean wait) throws InterruptedException, CouldNotPerformException;
-}
+interface RPCCommunicator : Communicator

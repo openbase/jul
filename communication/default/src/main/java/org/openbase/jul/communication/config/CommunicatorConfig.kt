@@ -1,5 +1,4 @@
-package org.openbase.jul.communication.config;
-
+package org.openbase.jul.communication.config
 /*-
  * #%L
  * JUL Communication Default
@@ -21,26 +20,7 @@ package org.openbase.jul.communication.config;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-public class CommunicatorConfig {
-    private String hostname;
-    private Integer port;
-
-    public String getHostname() {
-        return hostname;
-    }
-
-    public CommunicatorConfig setHostname(String hostname) {
-        this.hostname = hostname;
-        return this;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
-    public CommunicatorConfig setPort(Integer port) {
-        this.port = port;
-        return this;
-    }
-}
+data class CommunicatorConfig(
+    var hostname: String? = null,
+    var port: Int? = null,
+)

@@ -1,4 +1,12 @@
-package org.openbase.jul.communication.iface;
+package org.openbase.jul.communication.iface
+
+import org.openbase.jul.communication.iface.Communicator
+import java.lang.InterruptedException
+import org.openbase.jul.communication.iface.RPCCommunicator
+import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.iface.RPCClient
+import org.openbase.type.communication.EventType.Event
+import java.util.*
 
 /*
  * #%L
@@ -20,19 +28,11 @@ package org.openbase.jul.communication.iface;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-import org.openbase.jul.exception.CouldNotPerformException;
-
-import java.lang.reflect.Method;
-
-/**
+ */ /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
-public interface RPCServer extends RPCCommunicator {
-
-    void addMethod(Method method, Object instance) throws CouldNotPerformException;
-
-    void waitForShutdown() throws CouldNotPerformException, InterruptedException;
+interface Subscriber : Communicator {
+    fun registerDataHandler(callback: (Event) -> Any): UUID
+    fun removeDataHandler(handlerId: UUID)
 }

@@ -1,4 +1,12 @@
-package org.openbase.jul.communication.iface;
+package org.openbase.jul.communication.iface
+
+import org.openbase.jul.communication.iface.Communicator
+import java.lang.InterruptedException
+import org.openbase.jul.communication.iface.RPCCommunicator
+import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.iface.RPCClient
+import org.openbase.jul.exception.CouldNotPerformException
+import java.lang.reflect.Method
 
 /*
  * #%L
@@ -20,21 +28,11 @@ package org.openbase.jul.communication.iface;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-import org.openbase.jul.exception.NotAvailableException;
-import java.lang.reflect.Method;
-import java.util.Collection;
-
-/**
+ */ /**
  *
- * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
+ * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
-public interface RPCCommunicator extends Communicator {
+interface RPCServer : RPCCommunicator {
 
-    Collection<? extends Method> getMethods() throws NotAvailableException;
-
-    Method getMethod(String name) throws NotAvailableException;
-
-    boolean hasMethod(String name);
+    fun registerMethod(method: Method, instance: Any)
 }

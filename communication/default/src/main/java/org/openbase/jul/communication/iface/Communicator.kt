@@ -1,4 +1,14 @@
-package org.openbase.jul.communication.iface;
+package org.openbase.jul.communication.iface
+
+import org.openbase.jul.communication.iface.Communicator
+import java.lang.InterruptedException
+import org.openbase.jul.communication.iface.RPCCommunicator
+import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.iface.RPCClient
+import org.openbase.jul.exception.NotAvailableException
+import org.openbase.jul.iface.Activatable
+import org.openbase.type.communication.ScopeType.Scope
+import java.util.*
 
 /*
  * #%L
@@ -20,28 +30,17 @@ package org.openbase.jul.communication.iface;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-import org.openbase.jul.communication.config.CommunicatorConfig;
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.iface.Activatable;
-import org.openbase.type.communication.ScopeType.Scope;
-
-import java.util.UUID;
-
-/**
+ */ /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
-public interface Communicator extends Activatable {
+interface Communicator : Activatable {
+    val id: UUID
 
-    String getKind() throws NotAvailableException;
+    val scope: Scope
 
-    Class<?> getDataType() throws NotAvailableException;
+    val config: CommunicatorConfig
 
-    UUID getId() throws NotAvailableException;
-
-    Scope getScope() throws NotAvailableException;
-
-    CommunicatorConfig getConfig() throws NotAvailableException;
+    @Throws(InterruptedException::class)
+    fun waitForShutdown()
 }
