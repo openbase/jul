@@ -15,11 +15,6 @@
     
     <url>https://github.com/openbase/jul/wiki</url>
 
-    <properties>
-        <kotlin.version>1.5.0</kotlin.version>
-    </properties>
-
-
     <build>
         <plugins>
             <plugin>
