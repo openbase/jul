@@ -7,6 +7,7 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCClient
 import org.openbase.jul.exception.CouldNotPerformException
 import java.lang.reflect.Method
+import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmMemberSignature
 
 /*
  * #%L
@@ -34,5 +35,5 @@ import java.lang.reflect.Method
  */
 interface RPCServer : RPCCommunicator {
 
-    fun registerMethod(method: Method, instance: Any)
+    fun registerMethod(method: JvmMemberSignature.Method, instance: Any)
 }
