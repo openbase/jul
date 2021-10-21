@@ -1,5 +1,6 @@
 package org.openbase.jul.communication.iface
 
+import com.google.protobuf.Message
 import org.openbase.jul.communication.iface.Communicator
 import java.lang.InterruptedException
 import org.openbase.jul.communication.iface.RPCCommunicator
@@ -7,6 +8,7 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCClient
 import org.openbase.jul.exception.CouldNotPerformException
 import java.lang.reflect.Method
+import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmMemberSignature
 
 /*
@@ -35,5 +37,5 @@ import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmMemberSi
  */
 interface RPCServer : RPCCommunicator {
 
-    fun registerMethod(method: JvmMemberSignature.Method, instance: Any)
+    fun registerMethod(method: KFunction<*>, instance: Any)
 }
