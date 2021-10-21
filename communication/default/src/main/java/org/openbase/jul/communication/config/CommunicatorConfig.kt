@@ -21,6 +21,6 @@ package org.openbase.jul.communication.config
  * #L%
  */
 data class CommunicatorConfig(
-    var hostname: String? = null,
-    var port: Int? = null,
+    var hostname: String,
+    var port: Int,
 )
