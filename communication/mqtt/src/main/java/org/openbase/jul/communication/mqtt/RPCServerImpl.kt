@@ -7,13 +7,15 @@ import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCServer
 import org.openbase.jul.exception.CouldNotPerformException
-import org.openbase.jul.extension.type.processing.ScopeProcessor
+import org.openbase.jul.exception.StackTracePrinter
+import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.ScopeType
 import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Method
 import java.util.*
 import java.util.concurrent.Future
 import kotlin.reflect.KFunction
@@ -22,6 +24,8 @@ class RPCServerImpl(
     override val scope: ScopeType.Scope,
     override val config: CommunicatorConfig
 ) : RPCCommunicatorImpl(scope, config), RPCServer {
+
+    private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
     private val methods: HashMap<String, RPCMethod> = HashMap()
     private var activationFuture: Future<out Any>? = null
@@ -97,14 +101,17 @@ class RPCServerImpl(
         //TODO open thread to send PROGRESSING message periodically
         responseBuilder.status = ResponseType.Response.Status.FINISHED
         try {
-            val result = method.invoke(request.paramsList);
+            val result = method.invoke(request.paramsList)
             responseBuilder.result = result
-        } catch (ex: InvocationTargetException) {
-            responseBuilder.error = ex.cause!!.message //TODO: build message accordingly from stackstrace...
-        } catch (ex: CouldNotPerformException) {
-            responseBuilder.error = ex.message
         } catch (ex: Exception) {
-            responseBuilder.error = "Server error ${ex.message}"
+            when (ex) {
+                is InvocationTargetException, is CouldNotPerformException -> responseBuilder.error =
+                    ex.stackTraceToString()
+                else -> {
+                    StackTracePrinter.printStackTrace(logger, LogLevel.WARN)
+                    responseBuilder.error = CouldNotPerformException("Server error ${ex.message}").stackTraceToString()
+                }
+            }
         }
 
         mqttClient.publish(

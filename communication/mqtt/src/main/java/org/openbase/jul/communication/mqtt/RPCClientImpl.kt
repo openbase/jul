@@ -5,8 +5,8 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.communication.iface.RPCClient
-import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.ScopeType
 import org.openbase.type.communication.mqtt.RequestType.Request
@@ -90,8 +90,7 @@ class RPCClientImpl(
         )
 
         if (response.error.isNotEmpty()) {
-            //TODO parse exception correctly
-            rpcFuture.completeExceptionally(CouldNotPerformException(response.error));
+            rpcFuture.completeExceptionally(RPCException(response.error));
         } else {
             rpcFuture.complete(resultParserMap[request.methodName]!!(response.result) as RETURN);
         }
