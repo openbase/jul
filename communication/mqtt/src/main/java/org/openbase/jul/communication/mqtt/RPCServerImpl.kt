@@ -1,31 +1,40 @@
 package org.openbase.jul.communication.mqtt
 
 import com.hivemq.client.mqtt.datatypes.MqttQos
-import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
+import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.iface.RPCServer
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
+import org.openbase.type.communication.ScopeType
 import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.util.*
 import java.util.concurrent.Future
-import java.util.function.BiConsumer
+import kotlin.reflect.KFunction
 
-class RPCServer(private val mqttClient: Mqtt5AsyncClient, topic: String) {
+class RPCServerImpl(
+    override val scope: ScopeType.Scope,
+    override val config: CommunicatorConfig
+) : RPCCommunicatorImpl(scope, config), RPCServer {
 
-    private val topic: String = "$topic/rpc"
     private val methods: HashMap<String, RPCMethod> = HashMap()
-
     private var activationFuture: Future<out Any>? = null
-    val isActive: Boolean = (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
+    private val isActive: Boolean =
+        (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
 
-    fun activate(): Future<out Any> {
-        if (activationFuture != null && !activationFuture!!.isDone) {
-            return activationFuture!!
+    override fun isActive(): Boolean {
+        return isActive
+    }
+
+    override fun activate() {
+        if (isActive()) {
+            return
         }
 
         activationFuture = mqttClient.subscribe(
@@ -36,18 +45,18 @@ class RPCServer(private val mqttClient: Mqtt5AsyncClient, topic: String) {
             { mqtt5Publish -> handleRemoteCall(mqtt5Publish) },
             GlobalCachedExecutorService.getInstance().executorService
         )
-        return activationFuture!!
     }
 
-    fun deactivate(): Future<out Any> {
-        return mqttClient.unsubscribe(
+    override fun deactivate() {
+        activationFuture = null
+        mqttClient.unsubscribe(
             Mqtt5Unsubscribe.builder()
                 .topicFilter(topic)
                 .build()
         )
     }
 
-    fun addMethod(method: Method, instance: Any) {
+    override fun registerMethod(method: KFunction<*>, instance: Any) {
         methods[method.name] = RPCMethod(method, instance);
     }
 

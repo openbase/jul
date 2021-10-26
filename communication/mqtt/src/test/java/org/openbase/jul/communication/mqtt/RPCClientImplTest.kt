@@ -16,7 +16,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.mqtt.RequestType.Request
 import org.openbase.type.communication.mqtt.ResponseType.Response
@@ -27,7 +29,7 @@ import java.util.function.BiConsumer
 import java.util.function.Consumer
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class RPCRemoteTest {
+internal class RPCClientImplTest {
 
     private val mqttClient: Mqtt5AsyncClient = mockk()
     private val mqttSubscribeSlot = slot<Mqtt5Subscribe>()
@@ -36,7 +38,7 @@ internal class RPCRemoteTest {
     val callbackSlot = slot<Consumer<Mqtt5Publish>>()
     val afterSubscriptionSlot = slot<BiConsumer<Mqtt5SubAck, Throwable?>>()
 
-    private var rpcRemote: RPCRemote
+    private var rpcRemote: RPCClientImpl
 
     private val baseTopic = "/test/remote"
     private val methodName = "add"
@@ -45,7 +47,10 @@ internal class RPCRemoteTest {
     private val expectedResult = 42
 
     init {
-        rpcRemote = spyk(RPCRemote(mqttClient, baseTopic), recordPrivateCalls = true)
+        rpcRemote = spyk(
+            RPCClientImpl(ScopeProcessor.generateScope(baseTopic), CommunicatorConfig("localhost", 1000)),
+            recordPrivateCalls = true
+        )
         every { rpcRemote.generateRequestId() } returns requestId
     }
 
@@ -74,7 +79,7 @@ internal class RPCRemoteTest {
             .qos(MqttQos.EXACTLY_ONCE)
             .build()
 
-        val rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class.java, *args)
+        val rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class, *args)
         rpcFuture.isDone shouldNotBe true
         mqttSubscribeSlot.captured shouldBe expectedMqttSubscribe
         verify(exactly = 1) {
@@ -94,7 +99,7 @@ internal class RPCRemoteTest {
 
         @BeforeEach
         fun setupMethodCall() {
-            rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class.java, *args)
+            rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class, *args)
             callback = afterSubscriptionSlot.captured
         }
 
@@ -115,7 +120,7 @@ internal class RPCRemoteTest {
                 .setMethodName(methodName)
                 .addAllParams(args
                     .zip(args
-                        .map { arg -> RPCMethod.anyToProtoAny(arg::class.java) })
+                        .map { arg -> RPCMethod.anyToProtoAny(arg::class) })
                     .map { (arg, toProtoAny) -> toProtoAny(arg) })
                 .build()
             val expectedMqttPublish = Mqtt5Publish.builder()
@@ -146,7 +151,7 @@ internal class RPCRemoteTest {
 
         @BeforeEach
         fun setupMethodCall() {
-            rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class.java, *args)
+            rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class, *args)
             callback = callbackSlot.captured
         }
 
@@ -182,7 +187,7 @@ internal class RPCRemoteTest {
         @Test
         fun `test successful response`() {
             response.status = Response.Status.FINISHED
-            response.result = RPCMethod.anyToProtoAny(expectedResult::class.java)(expectedResult)
+            response.result = RPCMethod.anyToProtoAny(expectedResult::class)(expectedResult)
 
             callback.accept(mqtt5Publish)
 

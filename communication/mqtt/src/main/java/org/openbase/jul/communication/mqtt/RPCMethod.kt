@@ -4,7 +4,6 @@ import com.google.protobuf.Message
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
 import java.lang.Class
-import java.lang.reflect.Method
 import kotlin.Any
 import kotlin.Boolean
 import kotlin.Double
@@ -12,9 +11,12 @@ import kotlin.Float
 import kotlin.Int
 import kotlin.Long
 import kotlin.String
+import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.isSuperclassOf
 import com.google.protobuf.Any as protoAny
 
-class RPCMethod(private val method: Method, private val instance: Any) {
+class RPCMethod(private val function: KFunction<*>, private val instance: Any) {
 
     companion object {
         /**
@@ -24,38 +26,48 @@ class RPCMethod(private val method: Method, private val instance: Any) {
          * This only works for messages and certain java primitive types as
          * defined in the proto type Primitive.
          */
-        fun anyToProtoAny(clazz: Class<*>): (Any) -> protoAny {
-            if (Message::class.java.isAssignableFrom(clazz)) {
+        fun anyToProtoAny(clazz: KClass<*>): (Any) -> protoAny {
+            println("Create converter for ${clazz.qualifiedName} to protoAny...")
+
+            if (Message::class.isSuperclassOf(clazz)) {
                 return { msg: Any -> protoAny.pack(msg as Message) }
             }
 
             // Note: if a method is resolved via reflections Void::class.java does not match
             //       therefore, we perform a string comparison here
-            if (clazz.name == "void") {
-                return { _: Any -> protoAny.getDefaultInstance() }
-            }
+            /*if (clazz.qualifiedName == "void") {
+                return { _: Any? -> protoAny.getDefaultInstance() }
+            }*/
 
             return when (clazz) {
-                Int::class.java, java.lang.Integer::class.java -> { msg: Any ->
-                    protoAny.pack(Primitive.newBuilder().setInt(msg as Int).build());
+                Int::class -> { msg: Any ->
+                    println("Call converter for int class with $msg")
+                    println("Cast ${msg as Int}")
+                    val b = Primitive.newBuilder()
+                    b.int = msg as Int
+                    print("Hallo?")
+                    print("Builder ${b.isInitialized} msg ${b.build().isInitialized}")
+                    //println("As primitive ${Primitive.newBuilder().setInt(msg as Int).build()}")
+                    protoAny.pack(b.build())
                 }
-                Float::class.java, java.lang.Float::class.java -> { msg: Any ->
+                Float::class -> { msg: Any ->
                     protoAny.pack(Primitive.newBuilder().setFloat(msg as Float).build())
                 }
-                Double::class.java, java.lang.Double::class.java -> { msg: Any ->
+                Double::class -> { msg: Any ->
                     protoAny.pack(Primitive.newBuilder().setDouble(msg as Double).build())
                 }
-                Long::class.java, java.lang.Long::class.java -> { msg: Any ->
+                Long::class -> { msg: Any ->
                     protoAny.pack(Primitive.newBuilder().setLong(msg as Long).build())
                 }
-                String::class.java -> { msg: Any ->
+                String::class -> { msg: Any ->
                     protoAny.pack(Primitive.newBuilder().setString(msg as String).build())
                 }
-                Boolean::class.java, java.lang.Boolean::class.java -> { msg: Any ->
+                Boolean::class -> { msg: Any ->
                     protoAny.pack(Primitive.newBuilder().setBoolean(msg as Boolean).build());
                 }
+                Unit::class -> {_ -> protoAny.getDefaultInstance()}
 
-                else -> throw CouldNotPerformException("Cannot parse class ${clazz.name} to proto any!");
+                else -> throw CouldNotPerformException("Cannot parse class ${clazz.qualifiedName} to proto any!");
             }
         }
 
@@ -66,27 +78,28 @@ class RPCMethod(private val method: Method, private val instance: Any) {
          * This only works for messages and certain java primitive types as
          * defined in the proto type Primitive.
          */
-        fun protoAnyToAny(clazz: Class<*>): (protoAny) -> Any {
-            if (Message::class.java.isAssignableFrom(clazz)) {
-                return { msg: protoAny -> msg.unpack(clazz as Class<Message>) }
+        fun protoAnyToAny(clazz: KClass<*>): (protoAny) -> Any {
+            if (Message::class.isSuperclassOf(clazz)) {
+                return { msg: protoAny -> msg.unpack(clazz.java as Class<Message>) }
             }
 
             return when (clazz) {
-                Int::class.java, java.lang.Integer::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).int }
-                Float::class, java.lang.Float::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).float }
-                Double::class.java, java.lang.Double::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).double }
-                Long::class.java, java.lang.Long::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).long }
-                String::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).string }
-                Boolean::class.java, java.lang.Boolean::class.java -> { msg: protoAny -> msg.unpack(Primitive::class.java).boolean }
+                Int::class -> { msg: protoAny -> msg.unpack(Primitive::class.java).int }
+                Float::class -> { msg: protoAny -> msg.unpack(Primitive::class.java).float }
+                Double::class -> { msg: protoAny -> msg.unpack(Primitive::class.java).double }
+                Long::class -> { msg: protoAny -> msg.unpack(Primitive::class.java).long }
+                String::class -> { msg: protoAny -> msg.unpack(Primitive::class.java).string }
+                Boolean::class -> { msg: protoAny -> msg.unpack(Primitive::class.java).boolean }
+                Unit::class -> {_ -> protoAny.getDefaultInstance()}
 
-                else -> throw CouldNotPerformException("Cannot parse class ${clazz.name} from proto any!")
+                else -> throw CouldNotPerformException("Cannot parse class ${clazz.qualifiedName} from proto any!")
             }
         }
     }
 
     private val parameterParserList: List<(protoAny) -> Any> =
-        method.parameterTypes.map { parameterType -> protoAnyToAny(parameterType) }
-    private var resultParser: (Any) -> protoAny = anyToProtoAny(method.returnType)
+        function.parameters.map { parameter -> protoAnyToAny(parameter.type.classifier as KClass<*>) }
+    private var resultParser: (Any) -> protoAny = anyToProtoAny(function.returnType.classifier as KClass<*>)
 
     fun invoke(args: List<protoAny>): protoAny {
         if (args.size != parameterParserList.size) {
@@ -96,8 +109,13 @@ class RPCMethod(private val method: Method, private val instance: Any) {
         val parameters = args
             .zip(parameterParserList)
             .map { (parameter, parameterParser) -> parameterParser(parameter) }
+            //.filter { parameter -> parameter == protoAny.getDefaultInstance() }
             .toTypedArray()
-        val result = method.invoke(instance, *parameters)
+
+        println("Got ${parameters.size}")
+        parameters.forEach { arg -> println(arg) }
+
+        val result = function.call(instance, *parameters)!!
         return resultParser(result);
     }
 }
