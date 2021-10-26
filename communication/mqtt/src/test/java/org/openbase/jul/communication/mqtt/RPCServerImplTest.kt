@@ -5,13 +5,14 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
-import io.kotest.matchers.shouldBe
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
@@ -19,10 +20,10 @@ import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class RPCServerTest {
+internal class RPCServerImplTest {
 
     private val baseTopic = "/test/server"
-    private val rpcServer: RPCServer
+    private val rpcServer: RPCServerImpl
 
     private val mqttClient: Mqtt5AsyncClient = mockk()
     private val mqttSubscribeSlot = slot<Mqtt5Subscribe>()
@@ -31,7 +32,7 @@ internal class RPCServerTest {
     val callbackSlot = slot<Consumer<Mqtt5Publish>>()
 
     init {
-        rpcServer = RPCServer(mqttClient, baseTopic)
+        rpcServer = RPCServerImpl(ScopeProcessor.generateScope(baseTopic), CommunicatorConfig("localhost", 1234))
     }
 
     @BeforeEach
@@ -113,9 +114,7 @@ internal class RPCServerTest {
         lateinit var callback: Consumer<Mqtt5Publish>
 
         init {
-            val method = Adder::class.java.getMethod("add", Int::class.java, Int::class.java)
-            rpcServer.addMethod(method, adder)
-
+            rpcServer.registerMethod(adder::add, adder)
             every { mqtt5Publish.payloadAsBytes } answers { request.build().toByteArray() }
         }
 
@@ -161,7 +160,7 @@ internal class RPCServerTest {
             request.methodName = "add"
             val args = arrayOf(12, 5)
             val argsAsProtoAny = args
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class.java) }
+                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
                 .zip(args)
                 .map { (toProtoAny, arg) -> toProtoAny(arg) }
 
@@ -193,7 +192,7 @@ internal class RPCServerTest {
             request.methodName = "add"
             val args = arrayOf(12, 5, 6)
             val argsAsProtoAny = args
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class.java) }
+                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
                 .zip(args)
                 .map { (toProtoAny, arg) -> toProtoAny(arg) }
 
@@ -225,7 +224,7 @@ internal class RPCServerTest {
             request.methodName = "add"
             val args = arrayOf(6, 5)
             val argsAsProtoAny = args
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class.java) }
+                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
                 .zip(args)
                 .map { (toProtoAny, arg) -> toProtoAny(arg) }
 
@@ -233,7 +232,7 @@ internal class RPCServerTest {
             callback.accept(mqtt5Publish)
 
             val expectedResult = adder.add(args[0], args[1])
-            val expectedResultProto = RPCMethod.anyToProtoAny(Int::class.java)(expectedResult)
+            val expectedResultProto = RPCMethod.anyToProtoAny(Int::class)(expectedResult)
             val expectedResponse = ResponseType.Response.newBuilder()
                 .setId(requestId)
                 .setStatus(ResponseType.Response.Status.FINISHED)

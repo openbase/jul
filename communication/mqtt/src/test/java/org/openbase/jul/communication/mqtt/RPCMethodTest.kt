@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertThrows
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType
+import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
 import java.lang.reflect.Method
 import kotlin.Any
@@ -21,8 +22,8 @@ internal class RPCMethodTest {
     @Test
     fun `test anyToProtoAny and protoAnyToAny Conversion`() {
         fun <T : Any> backAndForth(value: T): T {
-            val anyToProtoAnyConverter = RPCMethod.anyToProtoAny(value::class.java)
-            val protoAnyToAnyConverter = RPCMethod.protoAnyToAny(value::class.java)
+            val anyToProtoAnyConverter = RPCMethod.anyToProtoAny(value::class)
+            val protoAnyToAnyConverter = RPCMethod.protoAnyToAny(value::class)
             return protoAnyToAnyConverter(anyToProtoAnyConverter(value)) as T
         }
 
@@ -45,36 +46,68 @@ internal class RPCMethodTest {
             ResponseType.Response.newBuilder().setStatus(ResponseType.Response.Status.ACKNOWLEDGED).build()
         backAndForth(valueMessage) shouldBe valueMessage
 
-        shouldThrow<CouldNotPerformException> { RPCMethod.anyToProtoAny(Any::class.java) }
-        shouldThrow<CouldNotPerformException> { RPCMethod.protoAnyToAny(Any::class.java) }
+        shouldThrow<CouldNotPerformException> { RPCMethod.anyToProtoAny(Any::class) }
+        shouldThrow<CouldNotPerformException> { RPCMethod.protoAnyToAny(Any::class) }
     }
 
+    internal class MethodProvider {
+
+        fun idle() {
+            println("Idle called")
+        }
+
+        fun ping(): Long {
+            println("Ping")
+            return 0
+        }
+
+        fun request(request: RequestType.Request): ResponseType.Response {
+            println("Request")
+            return ResponseType.Response.newBuilder().setStatus(ResponseType.Response.Status.FINISHED).build()
+        }
+
+        fun setValue(value: String) {
+            println("Set value to $value")
+        }
+    }
 
     @Test
     fun `test invoke rpc method`() {
-        val args = arrayOf(5, 6);
+        /*val args = arrayOf(5, 6);
         val argsAsProtoAny = args
             .map { arg -> protoAny.pack(PrimitiveType.Primitive.newBuilder().setInt(arg).build()) }
         val argClasses = args
             .map { param -> param::class.java }
             .toTypedArray()
-        val internalMethod = mockk<Method>() {}
-        every { internalMethod.returnType } returns Integer::class.java
+        val internalMethod = mockk<Function<*>>() {}
+        every { internalMethod.re } returns Integer::class.java
         every { internalMethod.parameterTypes } returns argClasses
         every { internalMethod.invoke(any(), args[0], args[1]) } answers { args.sum() }
+internalMethod.para*/
 
-        val instance = Any()
+        /*val instance = Any()
         val rpcMethod = RPCMethod(internalMethod, instance)
         val result = rpcMethod.invoke(argsAsProtoAny).unpack(PrimitiveType.Primitive::class.java)
         result.int shouldBe args.sum()
 
         verify(exactly = 1) {
             internalMethod.invoke(instance, args[0], args[1]);
-        }
+        }*/
 
-        val toManyArgs = arrayOf(1, 2, 3)
+        val instance = MethodProvider()
+        var result = RPCMethod(instance::idle, instance).invoke(emptyList())
+        println("Result $result")
+        result = RPCMethod(instance::ping, instance).invoke(emptyList())
+        println("Result $result")
+        var param = com.google.protobuf.Any.pack(PrimitiveType.Primitive.newBuilder().setString("StringValue").build())
+        result = RPCMethod(instance::setValue, instance).invoke(listOf(param))
+        println("Result $result")
+        param = com.google.protobuf.Any.pack(RequestType.Request.getDefaultInstance())
+        println("Result $result")
+
+        /*val toManyArgs = arrayOf(1, 2, 3)
             .map { arg -> protoAny.pack(PrimitiveType.Primitive.newBuilder().setInt(arg).build()) }
-        assertThrows<CouldNotPerformException> { rpcMethod.invoke(toManyArgs) }
+        assertThrows<CouldNotPerformException> { rpcMethod.invoke(toManyArgs) }*/
     }
 
 

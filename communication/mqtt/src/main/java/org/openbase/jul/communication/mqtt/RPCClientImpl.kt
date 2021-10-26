@@ -1,28 +1,36 @@
 package org.openbase.jul.communication.mqtt
 
 import com.hivemq.client.mqtt.datatypes.MqttQos
-import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
+import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.iface.RPCClient
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.schedule.GlobalCachedExecutorService
+import org.openbase.type.communication.ScopeType
 import org.openbase.type.communication.mqtt.RequestType.Request
 import org.openbase.type.communication.mqtt.ResponseType.Response
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import kotlin.Any
+import kotlin.reflect.KClass
 import com.google.protobuf.Any as protoAny
 
-class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
-
-    private val topic: String = "$topic/rpc"
+class RPCClientImpl(
+    override val scope: ScopeType.Scope,
+    override val config: CommunicatorConfig
+) : RPCCommunicatorImpl(scope, config), RPCClient {
 
     private val parameterParserMap: HashMap<String, List<(Any) -> protoAny>> = HashMap()
     private val resultParserMap: HashMap<String, (protoAny) -> Any> = HashMap()
 
-    fun <RETURN> callMethod(methodName: String, return_clazz: Class<RETURN>, vararg parameters: Any): Future<RETURN> {
+    override fun <RETURN : Any> callMethod(
+        methodName: String,
+        return_clazz: KClass<RETURN>,
+        vararg parameters: Any
+    ): Future<RETURN> {
         lazyRegisterMethod(methodName, return_clazz, *parameters)
 
         val request = generateRequest(methodName, *parameters)
@@ -52,6 +60,18 @@ class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
         return rpcFuture
     }
 
+    override fun activate() {
+        //TODO
+    }
+
+    override fun deactivate() {
+        //TODO
+    }
+
+    override fun isActive(): Boolean {
+        return true
+    }
+
     private fun <RETURN> handleRPCResponse(
         mqtt5Publish: Mqtt5Publish,
         rpcFuture: CompletableFuture<RETURN>,
@@ -77,11 +97,11 @@ class RPCRemote(private val mqttClient: Mqtt5AsyncClient, topic: String) {
         }
     }
 
-    private fun lazyRegisterMethod(methodName: String, return_clazz: Class<*>, vararg parameters: Any) {
+    private fun lazyRegisterMethod(methodName: String, return_clazz: KClass<*>, vararg parameters: Any) {
         resultParserMap.getOrPut(methodName) { RPCMethod.protoAnyToAny(return_clazz) }
         parameterParserMap.getOrPut(methodName) {
             parameters
-                .map { param -> param::class.java }
+                .map { param -> param::class }
                 .map { param_clazz -> RPCMethod.anyToProtoAny(param_clazz) }
         }
     }
