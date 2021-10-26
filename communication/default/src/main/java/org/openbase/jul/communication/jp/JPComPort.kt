@@ -1,8 +1,8 @@
-package org.openbase.jul.communication.mqtt.jp
+package org.openbase.jul.communication.jp
 
 import org.openbase.jps.preset.AbstractJPInteger
 
-class JPMqttBrokerPort : AbstractJPInteger(arrayOf("--broker-port")){
+class JPComPort : AbstractJPInteger(arrayOf("--com-port")){
 
     override fun getPropertyDefaultValue(): Int {
         return 1883

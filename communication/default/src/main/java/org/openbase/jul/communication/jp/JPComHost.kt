@@ -1,8 +1,8 @@
-package org.openbase.jul.communication.mqtt.jp
+package org.openbase.jul.communication.jp
 
 import org.openbase.jps.preset.AbstractJPString
 
-class JPMqttBrokerHost : AbstractJPString(arrayOf("--broker-host")) {
+class JPComHost : AbstractJPString(arrayOf("--com-hostname")) {
 
     override fun getPropertyDefaultValue(): String {
         return "localhost"
