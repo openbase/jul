@@ -6,6 +6,10 @@ import org.openbase.type.communication.ScopeType
 
 class CommunicatorFactoryImpl: CommunicatorFactory {
 
+    companion object {
+        val instance get() = CommunicatorFactoryImpl()
+    }
+
     override fun createPublisher(scope: ScopeType.Scope, config: CommunicatorConfig): Publisher {
         return PublisherImpl(scope, config)
     }
