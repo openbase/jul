@@ -1,15 +1,13 @@
 package org.openbase.jul.communication.iface
 
-import com.google.protobuf.Message
-import org.openbase.jul.communication.iface.Communicator
-import java.lang.InterruptedException
-import org.openbase.jul.communication.iface.RPCCommunicator
-import org.openbase.jul.communication.config.CommunicatorConfig
-import org.openbase.jul.communication.iface.RPCClient
+import org.openbase.jps.core.JPService
+import org.openbase.jul.annotation.RPCMethod
+import org.openbase.jul.communication.jp.JPComLegacyMode
 import org.openbase.jul.exception.CouldNotPerformException
 import java.lang.reflect.Method
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmMemberSignature
+import kotlin.reflect.full.memberFunctions
 
 /*
  * #%L
@@ -38,4 +36,34 @@ import kotlin.reflect.jvm.internal.impl.metadata.jvm.deserialization.JvmMemberSi
 interface RPCServer : RPCCommunicator {
 
     fun registerMethod(method: KFunction<*>, instance: Any)
+
+    fun registerMethod(method: Method, instance: Any)
+
+    @Throws(CouldNotPerformException::class)
+    fun <I : Any, T : I> registerMethods(
+        interfaceClass: Class<I>,
+        instance: T,
+    ) {
+        interfaceClass.methods
+            .filterNot { it.getAnnotation(RPCMethod::class.java) == null }
+            .filter { JPService.getValue(JPComLegacyMode::class.java, false)
+                    || !it.getAnnotation(RPCMethod::class.java).legacy }
+            .forEach { registerMethod(it, instance) }
+        }
+
+    @Throws(CouldNotPerformException::class)
+    fun <I : Any, T : I> registerMethods(
+        interfaceClass: KClass<I>,
+        instance: T,
+    ) {
+        interfaceClass.memberFunctions
+            .filter { method ->
+                method.annotations.any {
+                    it == RPCMethod::class
+                            && (JPService.getValue(JPComLegacyMode::class.java,false)
+                                || !(it as RPCMethod).legacy)
+                    }
+                }
+            .forEach { registerMethod(it, instance) }
+    }
 }
