@@ -26,6 +26,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.processing.StringProcessor;
 import org.openbase.type.communication.ScopeType;
+import org.openbase.type.communication.ScopeType.Scope;
 
 import java.util.Collection;
 
@@ -76,7 +77,7 @@ public class ScopeProcessor {
         }
     }
 
-    public static ScopeType.Scope generateScope(final String scope) throws CouldNotPerformException {
+    public static ScopeType.Scope generateScope(final String scope) {
         ScopeType.Scope.Builder generatedScope = ScopeType.Scope.newBuilder();
         for (String component : scope.split("/")) {
 
@@ -111,5 +112,9 @@ public class ScopeProcessor {
             stringRep += component;
         }
         return stringRep;
+    }
+
+    public static Scope concat(Scope a, Scope b) {
+        return a.toBuilder().addAllComponent(b.getComponentList()).build();
     }
 }

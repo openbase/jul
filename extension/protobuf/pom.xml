@@ -39,11 +39,11 @@
             <artifactId>jul.schedule</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>rsb</groupId>
-            <artifactId>${dependency.rsb.artifact}</artifactId>
-            <version>${dependency.rsb.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>rsb</groupId>-->
+<!--            <artifactId>${dependency.rsb.artifact}</artifactId>-->
+<!--            <version>${dependency.rsb.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <!-- processing package -->
             <groupId>org.openbase</groupId>

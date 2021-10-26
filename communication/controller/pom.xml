@@ -31,7 +31,12 @@
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rsb.com</artifactId>
+            <artifactId>jul.communication</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.communication.mqtt</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

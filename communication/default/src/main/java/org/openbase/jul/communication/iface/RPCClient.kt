@@ -1,15 +1,8 @@
 package org.openbase.jul.communication.iface
 
-import org.apache.commons.lang3.ObjectUtils.Null
-import org.openbase.jul.communication.iface.Communicator
-import java.lang.InterruptedException
-import org.openbase.jul.communication.iface.RPCCommunicator
-import org.openbase.jul.communication.config.CommunicatorConfig
-import org.openbase.jul.communication.iface.RPCClient
-import org.openbase.jul.exception.CouldNotPerformException
-import org.openbase.jul.exception.NotAvailableException
 import org.openbase.type.communication.EventType.Event
 import java.util.concurrent.Future
+import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 
 /*
@@ -42,4 +35,31 @@ interface RPCClient : RPCCommunicator {
         methodName: String,
         return_clazz: KClass<RETURN>,
         vararg parameters: Any): Future<RETURN>
+
+    fun <RETURN: Any> callMethodRaw(
+        methodName: String,
+        return_clazz: KClass<RETURN>,
+        vararg parameters: Any): Future<Event>
+
+    fun <RETURN: Any> callMethod(
+        methodName: String,
+        return_clazz: Class<RETURN>,
+        vararg parameters: Any): Future<RETURN> {
+        return callMethod(
+            methodName = methodName,
+            return_clazz = Reflection.getOrCreateKotlinClass(return_clazz) as KClass<RETURN>,
+            parameters = parameters
+        )
+    }
+
+    fun <RETURN: Any> callMethodRaw(
+        methodName: String,
+        return_clazz: Class<RETURN>,
+        vararg parameters: Any): Future<Event> {
+        return callMethodRaw(
+            methodName = methodName,
+            return_clazz = Reflection.getOrCreateKotlinClass(return_clazz) as KClass<RETURN>,
+            parameters = parameters
+        )
+    }
 }

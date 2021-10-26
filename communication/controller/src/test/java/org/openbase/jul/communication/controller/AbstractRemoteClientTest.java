@@ -22,9 +22,12 @@ package org.openbase.jul.communication.controller;
  * #L%
  */
 
+import com.google.protobuf.Any;
 import org.junit.*;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.communication.iface.RPCClient;
+import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;
@@ -32,7 +35,6 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractControllerServerImpl;
 import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractRemoteClientImpl;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.type.util.TransactionSynchronizationFuture;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.slf4j.Logger;
@@ -151,7 +153,7 @@ public class AbstractRemoteClientTest {
         check[0] = false;
         GlobalCachedExecutorService.submit(() -> {
             try {
-                remoteService.callMethodAsync("method").get();
+                remoteService.callMethodAsync("method", Any.class).get();
             } catch (InterruptedException | ExecutionException ex) {
                 // is expected since reinit should kill the method call
                 check[0] = true;
@@ -224,9 +226,9 @@ public class AbstractRemoteClientTest {
         }
 
         @Override
-        public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
+        public void registerMethods(RPCServer server) throws CouldNotPerformException {
             try {
-                RPCHelper.registerMethod(this.getClass().getMethod("performTransaction"), this, server);
+                server.registerMethod(this.getClass().getMethod("performTransaction"), this);
             } catch (NoSuchMethodException ex) {
                 throw new CouldNotPerformException("Could not register method[performTransaction]", ex);
             }
@@ -251,7 +253,7 @@ public class AbstractRemoteClientTest {
         }
 
         public Future<TransactionValue> performTransaction() {
-            return new TransactionSynchronizationFuture<>(RPCHelper.callRemoteMethod(this, TransactionValue.class), this);
+            return new TransactionSynchronizationFuture<>(this.callMethodAsync("performTransaction", TransactionValue.class), this);
         }
     }
 }

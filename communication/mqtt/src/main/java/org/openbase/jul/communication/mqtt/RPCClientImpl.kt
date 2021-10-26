@@ -8,6 +8,7 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.communication.iface.RPCClient
 import org.openbase.jul.schedule.GlobalCachedExecutorService
+import org.openbase.type.communication.EventType.Event
 import org.openbase.type.communication.ScopeType
 import org.openbase.type.communication.mqtt.RequestType.Request
 import org.openbase.type.communication.mqtt.ResponseType.Response
@@ -58,6 +59,14 @@ class RPCClientImpl(
         }
 
         return rpcFuture
+    }
+
+    override fun <RETURN : Any> callMethodRaw(
+        methodName: String,
+        return_clazz: KClass<RETURN>,
+        vararg parameters: Any
+    ): Future<Event> {
+        TODO()
     }
 
     override fun activate() {

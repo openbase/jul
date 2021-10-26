@@ -4,6 +4,7 @@ import org.openbase.jps.core.JPService
 import org.openbase.jul.annotation.RPCMethod
 import org.openbase.jul.communication.jp.JPComLegacyMode
 import org.openbase.jul.exception.CouldNotPerformException
+import java.lang.reflect.Method
 import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -36,12 +37,13 @@ import kotlin.reflect.full.memberFunctions
 interface RPCServer : RPCCommunicator {
 
     fun registerMethod(method: KFunction<*>, instance: Any)
+    fun registerMethod(method: Method, instance: Any): Nothing = TODO()
 
     @Throws(CouldNotPerformException::class)
     fun <I : Any, T : I> registerMethods(
         interfaceClass: Class<I>,
         instance: T,
-    ) = registerMethods(Reflection.createKotlinClass(interfaceClass), instance)
+    ) = registerMethods(Reflection.getOrCreateKotlinClass(interfaceClass), instance)
 
 
     @Throws(CouldNotPerformException::class)

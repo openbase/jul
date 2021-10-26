@@ -31,11 +31,9 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.communication.controller.AbstractConfigurableController;
 import org.openbase.jul.communication.controller.AbstractConfigurableRemote;
+import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData.Builder;
-import rsb.converter.DefaultConverterRepository;
-import rsb.converter.ProtocolBufferConverter;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData;
 import org.openbase.type.communication.ScopeType.Scope;
@@ -61,7 +59,7 @@ public class ConfigurableControllerAndRemoteTest {
     public void initTest() throws Exception {
         System.out.println("initTest");
 
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
+//        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test").addComponent("configurable").addComponent("controller").addComponent("and").addComponent("remote").build();
         UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setScope(scope).build();
@@ -97,7 +95,7 @@ public class ConfigurableControllerAndRemoteTest {
     public void applyConfigUpdateTest() throws Exception {
         System.out.println("applyConfigUpdateTest");
 
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
+//        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test2").addComponent("configurable2").addComponent("controller2").addComponent("and2").addComponent("remote2").build();
         UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setScope(scope).build();
@@ -137,7 +135,7 @@ public class ConfigurableControllerAndRemoteTest {
         }
 
         @Override
-        public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
+        public void registerMethods(RPCServer server) throws CouldNotPerformException {
         }
     }
 

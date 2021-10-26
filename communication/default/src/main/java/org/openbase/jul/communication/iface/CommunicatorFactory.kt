@@ -1,10 +1,7 @@
 package org.openbase.jul.communication.iface
 
-import org.openbase.jul.communication.iface.Communicator
-import java.lang.InterruptedException
-import org.openbase.jul.communication.iface.RPCCommunicator
 import org.openbase.jul.communication.config.CommunicatorConfig
-import org.openbase.jul.communication.iface.RPCClient
+import org.openbase.jul.exception.InstantiationException
 import org.openbase.type.communication.ScopeType.Scope
 
 /*

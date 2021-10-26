@@ -25,22 +25,25 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.junit.AfterClass;
+
+import com.google.protobuf.Any;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jul.communication.controller.RPCHelper;
+import org.openbase.jul.communication.config.CommunicatorConfig;
+import org.openbase.jul.communication.iface.CommunicatorFactory;
+import org.openbase.jul.communication.iface.RPCClient;
+import org.openbase.jul.communication.iface.RPCServer;
+import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
+import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.rsb.com.RSBFactoryImpl;
-import org.openbase.jul.extension.rsb.com.RSBSharedConnectionConfig;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Requestable;
+import org.openbase.type.communication.EventType.Event;
+import org.openbase.type.communication.ScopeType.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Event;
-import rsb.Scope;
-import rsb.config.ParticipantConfig;
 
 /**
  *
@@ -50,8 +53,8 @@ public class FutureCancelTest implements Requestable<Object> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private RSBLocalServer localServer;
-    private RSBRemoteServer remoteServer;
+    private RPCServer server;
+    private RPCClient client;
 
     public FutureCancelTest() {
     }
@@ -60,8 +63,6 @@ public class FutureCancelTest implements Requestable<Object> {
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
-
-
 
     @Override
     public Object requestStatus() throws CouldNotPerformException {
@@ -94,23 +95,26 @@ public class FutureCancelTest implements Requestable<Object> {
      *
      * @throws Exception
      */
-    //@Test
+    @Test
     public void testFutureCancellation() throws Exception {
         System.out.println("TestFutureCancellation");
 
-        Scope scope = new Scope("/test/futureCancel");
-        ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig();
+        final CommunicatorFactory factory = CommunicatorFactoryImpl.Companion.getInstance();
+        final CommunicatorConfig defaultCommunicatorConfig = DefaultCommunicatorConfig.Companion.getInstance();
 
-        localServer = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(scope, participantConfig);
-        remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope, participantConfig);
+
+        Scope scope = ScopeProcessor.generateScope("/test/futureCancel");
+
+        server = factory.createRPCServer(scope, defaultCommunicatorConfig);
+        client = factory.createRPCClient(scope, defaultCommunicatorConfig);
 
         // register rpc methods.
-        RPCHelper.registerInterface(Requestable.class, this, localServer);
+        server.registerMethods(Requestable.class, this);
 
-        localServer.activate();
-        remoteServer.activate();
+        server.activate();
+        client.activate();
 
-        Future<Event> future = remoteServer.callAsync("requestStatus");
+        Future<Event> future = client.callMethodRaw("requestStatus", Any.class);
         try {
             future.get(1000, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
@@ -118,5 +122,4 @@ public class FutureCancelTest implements Requestable<Object> {
             Thread.sleep(1000);
         }
     }
-
 }

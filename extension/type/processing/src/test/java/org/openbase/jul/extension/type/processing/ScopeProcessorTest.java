@@ -23,17 +23,12 @@ package org.openbase.jul.extension.type.processing;
  */
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.type.processing.ScopeProcessor;
-import rsb.Scope;
 import org.openbase.type.communication.ScopeType;
 
 /**

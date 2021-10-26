@@ -29,11 +29,10 @@ import ch.qos.logback.core.util.StatusPrinter;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jul.communication.controller.AbstractIdentifiableController;
-import org.openbase.jul.communication.controller.RPCHelper;
+import org.openbase.jul.communication.controller.RPCUtils;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Launchable;
 import org.openbase.jul.iface.VoidInitializable;
@@ -47,8 +46,6 @@ import org.openbase.jul.schedule.SyncObject;
 import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Scope;
-
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -66,7 +63,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final long LAUNCHER_TIMEOUT = 60000;
-    public static final String SCOPE_PREFIX_LAUNCHER = Scope.COMPONENT_SEPARATOR + "launcher";
+    public static final String SCOPE_PREFIX_LAUNCHER = ScopeProcessor.COMPONENT_SEPARATOR + "launcher";
 
     private final Class<L> launchableClass;
     private final Class<?> applicationClass;
@@ -97,13 +94,9 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
 
     @Override
     public void init() throws InitializationException, InterruptedException {
-        super.init(SCOPE_PREFIX_LAUNCHER + Scope.COMPONENT_SEPARATOR + ScopeProcessor.convertIntoValidScopeComponent(getName()));
+        super.init(SCOPE_PREFIX_LAUNCHER + ScopeProcessor.COMPONENT_SEPARATOR + ScopeProcessor.convertIntoValidScopeComponent(getName()));
     }
 
-    @Override
-    public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
-        RPCHelper.registerInterface(Launcher.class, this, server);
-    }
 
     /**
      * This method can be overwritten to identify a core launcher.

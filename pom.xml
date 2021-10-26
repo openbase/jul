@@ -307,8 +307,8 @@
         <dependency.rsx.version>[0.18,0.19-alpha)</dependency.rsx.version>
         <!--dependency.rsx.version>0.18-SNAPSHOT</dependency.rsx.version-->
 
-        <dependency.rsb.artifact>rsb</dependency.rsb.artifact>
-        <dependency.rsb.version>${dependency.rsx.version}</dependency.rsb.version>
+<!--        <dependency.rsb.artifact>rsb</dependency.rsb.artifact>-->
+<!--        <dependency.rsb.version>${dependency.rsx.version}</dependency.rsb.version>-->
 
         <!-- jul.visual.javafx -->
         <dependency.org.controlsfx.version>[9.0,9.1-alpha)</dependency.org.controlsfx.version>

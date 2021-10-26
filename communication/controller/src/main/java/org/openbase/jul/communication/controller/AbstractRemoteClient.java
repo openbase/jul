@@ -23,22 +23,27 @@ package org.openbase.jul.communication.controller;
  */
 
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
+import lombok.val;
 import org.openbase.jps.core.JPService;
-import org.openbase.jul.exception.InstantiationException;
-import org.openbase.jul.exception.TimeoutException;
+import org.openbase.jul.communication.config.CommunicatorConfig;
+import org.openbase.jul.communication.exception.RPCException;
+import org.openbase.jul.communication.exception.RPCResolvedException;
+import org.openbase.jul.communication.iface.CommunicatorFactory;
+import org.openbase.jul.communication.iface.RPCClient;
+import org.openbase.jul.communication.iface.Subscriber;
+import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
+import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
-import org.openbase.jul.extension.rsb.com.*;
-import org.openbase.jul.extension.rsb.com.exception.RSBResolvedException;
-import org.openbase.jul.extension.rsb.iface.RSBListener;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
-import org.openbase.jul.extension.type.processing.ScopeProcessor;
-import org.openbase.jul.extension.rsb.scope.ScopeTransformer;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
@@ -47,19 +52,17 @@ import org.openbase.jul.pattern.controller.Remote;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.*;
 import org.openbase.jul.schedule.WatchDog.ServiceState;
+import org.openbase.type.communication.EventType.Event;
 import org.openbase.type.communication.ScopeType.Scope;
+import org.openbase.type.communication.mqtt.PrimitiveType.Primitive;
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Event;
-import rsb.Handler;
-import rsb.RSBException;
-import rsb.config.ParticipantConfig;
-
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.*;
+import org.openbase.jul.exception.TimeoutException;
 
 import static org.openbase.jul.communication.controller.AbstractControllerServer.RPC_REQUEST_STATUS;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
@@ -70,10 +73,9 @@ import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionStat
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 //
-public abstract class AbstractRemoteClient<M extends Message> implements RSBRemote<M>, TransactionIdProvider {
+public abstract class AbstractRemoteClient<M extends Message> implements RPCRemote<M>, TransactionIdProvider {
 
     public static final long REQUEST_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
-    ;
     public static final long PING_TIMEOUT = TimeUnit.SECONDS.toMillis(5);
     public static final long PING_TEST_TIMEOUT = TimeUnit.SECONDS.toMillis(1);
     public static final long CONNECTION_TIMEOUT = TimeUnit.SECONDS.toMillis(60);
@@ -85,7 +87,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private static final Random JITTER_RANDOM = new Random();
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Handler mainHandler;
+    private final Function1<Event, Unit> mainHandler;
     private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
     private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
     private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
@@ -97,9 +99,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private final SyncObject dataUpdateMonitor = new SyncObject("DataUpdateMonitor");
     protected Object maintainer;
     protected Scope scope;
-    private RSBListener listener;
-    private WatchDog listenerWatchDog, remoteServerWatchDog;
-    private RSBRemoteServer remoteServer;
+    private Subscriber subscriber;
+    private WatchDog subscriberWatchDog, rpcClientWatchDog;
+    private RPCClient rpcClient;
     private ConnectionState.State connectionState;
     private Observer<WatchDog, ServiceState> middlewareFailureObserver;
     private Observer<WatchDog, ServiceState> middlewareReadyObserver;
@@ -118,14 +120,16 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     private Future<Long> pingTask = null;
     private volatile long transactionId = -1;
 
+    private final CommunicatorFactory factory = CommunicatorFactoryImpl.Companion.getInstance();
+    private final CommunicatorConfig defaultCommunicatorConfig = DefaultCommunicatorConfig.Companion.getInstance();
 
     public AbstractRemoteClient(final Class<M> dataClass) {
         this.dataClass = dataClass;
         this.mainHandler = generateHandler();
         this.initialized = false;
         this.shutdownInitiated = false;
-        this.remoteServer = new NotInitializedRSBRemoteServer();
-        this.listener = new NotInitializedRSBListener();
+        this.rpcClient = null;
+        this.subscriber = null;
         this.connectionState = DISCONNECTED;
         this.connectionPing = -1;
         this.lastPingReceived = -1;
@@ -143,7 +147,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             // Sync data after service start.
             switch (watchDogState) {
                 case RUNNING:
-                    remoteServerWatchDog.waitForServiceActivation();
+                    rpcClientWatchDog.waitForServiceActivation();
                     requestData();
                     break;
             }
@@ -168,7 +172,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      */
     @Override
     public void init(final Scope scope) throws InitializationException, InterruptedException {
-        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
+        init(scope, defaultCommunicatorConfig);
     }
 
     /**
@@ -203,17 +207,17 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * {@inheritDoc}
      *
      * @param scope             {@inheritDoc}
-     * @param participantConfig {@inheritDoc}
+     * @param communicatorConfig {@inheritDoc}
      *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
     @Override
-    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
-        internalInit(scope, participantConfig);
+    public void init(final Scope scope, final CommunicatorConfig communicatorConfig) throws InitializationException, InterruptedException {
+        internalInit(scope, communicatorConfig);
     }
 
-    private void internalInit(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+    private void internalInit(final Scope scope, final CommunicatorConfig communicatorConfig) throws InitializationException, InterruptedException {
         synchronized (maintainerLock) {
             try {
                 verifyMaintainability();
@@ -226,27 +230,24 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     setConnectionState(REINITIALIZING);
                 }
 
-                ParticipantConfig internalParticipantConfig = participantConfig;
+                CommunicatorConfig internalCommunicatorConfig = communicatorConfig;
 
                 if (scope == null) {
                     throw new NotAvailableException("scope");
                 }
 
                 // check if this instance was partly or fully initialized before.
-                if (initialized | listenerWatchDog != null | remoteServerWatchDog != null) {
+                if (initialized | subscriberWatchDog != null | rpcClientWatchDog != null) {
                     deactivate();
                     reset();
                 }
 
                 this.scope = scope;
 
-                final String scopeStringRep = ScopeProcessor.generateStringRep(scope).toLowerCase();
-                final rsb.Scope internalScope = new rsb.Scope(scopeStringRep);
-
                 // init new instances.
-                logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
-                initListener(internalScope, internalParticipantConfig);
-                initRemoteServer(internalScope, internalParticipantConfig);
+                logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + ScopeProcessor.generateStringRep(scope));
+                initSubscriber(scope, internalCommunicatorConfig);
+                initRemoteServer(scope, internalCommunicatorConfig);
                 addHandler(mainHandler, true);
                 postInit();
                 initialized = true;
@@ -266,24 +267,24 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         }
     }
 
-    private void initListener(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
+    private void initSubscriber(final Scope scope, final CommunicatorConfig communicatorConfig) throws CouldNotPerformException {
         try {
-            this.listener = RSBFactoryImpl.getInstance().createSynchronizedListener(scope.concat(AbstractControllerServer.SCOPE_SUFFIX_STATUS), participantConfig);
-            this.listenerWatchDog = new WatchDog(listener, "RSBListener[" + scope.concat(AbstractControllerServer.SCOPE_SUFFIX_STATUS) + "]");
-        } catch (InstantiationException ex) {
-            throw new CouldNotPerformException("Could not create Listener on scope [" + scope + "]!", ex);
+            this.subscriber = factory.createSubscriber(ScopeProcessor.concat(scope, AbstractControllerServer.SCOPE_SUFFIX_STATUS), communicatorConfig);
+            this.subscriberWatchDog = new WatchDog(subscriber, "Subscriber[" + ScopeProcessor.generateStringRep(subscriber.getScope()) + "]");
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not create Subscriber on scope [" + scope + "]!", ex);
         }
     }
 
-    private void initRemoteServer(final rsb.Scope scope, final ParticipantConfig participantConfig) throws CouldNotPerformException {
+    private void initRemoteServer(final Scope scope, final CommunicatorConfig communicatorConfig) throws CouldNotPerformException {
         try {
-            this.remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope.concat(AbstractControllerServer.SCOPE_SUFFIX_CONTROL), participantConfig);
-            this.remoteServerWatchDog = new WatchDog(remoteServer, "RSBRemoteServer[" + scope.concat(AbstractControllerServer.SCOPE_SUFFIX_CONTROL) + "]");
-            this.listenerWatchDog.addObserver(middlewareReadyObserver);
-            this.listenerWatchDog.addObserver(middlewareFailureObserver);
-            this.remoteServerWatchDog.addObserver(middlewareFailureObserver);
-        } catch (RuntimeException | InstantiationException ex) {
-            throw new CouldNotPerformException("Could not create RemoteServer on scope [" + scope + "]!", ex);
+            this.rpcClient = factory.createRPCClient(ScopeProcessor.concat(scope, AbstractControllerServer.SCOPE_SUFFIX_CONTROL), communicatorConfig);
+            this.rpcClientWatchDog = new WatchDog(rpcClient, "RPCClient[" + ScopeProcessor.generateStringRep(rpcClient.getScope()) + "]");
+            this.subscriberWatchDog.addObserver(middlewareReadyObserver);
+            this.subscriberWatchDog.addObserver(middlewareFailureObserver);
+            this.rpcClientWatchDog.addObserver(middlewareFailureObserver);
+        } catch (RuntimeException ex) {
+            throw new CouldNotPerformException("Could not create RPCClient on scope [" + scope + "]!", ex);
         }
     }
 
@@ -356,7 +357,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     }
 
     /**
-     * Method adds an handler to the internal rsb listener.
+     * Method adds an handler to the internal rsb subscriber.
      *
      * @param handler
      * @param wait
@@ -364,16 +365,20 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @throws InterruptedException
      * @throws CouldNotPerformException
      */
-    public void addHandler(final Handler handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
-        try {
-            listener.addHandler(handler, wait);
-        } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not register Handler!", ex);
-        }
+    public void addHandler(final Function1<Event, Unit> handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
+        subscriber.registerDataHandler(handler);
     }
 
-    protected Handler generateHandler() {
-        return new InternalUpdateHandler();
+    protected Function1<Event, Unit> generateHandler() {
+        return (event) -> {
+            try {
+                logger.debug("Internal notification: " + event.toString());
+                applyEventUpdate(event);
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
+            }
+            return null;
+        };
     }
 
     /**
@@ -395,8 +400,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 verifyMaintainability();
                 validateInitialization();
                 setConnectionState(CONNECTING);
-                remoteServerWatchDog.activate();
-                listenerWatchDog.activate();
+                rpcClientWatchDog.activate();
+                subscriberWatchDog.activate();
             } catch (CouldNotPerformException ex) {
                 throw new InvalidStateException("Could not activate remote service!", ex);
             }
@@ -482,12 +487,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     pingTask.cancel(true);
                 }
             }
-            if (listenerWatchDog != null) {
-                listenerWatchDog.deactivate();
+            if (subscriberWatchDog != null) {
+                subscriberWatchDog.deactivate();
             }
 
-            if (remoteServerWatchDog != null) {
-                remoteServerWatchDog.deactivate();
+            if (rpcClientWatchDog != null) {
+                rpcClientWatchDog.deactivate();
             }
         }
         synchronized (connectionMonitor) {
@@ -503,15 +508,15 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             initialized = false;
 
             // clear existing instances.
-            if (listenerWatchDog != null) {
-                listenerWatchDog.shutdown();
-                listenerWatchDog = null;
-                listener = new NotInitializedRSBListener();
+            if (subscriberWatchDog != null) {
+                subscriberWatchDog.shutdown();
+                subscriberWatchDog = null;
+                subscriber = null;
             }
-            if (remoteServerWatchDog != null) {
-                remoteServerWatchDog.shutdown();
-                remoteServerWatchDog = null;
-                remoteServer = new NotInitializedRSBRemoteServer();
+            if (rpcClientWatchDog != null) {
+                rpcClientWatchDog.shutdown();
+                rpcClientWatchDog = null;
+                rpcClient = null;
             }
         } catch (CouldNotPerformException ex) {
             throw new CouldNotPerformException("Could not reset " + this + "!", ex);
@@ -520,7 +525,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
-     * This method can be used in case of a broken connection or if the participant config has been changed.
+     * This method can be used in case of a broken connection or if the communicator config has been changed.
      * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
@@ -534,7 +539,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
-     * This method can be used in case of a broken connection or if the participant config has been changed.
+     * This method can be used in case of a broken connection or if the communicator config has been changed.
      * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
@@ -569,7 +574,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                         maintainer = null;
 
                         // reinit remote
-                        internalInit(scope, RSBSharedConnectionConfig.getParticipantConfig());
+                        internalInit(scope, defaultCommunicatorConfig);
                     } catch (final CouldNotPerformException ex) {
                         throw new CouldNotPerformException("Could not reinit " + this + "!", ex);
                     } finally {
@@ -587,7 +592,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
-     * This method can be used in case of a broken connection or if the participant config has been changed.
+     * This method can be used in case of a broken connection or if the communicator config has been changed.
      * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
@@ -604,7 +609,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
     /**
      * Method reinitialize this remote. If the remote was previously active the activation state will be recovered.
-     * This method can be used in case of a broken connection or if the participant config has been changed.
+     * This method can be used in case of a broken connection or if the communicator config has been changed.
      * <p>
      * Note: After reinit the data remains the same but a new sync task is created. So to make sure to have new data
      * it is necessary to call {@code requestData.get()}.
@@ -730,7 +735,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     @Override
     public boolean isActive() {
         try {
-            return listenerWatchDog.isActive() && remoteServerWatchDog.isActive();
+            return subscriberWatchDog.isActive() && rpcClientWatchDog.isActive();
         } catch (NullPointerException ex) {
             return false;
         }
@@ -740,7 +745,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * {@inheritDoc}
      */
     @Override
-    public <R> Future<R> callMethodAsync(final String methodName) {
+    public <R> Future<R> callMethodAsync(final String methodName, final Class<R> returnClazz) {
         return callMethodAsync(methodName, null);
     }
 
@@ -751,7 +756,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
-    public <R> R callMethod(final String methodName) throws CouldNotPerformException, InterruptedException {
+    public <R> R callMethod(final String methodName, final Class<R> returnClazz) throws CouldNotPerformException, InterruptedException {
         return callMethod(methodName, null);
     }
 
@@ -762,8 +767,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
-    public <R, T extends Object> R callMethod(final String methodName, final T argument) throws CouldNotPerformException, InterruptedException {
-        return callMethod(methodName, argument, -1);
+    public <R, T extends Object> R callMethod(final String methodName, final Class<R> returnClazz, final T argument) throws CouldNotPerformException, InterruptedException {
+        return callMethod(methodName, returnClazz, argument, -1);
     }
 
     /**
@@ -773,8 +778,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
-    public <R> R callMethod(String methodName, long timeout) throws CouldNotPerformException, InterruptedException {
-        return callMethod(methodName, null, timeout);
+    public <R> R callMethod(String methodName, final Class<R> returnClazz, long timeout) throws CouldNotPerformException, InterruptedException {
+        return callMethod(methodName, returnClazz, null, timeout);
     }
 
     /**
@@ -784,15 +789,15 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @throws java.lang.InterruptedException                      {@inheritDoc}
      */
     @Override
-    public <R, T extends Object> R callMethod(final String methodName, final T argument, final long timeout) throws CouldNotPerformException, InterruptedException {
+    public <R, T extends Object> R callMethod(final String methodName, final Class<R> returnClazz, final T argument, final long timeout) throws CouldNotPerformException, InterruptedException {
 
-        final String shortArgument = RPCHelper.argumentToString(argument);
+        final String shortArgument = RPCUtils.argumentToString(argument);
         validateMiddleware();
         long retryTimeout = METHOD_CALL_START_TIMEOUT;
         long validTimeout = timeout;
 
         try {
-            logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
+            logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + rpcClient.getScope());
             if (!isConnected()) {
                 waitForConnectionState(CONNECTED, timeout);
             }
@@ -808,23 +813,28 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 }
 
                 try {
-                    logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
-                    remoteServerWatchDog.waitForServiceActivation(timeout, TimeUnit.MILLISECONDS);
-                    final R returnValue = remoteServer.call(methodName, argument, retryTimeout);
+                    logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + rpcClient.getScope());
+                    rpcClientWatchDog.waitForServiceActivation(timeout, TimeUnit.MILLISECONDS);
+                    final R returnValue;
+                    try {
+                        returnValue = rpcClient.callMethod(methodName, returnClazz, argument).get(retryTimeout, TimeUnit.MILLISECONDS);
+                    } catch (ExecutionException e) {
+                        throw (CouldNotPerformException) e.getCause();
+                    }
 
                     if (retryTimeout != METHOD_CALL_START_TIMEOUT && retryTimeout > 15000) {
                         logger.info("Method[" + methodName + "(" + shortArgument + ")] returned! Continue processing...");
                     }
                     return returnValue;
 
-                } catch (TimeoutException ex) {
+                } catch (TimeoutException | java.util.concurrent.TimeoutException ex) {
 
                     // check if timeout is set and handle
                     if (timeout != -1) {
                         validTimeout -= retryTimeout;
                         if (validTimeout <= 0) {
                             ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                            throw new TimeoutException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "] in Time[" + timeout + "ms].");
+                            throw new TimeoutException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + rpcClient.getScope() + "] in Time[" + timeout + "ms].");
                         }
                         retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
                     } else {
@@ -834,10 +844,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                     // only print warning if timeout is too long.
                     if (retryTimeout > 15000) {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                        logger.warn("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
+                        logger.warn("Waiting for RPCServer[" + rpcClient.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     } else {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
-                        logger.debug("Waiting for RPCServer[" + remoteServer.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
+                        logger.debug("Waiting for RPCServer[" + rpcClient.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     }
 
                     Thread.yield();
@@ -846,7 +856,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         } catch (TimeoutException ex) {
             throw ex;
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+            throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + rpcClient.getScope() + "].", ex);
         }
     }
 
@@ -861,7 +871,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
      * @return {@inheritDoc}
      */
     @Override
-    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final T argument) {
+    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final Class<R> returnClazz, final T argument) {
 
         //todo: refactor this section by implementing a PreFutureHandler, so a future object can directly be returned.
         //      Both, the waitForMiddleware and the method call future should be encapsulated in the PreFutureHandler
@@ -883,11 +893,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             @Override
             public R call() throws Exception {
 
-                final String shortArgument = RPCHelper.argumentToString(argument);
+                final String shortArgument = RPCUtils.argumentToString(argument);
 
                 try {
                     try {
-                        logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + remoteServer.getScope().toString());
+                        logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + rpcClient.getScope().toString());
 
                         if (!isConnected()) {
                             try {
@@ -898,11 +908,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                             }
                         }
                         final long currentTime = System.nanoTime();
-                        remoteServerWatchDog.waitForServiceActivation();
-                        internalCallFuture = remoteServer.callAsync(methodName, argument);
+                        rpcClientWatchDog.waitForServiceActivation();
+                        internalCallFuture = rpcClient.callMethod(methodName, returnClazz, argument);
                         while (true) {
 
-                            if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - currentTime) > RPCHelper.RPC_TIMEOUT) {
+                            if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - currentTime) > RPCUtils.RPC_TIMEOUT) {
                                 throw new TimeoutException("RPCMethod call timeout");
                             }
 
@@ -926,8 +936,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                                     }
                                 }
                             } catch (ExecutionException ex) {
-                                if (ex.getCause() instanceof RSBException) {
-                                    throw new RSBResolvedException("Remote call failed!", (RSBException) ex.getCause());
+                                if (ex.getCause() instanceof RPCException) {
+                                    throw new RPCResolvedException("Remote call failed!", (RPCException) ex.getCause());
                                 }
                                 throw ex;
                             } catch (InterruptedException ex) {
@@ -961,7 +971,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                         throw ex;
                     }
                 } catch (final CouldNotPerformException | CancellationException | InterruptedException ex) {
-                    throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + remoteServer.getScope() + "].", ex);
+                    throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + rpcClient.getScope() + "].", ex);
                 }
             }
         });
@@ -1029,12 +1039,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         }
     }
 
-    protected RSBRemoteServer getRemoteServer() {
-        return remoteServer;
+    protected RPCClient getRpcClient() {
+        return rpcClient;
     }
 
     protected Future<Event> internalRequestStatus() {
-        return remoteServer.callAsync(RPC_REQUEST_STATUS);
+        return rpcClient.callMethodRaw(RPC_REQUEST_STATUS, getDataClass());
     }
 
     protected M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
@@ -1052,7 +1062,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 return data;
             }
 
-            M dataUpdate = (M) event.getData();
+            M dataUpdate = (M) event.getPayload();
 
             if (dataUpdate == null) {
                 logger.debug("Received dataUpdate null while in connection state[" + getConnectionState().name() + "]");
@@ -1065,7 +1075,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 }
 
                 // only print message if not already gone to connecting
-                ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
+                ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
 
                 // reset transaction id because controller will start at 0 again after reconnect.
                 transactionId = 0;
@@ -1075,29 +1085,39 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
             } else {
                 // received correct data
                 try {
-                    dataUpdate = messageProcessor.process((Message) event.getData());
+                    dataUpdate = messageProcessor.process(event.getPayload());
                 } catch (CouldNotPerformException ex) {
                     throw new CouldNotPerformException("Could not process message", ex);
                 }
 
                 // skip events which were send later than the last received update
-                long userTime = RPCHelper.USER_TIME_VALUE_INVALID;
-                if (event.getMetaData().hasUserTime(RPCHelper.USER_TIME_KEY)) {
-                    userTime = event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY);
-                } else {
-                    logger.debug("Data message does not contain user time key on scope " + event.getScope());
+                long userTime = RPCUtils.USER_TIME_VALUE_INVALID;
+                try {
+                    if (event.getHeaderMap().containsKey(RPCUtils.USER_TIME_KEY)) {
+                        userTime = event.getHeaderMap().get(RPCUtils.USER_TIME_KEY).unpack(Primitive.class).getLong();
+                    } else {
+                        logger.warn("Data message does not contain user time key on scope " + getScopeStringRep());
+                    }
+                } catch (InvalidProtocolBufferException ex) {
+                    logger.warn("Data message contains corrupt user time entry on scope " + getScopeStringRep());
                 }
+
 
                 // filter outdated events
-                if (event.getMetaData().getCreateTime() < newestEventTime || (event.getMetaData().getCreateTime() == newestEventTime && userTime < newestEventTimeNano)) {
-                    logger.debug("Skip event on scope[" + event.getScope() + "] because event seems to be outdated! Received event time < latest event time [" + event.getMetaData().getCreateTime() + "<= " + newestEventTime + "][" + event.getMetaData().getUserTime(RPCHelper.USER_TIME_KEY) + " < " + newestEventTimeNano + "]");
-                    return data;
+                try {
+                    long createTime = event.getHeaderMap().get(RPCUtils.CREATE_TIMESTAMP).unpack(Primitive.class).getLong();
+                    if (createTime < newestEventTime || (createTime == newestEventTime && userTime < newestEventTimeNano)) {
+                        logger.debug("Skip event on scope[" + getScopeStringRep() + "] because event seems to be outdated! Received event time < latest event time [" + createTime + "<= " + newestEventTime + "][" + userTime + " < " + newestEventTimeNano + "]");
+                        return data;
+                    }
+                    newestEventTime = createTime;
+                } catch (NullPointerException | InvalidProtocolBufferException ex) {
+                    ExceptionPrinter.printHistory("Data message does not contain vaild creation timestemp on scope " + getScopeStringRep(), ex, logger);
                 }
 
-                if (userTime != RPCHelper.USER_TIME_VALUE_INVALID) {
+                if (userTime != RPCUtils.USER_TIME_VALUE_INVALID) {
                     newestEventTimeNano = userTime;
                 }
-                newestEventTime = event.getMetaData().getCreateTime();
                 applyDataUpdate(dataUpdate);
                 return dataUpdate;
             }
@@ -1320,23 +1340,23 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
         validateActivation();
 
         try {
-            if (listener == null) {
-                throw new InvalidStateException("Listener not initialized!");
-            } else if (!listener.isActive()) {
-                throw new InvalidStateException("Listener not active!");
-            } else if (!listenerWatchDog.isServiceRunning()) {
-                throw new InvalidStateException("Listener service not running!");
+            if (subscriber == null) {
+                throw new InvalidStateException("Subscriber not initialized!");
+            } else if (!subscriber.isActive()) {
+                throw new InvalidStateException("Subscriber not active!");
+            } else if (!subscriberWatchDog.isServiceRunning()) {
+                throw new InvalidStateException("Subscriber service not running!");
             }
         } catch (CouldNotPerformException ex) {
-            throw new InvalidStateException("Listener of " + this + " not connected to middleware!", ex);
+            throw new InvalidStateException("Subscriber of " + this + " not connected to middleware!", ex);
         }
 
         try {
-            if (remoteServer == null) {
+            if (rpcClient == null) {
                 throw new InvalidStateException("RemoteServer not initialized!");
-            } else if (!remoteServer.isActive()) {
+            } else if (!rpcClient.isActive()) {
                 throw new InvalidStateException("RemoteServer not active!");
-            } else if (!remoteServerWatchDog.isServiceRunning()) {
+            } else if (!rpcClientWatchDog.isServiceRunning()) {
                 throw new InvalidStateException("RemoteServer service not running!");
             }
         } catch (CouldNotPerformException ex) {
@@ -1356,30 +1376,30 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
     }
 
     public void waitForMiddleware() throws CouldNotPerformException, InterruptedException {
-        if (listenerWatchDog == null) {
-            throw new NotAvailableException("listenerWatchDog");
+        if (subscriberWatchDog == null) {
+            throw new NotAvailableException("subscriberWatchDog");
         }
 
-        if (remoteServerWatchDog == null) {
+        if (rpcClientWatchDog == null) {
             throw new NotAvailableException("remoteServiceWatchDog");
         }
 
-        listenerWatchDog.waitForServiceActivation();
-        remoteServerWatchDog.waitForServiceActivation();
+        subscriberWatchDog.waitForServiceActivation();
+        rpcClientWatchDog.waitForServiceActivation();
     }
 
     public void waitForMiddleware(final long timeout, final TimeUnit timeUnit) throws CouldNotPerformException, InterruptedException {
-        if (listenerWatchDog == null) {
-            throw new NotAvailableException("listenerWatchDog");
+        if (subscriberWatchDog == null) {
+            throw new NotAvailableException("subscriberWatchDog");
         }
 
-        if (remoteServerWatchDog == null) {
+        if (rpcClientWatchDog == null) {
             throw new NotAvailableException("remoteServiceWatchDog");
         }
 
         final TimeoutSplitter timeoutSplitter = new TimeoutSplitter(timeout, timeUnit);
-        listenerWatchDog.waitForServiceActivation(timeoutSplitter.getTime(), TimeUnit.MILLISECONDS);
-        remoteServerWatchDog.waitForServiceActivation(timeoutSplitter.getTime(), TimeUnit.MILLISECONDS);
+        subscriberWatchDog.waitForServiceActivation(timeoutSplitter.getTime(), TimeUnit.MILLISECONDS);
+        rpcClientWatchDog.waitForServiceActivation(timeoutSplitter.getTime(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -1427,7 +1447,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
 
                 // wait till timeout
                 connectionMonitor.wait(timeout);
-                if (timeout != 0 && !this.connectionState.equals(connectionState)) {
+                if (!this.connectionState.equals(connectionState)) {
                     throw new TimeoutException("Timeout expired!");
                 }
             }
@@ -1595,7 +1615,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                         validateMiddleware();
                         Future<Long> internalTask = null;
                         try {
-                            internalTask = remoteServer.callAsync("ping", System.currentTimeMillis());
+                            internalTask = rpcClient.callMethod("ping", Long.class, System.currentTimeMillis());
                             final Long requestTime = internalTask.get(JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT, TimeUnit.MILLISECONDS);
                             lastPingReceived = System.currentTimeMillis();
                             connectionPing = lastPingReceived - requestTime;
@@ -1610,11 +1630,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                             /**
                              * After a ping timeout we should switch back to {@code connectionState == CONNECTING} because the controller is not reachable any longer.
                              * There is only one edge case when the ping was triggered before the controller was fully started.
-                             * Than we switch to connected when the notification is received after controller startup, but the ping timeout would again result in a reconnect.
+                             * Then we switch to connected when the notification is received after controller startup, but the ping timeout would again result in a reconnect.
                              * This is avoided by storing and comparing the {@code previousConnectionState} state and by only switching to {@code connectionState == CONNECTING} if the connection was previously established.
                              */
                             if (previousConnectionState == CONNECTED && connectionState == CONNECTED) {
-                                logger.warn("Remote connection to Controller[" + ScopeTransformer.transform(getScope()) + "] lost!");
+                                logger.warn("Remote connection to Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] lost!");
 
                                 // init reconnection
                                 setConnectionState(CONNECTING);
@@ -1804,7 +1824,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                             event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
-                                logger.info("Got response from Controller[" + ScopeTransformer.transform(getScope()) + "] and continue processing.");
+                                logger.info("Got response from Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] and continue processing.");
                             }
                             break;
 
@@ -1845,10 +1865,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                                 // only print warning if timeout is too long.
                                 if (timeout > 15000) {
                                     //ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                                    logger.warn("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond: " + ExceptionProcessor.getInitialCauseMessage(ex) + "  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                                    logger.warn("Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] does not respond: " + ExceptionProcessor.getInitialCauseMessage(ex) + "  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                                 } else {
                                     //ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
-                                    logger.debug("Controller[" + ScopeTransformer.transform(getScope()) + "] does not respond: +ExceptionProcessor.getInitialCauseMessage(ex)+  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                                    logger.debug("Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] does not respond: +ExceptionProcessor.getInitialCauseMessage(ex)+  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                                 }
                             } finally {
                                 // wait until controller is maybe available again
@@ -1874,19 +1894,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RSBRemo
                 }
             } catch (Exception ex) {
                 throw ExceptionPrinter.printHistoryAndReturnThrowable(new FatalImplementationErrorException(this, ex), logger);
-            }
-        }
-    }
-
-    private class InternalUpdateHandler implements Handler {
-
-        @Override
-        public void internalNotify(Event event) {
-            try {
-                logger.debug("Internal notification: " + event.toString());
-                applyEventUpdate(event);
-            } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
             }
         }
     }

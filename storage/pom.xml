@@ -41,16 +41,6 @@
         </dependency>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rsb.util</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rsb.container</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openbase</groupId>
             <artifactId>jul.extension.protobuf</artifactId>
             <version>${project.version}</version>
         </dependency>
