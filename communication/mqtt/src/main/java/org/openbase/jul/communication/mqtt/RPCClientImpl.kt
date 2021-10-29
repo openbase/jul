@@ -19,10 +19,8 @@ import kotlin.Any
 import kotlin.reflect.KClass
 import com.google.protobuf.Any as protoAny
 
-class RPCClientImpl(
-    override val scope: ScopeType.Scope,
-    override val config: CommunicatorConfig
-) : RPCCommunicatorImpl(scope, config), RPCClient {
+class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCommunicatorImpl(scope, config),
+    RPCClient {
 
     private val parameterParserMap: HashMap<String, List<(Any) -> protoAny>> = HashMap()
     private val resultParserMap: HashMap<String, (protoAny) -> Any> = HashMap()

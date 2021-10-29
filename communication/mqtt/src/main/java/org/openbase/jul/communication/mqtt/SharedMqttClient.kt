@@ -5,6 +5,7 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import org.openbase.jul.communication.config.CommunicatorConfig
 import java.util.*
 
+// TODO: register shutdown hook?
 object SharedMqttClient {
 
     private var sharedClients: MutableMap<CommunicatorConfig, Mqtt5AsyncClient> = mutableMapOf()
@@ -23,5 +24,9 @@ object SharedMqttClient {
         }
 
         return sharedClients[communicatorConfig]!!
+    }
+
+    fun waitForShutdown() {
+        sharedClients.values.forEach { client -> client.disconnect().get() }
     }
 }

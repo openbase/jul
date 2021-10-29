@@ -13,8 +13,7 @@ import java.util.*
 import java.util.concurrent.Future
 
 class SubscriberImpl(
-    override val scope: Scope,
-    override val config: CommunicatorConfig
+    scope: Scope, config: CommunicatorConfig
 ) : RPCCommunicatorImpl(scope, config), Subscriber {
 
     private var activationFuture: Future<out Any>? = null

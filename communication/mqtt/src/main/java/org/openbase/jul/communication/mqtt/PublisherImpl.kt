@@ -7,8 +7,7 @@ import org.openbase.jul.communication.iface.Publisher
 import org.openbase.type.communication.EventType
 import org.openbase.type.communication.ScopeType
 
-class PublisherImpl( override val scope: ScopeType.Scope,
-                     override val config: CommunicatorConfig) : CommunicatorImpl(scope, config), Publisher {
+class PublisherImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : CommunicatorImpl(scope, config), Publisher {
     override fun publish(event: EventType.Event): EventType.Event {
         mqttClient.publish(
             Mqtt5Publish.builder()

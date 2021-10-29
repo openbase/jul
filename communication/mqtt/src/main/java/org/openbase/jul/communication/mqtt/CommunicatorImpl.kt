@@ -8,15 +8,17 @@ import org.openbase.type.communication.ScopeType.Scope
 import java.util.*
 
 abstract class CommunicatorImpl(
-    override val scope: Scope,
-    override val config: CommunicatorConfig
+    final override val scope: Scope,
+    final override val config: CommunicatorConfig
 ) : Communicator {
 
-    override val id: UUID = UUID.randomUUID()
+    final override val id: UUID = UUID.randomUUID()
     val mqttClient: Mqtt5AsyncClient = SharedMqttClient.get(config)
     open val topic: String = ScopeProcessor.generateStringRep(scope)
 
     override fun waitForShutdown() {
-        mqttClient.disconnect().get()
+        SharedMqttClient.waitForShutdown()
     }
+
+
 }
