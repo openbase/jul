@@ -7,10 +7,11 @@ import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCServer
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.exception.StackTracePrinter
 import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.schedule.GlobalCachedExecutorService
-import org.openbase.type.communication.ScopeType
+import org.openbase.type.communication.ScopeType.Scope
 import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
 import org.slf4j.Logger
@@ -20,10 +21,7 @@ import java.util.*
 import java.util.concurrent.Future
 import kotlin.reflect.KFunction
 
-class RPCServerImpl(
-    override val scope: ScopeType.Scope,
-    override val config: CommunicatorConfig
-) : RPCCommunicatorImpl(scope, config), RPCServer {
+class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorImpl(scope, config), RPCServer {
 
     private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
@@ -31,6 +29,10 @@ class RPCServerImpl(
     private var activationFuture: Future<out Any>? = null
     private val isActive: Boolean =
         (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
+
+    internal fun getActivationFuture(): Future<out Any>? {
+        return this.activationFuture
+    }
 
     override fun isActive(): Boolean {
         return isActive
@@ -86,7 +88,8 @@ class RPCServerImpl(
 
         if (request.methodName !in methods) {
             responseBuilder.status = ResponseType.Response.Status.FINISHED;
-            responseBuilder.error = "Method ${request.methodName} is not available";
+            val ex = NotAvailableException("Method ${request.methodName}")
+            responseBuilder.error = ex.stackTraceToString()
 
             mqttClient.publish(
                 mqttResponseBuilder

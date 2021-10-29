@@ -5,17 +5,24 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeTypeOf
 import io.mockk.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.exception.RPCException
+import org.openbase.jul.communication.exception.RPCResolvedException
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
-import org.openbase.type.communication.mqtt.RequestType
-import org.openbase.type.communication.mqtt.ResponseType
+import org.openbase.type.communication.mqtt.RequestType.Request
+import org.openbase.type.communication.mqtt.ResponseType.Response
+import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 
@@ -25,13 +32,24 @@ internal class RPCServerImplTest {
     private val baseTopic = "/test/server"
     private val rpcServer: RPCServerImpl
 
+    // mock the mqtt client so that no actual communication occurs
     private val mqttClient: Mqtt5AsyncClient = mockk()
-    private val mqttSubscribeSlot = slot<Mqtt5Subscribe>()
 
-    val mqttPublishSlot = slot<Mqtt5Publish>()
+    /**
+     * Capture the callback which is invoked if an
+     * RPCClient calls a method to simulate calls.
+     */
     val callbackSlot = slot<Consumer<Mqtt5Publish>>()
 
+    /**
+     * Capture all responses send by the server.
+     */
+    val mqttPublishSlot = mutableListOf<Mqtt5Publish>()
+
     init {
+        mockkObject(SharedMqttClient)
+        every { SharedMqttClient.get(any()) } returns mqttClient
+
         rpcServer = RPCServerImpl(ScopeProcessor.generateScope(baseTopic), CommunicatorConfig("localhost", 1234))
     }
 
@@ -41,7 +59,7 @@ internal class RPCServerImplTest {
 
         every {
             mqttClient.subscribe(
-                capture(mqttSubscribeSlot),
+                any(),
                 capture(callbackSlot),
                 GlobalCachedExecutorService.getInstance().executorService
             )
@@ -66,6 +84,8 @@ internal class RPCServerImplTest {
                 GlobalCachedExecutorService.getInstance().executorService
             )
         }
+
+        // TODO: verify activation is skipped if called multiple times?
     }
 
     @Test
@@ -89,39 +109,59 @@ internal class RPCServerImplTest {
     @Nested
     inner class TestRequestHandling {
         //TODO: the tests in this nested class could be improved, e.g. by mocking the rpcMethod and its
-        // invokation
+        // invocation
 
         inner class Adder {
             fun add(a: Int, b: Int): Int {
                 if (a > 10) {
                     throw CouldNotPerformException("Number too high")
                 }
-
                 return a + b
             }
         }
 
+        private val validArgs = arrayOf(4, 6)
+        private val invalidArgs = arrayOf(12, 5)
+        private val invalidArgCount = arrayOf(1, 2, 3)
+
         private val adder = Adder()
         private val requestId = "00000000-0000-0000-0000-000000000001"
-        private var mqtt5Publish = mockk<Mqtt5Publish>()
-        private var request = RequestType.Request.newBuilder()
-            .setId(requestId)
-        private var acknowledgedResponse = ResponseType.Response.newBuilder()
-            .setId(requestId)
-            .setStatus(ResponseType.Response.Status.ACKNOWLEDGED)
-            .build()
-
-        lateinit var callback: Consumer<Mqtt5Publish>
 
         init {
-            rpcServer.registerMethod(adder::add, adder)
-            every { mqtt5Publish.payloadAsBytes } answers { request.build().toByteArray() }
+            rpcServer.registerMethod(Adder::add, adder)
         }
+
+        private lateinit var callback: Consumer<Mqtt5Publish>
 
         @BeforeEach
         fun setupSubscriptionCallback() {
+            //println("Test ${mqttPublishSlot.size}")
+            //mqttPublishSlot.clear()
+
             rpcServer.activate()
             callback = callbackSlot.captured
+        }
+
+        private fun simulateMethodCall(
+            methodName: String,
+            id: String = "00000000-0000-0000-0000-000000000001",
+            vararg parameter: Any
+        ) {
+            val argsAsProtoAny = parameter
+                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
+                .zip(parameter)
+                .map { (toProtoAny, arg) -> toProtoAny(arg) }
+
+            val request = Request.newBuilder()
+                .setId(requestId)
+                .setMethodName(methodName)
+                .addAllParams(argsAsProtoAny)
+                .build()
+
+            val clientRequest = mockk<Mqtt5Publish>()
+            every { clientRequest.payloadAsBytes } answers { request.toByteArray() }
+
+            callback.accept(clientRequest)
         }
 
         @Test
@@ -129,128 +169,104 @@ internal class RPCServerImplTest {
             //TODO: verify that id is a valid uuid
         }
 
+        /**
+         * Verify that no matter the request, the server
+         * always responds with an acknowledgement first.
+         */
         @Test
-        fun `test unknown method request`() {
-            request.methodName = "UnavailableMethod"
-
-            callback.accept(mqtt5Publish)
-
-            val expectedErrorResponse = ResponseType.Response.newBuilder()
+        fun `test acknowledgement`() {
+            val acknowledgedResponse = Response.newBuilder()
                 .setId(requestId)
-                .setStatus(ResponseType.Response.Status.FINISHED)
-                .setError("Method ${request.methodName} is not available")
+                .setStatus(Response.Status.ACKNOWLEDGED)
                 .build()
 
-            verifyOrder {
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(acknowledgedResponse.toByteArray())
-                    .build())
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(expectedErrorResponse.toByteArray())
-                    .build())
-            }
+            simulateMethodCall(methodName = "something")
+
+            mqttPublishSlot.size shouldBeGreaterThan 1
+            mqttPublishSlot[0] shouldBe Mqtt5Publish.builder()
+                .topic("$baseTopic/rpc/$requestId")
+                .qos(MqttQos.EXACTLY_ONCE)
+                .payload(acknowledgedResponse.toByteArray())
+                .build()
+        }
+
+        @Test
+        fun `test unknown method request`() {
+            val methodName = "UnavailableMethod"
+            simulateMethodCall(methodName = methodName)
+
+            val lastPublish = mqttPublishSlot.last()
+            lastPublish.topic.toString() shouldBe "$baseTopic/rpc/$requestId"
+            lastPublish.qos shouldBe MqttQos.EXACTLY_ONCE
+
+            val actualResponse = Response.parseFrom(lastPublish.payloadAsBytes)
+            actualResponse.id shouldBe requestId
+            actualResponse.status shouldBe Response.Status.FINISHED
+            actualResponse.hasResult() shouldBe false
+
+            val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
+            error shouldBe NotAvailableException("Method $methodName")
         }
 
         @Test
         fun `test error in invoked method`() {
-            request.methodName = "add"
-            val args = arrayOf(12, 5)
-            val argsAsProtoAny = args
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
-                .zip(args)
-                .map { (toProtoAny, arg) -> toProtoAny(arg) }
+            simulateMethodCall(
+                methodName = Adder::add.name,
+                parameter = invalidArgs
+            )
 
-            request.addAllParams(argsAsProtoAny)
-            callback.accept(mqtt5Publish)
+            val lastPublish = mqttPublishSlot.last()
+            lastPublish.topic.toString() shouldBe "$baseTopic/rpc/$requestId"
+            lastPublish.qos shouldBe MqttQos.EXACTLY_ONCE
 
-            val expectedErrorResponse = ResponseType.Response.newBuilder()
-                .setId(requestId)
-                .setStatus(ResponseType.Response.Status.FINISHED)
-                .setError("Number too high")
-                .build()
+            val actualResponse = Response.parseFrom(lastPublish.payloadAsBytes)
+            actualResponse.id shouldBe requestId
+            actualResponse.status shouldBe Response.Status.FINISHED
+            actualResponse.hasResult() shouldBe false
 
-            verifyOrder {
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(acknowledgedResponse.toByteArray())
-                    .build())
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(expectedErrorResponse.toByteArray())
-                    .build())
-            }
+            val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
+            error.shouldBeTypeOf<InvocationTargetException>()
         }
 
         @Test
         fun `test erroneous parameter count`() {
-            request.methodName = "add"
-            val args = arrayOf(12, 5, 6)
-            val argsAsProtoAny = args
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
-                .zip(args)
-                .map { (toProtoAny, arg) -> toProtoAny(arg) }
+            simulateMethodCall(
+                methodName = Adder::add.name,
+                parameter = invalidArgCount
+            )
 
-            request.addAllParams(argsAsProtoAny)
-            callback.accept(mqtt5Publish)
+            val lastPublish = mqttPublishSlot.last()
+            lastPublish.topic.toString() shouldBe "$baseTopic/rpc/$requestId"
+            lastPublish.qos shouldBe MqttQos.EXACTLY_ONCE
 
-            val expectedErrorResponse = ResponseType.Response.newBuilder()
-                .setId(requestId)
-                .setStatus(ResponseType.Response.Status.FINISHED)
-                .setError("Invalid number of arguments! Expected 2 but got ${args.size}")
-                .build()
+            val actualResponse = Response.parseFrom(lastPublish.payloadAsBytes)
+            actualResponse.id shouldBe requestId
+            actualResponse.status shouldBe Response.Status.FINISHED
+            actualResponse.hasResult() shouldBe false
 
-            verifyOrder {
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(acknowledgedResponse.toByteArray())
-                    .build())
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(expectedErrorResponse.toByteArray())
-                    .build())
-            }
+            val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
+            error.shouldBeTypeOf<CouldNotPerformException>()
         }
 
         @Test
         fun `test successful method request`() {
-            request.methodName = "add"
-            val args = arrayOf(6, 5)
-            val argsAsProtoAny = args
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
-                .zip(args)
-                .map { (toProtoAny, arg) -> toProtoAny(arg) }
+            simulateMethodCall(
+                methodName = Adder::add.name,
+                parameter = validArgs
+            )
 
-            request.addAllParams(argsAsProtoAny)
-            callback.accept(mqtt5Publish)
+            val lastPublish = mqttPublishSlot.last()
+            lastPublish.topic.toString() shouldBe "$baseTopic/rpc/$requestId"
+            lastPublish.qos shouldBe MqttQos.EXACTLY_ONCE
 
-            val expectedResult = adder.add(args[0], args[1])
+            val actualResponse = Response.parseFrom(lastPublish.payloadAsBytes)
+            actualResponse.id shouldBe requestId
+            actualResponse.status shouldBe Response.Status.FINISHED
+            actualResponse.error.isEmpty() shouldBe true
+
+            val expectedResult = adder.add(validArgs[0], validArgs[1])
             val expectedResultProto = RPCMethod.anyToProtoAny(Int::class)(expectedResult)
-            val expectedResponse = ResponseType.Response.newBuilder()
-                .setId(requestId)
-                .setStatus(ResponseType.Response.Status.FINISHED)
-                .setResult(expectedResultProto)
-                .build()
-
-            verifyOrder {
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(acknowledgedResponse.toByteArray())
-                    .build())
-                mqttClient.publish(Mqtt5Publish.builder()
-                    .topic("$baseTopic/rpc/$requestId")
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .payload(expectedResponse.toByteArray())
-                    .build())
-            }
+            actualResponse.result shouldBe expectedResultProto
         }
     }
 }
