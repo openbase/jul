@@ -10,13 +10,12 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.*
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
@@ -32,6 +31,12 @@ import java.util.function.Consumer
 internal class RPCClientImplTest {
 
     private val mqttClient: Mqtt5AsyncClient = mockk()
+
+    init {
+        mockkObject(SharedMqttClient)
+        every { SharedMqttClient.get(any()) } returns mqttClient
+    }
+
     private val mqttSubscribeSlot = slot<Mqtt5Subscribe>()
 
     val mqttPublishSlot = slot<Mqtt5Publish>()
@@ -52,6 +57,11 @@ internal class RPCClientImplTest {
             recordPrivateCalls = true
         )
         every { rpcRemote.generateRequestId() } returns requestId
+    }
+
+    @AfterAll
+    fun clearMocks() {
+        clearAllMocks()
     }
 
     @BeforeEach
@@ -162,7 +172,7 @@ internal class RPCClientImplTest {
             callback.accept(mqtt5Publish)
 
             val exception = shouldThrow<ExecutionException> { rpcFuture.get() }
-            exception.cause!!::class.java shouldBe CouldNotPerformException::class.java
+            exception.cause!!::class.java shouldBe RPCException::class.java
             exception.cause!!.message shouldBe response.error
 
             verify(exactly = 1) {

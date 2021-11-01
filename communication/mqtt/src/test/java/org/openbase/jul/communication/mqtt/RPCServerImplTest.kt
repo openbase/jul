@@ -9,10 +9,8 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import io.mockk.*
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.communication.exception.RPCResolvedException
@@ -51,6 +49,11 @@ internal class RPCServerImplTest {
         every { SharedMqttClient.get(any()) } returns mqttClient
 
         rpcServer = RPCServerImpl(ScopeProcessor.generateScope(baseTopic), CommunicatorConfig("localhost", 1234))
+    }
+
+    @AfterAll
+    fun clearMocks() {
+        clearAllMocks()
     }
 
     @BeforeEach
