@@ -10,20 +10,18 @@ package org.openbase.jul.extension.type.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import java.util.List;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jps.core.JPService;
@@ -31,8 +29,12 @@ import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.type.communication.ScopeType;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class ScopeProcessorTest {
@@ -41,12 +43,12 @@ public class ScopeProcessorTest {
     private final String scopeStringRep;
 
     public ScopeProcessorTest() {
-        this.components = new ArrayList<String>();
+        this.components = new ArrayList<>();
         this.components.add("home");
         this.components.add("kitchen");
-        this.components.add(""); // test if empty component is handeled correctly
+        this.components.add(""); // test if empty component is handled correctly
         this.components.add("table");
-        this.scopeStringRep = "/home/kitchen/table/";
+        this.scopeStringRep = "/home/kitchen/table";
     }
 
     @BeforeClass
@@ -86,14 +88,14 @@ public class ScopeProcessorTest {
     }
 
     @Test(timeout = 5000)
-    public void testScopeTransfromationChain() throws CouldNotPerformException {
+    public void testScopeTransformationChain() throws CouldNotPerformException {
         System.out.println("testGenerateScope");
 
         ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
         ScopeType.Scope result_1 = ScopeProcessor.generateScope(ScopeProcessor.generateStringRep(expected));
         assertEquals("Scope not fully generated!", expected, result_1);
         String result_2 = ScopeProcessor.generateStringRep(result_1);
-        assertEquals("Scope not fully generated!", "/paradise/room/device/test/", result_2);
+        assertEquals("Scope not fully generated!", "/paradise/room/device/test", result_2);
     }
 
     @Test

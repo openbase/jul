@@ -47,7 +47,7 @@ public class ScopeProcessor {
 
     public static String generateStringRep(final Collection<String> components) throws CouldNotPerformException {
         try {
-            String stringRep = COMPONENT_SEPARATOR;
+            StringBuilder stringRep = new StringBuilder();
             for (String component : components) {
 
                 // merge to components in case they are connected by an empty one
@@ -55,10 +55,10 @@ public class ScopeProcessor {
                     continue;
                 }
 
-                stringRep += component;
-                stringRep += COMPONENT_SEPARATOR;
+                stringRep.append(COMPONENT_SEPARATOR);
+                stringRep.append(component);
             }
-            return stringRep;
+            return stringRep.toString();
         } catch (RuntimeException ex) {
             throw new CouldNotPerformException("Could not generate scope string representation!", ex);
         }
@@ -73,7 +73,7 @@ public class ScopeProcessor {
 
             return newScope.build();
         } catch (NullPointerException ex) {
-            throw new CouldNotPerformException("Coult not generate scope!", ex);
+            throw new CouldNotPerformException("Could not generate scope!", ex);
         }
     }
 
