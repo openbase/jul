@@ -22,6 +22,7 @@ package org.openbase.jul.communication.controller;
  * #L%
  */
 
+import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
@@ -1062,7 +1063,14 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                 return data;
             }
 
-            M dataUpdate = (M) event.getPayload();
+            M dataUpdate = null;
+            if (event.hasPayload()) {
+                try {
+                    dataUpdate = event.getPayload().unpack(getDataClass());
+                } catch (InvalidProtocolBufferException e) {
+                    throw new CouldNotPerformException("Event data does not match " + getDataClass().getSimpleName(), e);
+                }
+            }
 
             if (dataUpdate == null) {
                 logger.debug("Received dataUpdate null while in connection state[" + getConnectionState().name() + "]");

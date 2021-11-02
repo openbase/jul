@@ -1248,6 +1248,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public String toString() {
+        if (publisher == null) {
+            return getClass().getSimpleName();
+        }
         return getClass().getSimpleName() + "[" + publisher.getScope() + "]";
     }
 }
