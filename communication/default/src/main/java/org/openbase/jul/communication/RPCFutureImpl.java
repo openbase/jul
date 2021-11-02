@@ -2,7 +2,7 @@ package org.openbase.jul.communication;
 
 /*-
  * #%L
- * JUL Extension RPC Communication
+ * JUL Communication Default
  * %%
  * Copyright (C) 2015 - 2021 openbase.org
  * %%
