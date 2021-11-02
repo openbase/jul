@@ -114,7 +114,7 @@ public class FutureCancelTest implements Requestable<Object> {
         server.activate();
         client.activate();
 
-        Future<Event> future = client.callMethodRaw("requestStatus", Any.class);
+        Future<Any> future = client.callMethod("requestStatus", Any.class);
         try {
             future.get(1000, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
