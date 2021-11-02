@@ -36,27 +36,11 @@ interface RPCClient : RPCCommunicator {
         return_clazz: KClass<RETURN>,
         vararg parameters: Any): Future<RETURN>
 
-    fun <RETURN: Any> callMethodRaw(
-        methodName: String,
-        return_clazz: KClass<RETURN>,
-        vararg parameters: Any): Future<Event>
-
     fun <RETURN: Any> callMethod(
         methodName: String,
         return_clazz: Class<RETURN>,
         vararg parameters: Any): Future<RETURN> {
         return callMethod(
-            methodName = methodName,
-            return_clazz = Reflection.getOrCreateKotlinClass(return_clazz) as KClass<RETURN>,
-            parameters = parameters
-        )
-    }
-
-    fun <RETURN: Any> callMethodRaw(
-        methodName: String,
-        return_clazz: Class<RETURN>,
-        vararg parameters: Any): Future<Event> {
-        return callMethodRaw(
             methodName = methodName,
             return_clazz = Reflection.getOrCreateKotlinClass(return_clazz) as KClass<RETURN>,
             parameters = parameters

@@ -1043,8 +1043,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         return rpcClient;
     }
 
-    protected Future<Event> internalRequestStatus() {
-        return rpcClient.callMethodRaw(RPC_REQUEST_STATUS, getDataClass());
+    protected Future<M> internalRequestStatus() {
+        return rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass());
     }
 
     protected M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
@@ -1769,8 +1769,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         @Override
         public M call() throws CouldNotPerformException {
 
-            Future<Event> internalFuture = null;
+            Future<M> internalFuture = null;
             Event event;
+            M receivedData;
             boolean active = isActive();
             ExecutionException lastException = null;
             try {
@@ -1821,7 +1822,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                             // get() is fine because ping task has internal timeout, so task will fail after timeout anyway.
                             ping().get();
                             internalFuture = internalRequestStatus();
-                            event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                            //event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                            receivedData = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] and continue processing.");
@@ -1876,7 +1878,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                             }
                         }
                     }
-                    return applyEventUpdate(event, relatedFuture);
+                    //TODO: verify that replacing this is okay
+                    applyDataUpdate(receivedData);
+                    return receivedData;
+                    //return applyEventUpdate(event, relatedFuture);
                 } catch (InterruptedException ex) {
                     if (internalFuture != null) {
                         internalFuture.cancel(true);

@@ -60,14 +60,6 @@ class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCom
         return rpcFuture
     }
 
-    override fun <RETURN : Any> callMethodRaw(
-        methodName: String,
-        return_clazz: KClass<RETURN>,
-        vararg parameters: Any
-    ): Future<Event> {
-        TODO()
-    }
-
     override fun activate() {
         active = true
     }
