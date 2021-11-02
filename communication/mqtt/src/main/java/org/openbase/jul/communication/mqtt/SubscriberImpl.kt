@@ -14,7 +14,7 @@ import java.util.concurrent.Future
 
 class SubscriberImpl(
     scope: Scope, config: CommunicatorConfig
-) : RPCCommunicatorImpl(scope, config), Subscriber {
+) : CommunicatorImpl(scope, config), Subscriber {
 
     private var activationFuture: Future<out Any>? = null
     private val isActive: Boolean =
@@ -57,5 +57,9 @@ class SubscriberImpl(
 
     override fun isActive(): Boolean {
         return isActive
+    }
+
+    internal fun getActivationFuture(): Future<out Any>? {
+        return this.activationFuture
     }
 }
