@@ -94,8 +94,7 @@
         <dependency>
             <groupId>org.openbase</groupId>
             <artifactId>jul.extension.type.processing</artifactId>
-            <version>2.0-SNAPSHOT</version>
-            <scope>${version}</scope>
+            <version>${version}</version>
         </dependency>
 
         <dependency>
