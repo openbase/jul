@@ -1,6 +1,9 @@
 package org.openbase.jul.communication.iface
 
-import org.openbase.type.communication.EventType.Event
+import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.InvalidStateException
+import org.openbase.jul.exception.NotAvailableException
+import org.openbase.jul.schedule.FutureProcessor
 import java.util.concurrent.Future
 import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
