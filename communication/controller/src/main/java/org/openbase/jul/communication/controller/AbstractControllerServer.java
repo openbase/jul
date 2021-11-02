@@ -1091,7 +1091,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     }
 
     /**
-     * Register methods for RPCs on the internal RSB rpc server.
+     * Register methods for RPCs on the internal RPC server.
      * <p>
      * Note:
      * Methods should not be registered outside this method because the internal server can already be active.

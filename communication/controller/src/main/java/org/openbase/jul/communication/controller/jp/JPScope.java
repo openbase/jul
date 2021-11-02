@@ -60,7 +60,7 @@ public class JPScope extends AbstractJavaProperty<Scope> {
 
     @Override
     public String getDescription() {
-        return "Setup the application scope which is used for the rsb communication.";
+        return "Setup the application scope which is used for the communication.";
     }
 
     @Override

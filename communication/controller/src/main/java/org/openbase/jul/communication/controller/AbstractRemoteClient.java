@@ -358,7 +358,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
     }
 
     /**
-     * Method adds an handler to the internal rsb subscriber.
+     * Method adds an handler to the internal subscriber.
      *
      * @param handler
      * @param wait
