@@ -27,19 +27,17 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
 
     private val methods: HashMap<String, RPCMethod> = HashMap()
     private var activationFuture: Future<out Any>? = null
-    private val isActive: Boolean =
-        (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
 
     internal fun getActivationFuture(): Future<out Any>? {
         return this.activationFuture
     }
 
     override fun isActive(): Boolean {
-        return isActive
+        return (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
     }
 
     override fun activate() {
-        if (isActive()) {
+        if (isActive) {
             return
         }
 

@@ -17,8 +17,6 @@ class SubscriberImpl(
 ) : CommunicatorImpl(scope, config), Subscriber {
 
     private var activationFuture: Future<out Any>? = null
-    private val isActive: Boolean =
-        (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
 
     private val callbackMap: MutableMap<UUID, (Event) -> Any> = mutableMapOf()
 
@@ -56,7 +54,7 @@ class SubscriberImpl(
     }
 
     override fun isActive(): Boolean {
-        return isActive
+        return (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
     }
 
     internal fun getActivationFuture(): Future<out Any>? {
