@@ -8,6 +8,9 @@ import org.openbase.type.communication.EventType
 import org.openbase.type.communication.ScopeType
 
 class PublisherImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : CommunicatorImpl(scope, config), Publisher {
+
+    var active = false
+
     override fun publish(event: EventType.Event): EventType.Event {
         mqttClient.publish(
             Mqtt5Publish.builder()
@@ -20,16 +23,14 @@ class PublisherImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : Commun
     }
 
     override fun activate() {
-        // see is active
+        active = true
     }
 
     override fun deactivate() {
-        // see is active
+        active = false
     }
 
     override fun isActive(): Boolean {
-        //TODO: active as long as the mqtt client is active which is shared
-        return true
+        return active
     }
-
 }

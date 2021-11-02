@@ -20,5 +20,4 @@ abstract class CommunicatorImpl(
         SharedMqttClient.waitForShutdown()
     }
 
-
 }

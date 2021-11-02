@@ -24,6 +24,7 @@ class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCom
 
     private val parameterParserMap: HashMap<String, List<(Any) -> protoAny>> = HashMap()
     private val resultParserMap: HashMap<String, (protoAny) -> Any> = HashMap()
+    private var active = false
 
     override fun <RETURN : Any> callMethod(
         methodName: String,
@@ -68,15 +69,15 @@ class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCom
     }
 
     override fun activate() {
-        //TODO
+        active = true
     }
 
     override fun deactivate() {
-        //TODO
+        active = false
     }
 
     override fun isActive(): Boolean {
-        return true
+        return active
     }
 
     private fun <RETURN> handleRPCResponse(

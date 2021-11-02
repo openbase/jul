@@ -40,7 +40,7 @@ class PublisherImpTest {
             .setPayload(protoAny.pack(expectedData))
             .build()
 
-        val topic = "/test/publish/"
+        val topic = "/test/publish"
         val publisher = PublisherImpl(ScopeProcessor.generateScope(topic), CommunicatorConfig("localhost", 1234))
 
         publisher.publish(expectedData)

@@ -47,7 +47,7 @@ class SubscriberImplTest {
         clearMocks(mqttClient)
     }
 
-    private val topic = "/test/subscribe/"
+    private val topic = "/test/subscribe"
     private val scope = ScopeProcessor.generateScope(topic)
     private val config = CommunicatorConfig("localhost", 1873)
     val subscriber = SubscriberImpl(scope, config)
