@@ -1,18 +1,21 @@
 package org.openbase.jul.communication.mqtt
 
-import io.kotest.matchers.should
+import com.google.protobuf.Any
 import io.kotest.matchers.shouldBe
-import com.google.protobuf.Any as protoAny
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.type.communication.EventType
 import org.openbase.type.communication.mqtt.PrimitiveType
+import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.utility.DockerImageName
+import java.util.concurrent.TimeUnit
 
 @Testcontainers
-class PubSubIntegrationTest {
+class IntegrationTest {
 
     // the companion object makes sure that the container once before all tests instead of restarting for every test
     companion object {
@@ -26,32 +29,60 @@ class PubSubIntegrationTest {
             .withExposedPorts(port)
     }
 
-    private val scope = ScopeProcessor.generateScope("/test/pubsub")
+    private val scope = ScopeProcessor.generateScope("/test/integration")
     private val config = CommunicatorConfig(broker.host, broker.firstMappedPort)
 
+    internal class Adder {
+        fun add(a: Int, b: Int): Int {
+            return a + b
+        }
+    }
+
     @Test
-    fun test() {
+    fun `test rpc over mqtt`() {
+        val instance = Adder()
+
+        val rpcServer = RPCServerImpl(scope, config)
+        rpcServer.registerMethod(Adder::add, instance)
+        rpcServer.activate()
+        rpcServer.getActivationFuture()!!.get()
+
+        val rpcClient = RPCClientImpl(scope, config)
+
+        val expectedResult = 45
+        val result = rpcClient.callMethod(instance::add.name, Int::class, 3, 42).get(1, TimeUnit.SECONDS)
+
+        result shouldBe expectedResult
+    }
+
+    @Test
+    @Timeout(value = 1, unit = TimeUnit.SECONDS)
+    fun `test pubsub over mqtt`() {
         val data = PrimitiveType.Primitive.newBuilder()
             .setString("IMPORTANT Message")
             .build()
         val expectedEvent = EventType.Event.newBuilder()
-            .setPayload(protoAny.pack(data))
+            .setPayload(Any.pack(data))
             .build()
-        var notifications = 0
+        val lock = Object()
 
         val subscriber = SubscriberImpl(scope, config)
         subscriber.activate()
         subscriber.getActivationFuture()!!.get()
-        subscriber.registerDataHandler { event ->  {
-            notifications++;
+        subscriber.registerDataHandler { event ->
             event shouldBe expectedEvent
-        } }
+            synchronized(lock) {
+                lock.notify()
+            }
+        }
 
         val publisher = PublisherImpl(scope, config)
         publisher.publish(expectedEvent)
 
-        //TODO: how to wait the right time here? wait on event with timeout? polling?
-        Thread.sleep(100)
-        notifications shouldBe 1
+        synchronized(lock) {
+            lock.wait()
+        }
     }
 }
+
+class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("vernemq/vernemq"))
