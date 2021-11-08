@@ -79,7 +79,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      * Constructor prepares the launcher and registers already a shutdown hook.
      * The launcher class is used to instantiate a new launcher instance if the instantiateLaunchable() method is not overwritten.
      * <p>
-     * After instantiation of this class the launcher must be initialized and activated before the RSB interface is provided.
+     * After instantiation of this class the launcher must be initialized and activated before the communication interface is provided.
      *
      * @param launchableClass  the class to be launched.
      * @param applicationClass the class representing this application. Those is used for scope generation if the getName() method is not overwritten.

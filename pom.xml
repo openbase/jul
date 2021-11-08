@@ -307,15 +307,12 @@
         <dependency.rsx.version>[0.18,0.19-alpha)</dependency.rsx.version>
         <!--dependency.rsx.version>0.18-SNAPSHOT</dependency.rsx.version-->
 
-<!--        <dependency.rsb.artifact>rsb</dependency.rsb.artifact>-->
-<!--        <dependency.rsb.version>${dependency.rsx.version}</dependency.rsb.version>-->
-
         <!-- jul.visual.javafx -->
         <dependency.org.controlsfx.version>[9.0,9.1-alpha)</dependency.org.controlsfx.version>
         <dependency.de.jensd.fontawesomefx.version>[8.9,8.10-alpha)</dependency.de.jensd.fontawesomefx.version>
         <dependency.com.jfoenix.version>[9.0,9.1-alpha)</dependency.com.jfoenix.version>
         <dependency.org.junit.jupiter.version>[5.6,5.7-alpha)</dependency.org.junit.jupiter.version>
-        <kotlin.version>1.5.20</kotlin.version>
+        <kotlin.version>1.5.31</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     </properties>
     
