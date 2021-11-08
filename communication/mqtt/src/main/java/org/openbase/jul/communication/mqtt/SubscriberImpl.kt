@@ -41,8 +41,12 @@ class SubscriberImpl(
                 .qos(MqttQos.EXACTLY_ONCE)
                 .build(),
             { mqtt5Publish: Mqtt5Publish ->
-                val event = Event.parseFrom(mqtt5Publish.payloadAsBytes)
-                callbackMap.values.forEach { function -> function(event) }
+                // Note: this is a wrapper for the usage of a shared client
+                //       which may remain subscribed even if deactivate is called
+                if (isActive) {
+                    val event = Event.parseFrom(mqtt5Publish.payloadAsBytes)
+                    callbackMap.values.forEach { function -> function(event) }
+                }
             },
             GlobalCachedExecutorService.getInstance().executorService
         )
