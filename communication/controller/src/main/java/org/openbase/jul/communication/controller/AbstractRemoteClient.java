@@ -10,25 +10,23 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
-import lombok.val;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.exception.RPCException;
@@ -38,6 +36,7 @@ import org.openbase.jul.communication.iface.RPCClient;
 import org.openbase.jul.communication.iface.Subscriber;
 import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
 import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
+import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -59,18 +58,17 @@ import org.openbase.type.communication.mqtt.PrimitiveType.Primitive;
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.*;
-import org.openbase.jul.exception.TimeoutException;
 
 import static org.openbase.jul.communication.controller.AbstractControllerServer.RPC_REQUEST_STATUS;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
 
 /**
  * @param <M>
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 //
@@ -167,7 +165,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * {@inheritDoc}
      *
      * @param scope {@inheritDoc}
-     *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
@@ -180,7 +177,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Initialize the remote on a scope.
      *
      * @param scope the scope where the remote communicates
-     *
      * @throws InitializationException if the initialization fails
      * @throws InterruptedException    if the initialization is interrupted
      */
@@ -207,9 +203,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
     /**
      * {@inheritDoc}
      *
-     * @param scope             {@inheritDoc}
+     * @param scope              {@inheritDoc}
      * @param communicatorConfig {@inheritDoc}
-     *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
@@ -333,7 +328,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Method unlocks this instance.
      *
      * @param maintainer the instance which currently holds the lock.
-     *
      * @throws CouldNotPerformException is thrown if the instance could not be
      *                                  unlocked.
      */
@@ -362,7 +356,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      *
      * @param handler
      * @param wait
-     *
      * @throws InterruptedException
      * @throws CouldNotPerformException
      */
@@ -448,7 +441,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Atomic deactivate which makes sure that the maintainer stays the same.
      *
      * @param maintainer the current maintainer of this remote
-     *
      * @throws InterruptedException        if deactivation is interrupted
      * @throws CouldNotPerformException    if deactivation fails
      * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
@@ -546,7 +538,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * it is necessary to call {@code requestData.get()}.
      *
      * @param scope the new scope to configure.
-     *
      * @throws InterruptedException     is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException is throws if the reinit has been failed.
      */
@@ -599,7 +590,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * it is necessary to call {@code requestData.get()}.
      *
      * @param maintainer the current maintainer of this remote
-     *
      * @throws InterruptedException        is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
@@ -617,7 +607,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      *
      * @param scope      the new scope to configure.
      * @param maintainer the current maintainer of this remote
-     *
      * @throws InterruptedException        is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
@@ -868,7 +857,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * @param <T>        {@inheritDoc}
      * @param methodName {@inheritDoc}
      * @param argument   {@inheritDoc}
-     *
      * @return {@inheritDoc}
      */
     @Override
@@ -1093,9 +1081,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
             } else {
                 // received correct data
                 try {
-                    dataUpdate = messageProcessor.process(event.getPayload());
+                    dataUpdate = messageProcessor.process(event.getPayload().unpack(getDataClass()));
                 } catch (CouldNotPerformException ex) {
                     throw new CouldNotPerformException("Could not process message", ex);
+                } catch (InvalidProtocolBufferException ex) {
+                    throw new CouldNotPerformException("Received data of unexpected type!. Expected [" + getDataClass().getSimpleName() + "]", ex);
                 }
 
                 // skip events which were send later than the last received update
@@ -1113,14 +1103,14 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
 
                 // filter outdated events
                 try {
-                    long createTime = event.getHeaderMap().get(RPCUtils.CREATE_TIMESTAMP).unpack(Primitive.class).getLong();
+                    long createTime = event.getHeaderMap().get(RPCUtils.USER_TIME_KEY).unpack(Primitive.class).getLong();
                     if (createTime < newestEventTime || (createTime == newestEventTime && userTime < newestEventTimeNano)) {
                         logger.debug("Skip event on scope[" + getScopeStringRep() + "] because event seems to be outdated! Received event time < latest event time [" + createTime + "<= " + newestEventTime + "][" + userTime + " < " + newestEventTimeNano + "]");
                         return data;
                     }
                     newestEventTime = createTime;
                 } catch (NullPointerException | InvalidProtocolBufferException ex) {
-                    ExceptionPrinter.printHistory("Data message does not contain vaild creation timestemp on scope " + getScopeStringRep(), ex, logger);
+                    ExceptionPrinter.printHistory("Data message does not contain valid creation timestamp on scope " + getScopeStringRep(), ex, logger);
                 }
 
                 if (userTime != RPCUtils.USER_TIME_VALUE_INVALID) {
@@ -1159,7 +1149,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -1202,7 +1191,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * transaction sync futures return.
      *
      * @param data the data type notified.
-     *
      * @throws CouldNotPerformException if notification fails or no transaction id could be extracted.
      */
     private void notifyPrioritizedObservers(final M data) throws CouldNotPerformException {
@@ -1273,7 +1261,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      *
      * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}
-     *
      * @throws CouldNotPerformException       {@inheritDoc}
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
@@ -1417,7 +1404,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * @param connectionState the desired connection state
      * @param timeout         the timeout in milliseconds until the method throw a
      *                        TimeoutException in case the connection state was not reached.
-     *
      * @throws InterruptedException                                is thrown in case the thread is externally
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.TimeoutException         is thrown in case the
@@ -1480,7 +1466,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Method blocks until the remote reaches the desired connection state.
      *
      * @param connectionState the desired connection state
-     *
      * @throws InterruptedException                                is thrown in case the thread is externally
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
@@ -1498,7 +1483,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -1734,7 +1718,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Get the latest transaction id. It will be updated every time after prioritized observers are notified.
      *
      * @return the latest transaction id.
-     *
      * @throws NotAvailableException if no data has been received yet
      */
     @Override
