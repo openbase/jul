@@ -23,7 +23,6 @@ package org.openbase.jul.communication.controller;
  */
 
 import org.junit.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.communication.iface.RPCServer;
@@ -44,8 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.ArrayList;
@@ -66,22 +63,19 @@ public class AbstractControllerServerTest {
     public AbstractControllerServerTest() {
     }
 
-    public final int port = 1883;
+    public static final int port = 1883;
 
-    @Rule
-    public GenericContainer broker = new GenericContainer(DockerImageName.parse("vernemq/vernemq"))
+    @ClassRule
+    public static GenericContainer broker = new GenericContainer(DockerImageName.parse("vernemq/vernemq"))
             .withEnv("DOCKER_VERNEMQ_ACCEPT_EULA", "yes")
             .withEnv("DOCKER_VERNEMQ_LISTENER.tcp.allowed_protocol_versions", "5") // enable mqtt5
             .withEnv("DOCKER_VERNEMQ_ALLOW_ANONYMOUS", "on") // enable connection without password
             .withExposedPorts(port);
 
-    @Before
-    public void setUp() throws JPServiceException {
-        System.out.println("Broker started? with port " + broker.getFirstMappedPort() + " and host " + broker.getHost());
-
+    @BeforeClass
+    public static void setUpClass() throws JPServiceException {
         JPService.registerProperty(JPComPort.class, broker.getFirstMappedPort());
         JPService.registerProperty(JPComHost.class, broker.getHost());
-
         JPService.setupJUnitTestMode();
     }
 
