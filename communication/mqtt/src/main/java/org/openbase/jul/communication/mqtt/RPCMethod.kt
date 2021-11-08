@@ -3,6 +3,7 @@ package org.openbase.jul.communication.mqtt
 import com.google.protobuf.Message
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
+import java.util.concurrent.Future
 import kotlin.Any
 import kotlin.Boolean
 import kotlin.Double
@@ -141,8 +142,27 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
 
     private val callOnInstance = instance != noInstance
 
-    private var resultParser: (Any) -> protoAny = anyToProtoAny(function.returnType.classifier as KClass<*>)
+    private var futureMethod = function.returnType.classifier == Future::class
+    private var resultParser: (Any) -> protoAny = if (futureMethod) {
+        anyToProtoAny(function.returnType.arguments[0].type!!.classifier as KClass<*>)
+    } else {
+        anyToProtoAny(function.returnType.classifier as KClass<*>)
+    }
+
     private var parameterParserList: List<(protoAny) -> Any>
+
+    init {
+        var filteredParameters = function.parameters
+
+        // if called on an instance the first parameter of the function is the
+        // instance and, it does not need to be wrapped
+        if (callOnInstance) {
+            filteredParameters = filteredParameters.subList(1, filteredParameters.size)
+        }
+
+        parameterParserList = filteredParameters
+            .map { parameter -> protoAnyToAny(parameter.type.classifier as KClass<*>) }
+    }
 
     fun invoke(args: List<protoAny>): protoAny {
         if (args.size != parameterParserList.size) {
@@ -158,20 +178,11 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
             parameters = arrayOf(instance, *parameters)
         }
 
-        val result = function.call(*parameters)!!
-        return resultParser(result);
-    }
-
-    init {
-        var filteredParameters = function.parameters
-
-        // if called on an instance the first parameter of the function is the
-        // instance and, it does not need to be wrapped
-        if (callOnInstance) {
-            filteredParameters = filteredParameters.subList(1, filteredParameters.size)
+        var result = function.call(*parameters)!!
+        if (futureMethod) {
+            //TODO: apply same procedure as done by RPCHelper
+            result = (result as Future<*>).get()
         }
-
-        parameterParserList = filteredParameters
-            .map { parameter -> protoAnyToAny(parameter.type.classifier as KClass<*>) }
+        return resultParser(result);
     }
 }
