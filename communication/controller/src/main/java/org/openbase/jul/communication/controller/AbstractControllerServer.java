@@ -25,6 +25,7 @@ package org.openbase.jul.communication.controller;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors;
+import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
 import org.openbase.jul.communication.iface.Publisher;
@@ -228,8 +229,10 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 // if already registered then everything is fine and we can continue...
             }
             try {
-                server.registerMethods(Requestable.class, this);
-            } catch (InvalidStateException ex) {
+                server.registerMethods((Class) getClass(), this);
+                //TODO: this does not work since the requestable interface has a generic return type
+                //server.registerMethods(Requestable.class, this);
+            } catch (InvalidStateException /*| NoSuchMethodException*/ ex) {
                 // if already registered then everything is fine and we can continue...
             }
 
@@ -1078,6 +1081,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
+    @RPCMethod
     @Override
     public M requestStatus() throws CouldNotPerformException {
         logger.trace("requestStatus of {}", this);
