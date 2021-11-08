@@ -54,7 +54,7 @@ interface RPCServer : RPCCommunicator {
         interfaceClass.memberFunctions
             .filter { method ->
                 method.annotations.any {
-                    it == RPCMethod::class
+                    it.annotationClass == RPCMethod::class
                             && (JPService.getValue(JPComLegacyMode::class.java, false)
                             || !(it as RPCMethod).legacy)
                 }
