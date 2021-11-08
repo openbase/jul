@@ -1,10 +1,10 @@
 package org.openbase.jul.communication.mqtt
 
-import com.google.protobuf.Any as protoAny
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
+import com.hivemq.client.mqtt.mqtt5.message.subscribe.suback.Mqtt5SubAck
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -18,6 +18,7 @@ import org.openbase.type.communication.EventType.Event
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
+import com.google.protobuf.Any as protoAny
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SubscriberImplTest {
@@ -103,13 +104,15 @@ class SubscriberImplTest {
 
         init {
             // mock
+            val activationFuture = CompletableFuture<Mqtt5SubAck>()
+            activationFuture.complete(null)
             every {
                 mqttClient.subscribe(
                     any(),
                     capture(callbackSlot),
                     GlobalCachedExecutorService.getInstance().executorService
                 )
-            } returns CompletableFuture()
+            } returns activationFuture
 
             // capture callback
             subscriber.activate()
@@ -130,10 +133,12 @@ class SubscriberImplTest {
             val handlerId = subscriber.registerDataHandler { ev -> receivedEvents.add(ev) }
 
             // mock event receive
-            callback.accept(Mqtt5Publish.builder()
-                .topic(topic)
-                .payload(event.toByteArray())
-                .build())
+            callback.accept(
+                Mqtt5Publish.builder()
+                    .topic(topic)
+                    .payload(event.toByteArray())
+                    .build()
+            )
 
             // validate callback was executed
             receivedEvents.size shouldBe 1
@@ -143,10 +148,12 @@ class SubscriberImplTest {
             subscriber.removeDataHandler(handlerId)
 
             // mock event receive
-            callback.accept(Mqtt5Publish.builder()
-                .topic(topic)
-                .payload(event.toByteArray())
-                .build())
+            callback.accept(
+                Mqtt5Publish.builder()
+                    .topic(topic)
+                    .payload(event.toByteArray())
+                    .build()
+            )
 
             // validate callback was not executed
             receivedEvents.size shouldBe 1
