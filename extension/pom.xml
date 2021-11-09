@@ -30,7 +30,6 @@
 
     <modules>
         <module>protobuf</module>
-<!--        <module>rsb</module>-->
         <module>type</module>
     </modules>
     
