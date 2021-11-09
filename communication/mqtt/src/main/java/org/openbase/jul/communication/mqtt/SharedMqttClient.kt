@@ -20,7 +20,6 @@ import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5UnsubscribeBuilder
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.unsuback.Mqtt5UnsubAck
 import org.openbase.jul.communication.config.CommunicatorConfig
-import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.iface.Shutdownable
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -49,7 +48,7 @@ object SharedMqttClient : Shutdownable {
                 .useMqttVersion5()
                 .buildAsync()
             val wrappedClient = Mqtt5ClientWrapper(client)
-            wrappedClient.connect()
+            wrappedClient.connect().get()
             sharedClients[communicatorConfig] = wrappedClient;
         }
 
@@ -82,7 +81,7 @@ object SharedMqttClient : Shutdownable {
 
         private fun decreaseTopicCounter(topic: String): Boolean {
             if (subscriptionsCounterMap[topic] == null || subscriptionsCounterMap[topic] == 0) {
-                throw NotAvailableException("No subscription to topic $topic")
+                return false
             }
             subscriptionsCounterMap[topic] = subscriptionsCounterMap[topic]!! - 1
             return subscriptionsCounterMap[topic] == 0
