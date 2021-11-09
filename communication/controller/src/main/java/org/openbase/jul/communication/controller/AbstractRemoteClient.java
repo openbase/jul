@@ -369,7 +369,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                 logger.debug("Internal notification: " + event.toString());
                 applyEventUpdate(event);
             } catch (Exception ex) {
-                ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
+                if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
+                }
             }
             return null;
         };
