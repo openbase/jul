@@ -52,10 +52,12 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
             GlobalCachedExecutorService.getInstance().executorService
         )
         try {
-            activationFuture!!.get(500, TimeUnit.MILLISECONDS)
+            activationFuture!!.get(2, TimeUnit.SECONDS)
         } catch (e: TimeoutException) {
             activationFuture!!.cancel(true)
             throw CouldNotPerformException("Could not activate RPCServer", e)
+        } catch (e: InterruptedException) {
+            activationFuture!!.cancel(true)
         }
     }
 

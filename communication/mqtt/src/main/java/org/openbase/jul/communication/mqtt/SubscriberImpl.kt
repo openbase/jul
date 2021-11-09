@@ -55,10 +55,12 @@ class SubscriberImpl(
         )
 
         try {
-            activationFuture!!.get(500, TimeUnit.MILLISECONDS)
+            activationFuture!!.get(2, TimeUnit.SECONDS)
         } catch (e: TimeoutException) {
             activationFuture!!.cancel(true)
             throw CouldNotPerformException("Could not activate Subscriber", e)
+        } catch (e: InterruptedException) {
+            activationFuture!!.cancel(true)
         }
     }
 

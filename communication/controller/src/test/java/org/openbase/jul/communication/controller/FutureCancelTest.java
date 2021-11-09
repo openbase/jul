@@ -10,12 +10,12 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -34,6 +34,7 @@ import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Requestable;
+import org.openbase.jul.schedule.WatchDog;
 import org.openbase.type.communication.ScopeType.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,12 +54,14 @@ public class FutureCancelTest extends MqttIntegrationTest implements Requestable
     public FutureCancelTest() {
     }
 
+    private boolean run = true;
+
     @RPCMethod
     @Override
     public Integer requestStatus() throws CouldNotPerformException {
         System.out.println("RequestStatus");
         try {
-            while (true) {
+            while (run) {
                 if (Thread.currentThread().isInterrupted()) {
                     System.out.println("Interrupted");
                     Thread.currentThread().interrupt();
@@ -97,11 +100,17 @@ public class FutureCancelTest extends MqttIntegrationTest implements Requestable
         RPCServer server = factory.createRPCServer(scope, defaultCommunicatorConfig);
         RPCClient client = factory.createRPCClient(scope, defaultCommunicatorConfig);
 
+        WatchDog serverWatchDog = new WatchDog(server, "PRCServer");
+        WatchDog clientWatchDog = new WatchDog(client, "RPCClient");
+
         // register rpc methods.
         server.registerMethods((Class) getClass(), this);
 
-        server.activate();
-        client.activate();
+        serverWatchDog.activate();
+        serverWatchDog.waitForServiceActivation();
+
+        clientWatchDog.activate();
+        clientWatchDog.waitForServiceActivation();
 
         Future<Any> future = client.callMethod("requestStatus", Any.class);
         try {
@@ -110,5 +119,10 @@ public class FutureCancelTest extends MqttIntegrationTest implements Requestable
             System.out.println("Future cancelled: " + future.cancel(true));
             Thread.sleep(1000);
         }
+
+        serverWatchDog.shutdown();
+        clientWatchDog.shutdown();
+
+        run = false;
     }
 }

@@ -41,6 +41,7 @@ object SharedMqttClient : Shutdownable {
     @Synchronized
     fun get(communicatorConfig: CommunicatorConfig): Mqtt5AsyncClient {
         if (!sharedClients.containsKey(communicatorConfig)) {
+            println("Create new shared client for config $communicatorConfig")
             val client = MqttClient.builder()
                 .identifier(UUID.randomUUID().toString())
                 .serverHost(communicatorConfig.hostname)

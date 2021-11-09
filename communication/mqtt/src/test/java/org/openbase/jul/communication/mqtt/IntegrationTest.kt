@@ -9,6 +9,7 @@ import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.type.communication.EventType
 import org.openbase.type.communication.mqtt.PrimitiveType
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
@@ -20,6 +21,7 @@ class IntegrationTest {
     // the companion object makes sure that the container once before all tests instead of restarting for every test
     companion object {
         private const val port: Int = 1883
+        private const val httpPort: Int = 8888
 
         @Container
         var broker: MqttBrokerContainer = MqttBrokerContainer()
@@ -27,6 +29,7 @@ class IntegrationTest {
             .withEnv("DOCKER_VERNEMQ_LISTENER.tcp.allowed_protocol_versions", "5") // enable mqtt5
             .withEnv("DOCKER_VERNEMQ_ALLOW_ANONYMOUS", "on") // enable connection without password
             .withExposedPorts(port)
+            .waitingFor(Wait.forHttp("/health").forPort(httpPort).forStatusCode(200));
     }
 
     private val scope = ScopeProcessor.generateScope("/test/integration")
