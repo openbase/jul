@@ -10,27 +10,21 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import com.google.protobuf.Any;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
 import org.openbase.jul.communication.iface.RPCClient;
@@ -40,32 +34,28 @@ import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Requestable;
-import org.openbase.type.communication.EventType.Event;
 import org.openbase.type.communication.ScopeType.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 /**
- *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class FutureCancelTest implements Requestable<Object> {
+public class FutureCancelTest extends MqttIntegrationTest implements Requestable<Object> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    private RPCServer server;
-    private RPCClient client;
 
     public FutureCancelTest() {
     }
 
-    @BeforeClass
-    public static void setUpClass() throws JPServiceException {
-        JPService.setupJUnitTestMode();
-    }
-
+    @RPCMethod
     @Override
-    public Object requestStatus() throws CouldNotPerformException {
+    public Integer requestStatus() throws CouldNotPerformException {
         System.out.println("RequestStatus");
         try {
             while (true) {
@@ -86,7 +76,7 @@ public class FutureCancelTest implements Requestable<Object> {
             System.out.println("Test" + ex);
         }
 
-        return null;
+        return 0;
     }
 
     /**
@@ -102,14 +92,13 @@ public class FutureCancelTest implements Requestable<Object> {
         final CommunicatorFactory factory = CommunicatorFactoryImpl.Companion.getInstance();
         final CommunicatorConfig defaultCommunicatorConfig = DefaultCommunicatorConfig.Companion.getInstance();
 
-
         Scope scope = ScopeProcessor.generateScope("/test/futureCancel");
 
-        server = factory.createRPCServer(scope, defaultCommunicatorConfig);
-        client = factory.createRPCClient(scope, defaultCommunicatorConfig);
+        RPCServer server = factory.createRPCServer(scope, defaultCommunicatorConfig);
+        RPCClient client = factory.createRPCClient(scope, defaultCommunicatorConfig);
 
         // register rpc methods.
-        server.registerMethods(Requestable.class, this);
+        server.registerMethods((Class) getClass(), this);
 
         server.activate();
         client.activate();
