@@ -10,24 +10,21 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import org.junit.*;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
+import org.junit.Assert;
+import org.junit.Test;
 import org.openbase.jul.communication.iface.RPCServer;
-import org.openbase.jul.communication.jp.JPComHost;
-import org.openbase.jul.communication.jp.JPComPort;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.StackTracePrinter;
@@ -37,46 +34,32 @@ import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData.Builder;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
-import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.OFFLINE;
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.ONLINE;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
-import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
 
 /**
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class AbstractControllerServerTest {
+public class AbstractControllerServerTest extends MqttIntegrationTest {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public AbstractControllerServerTest() {
-    }
-
-    public static final int port = 1883;
-
-    @ClassRule
-    public static GenericContainer broker = new GenericContainer(DockerImageName.parse("vernemq/vernemq"))
-            .withEnv("DOCKER_VERNEMQ_ACCEPT_EULA", "yes")
-            .withEnv("DOCKER_VERNEMQ_LISTENER.tcp.allowed_protocol_versions", "5") // enable mqtt5
-            .withEnv("DOCKER_VERNEMQ_ALLOW_ANONYMOUS", "on") // enable connection without password
-            .withExposedPorts(port);
-
-    @BeforeClass
-    public static void setUpClass() throws JPServiceException {
-        JPService.registerProperty(JPComPort.class, broker.getFirstMappedPort());
-        JPService.registerProperty(JPComHost.class, broker.getHost());
-        JPService.setupJUnitTestMode();
     }
 
     private boolean firstSync = false;
@@ -103,7 +86,7 @@ public class AbstractControllerServerTest {
 
         AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
-        remoteService.addDataObserver((Observer< DataProvider<UnitRegistryData>, UnitRegistryData>) (source, data) -> {
+        remoteService.addDataObserver((Observer<DataProvider<UnitRegistryData>, UnitRegistryData>) (source, data) -> {
             if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
                 firstSync = true;
                 synchronized (waitForDataSync) {
@@ -394,7 +377,6 @@ public class AbstractControllerServerTest {
 //    }
 
     /**
-     *
      * @throws Exception
      */
     @Test(timeout = 20000)
