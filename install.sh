@@ -15,6 +15,7 @@ echo -e "=== ${APP_NAME} project ${WHITE}installation${NC}" &&
 mvn install \
         -DassembleDirectory=${prefix} \
         -DskipTests=true \
+	-Dmaven.javadoc.skip=true \
         -Dmaven.test.skip=true \
         -Dlicense.skipAddThirdParty=true \
         -Dlicense.skipUpdateProjectLicense=true \
