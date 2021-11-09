@@ -10,12 +10,12 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -23,27 +23,26 @@ package org.openbase.jul.communication.controller;
  */
 
 import com.google.protobuf.Any;
-import org.junit.*;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jul.communication.iface.RPCClient;
+import org.junit.Assert;
+import org.junit.Test;
+import org.openbase.jul.annotation.RPCMethod;
+import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractControllerServerImpl;
+import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractRemoteClientImpl;
 import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
-import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractControllerServerImpl;
-import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractRemoteClientImpl;
 import org.openbase.jul.extension.type.util.TransactionSynchronizationFuture;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.openbase.type.domotic.communication.TransactionValueType.TransactionValue;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 import org.openbase.type.domotic.state.PowerStateType.PowerState.State;
 import org.openbase.type.domotic.unit.dal.PowerSwitchDataType.PowerSwitchData;
 import org.openbase.type.domotic.unit.dal.PowerSwitchDataType.PowerSwitchData.Builder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -51,23 +50,17 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
-
-import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
-import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.ONLINE;
+import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.CONNECTED;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public class AbstractRemoteClientTest {
+public class AbstractRemoteClientTest extends MqttIntegrationTest {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public AbstractRemoteClientTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() throws JPServiceException {
-        JPService.setupJUnitTestMode();
     }
 
     /**
@@ -112,18 +105,20 @@ public class AbstractRemoteClientTest {
         instance.shutdown();
     }
 
-    @Test(timeout = 5000)
+    @Test(timeout = 10000)
     public void testDeactivation() throws InterruptedException, CouldNotPerformException {
         System.out.println("testDeactivation");
+        final String scope = "/test/deactivation";
 
         AbstractRemoteClient instance = new AbstractRemoteClientImpl();
-        instance.init("/test/testDeactivation");
+        instance.init(scope);
         instance.activate();
 
         AbstractControllerServerImpl communicationService = new AbstractControllerServerImpl(UnitRegistryData.newBuilder());
-        communicationService.init("/test/testDeactivation");
+        communicationService.init(scope);
         communicationService.activate();
         communicationService.waitForAvailabilityState(ONLINE);
+
         instance.waitForConnectionState(CONNECTED);
         instance.waitForData();
         System.out.println("shutdown...");
@@ -214,26 +209,23 @@ public class AbstractRemoteClientTest {
         communicationService.shutdown();
     }
 
-    private static class TransactionControllerServer extends AbstractControllerServer<PowerSwitchData, Builder> {
+    public static class TransactionControllerServer extends AbstractControllerServer<PowerSwitchData, Builder> {
 
         /**
          * Create a communication service.
          *
          * @throws InstantiationException if the creation fails
          */
-        public TransactionControllerServer() throws InstantiationException {
+        public TransactionControllerServer() throws CouldNotPerformException {
             super(PowerSwitchData.newBuilder());
         }
 
         @Override
         public void registerMethods(RPCServer server) throws CouldNotPerformException {
-            try {
-                server.registerMethod(this.getClass().getMethod("performTransaction"), this);
-            } catch (NoSuchMethodException ex) {
-                throw new CouldNotPerformException("Could not register method[performTransaction]", ex);
-            }
+            server.registerMethods((Class) getClass(), this);
         }
 
+        @RPCMethod
         public TransactionValue performTransaction() throws CouldNotPerformException {
             // update transaction
             updateTransactionId();
