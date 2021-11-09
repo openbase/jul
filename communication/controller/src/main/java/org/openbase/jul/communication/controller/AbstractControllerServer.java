@@ -1096,11 +1096,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * Register methods for RPCs on the internal RPC server.
-     * <p>
-     * Note:
-     * Methods should not be registered outside this method because the internal server can already be active.
-     * When extending from a class already implementing this method always remember to call the super method
-     * so that all methods are properly registered.
      *
      * @param server the rpc server on which the methods should be registered.
      *

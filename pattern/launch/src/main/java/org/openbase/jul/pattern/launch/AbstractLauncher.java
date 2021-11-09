@@ -30,6 +30,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jul.communication.controller.AbstractIdentifiableController;
 import org.openbase.jul.communication.controller.RPCUtils;
+import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
@@ -636,5 +637,10 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
+    }
+
+    @Override
+    public void registerMethods(RPCServer server) {
+        // currently, the launcher does not support any rpc methods.
     }
 }
