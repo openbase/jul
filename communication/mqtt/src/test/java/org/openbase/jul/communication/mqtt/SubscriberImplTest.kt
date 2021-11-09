@@ -29,7 +29,7 @@ class SubscriberImplTest {
         mockkObject(SharedMqttClient)
         every { SharedMqttClient.get(any()) } returns mqttClient
 
-        every { mqttClient.publish(any()) } returns CompletableFuture()
+        every { mqttClient.publish(any()) } returns CompletableFuture.completedFuture(null)
     }
 
     /**
@@ -51,7 +51,6 @@ class SubscriberImplTest {
     private val topic = "/test/subscribe"
     private val scope = ScopeProcessor.generateScope(topic)
     private val config = CommunicatorConfig("localhost", 1873)
-    val subscriber = SubscriberImpl(scope, config)
 
     @Test
     fun `test activate`() {
@@ -62,8 +61,9 @@ class SubscriberImplTest {
                 capture(callbackSlot),
                 GlobalCachedExecutorService.getInstance().executorService
             )
-        } returns CompletableFuture()
+        } returns CompletableFuture.completedFuture(null)
 
+        val subscriber = SubscriberImpl(scope, config)
         subscriber.activate()
 
         subscriber.getActivationFuture() shouldNotBe null
@@ -83,6 +83,7 @@ class SubscriberImplTest {
     fun `test deactivate`() {
         every { mqttClient.unsubscribe(any()) } returns CompletableFuture()
 
+        val subscriber = SubscriberImpl(scope, config)
         subscriber.deactivate()
 
         subscriber.getActivationFuture() shouldBe null
@@ -97,22 +98,20 @@ class SubscriberImplTest {
 
     @Nested
     inner class TestHandlerManagement {
-
         // capture the callback invoked if the subscriber receives an event
         private val callbackSlot = slot<Consumer<Mqtt5Publish>>()
         private val callback: Consumer<Mqtt5Publish>
+        private val subscriber = SubscriberImpl(scope, config)
 
         init {
             // mock
-            val activationFuture = CompletableFuture<Mqtt5SubAck>()
-            activationFuture.complete(null)
             every {
                 mqttClient.subscribe(
                     any(),
                     capture(callbackSlot),
                     GlobalCachedExecutorService.getInstance().executorService
                 )
-            } returns activationFuture
+            } returns CompletableFuture.completedFuture(null)
 
             // capture callback
             subscriber.activate()

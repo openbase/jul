@@ -4,6 +4,7 @@ import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
+import com.hivemq.client.mqtt.mqtt5.message.subscribe.suback.Mqtt5SubAck
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -66,9 +67,9 @@ internal class RPCServerImplTest {
                 capture(callbackSlot),
                 GlobalCachedExecutorService.getInstance().executorService
             )
-        } returns CompletableFuture()
-        every { mqttClient.unsubscribe(any()) } returns CompletableFuture()
-        every { mqttClient.publish(capture(mqttPublishSlot)) } returns CompletableFuture()
+        } returns CompletableFuture.completedFuture(null)
+        every { mqttClient.unsubscribe(any()) } returns CompletableFuture.completedFuture(null)
+        every { mqttClient.publish(capture(mqttPublishSlot)) } returns CompletableFuture.completedFuture(null)
     }
 
     @Test
