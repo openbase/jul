@@ -28,6 +28,7 @@ import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.type.communication.ScopeType;
+import org.openbase.type.communication.ScopeType.Scope;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,6 +107,14 @@ public class ScopeProcessorTest {
         assertEquals("Scope component invalid!", "quejsss", ScopeProcessor.convertIntoValidScopeComponent("qüjßs"));
         assertEquals("Scope component invalid!", "mycomponent", ScopeProcessor.convertIntoValidScopeComponent("_myComponent__"));
         assertEquals("Scope component invalid!", "mysweet", ScopeProcessor.convertIntoValidScopeComponent("/my/sweet❤️"));
+    }
 
+    @Test
+    public void testScopeConcatination() {
+        final Scope scopeA = ScopeProcessor.generateScope("/my/first/scope");
+        final Scope scopeB = ScopeProcessor.generateScope("/has/a/suffix");
+        final Scope expectedResult = ScopeProcessor.generateScope("/my/first/scope/has/a/suffix");
+        final Scope result = ScopeProcessor.concat(scopeA, scopeB);
+        assertEquals("Concatination not valid!", expectedResult, result);
     }
 }
