@@ -6,11 +6,14 @@ import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.Subscriber
+import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.EventType.Event
 import org.openbase.type.communication.ScopeType.Scope
 import java.util.*
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 class SubscriberImpl(
     scope: Scope, config: CommunicatorConfig
@@ -50,6 +53,13 @@ class SubscriberImpl(
             },
             GlobalCachedExecutorService.getInstance().executorService
         )
+
+        try {
+            activationFuture!!.get(500, TimeUnit.MILLISECONDS)
+        } catch (e: TimeoutException) {
+            activationFuture!!.cancel(true)
+            throw CouldNotPerformException("Could not activate Subscriber", e)
+        }
     }
 
     override fun deactivate() {

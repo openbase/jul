@@ -8,7 +8,7 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCServer
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.NotAvailableException
-import org.openbase.jul.exception.StackTracePrinter
+import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.ScopeType.Scope
@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
 import java.util.*
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.reflect.KFunction
 
 class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorImpl(scope, config), RPCServer {
@@ -49,6 +51,12 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
             { mqtt5Publish -> handleRemoteCall(mqtt5Publish) },
             GlobalCachedExecutorService.getInstance().executorService
         )
+        try {
+            activationFuture!!.get(500, TimeUnit.MILLISECONDS)
+        } catch (e: TimeoutException) {
+            activationFuture!!.cancel(true)
+            throw CouldNotPerformException("Could not activate RPCServer", e)
+        }
     }
 
     override fun deactivate() {
@@ -109,7 +117,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
                 is InvocationTargetException, is CouldNotPerformException -> responseBuilder.error =
                     ex.stackTraceToString()
                 else -> {
-                    StackTracePrinter.printStackTrace(logger, LogLevel.WARN)
+                    ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN)
                     responseBuilder.error = CouldNotPerformException("Server error ${ex.message}").stackTraceToString()
                 }
             }
