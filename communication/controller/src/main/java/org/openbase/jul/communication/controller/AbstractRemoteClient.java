@@ -736,7 +736,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      */
     @Override
     public <R> Future<R> callMethodAsync(final String methodName, final Class<R> returnClazz) {
-        return callMethodAsync(methodName, null);
+        return callMethodAsync(methodName, returnClazz, null);
     }
 
     /**
@@ -898,7 +898,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         }
                         final long currentTime = System.nanoTime();
                         rpcClientWatchDog.waitForServiceActivation();
-                        internalCallFuture = rpcClient.callMethod(methodName, returnClazz, argument);
+                        if (argument == null) {
+                            internalCallFuture = rpcClient.callMethod(methodName, returnClazz);
+                        } else {
+                            internalCallFuture = rpcClient.callMethod(methodName, returnClazz, argument);
+                        }
                         while (true) {
 
                             if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - currentTime) > RPCUtils.RPC_TIMEOUT) {
