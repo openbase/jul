@@ -4,6 +4,8 @@ import com.google.protobuf.Message
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
 import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import kotlin.Any
 import kotlin.Boolean
 import kotlin.Double
@@ -180,8 +182,13 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
 
         var result = function.call(*parameters)!!
         if (futureMethod) {
-            //TODO: apply same procedure as done by RPCHelper
-            result = (result as Future<*>).get()
+            //TODO: make timeout accessible from RPCUtils?
+            try {
+                result = (result as Future<*>).get(5, TimeUnit.MINUTES)
+            } catch (ex: TimeoutException) {
+                (result as Future<*>).cancel(true)
+                throw ex
+            }
         }
         return resultParser(result);
     }
