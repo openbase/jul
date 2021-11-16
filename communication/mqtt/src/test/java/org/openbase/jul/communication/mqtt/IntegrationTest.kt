@@ -2,34 +2,52 @@ package org.openbase.jul.communication.mqtt
 
 import com.google.protobuf.Any
 import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.type.communication.EventType
 import org.openbase.type.communication.mqtt.PrimitiveType
+import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.containers.wait.strategy.Wait
-import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import java.util.concurrent.TimeUnit
+import kotlin.io.path.absolute
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.writeLines
 
 @Testcontainers
 class IntegrationTest {
 
-    // the companion object makes sure that the container once before all tests instead of restarting for every test
+    // the companion object makes sure that the container is started once before all tests instead of restarting for every test
     companion object {
         private const val port: Int = 1883
-        private const val httpPort: Int = 8888
 
-        @Container
-        var broker: MqttBrokerContainer = MqttBrokerContainer()
-            .withEnv("DOCKER_VERNEMQ_ACCEPT_EULA", "yes")
-            .withEnv("DOCKER_VERNEMQ_LISTENER.tcp.allowed_protocol_versions", "5") // enable mqtt5
-            .withEnv("DOCKER_VERNEMQ_ALLOW_ANONYMOUS", "on") // enable connection without password
-            .withExposedPorts(port)
-            .waitingFor(Wait.forHttp("/health").forPort(httpPort).forStatusCode(200));
+        private val mosquittoConfig = kotlin.io.path.createTempFile(prefix = "mosquitto_", suffix = ".conf")
+        var broker: MqttBrokerContainer
+
+        init {
+            mosquittoConfig.writeLines(
+                listOf(
+                    "allow_anonymous true",
+                    "listener 1883"
+                )
+            )
+
+            broker = MqttBrokerContainer()
+                .withExposedPorts(port)
+                .withFileSystemBind(mosquittoConfig.absolute().toString(), "/mosquitto/config/mosquitto.conf", BindMode.READ_ONLY)
+            broker.start()
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun cleanup() {
+            broker.stop()
+            mosquittoConfig.deleteIfExists()
+        }
     }
 
     private val scope = ScopeProcessor.generateScope("/test/integration")
@@ -88,4 +106,4 @@ class IntegrationTest {
     }
 }
 
-class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("vernemq/vernemq"))
+class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
