@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestInstance
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
 import org.openbase.type.communication.mqtt.ResponseType
+import org.openbase.type.domotic.unit.UnitTemplateType
 import kotlin.Any
 import com.google.protobuf.Any as protoAny
 
@@ -44,6 +45,10 @@ internal class RPCMethodTest {
         val valueMessage =
             ResponseType.Response.newBuilder().setStatus(ResponseType.Response.Status.ACKNOWLEDGED).build()
         backAndForth(valueMessage) shouldBe valueMessage
+
+        // test message eum
+        val valueEnum = UnitTemplateType.UnitTemplate.UnitType.DEVICE
+        backAndForth(valueEnum) shouldBe valueEnum
 
         // test exceptions on other types
         shouldThrow<CouldNotPerformException> { RPCMethod.anyToProtoAny(Any::class) }

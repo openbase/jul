@@ -1,6 +1,7 @@
 package org.openbase.jul.communication.mqtt
 
 import com.google.protobuf.Message
+import com.google.protobuf.ProtocolMessageEnum
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
 import java.util.concurrent.Future
@@ -16,6 +17,7 @@ import kotlin.String
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.isSuperclassOf
+import kotlin.reflect.full.staticFunctions
 import com.google.protobuf.Any as protoAny
 
 /**
@@ -47,12 +49,19 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
          * Create a function which converts an any type of the given class
          * to a proto any type.
          *
-         * This only works for messages and certain primitive types as
+         * This only works for messages, message enums and certain primitive types as
          * defined in [org.openbase.type.communication.mqtt.PrimitiveType.Primitive].
          */
         fun anyToProtoAny(clazz: KClass<*>): (Any) -> protoAny {
             if (Message::class.isSuperclassOf(clazz)) {
                 return { msg: Any -> protoAny.pack(msg as Message) }
+            }
+
+            if (ProtocolMessageEnum::class.isSuperclassOf(clazz)) {
+                return { msg: Any ->
+                    val asEnum = msg as ProtocolMessageEnum
+                    protoAny.pack(Primitive.newBuilder().setInt(asEnum.number).build())
+                }
             }
 
             return when (clazz) {
@@ -84,12 +93,28 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
          * Create a function which converts a proto any type to a type
          * of the given class.
          *
-         * This only works for messages and certain primitive types as
+         * This only works for messages, message enums and certain primitive types as
          * defined in [org.openbase.type.communication.mqtt.PrimitiveType.Primitive].
          */
         fun protoAnyToAny(clazz: KClass<*>): (protoAny) -> Any {
             if (Message::class.isSuperclassOf(clazz)) {
                 return { msg: protoAny -> msg.unpack(clazz.java as Class<Message>) }
+            }
+
+            if (ProtocolMessageEnum::class.isSuperclassOf(clazz)) {
+                val forNumberFunction = clazz.staticFunctions.first { function -> function.name == "forNumber" }
+                return { msg ->
+                    val unpacked: Primitive = msg.unpack(Primitive::class.java)
+                    if (!unpacked.hasInt()) {
+                        throw CouldNotPerformException("Arg is not of type Int which is needed to unpack enums!")
+                    }
+                    forNumberFunction.call(unpacked.int)
+                        ?: throw CouldNotPerformException("${unpacked.int} is an invalid number for enum ${clazz.simpleName}")
+                }
+            }
+
+            if (clazz.java == java.lang.Void::class.java) {
+                return { _ -> }
             }
 
             return when (clazz) {
