@@ -20,6 +20,7 @@ import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5UnsubscribeBuilder
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.unsuback.Mqtt5UnsubAck
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.exception.FatalImplementationErrorException
 import org.openbase.jul.iface.Shutdownable
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -56,11 +57,18 @@ object SharedMqttClient : Shutdownable {
     }
 
     fun waitForShutdown() {
-        sharedClients.values.forEach { client -> client.disconnect().get() }
+        sharedClients.values.forEach { client ->
+            client.disconnect().get()
+        }
+        sharedClients.clear()
     }
 
     override fun shutdown() {
-        sharedClients.values.forEach { client -> client.disconnect() }
+        sharedClients.entries.forEach { entry ->
+            entry.value
+                .disconnect()
+                .whenComplete { _, _ -> sharedClients.remove(entry.key) }
+        }
     }
 
     /**

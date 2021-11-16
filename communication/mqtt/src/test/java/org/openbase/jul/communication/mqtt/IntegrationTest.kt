@@ -45,6 +45,7 @@ class IntegrationTest {
         @JvmStatic
         @AfterAll
         fun cleanup() {
+            SharedMqttClient.waitForShutdown()
             broker.stop()
             mosquittoConfig.deleteIfExists()
         }
