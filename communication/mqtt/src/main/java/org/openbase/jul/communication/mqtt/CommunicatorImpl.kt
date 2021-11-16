@@ -19,5 +19,4 @@ abstract class CommunicatorImpl(
     override fun waitForShutdown() {
         SharedMqttClient.waitForShutdown()
     }
-
 }

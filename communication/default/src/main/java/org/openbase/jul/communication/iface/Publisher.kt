@@ -9,6 +9,7 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCClient
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.EventType.Event
+import org.openbase.type.communication.ScopeType.Scope
 
 /*
  * #%L
@@ -56,4 +57,28 @@ interface Publisher : Communicator {
      */
     @Throws(CouldNotPerformException::class, InterruptedException::class)
     fun publish(data: Message) = publish(Event.newBuilder().setPayload(Any.pack(data)).build())
+
+    /**
+     * Send an [Event] to all subscriber.
+     *
+     * @param event the event to send.
+     * @param scope the scope of the event to send.
+     * @return modified event with set timing information.
+     * @throws CouldNotPerformException is thrown in case the message could not be sent.
+     * @throws InterruptedException thrown in case the current thread was internally interrupted.
+     */
+    @Throws(CouldNotPerformException::class, InterruptedException::class)
+    fun publish(event: Event, scope: Scope): Event
+
+    /**
+     * Send data (of type T) to all subscriber.
+     *
+     * @param data data to send with default setting from the publisher.
+     * @param scope the scope of the event to send.
+     * @return generated event
+     * @throws CouldNotPerformException is thrown in case the message could not be sent.
+     * @throws InterruptedException thrown in case the current thread was internally interrupted.
+     */
+    @Throws(CouldNotPerformException::class, InterruptedException::class)
+    fun publish(data: Message, scope: Scope) = publish(Event.newBuilder().setPayload(Any.pack(data)).build(), scope)
 }

@@ -27,7 +27,7 @@ import org.openbase.jul.storage.registry.Registry;
 
 /**
  *
- * * @author <a href="mailto:MarianPohling@cit-ec.uni-bielefeld.de">mpohling</a>
+ * * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * @param <KEY>
  * @param <ENTRY>
  */
