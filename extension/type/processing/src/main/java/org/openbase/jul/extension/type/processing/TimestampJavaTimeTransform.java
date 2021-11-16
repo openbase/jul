@@ -26,7 +26,7 @@ import org.openbase.type.timing.TimestampType.Timestamp;
 import org.openbase.type.timing.TimestampType.TimestampOrBuilder;
 
 /**
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class TimestampJavaTimeTransform {
 

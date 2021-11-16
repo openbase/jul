@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * @author <a href="mailto:mpohling@cit-ec.uni-bielefeld.de">Divine Threepwood</a>
+ * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  * <p>
  * Generic converter to rename a field of a db entry.
  */
