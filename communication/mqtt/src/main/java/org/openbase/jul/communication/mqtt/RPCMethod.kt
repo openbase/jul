@@ -64,6 +64,10 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
                 }
             }
 
+            if (clazz.java == java.lang.Void::class.java) {
+                return { _ -> protoAny.getDefaultInstance() }
+            }
+
             return when (clazz) {
                 Int::class -> { msg: Any ->
                     protoAny.pack(Primitive.newBuilder().setInt(msg as Int).build())
@@ -170,10 +174,17 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
     private val callOnInstance = instance != noInstance
 
     private var futureMethod = function.returnType.classifier == Future::class
-    private var resultParser: (Any) -> protoAny = if (futureMethod) {
-        anyToProtoAny(function.returnType.arguments[0].type!!.classifier as KClass<*>)
-    } else {
-        anyToProtoAny(function.returnType.classifier as KClass<*>)
+    private var resultParser: (Any) -> protoAny
+    init {
+        try {
+            resultParser = if (futureMethod) {
+                anyToProtoAny(function.returnType.arguments[0].type!!.classifier as KClass<*>)
+            } else {
+                anyToProtoAny(function.returnType.classifier as KClass<*>)
+            }
+        } catch (ex: CouldNotPerformException) {
+            throw CouldNotPerformException("Could not register method ${function.name}", ex)
+        }
     }
 
     private var parameterParserList: List<(protoAny) -> Any>
@@ -187,8 +198,12 @@ class RPCMethod(private val function: KFunction<*>, private val instance: Any = 
             filteredParameters = filteredParameters.subList(1, filteredParameters.size)
         }
 
-        parameterParserList = filteredParameters
-            .map { parameter -> protoAnyToAny(parameter.type.classifier as KClass<*>) }
+        try {
+            parameterParserList = filteredParameters
+                .map { parameter -> protoAnyToAny(parameter.type.classifier as KClass<*>) }
+        } catch (ex: CouldNotPerformException) {
+            throw CouldNotPerformException("Could not register method ${function.name}", ex)
+        }
     }
 
     fun invoke(args: List<protoAny>): protoAny {
