@@ -30,7 +30,7 @@ import org.openbase.jps.preset.AbstractJPBoolean;
  */
 public class JPPrintLauncher extends AbstractJPBoolean {
 	
-	public final static String[] COMMAND_IDENTIFIERS = {"--print-launcher"};
+	public final static String[] COMMAND_IDENTIFIERS = {"--list-launcher", "--print-launcher"};
 
 	public JPPrintLauncher() {
 		super(COMMAND_IDENTIFIERS);
