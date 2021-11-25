@@ -23,7 +23,7 @@ package org.openbase.jul.communication.controller;
  */
 
 import com.google.protobuf.Any;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.iface.CommunicatorFactory;

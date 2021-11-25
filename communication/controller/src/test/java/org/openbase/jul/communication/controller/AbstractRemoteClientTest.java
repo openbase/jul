@@ -23,8 +23,8 @@ package org.openbase.jul.communication.controller;
  */
 
 import com.google.protobuf.Any;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractControllerServerImpl;
 import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractRemoteClientImpl;
@@ -49,7 +49,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.ONLINE;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.CONNECTED;
 
@@ -69,7 +70,8 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
      * @throws java.lang.InterruptedException
      * @throws org.openbase.jul.exception.CouldNotPerformException
      */
-    @Test(timeout = 10000)
+    @Timeout(10)
+    @Test
     public void testWaitForConnectionState() throws InterruptedException, CouldNotPerformException {
         System.out.println("waitForConnectionState");
         AbstractRemoteClient instance = new AbstractRemoteClientImpl();
@@ -80,10 +82,10 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
 
         try {
             instance.waitForConnectionState(CONNECTED, 10);
-            Assert.fail("No exception thrown.");
+            fail("No exception thrown.");
         } catch (TimeoutException ex) {
             // should be thrown...
-            Assert.assertTrue(true);
+            assertTrue(true);
         }
 
         // Test if shutdown is blocked by waitForConnection without timeout
@@ -91,7 +93,7 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
         GlobalCachedExecutorService.submit(() -> {
             try {
                 System.out.println("Thread is running");
-                assertTrue("Instance is not active while waiting", instance.isActive());
+                assertTrue(instance.isActive(), "Instance is not active while waiting");
                 System.out.println("Wait for ConnectionState");
                 instance.waitForConnectionState(CONNECTED);
             } catch (CouldNotPerformException | InterruptedException ex) {
@@ -105,7 +107,8 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
         instance.shutdown();
     }
 
-    @Test(timeout = 10000)
+    @Timeout(10)
+    @Test
     public void testDeactivation() throws InterruptedException, CouldNotPerformException {
         System.out.println("testDeactivation");
         final String scope = "/test/deactivation";
@@ -136,7 +139,8 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testReinit() throws Exception {
         System.out.println("testReinit");
 
@@ -166,7 +170,7 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
             // is expected here since no server is started
         }
 
-        assertTrue("call was not canceled!", check[0]);
+        assertTrue(check[0], "call was not canceled!");
 
         remoteService.shutdown();
     }
@@ -183,7 +187,8 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
      *
      * @throws Exception if an error occurs.
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testTransactionSynchronization() throws Exception {
         final String scope = "/test/transaction/sync";
 
@@ -202,8 +207,8 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
             prioritizedObservableFinished = true;
         });
         remoteService.performTransaction().get();
-        assertTrue("Transaction id did not increase after performTransaction call", remoteService.getTransactionId() > transactionId);
-        assertTrue("Prioritized observable is not finished but sync future already returned", prioritizedObservableFinished);
+        assertTrue(remoteService.getTransactionId() > transactionId, "Transaction id did not increase after performTransaction call");
+        assertTrue(prioritizedObservableFinished, "Prioritized observable is not finished but sync future already returned");
 
         remoteService.shutdown();
         communicationService.shutdown();
