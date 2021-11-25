@@ -56,6 +56,7 @@ object SharedMqttClient : Shutdownable {
         return sharedClients[communicatorConfig]!!
     }
 
+    @Synchronized
     fun waitForShutdown() {
         sharedClients.values.forEach { client ->
             client.disconnect().get()
@@ -63,6 +64,7 @@ object SharedMqttClient : Shutdownable {
         sharedClients.clear()
     }
 
+    @Synchronized
     override fun shutdown() {
         sharedClients.entries.forEach { entry ->
             entry.value
