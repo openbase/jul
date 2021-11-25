@@ -22,20 +22,16 @@ package org.openbase.jul.extension.type.processing;
  * #L%
  */
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
 import org.openbase.type.timing.TimestampType;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class TimestampJavaTimeTransformTest {
-    
+
     public TimestampJavaTimeTransformTest() {
     }
 
@@ -45,10 +41,10 @@ public class TimestampJavaTimeTransformTest {
     @Test
     public void testTransform_long() {
         System.out.println("transform");
-        long millisecunds = 8888;
-        TimestampType.Timestamp result = TimestampJavaTimeTransform.transform(millisecunds);
-        assertEquals(millisecunds, result.getTime() / 1000);
-        assertEquals(millisecunds, TimestampJavaTimeTransform.transform(result));
+        long milliseconds = 8888;
+        TimestampType.Timestamp result = TimestampJavaTimeTransform.transform(milliseconds);
+        assertEquals(milliseconds, result.getTime() / 1000);
+        assertEquals(milliseconds, TimestampJavaTimeTransform.transform(result));
     }
 }
 

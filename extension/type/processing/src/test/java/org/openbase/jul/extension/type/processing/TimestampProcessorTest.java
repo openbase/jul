@@ -22,19 +22,14 @@ package org.openbase.jul.extension.type.processing;
  * #L%
  */
 
-import org.junit.After;
-import org.junit.AfterClass;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbase.type.domotic.state.PowerStateType;
 import org.openbase.type.domotic.state.PowerStateType.PowerState;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -74,7 +69,10 @@ public class TimestampProcessorTest {
         long time3 = System.currentTimeMillis();
         assertTrue(time1 < time2);
         assertTrue(time2 < time3);
-        assertEquals("Timestamp is not correctly converted into milliseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS.convert(powerState.getTimestamp().getTime(), TimeUnit.MICROSECONDS));
+        assertEquals(
+                TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS),
+                TimeUnit.MILLISECONDS.convert(powerState.getTimestamp().getTime(), TimeUnit.MICROSECONDS),
+                "Timestamp is not correctly converted into milliseconds!");
     }
 
     /**
@@ -86,9 +84,9 @@ public class TimestampProcessorTest {
         PowerStateType.PowerState.Builder powerState = PowerState.newBuilder();
         long time = System.currentTimeMillis();
         TimestampProcessor.updateTimestamp(time, powerState);
-        assertEquals("Timestamp not build correctly!", TimestampJavaTimeTransform.transform(time), powerState.getTimestamp());
-        assertEquals("Timestamp unit is not microseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MICROSECONDS), powerState.getTimestamp().getTime());
-        assertEquals("Timestamp is not correctly converted into milliseconds!", TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS), TimeUnit.MICROSECONDS.toMillis(powerState.getTimestamp().getTime()));
+        assertEquals(TimestampJavaTimeTransform.transform(time), powerState.getTimestamp(), "Timestamp not build correctly!");
+        assertEquals(TimestampProcessor.getTimestamp(powerState, TimeUnit.MICROSECONDS), powerState.getTimestamp().getTime(), "Timestamp unit is not microseconds!");
+        assertEquals(TimestampProcessor.getTimestamp(powerState, TimeUnit.MILLISECONDS), TimeUnit.MICROSECONDS.toMillis(powerState.getTimestamp().getTime()), "Timestamp is not correctly converted into milliseconds!");
     }
 
     /**
