@@ -22,11 +22,12 @@ package org.openbase.jul.processing;
  * #L%
  */
 
-import org.junit.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
@@ -36,12 +37,12 @@ public class StringProcessorTest {
     public StringProcessorTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
 
-    @Test(timeout = 5000)
+    @Test
     public void testFormatHumanReadable() {
         System.out.println("insertSpaceBetweenPascalCase");
         assertEquals("My Farm", StringProcessor.formatHumanReadable("MyFarm"));
@@ -54,7 +55,7 @@ public class StringProcessorTest {
     /**
      * Test of removeDoubleWhiteSpaces method, of class StringProcessor.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testRemoveDoubleWhiteSpaces() {
         System.out.println("insertSpaceBetweenPascalCase");
         assertEquals("My Farm", StringProcessor.removeDoubleWhiteSpaces("My	 		Farm"));
@@ -67,7 +68,7 @@ public class StringProcessorTest {
     /**
      * Test of insertSpaceBetweenPascalCase method, of class StringProcessor.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testInsertSpaceBetweenPascalcase() {
         System.out.println("insertSpaceBetweenPascalCase");
         assertEquals("My Farm", StringProcessor.insertSpaceBetweenPascalCase("MyFarm"));
@@ -84,7 +85,7 @@ public class StringProcessorTest {
     /**
      * Test of transformUpperCaseToPascalCase method, of class StringProcessor.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testTransformUpperCaseToPascalcase() {
         System.out.println("transformUpperCaseToPascalCase");
         assertEquals("MyFarm", StringProcessor.transformUpperCaseToPascalCase("My Farm"));
@@ -94,7 +95,7 @@ public class StringProcessorTest {
         assertEquals("Final", StringProcessor.transformUpperCaseToPascalCase("final"));
     }
 
-    @Test(timeout = 5000)
+    @Test
     public void testTransformToUpperCase() {
         System.out.println("insertSpaceBetweenPascalCase");
         assertEquals("MY_FARM", StringProcessor.transformToUpperCase("MyFarm"));
@@ -105,7 +106,7 @@ public class StringProcessorTest {
         assertEquals("UND_ER_SCORE", StringProcessor.transformToUpperCase("-Und-erScore--"));
     }
 
-    @Test(timeout = 5000)
+    @Test
     public void testTransformToPascalcase() {
         System.out.println("transformToPascalCase");
         assertEquals("MyFarm", StringProcessor.transformToPascalCase("My Farm"));
@@ -116,7 +117,7 @@ public class StringProcessorTest {
         assertEquals("Final", StringProcessor.transformToPascalCase("final"));
     }
 
-    @Test(timeout = 5000)
+    @Test
     public void testTransformToKebabCase() {
         System.out.println("transformToKebabCase");
         assertEquals("my-farm", StringProcessor.transformToKebabCase("My Farm"));
@@ -127,7 +128,7 @@ public class StringProcessorTest {
         assertEquals("final", StringProcessor.transformToKebabCase("final"));
     }
 
-    @Test(timeout = 5000)
+    @Test
     public void testFillWithSpaces() {
         System.out.println("testFillWithSpaces");
         assertEquals("MyFarm    ", StringProcessor.fillWithSpaces("MyFarm", 10));

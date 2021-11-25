@@ -21,19 +21,18 @@ package org.openbase.jul.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.MultiException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
+
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine Threepwood</a>
  */
 public class VariableProcessorTest {
@@ -44,7 +43,7 @@ public class VariableProcessorTest {
         provider = new TestVariableProvider();
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -52,7 +51,8 @@ public class VariableProcessorTest {
     /**
      * Test of resolveVariables method, of class VariableProcessor.
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testResolveVariables() throws Exception {
         System.out.println("testResolveVariables");
         String context = "${VAR_A} : Hey Mr ${VAR_B} is happy today because of Mrs ${VAR_C}. ${VAR_W}${VAR_O}${VAR_W}";
@@ -65,7 +65,8 @@ public class VariableProcessorTest {
     /**
      * Test of resolveVariables method, of class VariableProcessor.
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testResolveVariablesErrorCase() throws Exception {
         System.out.println("testResolveVariablesErrorCase");
         String context = "${VAR_A} : Hey Mr ${VAR_D} is happy today because of Mrs ${VAR_C}. ${VAR_W}${VAR_Y}${VAR_W}";
