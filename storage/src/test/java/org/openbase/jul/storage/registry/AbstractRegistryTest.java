@@ -21,14 +21,9 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -36,8 +31,13 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
- *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class AbstractRegistryTest {
@@ -47,7 +47,7 @@ public class AbstractRegistryTest {
     public AbstractRegistryTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -70,9 +70,15 @@ public class AbstractRegistryTest {
         System.out.println("Locking Dependent...");
         dependentRegistry.lock();
         System.out.println("Dependent locked");
-        assertTrue("MainRegistry should be locked", mainRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentRegistry should be locked", dependentRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentFromAllRegistry should be locked", !dependentFromAllRegistry.isWriteLockedByCurrentThread());
+        assertTrue(
+                mainRegistry.isWriteLockedByCurrentThread(),
+                "MainRegistry should be locked");
+        assertTrue(
+                dependentRegistry.isWriteLockedByCurrentThread(),
+                "DependentRegistry should be locked");
+        assertFalse(
+                dependentFromAllRegistry.isWriteLockedByCurrentThread(),
+                "DependentFromAllRegistry should be locked");
 
         Thread lockThread = new Thread(new Runnable() {
 
@@ -82,16 +88,22 @@ public class AbstractRegistryTest {
                     System.out.println("Locking DependentFromAll...");
                     dependentFromAllRegistry.lock();
                     System.out.println("DependentFromAll locked");
-                    assertTrue("MainRegistry should be locked", mainRegistry.isWriteLockedByCurrentThread());
-                    assertTrue("DependentRegistry should be locked", dependentRegistry.isWriteLockedByCurrentThread());
-                    assertTrue("DependentFromAllRegistry should be locked", dependentFromAllRegistry.isWriteLockedByCurrentThread());
+                    assertTrue(
+                            mainRegistry.isWriteLockedByCurrentThread(),
+                            "MainRegistry should be locked");
+                    assertTrue(
+                            dependentRegistry.isWriteLockedByCurrentThread(),
+                            "DependentRegistry should be locked");
+                    assertTrue(
+                            dependentFromAllRegistry.isWriteLockedByCurrentThread(),
+                            "DependentFromAllRegistry should be locked");
 
                     System.out.println("Unlocking DependentFromAll...");
                     dependentFromAllRegistry.unlock();
                     System.out.println("DependentFromAll unlocked");
-                    assertTrue("MainRegistry should be unlocked", !mainRegistry.isWriteLockedByCurrentThread());
-                    assertTrue("DependentRegistry should be unlocked", !dependentRegistry.isWriteLockedByCurrentThread());
-                    assertTrue("DependentFromAllRegistry should be unlocked", !dependentFromAllRegistry.isWriteLockedByCurrentThread());
+                    assertFalse(mainRegistry.isWriteLockedByCurrentThread(), "MainRegistry should be unlocked");
+                    assertFalse(dependentRegistry.isWriteLockedByCurrentThread(), "DependentRegistry should be unlocked");
+                    assertFalse(dependentFromAllRegistry.isWriteLockedByCurrentThread(), "DependentFromAllRegistry should be unlocked");
                 } catch (CouldNotPerformException ex) {
                     ExceptionPrinter.printHistoryAndExit("Exception while locking", ex, logger);
                 }
@@ -102,23 +114,23 @@ public class AbstractRegistryTest {
         System.out.println("Unlocking Dependent...");
         dependentRegistry.unlock();
         System.out.println("Dependent unlocked");
-        assertTrue("MainRegistry should be unlocked", !mainRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentRegistry should be unlocked", !dependentRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentFromAllRegistry should be unlocked", !dependentFromAllRegistry.isWriteLockedByCurrentThread());
+        assertFalse(mainRegistry.isWriteLockedByCurrentThread(), "MainRegistry should be unlocked");
+        assertFalse(dependentRegistry.isWriteLockedByCurrentThread(), "DependentRegistry should be unlocked");
+        assertFalse(dependentFromAllRegistry.isWriteLockedByCurrentThread(), "DependentFromAllRegistry should be unlocked");
 
         System.out.println("Locking main...");
         mainRegistry.lock();
         System.out.println("Main locked");
-        assertTrue("MainRegistry should be locked", mainRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentRegistry should be unlocked", !dependentRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentFromAllRegistry should be unlocked", !dependentFromAllRegistry.isWriteLockedByCurrentThread());
+        assertTrue(mainRegistry.isWriteLockedByCurrentThread(), "MainRegistry should be locked");
+        assertFalse(dependentRegistry.isWriteLockedByCurrentThread(), "DependentRegistry should be unlocked");
+        assertFalse(dependentFromAllRegistry.isWriteLockedByCurrentThread(), "DependentFromAllRegistry should be unlocked");
 
         System.out.println("Unlocking Main...");
         mainRegistry.unlock();
         System.out.println("Main unlocked");
-        assertTrue("MainRegistry should be unlocked", !mainRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentRegistry should be unlocked", !dependentRegistry.isWriteLockedByCurrentThread());
-        assertTrue("DependentFromAllRegistry should be unlocked", !dependentFromAllRegistry.isWriteLockedByCurrentThread());
+        assertFalse(mainRegistry.isWriteLockedByCurrentThread(), "MainRegistry should be unlocked");
+        assertFalse(dependentRegistry.isWriteLockedByCurrentThread(), "DependentRegistry should be unlocked");
+        assertFalse(dependentFromAllRegistry.isWriteLockedByCurrentThread(), "DependentFromAllRegistry should be unlocked");
 
     }
 
