@@ -21,17 +21,17 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -44,7 +44,7 @@ public class ProtobufListDiffTest {
     public ProtobufListDiffTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
         currentContext = new ArrayList<>();
@@ -55,7 +55,7 @@ public class ProtobufListDiffTest {
         currentContext.add(UnitConfig.newBuilder().setId("5").build());
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() {
         currentContext.clear();
     }
@@ -65,7 +65,7 @@ public class ProtobufListDiffTest {
     /**
      * Test of getNewMessages method, of class ProtobufListDiff.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testGetNewMessages() {
         System.out.println("getNewMessages");
 
@@ -77,16 +77,16 @@ public class ProtobufListDiffTest {
         modContext.add(newUnitConfig);
 
         diff.diffMessages(modContext);
-        Assert.assertTrue(diff.getUpdatedMessageMap().isEmpty());
-        Assert.assertTrue(diff.getRemovedMessageMap().isEmpty());
-        Assert.assertEquals(1, diff.getNewMessageMap().size());
-        Assert.assertTrue(diff.getNewMessageMap().getMessages().contains(newUnitConfig));
+        Assertions.assertTrue(diff.getUpdatedMessageMap().isEmpty());
+        Assertions.assertTrue(diff.getRemovedMessageMap().isEmpty());
+        Assertions.assertEquals(1, diff.getNewMessageMap().size());
+        Assertions.assertTrue(diff.getNewMessageMap().getMessages().contains(newUnitConfig));
     }
 
     /**
      * Test of getUpdatedMessages method, of class ProtobufListDiff.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testGetUpdatedMessages() {
         System.out.println("getUpdatedMessages");
         UnitConfig updatedUnitConfig = UnitConfig.newBuilder().setId("2").addAlias("coolUnit").build();
@@ -102,16 +102,16 @@ public class ProtobufListDiffTest {
         }
         modContext.add(updatedUnitConfig);
         diff.diffMessages(modContext);
-        Assert.assertTrue(diff.getNewMessageMap().isEmpty());
-        Assert.assertTrue(diff.getRemovedMessageMap().isEmpty());
-        Assert.assertEquals(1, diff.getUpdatedMessageMap().size());
-        Assert.assertTrue(diff.getUpdatedMessageMap().getMessages().contains(updatedUnitConfig));
+        Assertions.assertTrue(diff.getNewMessageMap().isEmpty());
+        Assertions.assertTrue(diff.getRemovedMessageMap().isEmpty());
+        Assertions.assertEquals(1, diff.getUpdatedMessageMap().size());
+        Assertions.assertTrue(diff.getUpdatedMessageMap().getMessages().contains(updatedUnitConfig));
     }
 
     /**
      * Test of getRemovedMessages method, of class ProtobufListDiff.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testGetRemovedMessages() {
         System.out.println("getRemovedMessages");
         UnitConfig removedUnitConfig = UnitConfig.newBuilder().setId("1").build();
@@ -122,10 +122,10 @@ public class ProtobufListDiffTest {
         modContext.remove(removedUnitConfig);
 
         diff.diffMessages(modContext);
-        Assert.assertTrue(diff.getUpdatedMessageMap().isEmpty());
-        Assert.assertTrue(diff.getNewMessageMap().isEmpty());
-        Assert.assertEquals(1, diff.getRemovedMessageMap().size());
-        Assert.assertTrue(diff.getRemovedMessageMap().getMessages().contains(removedUnitConfig));
+        Assertions.assertTrue(diff.getUpdatedMessageMap().isEmpty());
+        Assertions.assertTrue(diff.getNewMessageMap().isEmpty());
+        Assertions.assertEquals(1, diff.getRemovedMessageMap().size());
+        Assertions.assertTrue(diff.getRemovedMessageMap().getMessages().contains(removedUnitConfig));
     }
 
 }

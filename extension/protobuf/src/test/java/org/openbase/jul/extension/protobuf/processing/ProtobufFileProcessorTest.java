@@ -23,7 +23,7 @@ package org.openbase.jul.extension.protobuf.processing;
  */
 
 import com.google.protobuf.ByteString;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbase.type.domotic.authentication.LoginCredentialsType.LoginCredentials;
 import org.openbase.type.domotic.authentication.LoginCredentialsType.LoginCredentials.Builder;
 
@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>

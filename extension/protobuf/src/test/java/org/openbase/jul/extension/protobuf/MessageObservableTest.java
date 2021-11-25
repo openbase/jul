@@ -23,21 +23,9 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.Message;
-
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.After;
-import org.junit.AfterClass;
-
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
-import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.FutureProcessor;
@@ -45,6 +33,11 @@ import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.type.domotic.state.PowerStateType.PowerState;
 import org.openbase.type.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
 import org.openbase.type.timing.TimestampType.Timestamp;
+
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
@@ -74,10 +67,16 @@ public class MessageObservableTest {
 
         final MessageObservable<DataProvider<ColorableLightData>, ColorableLightData> messageObservable = new MessageObservableImpl<>(ColorableLightData.class);
 
-        assertEquals("Hashes are not equal even though only the timestamp has changed", messageObservable.removeTimestamps(colorableLightData1.toBuilder()).build().hashCode(), messageObservable.removeTimestamps(colorableLightData2.toBuilder()).build().hashCode());
+        assertEquals(
+                messageObservable.removeTimestamps(colorableLightData1.toBuilder()).build().hashCode(),
+                messageObservable.removeTimestamps(colorableLightData2.toBuilder()).build().hashCode(),
+                "Hashes are not equal even though only the timestamp has changed");
 
         messageObservable.addObserver((DataProvider<ColorableLightData> source, ColorableLightData data) -> {
-            assertEquals("Received unexpected update", colorableLightData1, data);
+            assertEquals(
+                    colorableLightData1,
+                    data,
+                    "Received unexpected update");
         });
 
         messageObservable.notifyObservers(colorableLightData1);
