@@ -92,7 +92,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
             mqttResponseBuilder
                 .payload(responseBuilder.build().toByteArray())
                 .build()
-        ) //TODO call get?
+        )
 
         if (request.methodName !in methods) {
             responseBuilder.status = ResponseType.Response.Status.FINISHED;
@@ -103,7 +103,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
                 mqttResponseBuilder
                     .payload(responseBuilder.build().toByteArray())
                     .build()
-            ) //TODO call get?
+            )
             return;
         }
 
@@ -129,6 +129,6 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
             mqttResponseBuilder
                 .payload(responseBuilder.build().toByteArray())
                 .build()
-        ) //TODO call get?
+        )
     }
 }
