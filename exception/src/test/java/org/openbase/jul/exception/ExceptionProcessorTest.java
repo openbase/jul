@@ -22,12 +22,8 @@ package org.openbase.jul.exception;
  * #L%
  */
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  *
@@ -43,15 +39,15 @@ public class ExceptionProcessorTest {
         Throwable cause = new RuntimeException("The Message");
         Exception exception = new Exception(cause);
 
-        Assert.assertEquals(cause, ExceptionProcessor.getInitialCause(exception));
-        Assert.assertEquals("The Message", ExceptionProcessor.getInitialCauseMessage(exception));
+        Assertions.assertEquals(cause, ExceptionProcessor.getInitialCause(exception));
+        Assertions.assertEquals("The Message", ExceptionProcessor.getInitialCauseMessage(exception));
     }
 
     @Test
     public void get() throws Exception {
         Exception exception = new Exception("The Message");
 
-        Assert.assertEquals(exception, ExceptionProcessor.getInitialCause(exception));
-        Assert.assertEquals("The Message", ExceptionProcessor.getInitialCauseMessage(exception));
+        Assertions.assertEquals(exception, ExceptionProcessor.getInitialCause(exception));
+        Assertions.assertEquals("The Message", ExceptionProcessor.getInitialCauseMessage(exception));
     }
 }
