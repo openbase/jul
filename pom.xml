@@ -301,11 +301,7 @@
         <dependency.jps.version>[3.5,3.6-alpha)</dependency.jps.version>
 <!--        <dependency.jps.version>3.4-SNAPSHOT</dependency.jps.version>-->
 
-
-        <dependency.openbase.type.version>1.1-SNAPSHOT</dependency.openbase.type.version>
-
-        <dependency.rsx.version>[0.18,0.19-alpha)</dependency.rsx.version>
-        <!--dependency.rsx.version>0.18-SNAPSHOT</dependency.rsx.version-->
+        <dependency.openbase.type.version>[1.1,1.2-alpha)</dependency.openbase.type.version>
 
         <!-- jul.visual.javafx -->
         <dependency.org.controlsfx.version>[9.0,9.1-alpha)</dependency.org.controlsfx.version>
