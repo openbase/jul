@@ -105,11 +105,6 @@ internal class RPCServerImplTest {
         }
     }
 
-    /*@Test
-    fun addMethod() {
-        rpcServer.addMethod(Any, )
-    }*/
-
     @Nested
     inner class TestRequestHandling {
         //TODO: the tests in this nested class could be improved, e.g. by mocking the rpcMethod and its
