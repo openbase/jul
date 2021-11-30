@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.openbase</groupId>
         <artifactId>jul.communication.module</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>3.0-SNAPSHOT</version>
     </parent>
     
     <url>https://github.com/openbase/jul/wiki</url>
@@ -31,7 +31,12 @@
     <dependencies>
         <dependency>
             <groupId>org.openbase</groupId>
-            <artifactId>jul.extension.rsb.com</artifactId>
+            <artifactId>jul.communication</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openbase</groupId>
+            <artifactId>jul.communication.mqtt</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -68,6 +73,13 @@
             <groupId>org.openbase</groupId>
             <artifactId>jul.pattern.controller</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>1.16.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

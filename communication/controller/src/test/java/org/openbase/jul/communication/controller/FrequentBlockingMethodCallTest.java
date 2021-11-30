@@ -23,17 +23,15 @@ package org.openbase.jul.communication.controller;
  */
 
 import org.openbase.jps.core.JPService;
+import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData.Builder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.converter.DefaultConverterRepository;
-import rsb.converter.ProtocolBufferConverter;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 
 import java.util.ArrayList;
@@ -43,10 +41,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 public class FrequentBlockingMethodCallTest {
-
-    static {
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
-    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FrequentBlockingMethodCallTest.class);
 
@@ -104,8 +98,8 @@ public class FrequentBlockingMethodCallTest {
         }
 
         @Override
-        public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
-            RPCHelper.registerInterface(Blocked.class, this, server);
+        public void registerMethods(RPCServer server) throws CouldNotPerformException {
+            server.registerMethods(Blocked.class, this);
         }
 
         @Override
@@ -130,7 +124,7 @@ public class FrequentBlockingMethodCallTest {
 
         @Override
         public Void blockForever() {
-             futureList.add(RPCHelper.callRemoteMethod(this));
+             futureList.add(this.callMethodAsync("blockForever", Void.class));
             return null;
         }
 

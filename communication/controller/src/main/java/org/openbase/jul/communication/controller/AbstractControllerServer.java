@@ -23,16 +23,21 @@ package org.openbase.jul.communication.controller;
  */
 
 import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors;
+import org.openbase.jul.annotation.RPCMethod;
+import org.openbase.jul.communication.config.CommunicatorConfig;
+import org.openbase.jul.communication.iface.CommunicatorFactory;
+import org.openbase.jul.communication.iface.Publisher;
+import org.openbase.jul.communication.iface.RPCServer;
+import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
+import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.extension.protobuf.*;
 import org.openbase.jul.extension.protobuf.BuilderSyncSetup.NotificationStrategy;
-import org.openbase.jul.extension.rsb.com.*;
-import org.openbase.jul.extension.rsb.iface.RSBInformer;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.extension.type.iface.ScopeProvider;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
@@ -43,12 +48,13 @@ import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.controller.MessageController;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.*;
+import org.openbase.type.communication.EventType;
+import org.openbase.type.communication.EventType.Event;
 import org.openbase.type.communication.ScopeType.Scope;
+import org.openbase.type.communication.mqtt.PrimitiveType.Primitive;
 import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.Event;
-import rsb.config.ParticipantConfig;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -70,8 +76,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     public final static String SCOPE_ELEMENT_SUFFIX_CONTROL = "/ctrl";
     public final static String SCOPE_ELEMENT_SUFFIX_STATUS = "/status";
 
-    public final static rsb.Scope SCOPE_SUFFIX_CONTROL = new rsb.Scope(SCOPE_ELEMENT_SUFFIX_CONTROL);
-    public final static rsb.Scope SCOPE_SUFFIX_STATUS = new rsb.Scope(SCOPE_ELEMENT_SUFFIX_STATUS);
+    public final static Scope SCOPE_SUFFIX_CONTROL = ScopeProcessor.generateScope(SCOPE_ELEMENT_SUFFIX_CONTROL);
+    public final static Scope SCOPE_SUFFIX_STATUS = ScopeProcessor.generateScope(SCOPE_ELEMENT_SUFFIX_STATUS);
 
     private static final long NOTIFICATILONG_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
 
@@ -81,9 +87,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     private final ShutdownDaemon shutdownDaemon;
 
-    protected RSBInformer<Object> informer;
-    protected RSBLocalServer server;
-    protected WatchDog informerWatchDog;
+    protected Publisher publisher;
+    protected RPCServer server;
+    protected WatchDog publisherWatchDog;
     protected WatchDog serverWatchDog;
 
     private final MB dataBuilder;
@@ -107,6 +113,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     private volatile long transaction_id = 0;
 
+    private final CommunicatorFactory factory = CommunicatorFactoryImpl.Companion.getInstance();
+    private final CommunicatorConfig defaultCommunicatorConfig = DefaultCommunicatorConfig.Companion.getInstance();
+
     /**
      * Create a communication service.
      *
@@ -129,8 +138,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             this.dataBuilderWriteLock = dataLock.writeLock();
             this.manageLock = new BundledReentrantReadWriteLock(dataLock, true, this);
             this.messageClass = detectDataClass();
-            this.server = new NotInitializedRSBLocalServer();
-            this.informer = new NotInitializedRSBInformer<>();
             this.dataObserver = new MessageObservable(this);
             this.dataObserver.setExecutorService(GlobalCachedExecutorService.getInstance().getExecutorService());
             this.initialized = false;
@@ -159,7 +166,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws InterruptedException
      */
     public void init(final Scope scope) throws InitializationException, InterruptedException {
-        init(scope, RSBSharedConnectionConfig.getParticipantConfig());
+        init(scope, defaultCommunicatorConfig);
     }
 
     /**
@@ -178,23 +185,23 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param scope
-     * @param participantConfig
+     * @param communicatorConfig
      *
      * @throws InitializationException
      * @throws InterruptedException
      */
-    public void init(final Scope scope, final ParticipantConfig participantConfig) throws InitializationException, InterruptedException {
+    public void init(final Scope scope, final CommunicatorConfig communicatorConfig) throws InitializationException, InterruptedException {
         manageLock.lockWriteInterruptibly(this);
         try {
             final boolean alreadyActivated = isActive();
-            ParticipantConfig internalParticipantConfig = participantConfig;
+            CommunicatorConfig internalCommunicatorConfig = communicatorConfig;
 
             if (scope == null) {
                 throw new NotAvailableException("scope");
             }
 
             // check if this instance was partly or fully initialized before.
-            if (initialized | informerWatchDog != null | serverWatchDog != null) {
+            if (initialized | publisherWatchDog != null | serverWatchDog != null) {
                 deactivate();
                 reset();
             }
@@ -202,45 +209,45 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             this.scope = scope;
 
             final String scopeStringRep = ScopeProcessor.generateStringRep(scope).toLowerCase();
-            final rsb.Scope internalScope = new rsb.Scope(scopeStringRep);
+            final Scope internalScope = ScopeProcessor.generateScope(scopeStringRep);
 
             // init new instances.
             logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
-            informer = new RSBSynchronizedInformer<>(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)), Object.class, internalParticipantConfig);
-            informerWatchDog = new WatchDog(informer, "RSBInformer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_STATUS)) + "]");
+            publisher = factory.createPublisher(ScopeProcessor.concat(internalScope, SCOPE_SUFFIX_STATUS), internalCommunicatorConfig);
+            publisherWatchDog = new WatchDog(publisher, "Publisher[" + ScopeProcessor.generateStringRep(publisher.getScope()) + "]");
 
-            // get local server object which allows to expose remotely callable methods.
-            server = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)), internalParticipantConfig);
+            // get rpc server object which allows to expose remotely callable methods.
+            server = factory.createRPCServer(ScopeProcessor.concat(internalScope, SCOPE_SUFFIX_CONTROL), internalCommunicatorConfig);
 
             // register rpc methods.
             registerMethods(server);
 
             // register default methods
             try {
-                RPCHelper.registerInterface(Pingable.class, this, server);
+                server.registerMethods(Pingable.class, this);
             } catch (InvalidStateException ex) {
                 // if already registered then everything is fine and we can continue...
             }
             try {
-                RPCHelper.registerInterface(Requestable.class, this, server);
-            } catch (InvalidStateException ex) {
-                // if already registered then everything is fine and we can continue...
+                server.registerMethods((Class) getClass(), this);
+            } catch (InvalidStateException /*| NoSuchMethodException*/ ex) {
+                // if already registered then everything is fine, and we can continue...
             }
 
-            serverWatchDog = new WatchDog(server, "RSBLocalServer[" + internalScope.concat(new rsb.Scope(rsb.Scope.COMPONENT_SEPARATOR).concat(SCOPE_SUFFIX_CONTROL)) + "]");
+            serverWatchDog = new WatchDog(server, "RPCServer[" + ScopeProcessor.generateStringRep(server.getScope()) + "]");
 
-            this.informerWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data) -> {
+            this.publisherWatchDog.addObserver((final WatchDog source, WatchDog.ServiceState data) -> {
                 if (data == WatchDog.ServiceState.RUNNING) {
 
                     // Sync data after service start.
                     initialDataSyncFuture = GlobalCachedExecutorService.submit(() -> {
                         try {
                             // skip if shutdown was already initiated
-                            if (informerWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
+                            if (publisherWatchDog.isServiceDone() || serverWatchDog.isServiceDone()) {
                                 return;
                             }
 
-                            informerWatchDog.waitForServiceActivation();
+                            publisherWatchDog.waitForServiceActivation();
                             serverWatchDog.waitForServiceActivation();
 
                             // mark controller as online.
@@ -322,9 +329,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             logger.debug("Activate AbstractControllerServer for: " + this);
             setAvailabilityState(ACTIVATING);
             assert serverWatchDog != null;
-            assert informerWatchDog != null;
+            assert publisherWatchDog != null;
             serverWatchDog.activate();
-            informerWatchDog.activate();
+            publisherWatchDog.activate();
         } finally {
             manageLock.unlockWrite(this);
         }
@@ -353,7 +360,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
 
             logger.debug("Deactivate AbstractControllerServer for: " + this);
-            // The order is important: The informer publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
+            // The order is important: The publisher publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
             // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
             // and the remotes will think that the server is still there..
             if (serverWatchDog != null) {
@@ -361,8 +368,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
             // inform remotes about deactivation
             setAvailabilityState(DEACTIVATING);
-            if (informerWatchDog != null) {
-                informerWatchDog.deactivate();
+            if (publisherWatchDog != null) {
+                publisherWatchDog.deactivate();
             }
             setAvailabilityState(OFFLINE);
         } finally {
@@ -379,14 +386,12 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             if (serverWatchDog != null) {
                 serverWatchDog.shutdown();
                 serverWatchDog = null;
-                server = new NotInitializedRSBLocalServer();
             }
 
             // clear existing instances.        
-            if (informerWatchDog != null) {
-                informerWatchDog.shutdown();
-                informerWatchDog = null;
-                informer = new NotInitializedRSBInformer<>();
+            if (publisherWatchDog != null) {
+                publisherWatchDog.shutdown();
+                publisherWatchDog = null;
             }
         } finally {
             manageLock.unlockWrite(this);
@@ -428,7 +433,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             Thread.currentThread().interrupt();
             return false;
         }
-        return informerWatchDog.isActive() && serverWatchDog.isActive();
+        return publisherWatchDog.isActive() && serverWatchDog.isActive();
     }
 
     /**
@@ -486,12 +491,12 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 if (availabilityState.equals(DEACTIVATING)) {
                     try {
                         validateInitialization();
-                        if (!informer.isActive()) {
+                        if (!publisher.isActive()) {
                             logger.debug("Skip update notification because connection not established.");
                             return;
                         }
                         try {
-                            informer.publish(new Event(informer.getScope(), Void.class, null));
+                            publisher.publish(EventType.Event.newBuilder().build());
                         } catch (CouldNotPerformException ex) {
                             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
                         }
@@ -502,7 +507,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                     }
                 }
             } finally {
-                // wakeup listener.
+                // wakeup subscriber.
                 this.controllerAvailabilityMonitor.notifyAll();
             }
         }
@@ -785,14 +790,18 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
             // update the current data builder before updating to allow implementations to change data beforehand
             newData = updateDataToPublish(cloneDataBuilder());
-            Event event = new Event(informer.getScope(), newData.getClass(), newData);
-            event.getMetaData().setUserTime(RPCHelper.USER_TIME_KEY, System.nanoTime());
+            final Event event = Event.newBuilder()
+                    .setPayload(Any.pack(newData))
+                    .putHeader(
+                            RPCUtils.USER_TIME_KEY,
+                            Any.pack(Primitive.newBuilder().setLong(System.nanoTime()).build()))
+                    .build();
 
             // only publish if controller is active
             if (isActive()) {
                 try {
                     waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
-                    informer.publish(event);
+                    publisher.publish(event);
                 } catch (TimeoutException ex) {
                     if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         throw ex;
@@ -827,7 +836,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     }
 
     /**
-     * Called before publishing data via the informer. Can be implemented by
+     * Called before publishing data via the publisher. Can be implemented by
      * sub classes to update data which can be received by everyone.
      *
      * @param dataBuilder a clone of the current data builder.
@@ -1009,8 +1018,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     public void validateMiddleware() throws InvalidStateException {
         validateActivation();
-        if (informer == null || !informer.isActive() || !informerWatchDog.isServiceRunning()) {
-            throw new InvalidStateException("Informer of " + this + " not connected to middleware!");
+        if (publisher == null || !publisher.isActive() || !publisherWatchDog.isServiceRunning()) {
+            throw new InvalidStateException("Publisher of " + this + " not connected to middleware!");
         }
 
         if (server == null || !server.isActive() || !serverWatchDog.isServiceRunning()) {
@@ -1021,7 +1030,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     public void waitForMiddleware(final long timeout, final TimeUnit timeUnit) throws InterruptedException, CouldNotPerformException {
         final TimeoutSplitter timeSplit = new TimeoutSplitter(timeout, timeUnit);
         validateActivation();
-        informerWatchDog.waitForServiceActivation(timeSplit.getTime(), TimeUnit.MILLISECONDS);
+        publisherWatchDog.waitForServiceActivation(timeSplit.getTime(), TimeUnit.MILLISECONDS);
         serverWatchDog.waitForServiceActivation(timeSplit.getTime(), TimeUnit.MILLISECONDS);
     }
 
@@ -1068,6 +1077,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
+    @RPCMethod
     @Override
     public M requestStatus() throws CouldNotPerformException {
         logger.trace("requestStatus of {}", this);
@@ -1081,18 +1091,13 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     }
 
     /**
-     * Register methods for RPCs on the internal RSB local server.
-     * <p>
-     * Note:
-     * Methods should not be registered outside this method because the internal server can already be active.
-     * When extending from a class already implementing this method always remember to call the super method
-     * so that all methods are properly registered.
+     * Register methods for RPCs on the internal RPC server.
      *
-     * @param server the local server on which the methods should be registered.
+     * @param server the rpc server on which the methods should be registered.
      *
      * @throws CouldNotPerformException if registering methods fails
      */
-    public abstract void registerMethods(final RSBLocalServer server) throws CouldNotPerformException;
+    public abstract void registerMethods(final RPCServer server) throws CouldNotPerformException;
 
     /**
      * {@inheritDoc}
@@ -1238,10 +1243,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public String toString() {
-        try {
-            return getClass().getSimpleName() + "[" + informer.getScope().toString() + "]";
-        } catch (NotAvailableException ex) {
-            return getClass().getSimpleName() + "[]";
+        if (publisher == null) {
+            return getClass().getSimpleName();
         }
+        return getClass().getSimpleName() + "[" + publisher.getScope() + "]";
     }
 }

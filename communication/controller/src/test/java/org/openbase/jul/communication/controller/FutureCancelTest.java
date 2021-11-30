@@ -21,53 +21,47 @@ package org.openbase.jul.communication.controller;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import com.google.protobuf.Any;
+import org.junit.Test;
+import org.openbase.jul.annotation.RPCMethod;
+import org.openbase.jul.communication.config.CommunicatorConfig;
+import org.openbase.jul.communication.iface.CommunicatorFactory;
+import org.openbase.jul.communication.iface.RPCClient;
+import org.openbase.jul.communication.iface.RPCServer;
+import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
+import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.extension.type.processing.ScopeProcessor;
+import org.openbase.jul.iface.Requestable;
+import org.openbase.jul.schedule.WatchDog;
+import org.openbase.type.communication.ScopeType.Scope;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jul.communication.controller.RPCHelper;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.rsb.com.RSBFactoryImpl;
-import org.openbase.jul.extension.rsb.com.RSBSharedConnectionConfig;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.jul.extension.rsb.iface.RSBRemoteServer;
-import org.openbase.jul.iface.Requestable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import rsb.Event;
-import rsb.Scope;
-import rsb.config.ParticipantConfig;
 
 /**
- *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class FutureCancelTest implements Requestable<Object> {
+public class FutureCancelTest extends MqttIntegrationTest implements Requestable<Object> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-
-    private RSBLocalServer localServer;
-    private RSBRemoteServer remoteServer;
 
     public FutureCancelTest() {
     }
 
-    @BeforeClass
-    public static void setUpClass() throws JPServiceException {
-        JPService.setupJUnitTestMode();
-    }
+    private boolean run = true;
 
-
-
+    @RPCMethod
     @Override
-    public Object requestStatus() throws CouldNotPerformException {
+    public Integer requestStatus() throws CouldNotPerformException {
         System.out.println("RequestStatus");
         try {
-            while (true) {
+            while (run) {
                 if (Thread.currentThread().isInterrupted()) {
                     System.out.println("Interrupted");
                     Thread.currentThread().interrupt();
@@ -85,7 +79,7 @@ public class FutureCancelTest implements Requestable<Object> {
             System.out.println("Test" + ex);
         }
 
-        return null;
+        return 0;
     }
 
     /**
@@ -94,29 +88,41 @@ public class FutureCancelTest implements Requestable<Object> {
      *
      * @throws Exception
      */
-    //@Test
+    @Test
     public void testFutureCancellation() throws Exception {
         System.out.println("TestFutureCancellation");
 
-        Scope scope = new Scope("/test/futureCancel");
-        ParticipantConfig participantConfig = RSBSharedConnectionConfig.getParticipantConfig();
+        final CommunicatorFactory factory = CommunicatorFactoryImpl.Companion.getInstance();
+        final CommunicatorConfig defaultCommunicatorConfig = DefaultCommunicatorConfig.Companion.getInstance();
 
-        localServer = RSBFactoryImpl.getInstance().createSynchronizedLocalServer(scope, participantConfig);
-        remoteServer = RSBFactoryImpl.getInstance().createSynchronizedRemoteServer(scope, participantConfig);
+        Scope scope = ScopeProcessor.generateScope("/test/futureCancel");
+
+        RPCServer server = factory.createRPCServer(scope, defaultCommunicatorConfig);
+        RPCClient client = factory.createRPCClient(scope, defaultCommunicatorConfig);
+
+        WatchDog serverWatchDog = new WatchDog(server, "PRCServer");
+        WatchDog clientWatchDog = new WatchDog(client, "RPCClient");
 
         // register rpc methods.
-        RPCHelper.registerInterface(Requestable.class, this, localServer);
+        server.registerMethods((Class) getClass(), this);
 
-        localServer.activate();
-        remoteServer.activate();
+        serverWatchDog.activate();
+        serverWatchDog.waitForServiceActivation();
 
-        Future<Event> future = remoteServer.callAsync("requestStatus");
+        clientWatchDog.activate();
+        clientWatchDog.waitForServiceActivation();
+
+        Future<Any> future = client.callMethod("requestStatus", Any.class);
         try {
             future.get(1000, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
             System.out.println("Future cancelled: " + future.cancel(true));
             Thread.sleep(1000);
         }
-    }
 
+        serverWatchDog.shutdown();
+        clientWatchDog.shutdown();
+
+        run = false;
+    }
 }

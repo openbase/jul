@@ -21,23 +21,21 @@ package org.openbase.jul.extension.type.processing;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.type.processing.ScopeProcessor;
-import rsb.Scope;
 import org.openbase.type.communication.ScopeType;
+import org.openbase.type.communication.ScopeType.Scope;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 /**
- *
  * * @author Divine <a href="mailto:DivineThreepwood@gmail.com">Divine</a>
  */
 public class ScopeProcessorTest {
@@ -46,12 +44,12 @@ public class ScopeProcessorTest {
     private final String scopeStringRep;
 
     public ScopeProcessorTest() {
-        this.components = new ArrayList<String>();
+        this.components = new ArrayList<>();
         this.components.add("home");
         this.components.add("kitchen");
-        this.components.add(""); // test if empty component is handeled correctly
+        this.components.add(""); // test if empty component is handled correctly
         this.components.add("table");
-        this.scopeStringRep = "/home/kitchen/table/";
+        this.scopeStringRep = "/home/kitchen/table";
     }
 
     @BeforeClass
@@ -91,14 +89,14 @@ public class ScopeProcessorTest {
     }
 
     @Test(timeout = 5000)
-    public void testScopeTransfromationChain() throws CouldNotPerformException {
+    public void testScopeTransformationChain() throws CouldNotPerformException {
         System.out.println("testGenerateScope");
 
         ScopeType.Scope expected = ScopeType.Scope.newBuilder().addComponent("paradise").addComponent("room").addComponent("device").addComponent("test").build();
         ScopeType.Scope result_1 = ScopeProcessor.generateScope(ScopeProcessor.generateStringRep(expected));
         assertEquals("Scope not fully generated!", expected, result_1);
         String result_2 = ScopeProcessor.generateStringRep(result_1);
-        assertEquals("Scope not fully generated!", "/paradise/room/device/test/", result_2);
+        assertEquals("Scope not fully generated!", "/paradise/room/device/test", result_2);
     }
 
     @Test
@@ -109,6 +107,14 @@ public class ScopeProcessorTest {
         assertEquals("Scope component invalid!", "quejsss", ScopeProcessor.convertIntoValidScopeComponent("qüjßs"));
         assertEquals("Scope component invalid!", "mycomponent", ScopeProcessor.convertIntoValidScopeComponent("_myComponent__"));
         assertEquals("Scope component invalid!", "mysweet", ScopeProcessor.convertIntoValidScopeComponent("/my/sweet❤️"));
+    }
 
+    @Test
+    public void testScopeConcatination() {
+        final Scope scopeA = ScopeProcessor.generateScope("/my/first/scope");
+        final Scope scopeB = ScopeProcessor.generateScope("/has/a/suffix");
+        final Scope expectedResult = ScopeProcessor.generateScope("/my/first/scope/has/a/suffix");
+        final Scope result = ScopeProcessor.concat(scopeA, scopeB);
+        assertEquals("Concatination not valid!", expectedResult, result);
     }
 }

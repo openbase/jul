@@ -21,47 +21,32 @@ package org.openbase.jul.communication.controller;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.UUID;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+
 import org.junit.Test;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jul.communication.controller.AbstractConfigurableController;
-import org.openbase.jul.communication.controller.AbstractConfigurableRemote;
+import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
-import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData.Builder;
-import rsb.converter.DefaultConverterRepository;
-import rsb.converter.ProtocolBufferConverter;
+import org.openbase.type.communication.ScopeType.Scope;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData;
-import org.openbase.type.communication.ScopeType.Scope;
+import org.openbase.type.domotic.unit.scene.SceneDataType.SceneData.Builder;
 
-import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
-import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
+import java.util.UUID;
+
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.ONLINE;
+import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.CONNECTED;
+import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.CONNECTING;
 
 /**
- *
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class ConfigurableControllerAndRemoteTest {
+public class ConfigurableControllerAndRemoteTest extends MqttIntegrationTest {
 
     public ConfigurableControllerAndRemoteTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() throws JPServiceException {
-        JPService.setupJUnitTestMode();
     }
 
     @Test(timeout = 30000)
     public void initTest() throws Exception {
         System.out.println("initTest");
-
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test").addComponent("configurable").addComponent("controller").addComponent("and").addComponent("remote").build();
         UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setScope(scope).build();
@@ -96,8 +81,6 @@ public class ConfigurableControllerAndRemoteTest {
     @Test(timeout = 30000)
     public void applyConfigUpdateTest() throws Exception {
         System.out.println("applyConfigUpdateTest");
-
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(SceneData.getDefaultInstance()));
 
         Scope scope = Scope.newBuilder().addComponent("test2").addComponent("configurable2").addComponent("controller2").addComponent("and2").addComponent("remote2").build();
         UnitConfig unitConfig = UnitConfig.newBuilder().setId(UUID.randomUUID().toString()).setScope(scope).build();
@@ -137,7 +120,7 @@ public class ConfigurableControllerAndRemoteTest {
         }
 
         @Override
-        public void registerMethods(RSBLocalServer server) throws CouldNotPerformException {
+        public void registerMethods(RPCServer server) throws CouldNotPerformException {
         }
     }
 

@@ -22,53 +22,44 @@ package org.openbase.jul.communication.controller;
  * #L%
  */
 
-import org.junit.*;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
+import org.junit.Assert;
+import org.junit.Test;
+import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.extension.rsb.iface.RSBLocalServer;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.provider.DataProvider;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
+import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData.Builder;
+import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rsb.converter.DefaultConverterRepository;
-import rsb.converter.ProtocolBufferConverter;
-import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
-import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 
 import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.OFFLINE;
+import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.ONLINE;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
-import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.*;
 
 /**
  * * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
-public class AbstractControllerServerTest {
-
-    static {
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
-        DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitConfig.getDefaultInstance()));
-    }
+public class AbstractControllerServerTest extends MqttIntegrationTest {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public AbstractControllerServerTest() {
-    }
-
-    @BeforeClass
-    public static void setUpClass() throws JPServiceException {
-        JPService.setupJUnitTestMode();
     }
 
     private boolean firstSync = false;
@@ -95,7 +86,7 @@ public class AbstractControllerServerTest {
 
         AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
-        remoteService.addDataObserver((Observer< DataProvider<UnitRegistryData>, UnitRegistryData>) (source, data) -> {
+        remoteService.addDataObserver((Observer<DataProvider<UnitRegistryData>, UnitRegistryData>) (source, data) -> {
             if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
                 firstSync = true;
                 synchronized (waitForDataSync) {
@@ -386,7 +377,6 @@ public class AbstractControllerServerTest {
 //    }
 
     /**
-     *
      * @throws Exception
      */
     @Test(timeout = 20000)
@@ -453,25 +443,17 @@ public class AbstractControllerServerTest {
 
     public static class AbstractControllerServerImpl extends AbstractControllerServer<UnitRegistryData, Builder> {
 
-        static {
-            DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
-        }
-
         public AbstractControllerServerImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);
         }
 
         @Override
-        public void registerMethods(RSBLocalServer server) {
+        public void registerMethods(RPCServer server) throws CouldNotPerformException {
+
         }
     }
 
     public static class AbstractRemoteClientImpl extends AbstractRemoteClient<UnitRegistryData> {
-
-        static {
-            DefaultConverterRepository.getDefaultConverterRepository().addConverter(new ProtocolBufferConverter<>(UnitRegistryData.getDefaultInstance()));
-        }
-
         public AbstractRemoteClientImpl() {
             super(UnitRegistryData.class);
         }

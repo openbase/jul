@@ -46,15 +46,11 @@ public class JPScope extends AbstractJavaProperty<Scope> {
 
     @Override
     protected Scope getPropertyDefaultValue() throws JPNotAvailableException {
-        try {
-            if (JPService.testMode()) {
-                String user = ScopeProcessor.convertIntoValidScopeComponent(System.getProperty("user.name"));
-                return ScopeProcessor.generateScope("/test/" + user);
-            }
-            return ScopeProcessor.generateScope("/");
-        } catch (CouldNotPerformException ex) {
-            throw new JPNotAvailableException(JPScope.class, ex);
+        if (JPService.testMode()) {
+            String user = ScopeProcessor.convertIntoValidScopeComponent(System.getProperty("user.name"));
+            return ScopeProcessor.generateScope("/test/" + user);
         }
+        return ScopeProcessor.generateScope("/");
     }
 
     @Override
@@ -64,7 +60,7 @@ public class JPScope extends AbstractJavaProperty<Scope> {
 
     @Override
     public String getDescription() {
-        return "Setup the application scope which is used for the rsb communication.";
+        return "Setup the application scope which is used for the communication.";
     }
 
     @Override
