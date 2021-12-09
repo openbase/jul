@@ -152,7 +152,7 @@ internal class RPCServerImplTest {
                 .map { (toProtoAny, arg) -> toProtoAny(arg) }
 
             val request = Request.newBuilder()
-                .setId(requestId)
+                .setId(id)
                 .setMethodName(methodName)
                 .addAllParams(argsAsProtoAny)
                 .build()
