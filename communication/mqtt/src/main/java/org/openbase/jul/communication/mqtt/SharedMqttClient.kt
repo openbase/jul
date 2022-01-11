@@ -66,11 +66,9 @@ object SharedMqttClient : Shutdownable {
 
     @Synchronized
     override fun shutdown() {
-        sharedClients.entries.forEach { entry ->
-            entry.value
-                .disconnect()
-                .whenComplete { _, _ -> sharedClients.remove(entry.key) }
-        }
+        sharedClients.values
+            .onEach{ it.disconnect() }
+            .also { sharedClients.clear() }
     }
 
     /**
