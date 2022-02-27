@@ -2,7 +2,7 @@ package org.openbase.jul.communication.jp
 
 import org.openbase.jps.preset.AbstractJPInteger
 
-class JPComPort : AbstractJPInteger(arrayOf("--com-port")){
+class JPComPort : AbstractJPInteger(arrayOf("--port", "--com-port")){
 
     override fun getPropertyDefaultValue(): Int {
         return 1883

@@ -309,7 +309,7 @@
         <dependency.de.jensd.fontawesomefx.version>[8.9,8.10-alpha)</dependency.de.jensd.fontawesomefx.version>
         <dependency.com.jfoenix.version>[9.0,9.1-alpha)</dependency.com.jfoenix.version>
         <dependency.org.junit.jupiter.version>[5.6,5.7-alpha)</dependency.org.junit.jupiter.version>
-        <kotlin.version>1.6.0</kotlin.version>
+        <kotlin.version>1.6.10</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     </properties>
     

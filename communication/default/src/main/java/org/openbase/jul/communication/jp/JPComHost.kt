@@ -2,7 +2,7 @@ package org.openbase.jul.communication.jp
 
 import org.openbase.jps.preset.AbstractJPString
 
-class JPComHost : AbstractJPString(arrayOf("--com-hostname")) {
+class JPComHost : AbstractJPString(arrayOf("--host", "--com-hostname")) {
 
     override fun getPropertyDefaultValue(): String {
         return "localhost"
