@@ -21,18 +21,17 @@ package org.openbase.jul.storage.registry;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.util.ArrayList;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class RemoteRegistryTest {
@@ -44,7 +43,7 @@ public class RemoteRegistryTest {
     public RemoteRegistryTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws Throwable {
         try {
             JPService.setupJUnitTestMode();
@@ -54,7 +53,7 @@ public class RemoteRegistryTest {
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws Throwable {
         try {
             remoteRegistry.shutdown();

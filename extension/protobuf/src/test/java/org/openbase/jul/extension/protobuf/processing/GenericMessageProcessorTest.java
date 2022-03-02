@@ -22,20 +22,16 @@ package org.openbase.jul.extension.protobuf.processing;
  * #L%
  */
 
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbase.type.domotic.state.ColorStateType.ColorState;
 import org.openbase.type.domotic.state.PowerStateType.PowerState;
 import org.openbase.type.domotic.unit.dal.ColorableLightDataType.ColorableLightData;
 import org.openbase.type.domotic.unit.dal.LightDataType.LightData;
 import org.openbase.type.vision.ColorType;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
- *
  * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
  */
 public class GenericMessageProcessorTest {
@@ -60,9 +56,9 @@ public class GenericMessageProcessorTest {
 
         LightData lightData = messageProcessor.process(colorableLightData);
 
-        assertEquals("Id has not been set!", id, lightData.getId());
-        assertEquals("Label has not been set!", testAlias, lightData.getAlias(0));
-        assertEquals("PowerState has not been set!", powerState, lightData.getPowerState());
+        assertEquals(id, lightData.getId(), "Id has not been set!");
+        assertEquals(testAlias, lightData.getAlias(0), "Label has not been set!");
+        assertEquals(powerState, lightData.getPowerState(), "PowerState has not been set!");
     }
 
 }

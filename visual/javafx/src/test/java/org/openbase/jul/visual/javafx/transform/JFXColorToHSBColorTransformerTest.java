@@ -23,19 +23,15 @@ package org.openbase.jul.visual.javafx.transform;
  */
 
 import javafx.scene.paint.Color;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class JFXColorToHSBColorTransformerTest {
-    
+
     public JFXColorToHSBColorTransformerTest() {
     }
 

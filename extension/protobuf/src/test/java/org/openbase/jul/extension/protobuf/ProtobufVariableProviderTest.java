@@ -21,19 +21,17 @@ package org.openbase.jul.extension.protobuf;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.type.domotic.unit.UnitConfigType;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ProtobufVariableProviderTest {
@@ -41,7 +39,7 @@ public class ProtobufVariableProviderTest {
     public ProtobufVariableProviderTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -49,7 +47,7 @@ public class ProtobufVariableProviderTest {
     /**
      * Test of getName method, of class ProtobufVariableProvider.
      */
-    @Test(timeout = 10000)
+    @Test
     public void testGetName() {
 
         UnitConfigType.UnitConfig config = UnitConfig.getDefaultInstance();
@@ -62,7 +60,7 @@ public class ProtobufVariableProviderTest {
     /**
      * Test of getValue method, of class ProtobufVariableProvider.
      */
-    @Test(timeout = 10000)
+    @Test
     public void testGetValue() throws Exception {
         UnitConfigType.UnitConfig config = UnitConfig.getDefaultInstance();
         config = config.toBuilder().setUnitHostId("TestHost").build();

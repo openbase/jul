@@ -21,23 +21,19 @@ package org.openbase.jul.exception;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.MultiException;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.exception.MultiException.ExceptionStack;
-import org.openbase.jul.exception.printer.LogLevel;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jul.exception.MultiException.ExceptionStack;
+import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class ExceptionPrinterTest {
@@ -45,7 +41,7 @@ public class ExceptionPrinterTest {
     public ExceptionPrinterTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -53,7 +49,8 @@ public class ExceptionPrinterTest {
     /**
      * Test of printHistory method, of class ExceptionPrinter.
      */
-    @Test(timeout = 30000)
+    @Timeout(5)
+    @Test
     public void testPrintHistory() {
         System.out.println("printHistory");
         Logger logger = LoggerFactory.getLogger(ExceptionPrinterTest.class);
@@ -87,7 +84,7 @@ public class ExceptionPrinterTest {
         stack2 = MultiException.push(this, baseException1, stack2);
 
         try {
-            MultiException.checkAndThrow(() ->"MultiException 1", stack);
+            MultiException.checkAndThrow(() -> "MultiException 1", stack);
         } catch (MultiException ex) {
             stack2 = MultiException.push(this, ex, stack2);
             ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
@@ -99,7 +96,7 @@ public class ExceptionPrinterTest {
         stack2 = MultiException.push(this, ex4, stack2);
 
         try {
-            MultiException.checkAndThrow(() ->"MultiException 2", stack2);
+            MultiException.checkAndThrow(() -> "MultiException 2", stack2);
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
             ExceptionPrinter.printHistory(new CouldNotPerformException("BaseException containing MultiException", ex), logger);
@@ -112,11 +109,12 @@ public class ExceptionPrinterTest {
     /**
      * Test of printHistory method, of class ExceptionPrinter.
      */
-    @Test(timeout = 30000)
+    @Timeout(5)
+    @Test
     public void testPrintMultiExceptionHistory() {
         System.out.println("printHistory");
         Logger logger = LoggerFactory.getLogger(ExceptionPrinterTest.class);
-        
+
         ExceptionStack innerStack = null;
         ExceptionStack outerStack = null;
 
@@ -137,7 +135,7 @@ public class ExceptionPrinterTest {
         innerStack = MultiException.push(this, ex7, innerStack);
 
         try {
-            MultiException.checkAndThrow(() ->"InnerMultiException", innerStack);
+            MultiException.checkAndThrow(() -> "InnerMultiException", innerStack);
         } catch (MultiException ex) {
             outerStack = MultiException.push(this, new NotAvailableException("first"), outerStack);
             outerStack = MultiException.push(this, ex, outerStack);
@@ -145,14 +143,14 @@ public class ExceptionPrinterTest {
         }
 
         try {
-            MultiException.checkAndThrow(() ->"OuterMultiException", outerStack);
+            MultiException.checkAndThrow(() -> "OuterMultiException", outerStack);
         } catch (MultiException ex) {
 //            ExceptionPrinter.printHistory(ex, logger, LogLevel.ERROR);
             ExceptionPrinter.printHistory(new CouldNotPerformException("Base 1", ex), logger, LogLevel.ERROR);
         }
 
     }
-    
+
     @Override
     public String toString() {
         return getClass().getSimpleName();

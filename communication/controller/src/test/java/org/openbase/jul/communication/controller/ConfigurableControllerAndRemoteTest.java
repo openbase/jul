@@ -22,7 +22,8 @@ package org.openbase.jul.communication.controller;
  * #L%
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.type.communication.ScopeType.Scope;
@@ -44,7 +45,8 @@ public class ConfigurableControllerAndRemoteTest extends MqttIntegrationTest {
     public ConfigurableControllerAndRemoteTest() {
     }
 
-    @Test(timeout = 30000)
+    @Timeout(10)
+    @Test
     public void initTest() throws Exception {
         System.out.println("initTest");
 
@@ -78,7 +80,8 @@ public class ConfigurableControllerAndRemoteTest extends MqttIntegrationTest {
         remote.shutdown();
     }
 
-    @Test(timeout = 30000)
+    @Timeout(10)
+    @Test
     public void applyConfigUpdateTest() throws Exception {
         System.out.println("applyConfigUpdateTest");
 

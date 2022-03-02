@@ -21,14 +21,13 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.openbase.jul.schedule.RecurrenceEventFilterTest.RecurrenceEventFilterImpl.TIMEOUT;
 
 /**
@@ -40,7 +39,7 @@ public class RecurrenceEventFilterTest {
     public RecurrenceEventFilterTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -50,7 +49,8 @@ public class RecurrenceEventFilterTest {
      *
      * @throws java.lang.InterruptedException
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testRecurrenceEventFilter() throws Exception {
         System.out.println("trigger");
         RecurrenceEventFilterImpl instance = new RecurrenceEventFilterImpl();

@@ -22,20 +22,19 @@ package org.openbase.jul.communication.controller;
  * #L%
  */
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
-import org.openbase.jul.pattern.Observer;
-import org.openbase.jul.pattern.provider.DataProvider;
+import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
-import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData.Builder;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,8 +45,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.OFFLINE;
 import static org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState.State.ONLINE;
 import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State.*;
@@ -64,7 +62,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
 
     private boolean firstSync = false;
     private boolean secondSync = false;
-    private AbstractControllerServer communicationService;
+    private AbstractControllerServer<UnitRegistryData, UnitRegistryData.Builder> communicationService;
 
     /**
      * Test if the initial sync that happens if a communication service starts
@@ -72,10 +70,9 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
      *
      * @throws Exception
      */
-    @Test(timeout = 20000)
+    @Timeout(5)
+    @Test
     public void testInitialSync() throws Exception {
-        System.out.println("testInitialSync");
-
         String scope = "/test/synchronization";
         final SyncObject waitForDataSync = new SyncObject("WaitForDataSync");
         UnitConfig unit1 = UnitConfig.newBuilder().setId("Location1").build();
@@ -84,9 +81,9 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         communicationService.init(scope);
         communicationService.activate();
 
-        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
+        AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
-        remoteService.addDataObserver((Observer<DataProvider<UnitRegistryData>, UnitRegistryData>) (source, data) -> {
+        remoteService.addDataObserver((source, data) -> {
             if (data.getLocationUnitConfigCount() == 1 && data.getLocationUnitConfig(0).getId().equals("Location1")) {
                 firstSync = true;
                 synchronized (waitForDataSync) {
@@ -102,12 +99,12 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         });
 
         synchronized (waitForDataSync) {
-            if (firstSync == false) {
+            if (!firstSync) {
                 remoteService.activate();
                 waitForDataSync.wait();
             }
         }
-        assertTrue("Synchronization after the start of the remote service has not been done", firstSync);
+        assertTrue(firstSync, "Synchronization after the start of the remote service has not been done");
 
         communicationService.shutdown();
         UnitConfig location2 = UnitConfig.newBuilder().setId("Location2").build();
@@ -116,140 +113,105 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         communicationService.init(scope);
 
         synchronized (waitForDataSync) {
-            if (secondSync == false) {
+            if (!secondSync) {
                 communicationService.activate();
                 waitForDataSync.wait();
             }
         }
-        assertTrue("Synchronization after the restart of the communication service has not been done", secondSync);
+        assertTrue(secondSync, "Synchronization after the restart of the communication service has not been done");
 
         communicationService.deactivate();
-
-        remoteService.addConnectionStateObserver(((source, data) -> {
-            logger.info("ConnectionState [" + data + "]");
-        }));
-
         try {
             remoteService.ping().get();
-            assertTrue("Pinging was not canceled after timeout.", false);
+            fail("Pinging was not canceled after timeout.");
         } catch (ExecutionException ex) {
             // ping canceled
         }
 
-        assertEquals("Remote is still connected after remote service shutdown!", CONNECTING, remoteService.getConnectionState());
+        assertEquals(
+                CONNECTING,
+                remoteService.getConnectionState(),
+                "Remote is still connected after remote service shutdown!");
         communicationService.activate();
         communicationService.waitForAvailabilityState(ONLINE);
         remoteService.waitForConnectionState(CONNECTED);
         remoteService.shutdown();
         communicationService.shutdown();
-        assertEquals("Communication Service is not offline after shutdown!", OFFLINE, communicationService.getControllerAvailabilityState());
-        assertEquals("Remote is not disconnected after shutdown!", DISCONNECTED, remoteService.getConnectionState());
+        assertEquals(
+                OFFLINE,
+                communicationService.getControllerAvailabilityState(),
+                "Communication Service is not offline after shutdown!");
+        assertEquals(
+                DISCONNECTED,
+                remoteService.getConnectionState(),
+                "Remote is not disconnected after shutdown!");
     }
 
     /**
      * Test if a RemoteService will reconnect when the communication service
      * restarts.
      *
-     * @throws Exception
+     * This test validates, that at least 10 re-connection cycles can be repeated
+     * within a timeout of 5 seconds.
      */
-    @Test(timeout = 20000)
+    @Timeout(5)
+    @Test
     public void testReconnection() throws Exception {
-        // todo: this test takes to much time! Even more after increasing the deactivation timeout in the RSBSynchronizedParticipant class. There seems to be an issue that rsb takes to many time during deactivation.
-        System.out.println("testReconnection");
-
-        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
-        remoteService.addConnectionStateObserver((source, data) -> {
-            logger.info("New connection state [" + data + "]");
-        });
-
-        Stopwatch stopWatch = new Stopwatch();
-        stopWatch.start();
-
+        int cycles = 10;
         String scope = "/test/reconnection";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
+
         communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
         communicationService.activate();
 
-        logger.info(stopWatch.stop() + "ms to activate communication service");
-        stopWatch.restart();
-
+        AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
         remoteService.activate();
-        logger.info(stopWatch.getTime() + "ms to activate remote service");
-        stopWatch.restart();
 
-        logger.info("wait for inital connection...");
         remoteService.waitForConnectionState(CONNECTED);
 
-        logger.info(stopWatch.getTime() + "ms till remote service connected");
-        stopWatch.restart();
+        Stopwatch stopWatch = new Stopwatch();
+        stopWatch.start();
+        for (int i = 0; i < cycles; i++) {
+            communicationService.deactivate();
+            remoteService.waitForConnectionState(CONNECTING);
 
-        communicationService.deactivate();
-
-        logger.info(stopWatch.getTime() + "ms till communication service deactivated");
-        stopWatch.restart();
-
-        logger.info("wait for connection loss after controller shutdown...");
-        remoteService.waitForConnectionState(CONNECTING);
-
-        logger.info(stopWatch.getTime() + "ms till remote service switched to connecting");
-        stopWatch.restart();
-
-        communicationService.activate();
-
-        logger.info(stopWatch.getTime() + "ms till communication service reactivated");
-        stopWatch.restart();
-
-        logger.info("wait for reconnection after controller start...");
-        remoteService.waitForConnectionState(CONNECTED);
-
-        logger.info(stopWatch.getTime() + "ms till remote service reconnected");
-        stopWatch.restart();
-
-        remoteService.shutdown();
-
-        logger.info(stopWatch.getTime() + "ms till remote service shutdown");
-        stopWatch.restart();
-
-        logger.info("wait for remote shutdown...");
-        remoteService.waitForConnectionState(DISCONNECTED);
-
-        logger.info(stopWatch.getTime() + "ms till remote service switched to disconnected");
-        stopWatch.restart();
+            communicationService.activate();
+            remoteService.waitForConnectionState(CONNECTED);
+        }
+        logger.info(stopWatch.stop() + "ms for 100 reconnection cycles (" + (stopWatch.getTime() / cycles) + ")ms on average");
 
         communicationService.shutdown();
-
-        logger.info(stopWatch.getTime() + "ms till communication service shutdown");
-        stopWatch.restart();
+        remoteService.shutdown();
     }
 
     /**
      * Test waiting for data from a communication service.
-     *
-     * @throws Exception
      */
-    @Test(timeout = 10000)
+    @Timeout(5)
+    @Test
     public void testWaitForData() throws Exception {
-        System.out.println("testWaitForData");
-
         String scope = "/test/waitfordata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
-        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
+        AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
         communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
 
         remoteService.activate();
 
-        Future dataFuture = remoteService.getDataFuture();
+        Future<?> dataFuture = remoteService.getDataFuture();
 
         communicationService.activate();
 
-        assertEquals("DataFuture did not return data from communicationService!", communicationService.getData(), dataFuture.get());
+        assertEquals(
+                communicationService.getData(),
+                dataFuture.get(),
+                "DataFuture did not return data from communicationService!");
 
         communicationService.shutdown();
         remoteService.shutdown();
@@ -257,18 +219,15 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
 
     /**
      * Test requesting data from a communication service.
-     *
-     * @throws Exception
      */
-    @Test(timeout = 10000)
+    @Timeout(5)
+    @Test
     public void testRequestData() throws Exception {
-        System.out.println("testRequestData");
-
         String scope = "/test/requestdata";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
-        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
+        AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
         communicationService = new AbstractControllerServerImpl(testData);
         communicationService.init(scope);
@@ -278,7 +237,10 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
 
         remoteService.requestData().get();
 
-        assertEquals("CommunicationService data and remoteService data do not match after requestData!", communicationService.getData(), remoteService.getData());
+        assertEquals(
+                communicationService.getData(),
+                remoteService.getData(),
+                "CommunicationService data and remoteService data do not match after requestData!");
 
         communicationService.shutdown();
         remoteService.shutdown();
@@ -287,19 +249,16 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
     /**
      * Test if when there are 2 remotes connected to a communication service
      * the shutdown of one remote affects the communication of the other one.
-     *
-     * @throws Exception
      */
-    @Test(timeout = 10000)
+    @Timeout(5)
+    @Test
     public void testRemoteInterference() throws Exception {
-        System.out.println("testRemoteInterference");
-
         String scope = "/test/interference";
         UnitConfig location1 = UnitConfig.newBuilder().setId("Location1").build();
         UnitRegistryData.Builder testData = UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location1);
 
-        AbstractRemoteClient remoteService1 = new AbstractRemoteClientImpl();
-        AbstractRemoteClient remoteService2 = new AbstractRemoteClientImpl();
+        AbstractRemoteClient<UnitRegistryData> remoteService1 = new AbstractRemoteClientImpl();
+        AbstractRemoteClient<UnitRegistryData> remoteService2 = new AbstractRemoteClientImpl();
         remoteService1.init(scope);
         remoteService2.init(scope);
         communicationService = new AbstractControllerServerImpl(testData);
@@ -309,89 +268,84 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         remoteService1.activate();
         remoteService2.activate();
 
-        System.out.println("remoteService1.waitForConnectionState(CONNECTED)");
         remoteService1.waitForConnectionState(CONNECTED);
-        System.out.println("remoteService2.waitForConnectionState(CONNECTED)");
         remoteService2.waitForConnectionState(CONNECTED);
 
         remoteService1.shutdown();
-        System.out.println("remoteService1.waitForConnectionState(DISCONNECTED)");
         remoteService1.waitForConnectionState(DISCONNECTED);
 
-        assertEquals("Remote connected to the same service got shutdown too", CONNECTED, remoteService2.getConnectionState());
+        assertEquals(
+                CONNECTED,
+                remoteService2.getConnectionState(),
+                "Remote connected to the same service got shutdown too");
         remoteService2.requestData().get();
 
         communicationService.deactivate();
-
-        System.out.println("remoteService2.waitForConnectionState(CONNECTING)");
         remoteService2.waitForConnectionState(CONNECTING);
 
         communicationService.activate();
-        System.out.println("remoteService2.waitForConnectionState(CONNECTED)");
         remoteService2.waitForConnectionState(CONNECTED);
-        assertEquals("Remote reconnected even though it already shutdown", DISCONNECTED, remoteService1.getConnectionState());
+        assertEquals(
+                DISCONNECTED,
+                remoteService1.getConnectionState(),
+                "Remote reconnected even though it already shutdown");
 
         remoteService2.shutdown();
         communicationService.shutdown();
     }
 
 //    Temporally disabled until issue openbase/jul#55 has been solved.
-//    /**
-//     * @throws Exception
-//     */
-//    @Test(timeout = 10000)
-//    public void testNotification() throws Exception {
-//        System.out.println("testNotification");
-//
-//        String scope = "/test/notification";
-//        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
-//        communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
-//        communicationService.init(scope);
-//
-//        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
-//        remoteService.init(scope);
-//        remoteService.activate();
-//
-//        GlobalCachedExecutorService.submit( () -> {
-//            try {
-//                // make sure the remote is ready to wait for data
-//                Thread.sleep(10);
-//                communicationService.activate();
-//                // notification should be send automatically.
-//            } catch (Exception ex) {
-//                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, ex), System.err);
-//            }
-//        });
-//
-//        remoteService.waitForData();
-//        try {
-//            remoteService.ping().get(500, TimeUnit.MILLISECONDS);
-//        } catch (TimeoutException ex) {
-//
-//            StackTracePrinter.printAllStackTraces(LoggerFactory.getLogger(getClass()), LogLevel.WARN);
-//            Assert.fail("Even though wait for data returned the pinging immediatly afterwards took to long. Please check stacktrace for deadlocks...");
-//        }
-//
-//        remoteService.deactivate();
-//        communicationService.deactivate();
-//    }
 
     /**
      * @throws Exception
      */
-    @Test(timeout = 20000)
-    public void testReinit() throws Exception {
-        System.out.println("testReinit");
-
-        final int TEST_PARALLEL_REINIT_TASKS = 5;
-
+    @Timeout(10)
+    @Test
+    public void testNotification() throws Exception {
         String scope = "/test/notification";
         UnitConfig location = UnitConfig.newBuilder().setId("id").build();
         communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder().addLocationUnitConfig(location));
         communicationService.init(scope);
+
+        AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
+        remoteService.init(scope);
+        remoteService.activate();
+
+        GlobalCachedExecutorService.submit(() -> {
+            try {
+                // make sure the remote is ready to wait for data
+                Thread.sleep(10);
+                communicationService.activate();
+                // notification should be sent automatically.
+            } catch (Exception ex) {
+                ExceptionPrinter.printHistory(new FatalImplementationErrorException(this, ex), System.err);
+            }
+        });
+
+        remoteService.waitForData();
+        try {
+            remoteService.ping().get(500, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException ex) {
+
+            StackTracePrinter.printAllStackTraces(LoggerFactory.getLogger(getClass()), LogLevel.WARN);
+            fail("Even though wait for data returned the pinging immediately afterwards took to long. Please check stacktrace for deadlocks...");
+        }
+
+        remoteService.deactivate();
+        communicationService.deactivate();
+    }
+
+    @Timeout(5)
+    @Test
+    public void testReinit() throws Exception {
+        final int TEST_PARALLEL_REINIT_TASKS = 5;
+        String scope = "/test/notification";
+        UnitConfig location = UnitConfig.newBuilder().setId("id").build();
+        communicationService = new AbstractControllerServerImpl(UnitRegistryData.newBuilder().addLocationUnitConfig(location));
+        communicationService.init(scope);
         communicationService.activate();
 
-        AbstractRemoteClient remoteService = new AbstractRemoteClientImpl();
+        AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
         remoteService.activate();
 
@@ -405,17 +359,17 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         };
 
         // execute reinits
-        final ArrayList<Future> taskFutures = new ArrayList<>();
+        final ArrayList<Future<?>> taskFutures = new ArrayList<>();
         for (int i = 0; i < TEST_PARALLEL_REINIT_TASKS; i++) {
             taskFutures.add(GlobalCachedExecutorService.submit(reinitTask));
         }
-        for (Future future : taskFutures) {
+        for (Future<?> future : taskFutures) {
             try {
                 future.get(15, TimeUnit.SECONDS);
             } catch (TimeoutException ex) {
                 //StackTracePrinter.printAllStackTrace(AbstractControllerServerTest.class);
                 StackTracePrinter.detectDeadLocksAndPrintStackTraces(AbstractControllerServerTest.class);
-                Assert.fail("Reint took too long! Please analyse deadlock in stacktrace...");
+                fail("Reint took too long! Please analyse deadlock in stacktrace...");
             }
         }
 
@@ -423,7 +377,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         try {
             remoteService.ping().get(500, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
-            Assert.fail("Even though wait for data returned the pinging immediately afterwards failed");
+            fail("Even though wait for data returned the pinging immediately afterwards failed");
         }
         communicationService.deactivate();
         remoteService.deactivate();
@@ -435,13 +389,13 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
 
         try {
             remoteService.reinit();
-            Assert.fail("No exception occurred.");
+            fail("No exception occurred.");
         } catch (CouldNotPerformException ex) {
             // this should happen
         }
     }
 
-    public static class AbstractControllerServerImpl extends AbstractControllerServer<UnitRegistryData, Builder> {
+    public static class AbstractControllerServerImpl extends AbstractControllerServer<UnitRegistryData, UnitRegistryData.Builder> {
 
         public AbstractControllerServerImpl(UnitRegistryData.Builder builder) throws InstantiationException {
             super(builder);

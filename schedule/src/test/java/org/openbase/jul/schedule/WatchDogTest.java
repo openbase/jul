@@ -21,20 +21,20 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.iface.Activatable;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class WatchDogTest {
@@ -42,7 +42,7 @@ public class WatchDogTest {
     public WatchDogTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -52,14 +52,13 @@ public class WatchDogTest {
      *
      * @throws java.lang.Exception
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testActivate() throws Exception {
         System.out.println("isActive");
         WatchDog instance = new WatchDog(new TestService(), "TestService");
-        boolean expResult = true;
         instance.activate();
-        boolean result = instance.isActive();
-        assertEquals(expResult, result);
+        assertTrue(instance.isActive());
     }
 
     /**
@@ -67,15 +66,14 @@ public class WatchDogTest {
      *
      * @throws java.lang.Exception
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testDeactivate() throws Exception {
         System.out.println("deactivate");
         WatchDog instance = new WatchDog(new TestService(), "TestService");
-        boolean expResult = false;
         instance.activate();
         instance.deactivate();
-        boolean result = instance.isActive();
-        assertEquals(expResult, result);
+        assertFalse(instance.isActive());
     }
 
     /**
@@ -83,15 +81,16 @@ public class WatchDogTest {
      *
      * @throws java.lang.Exception
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testIsActive() throws Exception {
         System.out.println("isActive");
         WatchDog instance = new WatchDog(new TestService(), "TestService");
-        assertEquals(instance.isActive(), false);
+        assertFalse(instance.isActive());
         instance.activate();
-        assertEquals(instance.isActive(), true);
+        assertTrue(instance.isActive());
         instance.deactivate();
-        assertEquals(instance.isActive(), false);
+        assertFalse(instance.isActive());
     }
 
     /**
@@ -99,15 +98,16 @@ public class WatchDogTest {
      *
      * @throws java.lang.Exception
      */
-    @Test(timeout = 5000)
+    @Timeout(5)
+    @Test
     public void testServiceErrorHandling() throws Exception {
         System.out.println("serviceErrorHandling");
         WatchDog instance = new WatchDog(new TestService(), "TestService");
-        assertEquals(instance.isActive(), false);
+        assertFalse(instance.isActive());
         instance.activate();
-        assertEquals(instance.isActive(), true);
+        assertTrue(instance.isActive());
         instance.deactivate();
-        assertEquals(instance.isActive(), false);
+        assertFalse(instance.isActive());
     }
 
     /**
@@ -115,31 +115,28 @@ public class WatchDogTest {
      *
      * @throws java.lang.Exception
      */
-    @Test(timeout = 3000)
+    @Timeout(5)
+    @Test
     public void testDeactivationInNonActiveState() throws Exception {
         System.out.println("testDeactivationInNonActiveState");
         final WatchDog watchDog = new WatchDog(new TestBadService(), "TestBadService");
-        assertEquals(watchDog.isActive(), false);
+        assertFalse(watchDog.isActive());
 
-        Thread disableTask = new Thread() {
+        Thread disableTask = new Thread(() -> {
+            ExceptionPrinter.setBeQuit(true);
 
-            @Override
-            public void run() {
-                ExceptionPrinter.setBeQuit(true);
-                try {
-                    Thread.sleep(50);
-                    watchDog.deactivate();
-                    assertEquals(false, watchDog.isActive());
-                } catch (InterruptedException ex) {
-                }
-                ExceptionPrinter.setBeQuit(false);
+            try {
+                Thread.sleep(50);
+                watchDog.deactivate();
+                assertFalse(watchDog.isActive());
+            } catch (InterruptedException ignored) {
             }
-        };
+            ExceptionPrinter.setBeQuit(false);
+        });
         disableTask.start();
         watchDog.activate();
         disableTask.join();
-        assertEquals(false, watchDog.isActive());
-        System.out.println("Tests finished.");
+        assertFalse(watchDog.isActive());
     }
 
     class TestService implements Activatable {

@@ -22,8 +22,8 @@ package org.openbase.jul.communication.controller;
  * #L%
  */
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.communication.jp.JPComHost;
@@ -44,7 +44,7 @@ public class MqttIntegrationTest {
     public static Path mosquittoConfig;
     public static GenericContainer<?> broker;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException, IOException {
         mosquittoConfig = Files.createTempFile("mosquitto_", ".conf");
         Files.write(mosquittoConfig, Arrays.asList(
@@ -66,7 +66,7 @@ public class MqttIntegrationTest {
         JPService.setupJUnitTestMode();
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDownClass() throws IOException {
         SharedMqttClient.INSTANCE.waitForShutdown();
         broker.stop();

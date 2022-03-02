@@ -21,18 +21,16 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 public class TimeoutTest {
@@ -40,7 +38,7 @@ public class TimeoutTest {
     public TimeoutTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -48,7 +46,8 @@ public class TimeoutTest {
     /**
      * Test of getTimeToWait method, of class Timeout.
      */
-    @Test(timeout = 3000)
+    @org.junit.jupiter.api.Timeout(3)
+    @Test
     public void testTimer() throws Exception {
         System.out.println("getTimeToWait");
         final Stopwatch stopwatch = new Stopwatch();
@@ -68,11 +67,11 @@ public class TimeoutTest {
         };
 
         timeout.start();
-        assertTrue("timer was started but is not active!", timeout.isActive());
+        assertTrue(timeout.isActive(), "timer was started but is not active!");
         stopwatch.start();
         stopwatch.waitForStop();
         System.out.println("time: " + stopwatch.getTime());
-        assertTrue("timer to fast!", Math.abs(stopwatch.getTime() - timeToWait) < 50);
+        assertTrue(Math.abs(stopwatch.getTime() - timeToWait) < 50, "timer to fast!");
 
         // #### Test timeout cancel ####
         stopwatch.reset();
@@ -81,7 +80,7 @@ public class TimeoutTest {
         Thread.sleep(10);
         timeout.cancel();
         Thread.sleep(100);
-        assertTrue("Timeout expired but was canceled!", !timeout.isExpired());
+        assertTrue(!timeout.isExpired(), "Timeout expired but was canceled!");
         try {
             stopwatch.getEndTime();
             assertTrue(false);

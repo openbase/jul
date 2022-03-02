@@ -22,14 +22,14 @@ package org.openbase.jul.extension.type.transform;
  * #L%
  */
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openbase.jul.exception.CouldNotTransformException;
 import org.openbase.type.vision.HSBColorType;
 import org.openbase.type.vision.RGBColorType;
 
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HSBColorToRGBColorTransformerTest {
 
@@ -56,9 +56,9 @@ public class HSBColorToRGBColorTransformerTest {
             saturationDelta += Math.abs(inputHSBColorBuilder.getSaturation() - resultingHSBColor.getSaturation());
             brightnessDelta += Math.abs(inputHSBColorBuilder.getBrightness() - resultingHSBColor.getBrightness());
         }
-        assertEquals("Color transformation hue delta to high!", 0d, hueDelta, 1d);
-        assertEquals("Color transformation saturation delta to high!", 0d, saturationDelta, 1d);
-        assertEquals("Color transformation brightness delta to high!", 0d, brightnessDelta, 1d);
+        assertEquals(0d, hueDelta, 1d, "Color transformation hue delta to high!");
+        assertEquals(0d, saturationDelta, 1d, "Color transformation saturation delta to high!");
+        assertEquals(0d, brightnessDelta, 1d, "Color transformation brightness delta to high!");
     }
 
     @Test
@@ -69,9 +69,9 @@ public class HSBColorToRGBColorTransformerTest {
             inputRGBColorBuilder.setGreen(RANDOM.nextDouble());
             inputRGBColorBuilder.setBlue(RANDOM.nextDouble());
             final RGBColorType.RGBColor resultingRGBColor = HSBColorToRGBColorTransformer.transform(HSBColorToRGBColorTransformer.transform(inputRGBColorBuilder.build()));
-            assertEquals("Color transformation red delta to high!", inputRGBColorBuilder.getRed(), resultingRGBColor.getRed(), 0.000001d);
-            assertEquals("Color transformation green delta to high!", inputRGBColorBuilder.getGreen(), resultingRGBColor.getGreen(), 0.000001d);
-            assertEquals("Color transformation blue delta to high!", inputRGBColorBuilder.getBlue(), resultingRGBColor.getBlue(), 0.000001d);
+            assertEquals(inputRGBColorBuilder.getRed(), resultingRGBColor.getRed(), 0.000001d, "Color transformation red delta to high!");
+            assertEquals(inputRGBColorBuilder.getGreen(), resultingRGBColor.getGreen(), 0.000001d, "Color transformation green delta to high!");
+            assertEquals(inputRGBColorBuilder.getBlue(), resultingRGBColor.getBlue(), 0.000001d, "Color transformation blue delta to high!");
         }
     }
 }

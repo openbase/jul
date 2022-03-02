@@ -21,19 +21,9 @@ package org.openbase.jul.extension.type.storage.registry.consistency;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.*;
@@ -48,10 +38,18 @@ import org.openbase.type.domotic.unit.location.LocationConfigType.LocationConfig
 import org.openbase.type.spatial.PlacementConfigType;
 import org.openbase.type.spatial.PlacementConfigType.PlacementConfig;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- *
  */
 public class TransformationFrameConsistencyHandlerTest {
 
@@ -80,7 +78,7 @@ public class TransformationFrameConsistencyHandlerTest {
             .setLocationConfig(LocationConfig.newBuilder().setRoot(false))
             .build();
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
 
@@ -90,7 +88,7 @@ public class TransformationFrameConsistencyHandlerTest {
      * Test of verifyAndUpdatePlacement method, of class
      * AbstractTransformationFrameConsistencyHandler.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testVerifyAndUpdatePlacement() throws Exception {
         System.out.println("verifyAndUpdatePlacement");
         PlacementConfig.Builder placementConfigA = PlacementConfigType.PlacementConfig.newBuilder()
@@ -110,7 +108,7 @@ public class TransformationFrameConsistencyHandlerTest {
      * Test of generateFrameId method, of class
      * AbstractTransformationFrameConsistencyHandler.
      */
-    @Test(timeout = 5000)
+    @Test
     public void testGenerateFrameId() throws Exception {
         System.out.println("generateFrameId");
         PlacementConfig placementConfigA = PlacementConfigType.PlacementConfig.newBuilder()
@@ -291,7 +289,7 @@ public class TransformationFrameConsistencyHandlerTest {
                 }
 
                 @Override
-                public List<IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntries(){
+                public List<IdentifiableMessage<String, UnitConfig, UnitConfig.Builder>> getEntries() {
                     throw new UnsupportedOperationException("Not supported yet.");
                 }
 
@@ -322,12 +320,12 @@ public class TransformationFrameConsistencyHandlerTest {
 
                 @Override
                 public void addObserver(Observer<DataProvider<Map<String, IdentifiableMessage<String, UnitConfig, Builder>>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
-                     throw new UnsupportedOperationException("Not supported yet.");
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override
                 public void removeObserver(Observer<DataProvider<Map<String, IdentifiableMessage<String, UnitConfig, Builder>>>, Map<String, IdentifiableMessage<String, UnitConfig, Builder>>> observer) {
-                     throw new UnsupportedOperationException("Not supported yet.");
+                    throw new UnsupportedOperationException("Not supported yet.");
                 }
 
                 @Override

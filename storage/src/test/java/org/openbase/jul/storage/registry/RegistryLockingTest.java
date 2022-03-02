@@ -22,23 +22,21 @@ package org.openbase.jul.storage.registry;
  * #L%
  */
 
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.After;
-import org.junit.AfterClass;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.RejectedException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
- *
  * @author <a href="mailto:pLeminoq@openbase.org">Tamino Huxohl</a>
  */
 public class RegistryLockingTest {
@@ -48,7 +46,7 @@ public class RegistryLockingTest {
     public RegistryLockingTest() {
     }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -63,7 +61,7 @@ public class RegistryLockingTest {
 
         final RemoteRegistry remoteRegistry1 = new RemoteRegistry(new HashMap());
         final RemoteRegistry remoteRegistry2 = new RemoteRegistry(new HashMap());
-        
+
         registry1.setName("Registry 1");
         registry2.setName("Registry 2");
         registry3.setName("Registry 3");
@@ -71,27 +69,27 @@ public class RegistryLockingTest {
 
         remoteRegistry1.setName("RemoteRegistry 1");
         remoteRegistry2.setName("RemoteRegistry 2");
-        
+
         registry1.registerDependency(remoteRegistry1);
         registry2.registerDependency(registry1);
         registry3.registerDependency(registry2);
         registry3.registerDependency(remoteRegistry2);
         registry4.registerDependency(registry2);
         registry4.registerDependency(registry3);
-        
+
         remoteRegistry1.lock();
         remoteRegistry1.unlock();
-        
+
         registry1.lock();
 
         Thread testingThread = new Thread(() -> {
             try {
-                assertFalse("Registry1 still lockable", registry1.tryLockRegistry());
-                assertTrue("Registry2 still lockable", registry2.tryLockRegistry());
-                assertTrue("Registry3 still lockable", registry3.tryLockRegistry());
-                assertTrue("Registry4 still lockable", registry4.tryLockRegistry());
-                assertFalse("RemoteRegistry1 still lockable", remoteRegistry1.internalTryLockRegistry());
-                assertTrue("RemoteRegistry2 still lockable", remoteRegistry2.internalTryLockRegistry());
+                assertFalse(registry1.tryLockRegistry(), "Registry1 still lockable");
+                assertTrue(registry2.tryLockRegistry(), "Registry2 still lockable");
+                assertTrue(registry3.tryLockRegistry(), "Registry3 still lockable");
+                assertTrue(registry4.tryLockRegistry(), "Registry4 still lockable");
+                assertFalse(remoteRegistry1.internalTryLockRegistry(), "RemoteRegistry1 still lockable");
+                assertTrue(remoteRegistry2.internalTryLockRegistry(), "RemoteRegistry2 still lockable");
                 registry2.unlockRegistry();
                 registry3.unlockRegistry();
                 registry4.unlockRegistry();
@@ -101,15 +99,15 @@ public class RegistryLockingTest {
                 assertTrue(false);
             }
         });
-        
+
         registry2.lock();
         registry2.unlock();
-        
+
         testingThread.start();
         testingThread.join();
-        
+
         registry1.unlock();
-        
+
         testingThread = new Thread(() -> {
             try {
                 assertTrue(registry1.tryLockRegistry());
@@ -129,16 +127,16 @@ public class RegistryLockingTest {
                 assertTrue(false);
             }
         });
-        
+
         testingThread.start();
         testingThread.join();
-        
+
         registry1.lock();
         registry1.lock();
         registry1.unlock();
         registry1.unlock();
-        
-        
+
+
     }
 
     public class AbstractRegistryImpl extends AbstractRegistry {
