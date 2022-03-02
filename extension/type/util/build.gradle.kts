@@ -9,9 +9,10 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.extension.protobuf"))
-    implementation(project(":jul.extension.type.interface"))
-    implementation(project(":jul.schedule"))
+    api(project(":jul.extension.protobuf"))
+    api(project(":jul.extension.type.interface"))
+    api(project(":jul.schedule"))
+    api("org.openbase:type:1.1.3")
 }
 
 description = "JUL Extension RST Util"

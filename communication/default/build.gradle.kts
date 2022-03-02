@@ -9,11 +9,11 @@ plugins {
 }
 
 dependencies {
-    implementation("org.openbase:type:[1.1,1.2-alpha)")
-    implementation(project(":jul.extension.type.processing"))
-    implementation(project(":jul.interface"))
-    implementation(project(":jul.exception"))
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
+    api("org.openbase:type:[1.1,1.2-alpha)")
+    api(project(":jul.extension.type.processing"))
+    api(project(":jul.interface"))
+    api(project(":jul.exception"))
+    api("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
 }
 
 description = "JUL Communication Default"

@@ -9,14 +9,14 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.exception"))
-    implementation(project(":jul.interface"))
-    implementation(project(":jul.extension.protobuf"))
-    implementation(project(":jul.processing"))
-    implementation(project(":jul.schedule"))
-    implementation("org.eclipse.jgit:org.eclipse.jgit:[5.1.7,5.1.8-alpha)")
-    implementation("uk.com.robust-it:cloning:1.9.2")
-    implementation(project(":jul.pattern.controller"))
+    api(project(":jul.exception"))
+    api(project(":jul.interface"))
+    api(project(":jul.extension.protobuf"))
+    api(project(":jul.processing"))
+    api(project(":jul.schedule"))
+    api("org.eclipse.jgit:org.eclipse.jgit:[5.1.7,5.1.8-alpha)")
+    api("uk.com.robust-it:cloning:1.9.2")
+    api(project(":jul.pattern.controller"))
 }
 
 description = "JUL Storage"

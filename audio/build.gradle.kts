@@ -9,7 +9,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.exception"))
+    api(project(":jul.exception"))
 }
 
 description = "JUL Audio"

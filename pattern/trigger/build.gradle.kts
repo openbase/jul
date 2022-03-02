@@ -9,9 +9,9 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.interface"))
-    implementation(project(":jul.pattern"))
-    implementation(project(":jul.extension.type.processing"))
+    api(project(":jul.interface"))
+    api(project(":jul.pattern"))
+    api(project(":jul.extension.type.processing"))
 }
 
 description = "JUL Pattern Trigger"

@@ -9,11 +9,11 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.interface"))
-    implementation(project(":jul.schedule"))
-    implementation(project(":jul.processing.json"))
-    implementation("com.google.code.gson:gson:2.6.2")
-    implementation("org.openbase:type:[1.1,1.2-alpha)")
+    api(project(":jul.interface"))
+    api(project(":jul.schedule"))
+    api(project(":jul.processing.json"))
+    api("com.google.code.gson:gson:2.6.2")
+    api("org.openbase:type:[1.1,1.2-alpha)")
 }
 
 description = "JUL Extension Protobuf"

@@ -9,8 +9,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.exception"))
-    implementation(project(":jul.annotation"))
+    api(project(":jul.exception"))
+    api(project(":jul.annotation"))
 }
 
 description = "JUL Interface"

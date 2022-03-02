@@ -29,15 +29,15 @@ repositories {
 }
 
 dependencies {
-    implementation("org.openbase:jps:[3.5,3.6-alpha)")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10")
+    api("org.openbase:jps:[3.5,3.6-alpha)")
+    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10")
     testImplementation("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
     testImplementation("org.junit.jupiter:junit-jupiter-engine:[5.8,5.9-alpha)")
     testImplementation("org.jetbrains.kotlin:kotlin-test:1.6.10")
 }
 
 group = "org.openbase"
-version = "3.0-SNAPSHOT"
+version = "3.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 java {

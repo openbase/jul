@@ -9,7 +9,7 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.interface"))
+    api(project(":jul.interface"))
 }
 
 description = "JUL Pattern Default"

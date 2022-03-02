@@ -9,9 +9,9 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.annotation"))
-    implementation(project(":jul.pattern"))
-    implementation(project(":jul.exception"))
+    api(project(":jul.annotation"))
+    api(project(":jul.pattern"))
+    api(project(":jul.exception"))
 }
 
 description = "JUL Schedule"

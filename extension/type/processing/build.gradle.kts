@@ -9,7 +9,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.extension.protobuf"))
+    api(project(":jul.extension.protobuf"))
+    api("org.openbase:type:[1.1,1.2-alpha)")
 }
 
 description = "JUL Extension Type Processing"

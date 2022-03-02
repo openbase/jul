@@ -9,12 +9,12 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.schedule"))
-    implementation("org.netbeans.external:AbsoluteLayout:RELEASE100")
-    implementation(project(":jul.extension.type.interface"))
-    implementation("org.openjfx:javafx-swing:16")
-    implementation("org.openjfx:javafx-swing:16")
-    implementation("org.openjfx:javafx-swing:16")
+    api(project(":jul.schedule"))
+    api("org.netbeans.external:AbsoluteLayout:RELEASE100")
+    api(project(":jul.extension.type.interface"))
+    api("org.openjfx:javafx-swing:16")
+    api("org.openjfx:javafx-swing:16")
+    api("org.openjfx:javafx-swing:16")
 }
 
 description = "JUL Visual Swing"

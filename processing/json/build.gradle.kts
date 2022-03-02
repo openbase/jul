@@ -9,11 +9,11 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.processing"))
-    implementation("com.fasterxml.jackson.core:jackson-core:[2.11,2.12-alpha)")
-    implementation("com.fasterxml.jackson.core:jackson-databind:[2.11,2.12-alpha)")
-    implementation(project(":jul.pattern"))
-    implementation("com.googlecode.protobuf-java-format:protobuf-java-format:1.4")
+    api(project(":jul.processing"))
+    api("com.fasterxml.jackson.core:jackson-core:[2.11,2.12-alpha)")
+    api("com.fasterxml.jackson.core:jackson-databind:[2.11,2.12-alpha)")
+    api(project(":jul.pattern"))
+    api("com.googlecode.protobuf-java-format:protobuf-java-format:1.4")
 }
 
 description = "JUL Processing JSon"

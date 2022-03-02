@@ -9,10 +9,10 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.interface"))
-    implementation("org.openbase:type:[1.1,1.2-alpha)")
-    implementation(project(":jul.pattern"))
-    implementation(project(":jul.extension.protobuf"))
+    api(project(":jul.interface"))
+    api("org.openbase:type:[1.1,1.2-alpha)")
+    api(project(":jul.pattern"))
+    api(project(":jul.extension.protobuf"))
 }
 
 description = "JUL Pattern Controller"

@@ -9,9 +9,9 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.processing.xml"))
-    implementation(project(":jul.schedule"))
-    implementation("org.apache.commons:commons-lang3:3.6")
+    api(project(":jul.processing.xml"))
+    api(project(":jul.schedule"))
+    api("org.apache.commons:commons-lang3:3.6")
 }
 
 description = "JUL Extension TCP"

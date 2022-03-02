@@ -9,15 +9,15 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.communication"))
-    implementation(project(":jul.communication.mqtt"))
-    implementation(project(":jul.extension.type.interface"))
-    implementation(project(":jul.extension.type.util"))
-    implementation(project(":jul.exception"))
-    implementation(project(":jul.extension.protobuf"))
-    implementation(project(":jul.interface"))
-    implementation(project(":jul.schedule"))
-    implementation(project(":jul.pattern.controller"))
+    api(project(":jul.communication"))
+    api(project(":jul.communication.mqtt"))
+    api(project(":jul.extension.type.interface"))
+    api(project(":jul.extension.type.util"))
+    api(project(":jul.exception"))
+    api(project(":jul.extension.protobuf"))
+    api(project(":jul.interface"))
+    api(project(":jul.schedule"))
+    api(project(":jul.pattern.controller"))
     testImplementation("org.testcontainers:testcontainers:1.16.3")
 }
 

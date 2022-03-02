@@ -9,7 +9,7 @@ plugins {
 }
 
 dependencies {
-    implementation("org.projectlombok:lombok:1.18.20")
+    api("org.projectlombok:lombok:1.18.20")
 }
 
 description = "JUL Annoation"

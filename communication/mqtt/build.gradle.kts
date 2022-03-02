@@ -9,10 +9,10 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.communication"))
-    implementation(project(":jul.schedule"))
-    implementation(project(":jul.extension.type.processing"))
-    implementation("com.hivemq:hivemq-mqtt-client:1.2.2")
+    api(project(":jul.communication"))
+    api(project(":jul.schedule"))
+    api(project(":jul.extension.type.processing"))
+    api("com.hivemq:hivemq-mqtt-client:1.2.2")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
     testImplementation("io.mockk:mockk:1.11.0")
     testImplementation("org.testcontainers:junit-jupiter:1.16.3")

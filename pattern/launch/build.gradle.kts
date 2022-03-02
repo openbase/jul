@@ -9,8 +9,8 @@ plugins {
 }
 
 dependencies {
-    implementation(project(":jul.interface"))
-    implementation(project(":jul.communication.controller"))
+    api(project(":jul.interface"))
+    api(project(":jul.communication.controller"))
 }
 
 description = "JUL Pattern Launch"
