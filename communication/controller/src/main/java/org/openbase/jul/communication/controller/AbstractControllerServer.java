@@ -4,7 +4,7 @@ package org.openbase.jul.communication.controller;
  * #%L
  * JUL Extension Controller
  * %%
- * Copyright (C) 2015 - 2021 openbase.org
+ * Copyright (C) 2015 - 2022 openbase.org
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -230,10 +230,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
             try {
                 server.registerMethods((Class) getClass(), this);
-                //TODO: this does not work since the requestable interface has a generic return type
-                //server.registerMethods(Requestable.class, this);
             } catch (InvalidStateException /*| NoSuchMethodException*/ ex) {
-                // if already registered then everything is fine and we can continue...
+                // if already registered then everything is fine, and we can continue...
             }
 
             serverWatchDog = new WatchDog(server, "RPCServer[" + ScopeProcessor.generateStringRep(server.getScope()) + "]");
@@ -388,14 +386,12 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             if (serverWatchDog != null) {
                 serverWatchDog.shutdown();
                 serverWatchDog = null;
-//                server = new NotInitializedRPCServer(); // todo
             }
 
             // clear existing instances.        
             if (publisherWatchDog != null) {
                 publisherWatchDog.shutdown();
                 publisherWatchDog = null;
-//                publisher = new NotInitializedPublisher<>(); // todo
             }
         } finally {
             manageLock.unlockWrite(this);
