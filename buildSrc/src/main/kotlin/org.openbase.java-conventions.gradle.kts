@@ -23,6 +23,7 @@ repositories {
     }
 }
 
+description = "Java Utility Lib"
 group = "org.openbase"
 version = "3.1-SNAPSHOT"
 
@@ -37,7 +38,8 @@ dependencies {
     api("org.openbase:jps:[3.5,3.6-alpha)")
     api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10")
     testImplementation("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:[5.8,5.9-alpha)")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
 }
 
 publishing {

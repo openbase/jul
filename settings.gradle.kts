@@ -4,7 +4,7 @@
  * This project uses @Incubating APIs which are subject to change.
  */
 
-rootProject.name = "jul"
+rootProject.name = "JUL"
 include(":jul.pattern.launch")
 include(":jul.schedule")
 include(":jul.audio")
