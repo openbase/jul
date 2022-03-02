@@ -22,7 +22,3 @@ dependencies {
 }
 
 description = "JUL Extension Controller"
-
-java {
-    withJavadocJar()
-}

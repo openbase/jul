@@ -21,14 +21,15 @@ package org.openbase.jul.communication.controller;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
+
 import org.openbase.jul.communication.iface.RPCClient;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
 import org.openbase.jul.exception.NotAvailableException;
 import org.openbase.jul.schedule.FutureProcessor;
-import org.openbase.type.communication.EventType.Event;
 
-import java.util.concurrent.*;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
