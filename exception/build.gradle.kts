@@ -9,7 +9,3 @@ plugins {
 }
 
 description = "JUL Exception"
-
-java {
-    withJavadocJar()
-}
