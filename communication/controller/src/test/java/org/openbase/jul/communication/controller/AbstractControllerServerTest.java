@@ -324,9 +324,8 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
 
         remoteService.waitForData();
         try {
-            remoteService.ping().get(500, TimeUnit.MILLISECONDS);
+            remoteService.ping().get(1000, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
-
             StackTracePrinter.printAllStackTraces(LoggerFactory.getLogger(getClass()), LogLevel.WARN);
             fail("Even though wait for data returned the pinging immediately afterwards took to long. Please check stacktrace for deadlocks...");
         }
