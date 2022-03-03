@@ -14,7 +14,7 @@ dependencies {
     api(project(":jul.extension.type.processing"))
     api("com.hivemq:hivemq-mqtt-client:1.2.2")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
-    testImplementation("io.mockk:mockk:1.11.0")
+    testImplementation("io.mockk:mockk:1.12.3")
     testImplementation("org.testcontainers:junit-jupiter:1.16.3")
     testImplementation("io.kotest:kotest-assertions-core-jvm:4.5.0")
 }
