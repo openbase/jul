@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - dev
+      - feature/#57_switch_build_system_from_maven_to_gradle
 jobs:
   publish:
     runs-on: ubuntu-latest 
