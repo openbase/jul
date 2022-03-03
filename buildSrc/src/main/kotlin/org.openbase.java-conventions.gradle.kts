@@ -44,11 +44,11 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
 }
 
-publishing {
-    publications.create<MavenPublication>("maven") {
-        from(components["java"])
-    }
-}
+//publishing {
+//    publications.create<MavenPublication>("maven") {
+//        from(components["java"])
+//    }
+//}
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
