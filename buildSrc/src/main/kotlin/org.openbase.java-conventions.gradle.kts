@@ -1,3 +1,6 @@
+import org.gradle.internal.impldep.org.bouncycastle.asn1.x509.X509ObjectIdentifiers.organization
+import org.gradle.internal.impldep.org.eclipse.jgit.lib.ObjectChecker.type
+import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToElasticSearch.url
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /*
@@ -12,6 +15,8 @@ plugins {
     kotlin("jvm")
     signing
 }
+
+val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
 
 repositories {
     mavenLocal()
@@ -115,6 +120,11 @@ publishing {
     }
     repositories {
         maven {
+            name = "SonatypeOSS"
+//            credentials {
+//                username = if (project.hasProperty("ossrhUsername")) (project.property("ossrhUsername") as String) else "N/A"
+//                password = if (project.hasProperty("ossrhPassword")) (project.property("ossrhPassword") as String) else "N/A"
+//            }
             // change URLs to point to your repos, e.g. http://my.org/repo
             val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
             val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
@@ -124,9 +134,17 @@ publishing {
 }
 
 signing {
+//    sign(publishing.publications)
+//    sign(configurations.archives.get())
+
+    val privateKey = findProperty("MAVEN_GPG_PRIVATE_KEY") as String?
+    val ownertrust = findProperty("MAVEN_GPG_OWNERTRUST") as String?
+//    println("key[$privateKey] ownertrust[$ownertrust]")
+    println("user[${findProperty("MAVEN_CENTRAL_USERNAME")}]")
+
     useInMemoryPgpKeys(
-        findProperty("MAVEN_GPG_PRIVATE_KEY") as String?,
-        findProject("MAVEN_GPG_PASSPHRASE") as String?
+        privateKey,
+        ownertrust
     )
     sign(publishing.publications["mavenJava"])
 }
