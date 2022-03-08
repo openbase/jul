@@ -137,10 +137,10 @@ signing {
 //    sign(publishing.publications)
 //    sign(configurations.archives.get())
 
-    val privateKey = System.getenv("MAVEN_GPG_PRIVATE_KEY")
-    val ownertrust = System.getenv("MAVEN_GPG_OWNERTRUST")
+    val privateKey = findProperty("MAVEN_GPG_PRIVATE_KEY") as String?
+    val ownertrust = findProperty("MAVEN_GPG_OWNERTRUST") as String?
 //    println("key[$privateKey] ownertrust[$ownertrust]")
-    println("user[${System.getenv("MAVEN_CENTRAL_USERNAME").subSequence(0..3)}]")
+    println("user[${(findProperty("MAVEN_CENTRAL_USERNAME") as String).subSequence(0 .. 2)}]")
 
     useInMemoryPgpKeys(
         privateKey,
