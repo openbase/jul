@@ -1,6 +1,7 @@
 package org.openbase.jul.communication.mqtt
 
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -18,9 +19,11 @@ abstract class AbstractIntegrationTest {
         private const val port: Int = 1883
 
         private val mosquittoConfig = kotlin.io.path.createTempFile(prefix = "mosquitto_", suffix = ".conf")
-        private var broker: MqttBrokerContainer
+        private lateinit var broker: MqttBrokerContainer
 
-        init {
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
             mosquittoConfig.writeLines(
                 listOf(
                     "allow_anonymous true",
@@ -37,6 +40,24 @@ abstract class AbstractIntegrationTest {
                 )
             broker.start()
         }
+
+        /*init {
+            mosquittoConfig.writeLines(
+                listOf(
+                    "allow_anonymous true",
+                    "listener 1883"
+                )
+            )
+
+            broker = MqttBrokerContainer()
+                .withExposedPorts(port)
+                .withFileSystemBind(
+                    mosquittoConfig.absolute().toString(),
+                    "/mosquitto/config/mosquitto.conf",
+                    BindMode.READ_ONLY
+                )
+            broker.start()
+        }*/
 
         @JvmStatic
         @AfterAll
