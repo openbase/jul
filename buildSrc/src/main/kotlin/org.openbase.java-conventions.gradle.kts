@@ -44,12 +44,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
 }
 
-//publishing {
-//    publications.create<MavenPublication>("maven") {
-//        from(components["java"])
-//    }
-//}
-
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
@@ -122,14 +116,18 @@ publishing {
     repositories {
         maven {
             // change URLs to point to your repos, e.g. http://my.org/repo
-            val releasesRepoUrl = uri(layout.buildDirectory.dir("repos/releases"))
-            val snapshotsRepoUrl = uri(layout.buildDirectory.dir("repos/snapshots"))
+            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
         }
     }
 }
 
 signing {
+    useInMemoryPgpKeys(
+        findProperty("MAVEN_GPG_PRIVATE_KEY") as String?,
+        findProject("MAVEN_GPG_PASSPHRASE") as String?
+    )
     sign(publishing.publications["mavenJava"])
 }
 
