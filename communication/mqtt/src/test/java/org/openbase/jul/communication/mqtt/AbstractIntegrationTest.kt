@@ -47,9 +47,9 @@ abstract class AbstractIntegrationTest {
         }
     }
 
-    protected val brokerHost: String = broker.host
+    protected val brokerHost: String get() = broker.host
 
-    protected val brokerPort: Int = broker.firstMappedPort
+    protected val brokerPort: Int get () = broker.firstMappedPort
 }
 
 class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
