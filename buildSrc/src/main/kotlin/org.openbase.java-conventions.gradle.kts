@@ -125,7 +125,6 @@ publishing {
 //                username = if (project.hasProperty("ossrhUsername")) (project.property("ossrhUsername") as String) else "N/A"
 //                password = if (project.hasProperty("ossrhPassword")) (project.property("ossrhPassword") as String) else "N/A"
 //            }
-            // change URLs to point to your repos, e.g. http://my.org/repo
             val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
             val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
@@ -134,17 +133,13 @@ publishing {
 }
 
 signing {
-//    sign(publishing.publications)
-//    sign(configurations.archives.get())
 
     val privateKey = findProperty("MAVEN_GPG_PRIVATE_KEY") as String?
-    val ownertrust = findProperty("MAVEN_GPG_OWNERTRUST") as String?
-//    println("key[$privateKey] ownertrust[$ownertrust]")
-//    println("user[${(findProperty("MAVEN_CENTRAL_USERNAME") as String).subSequence(0 .. 2)}]")
+    val passphrase = findProperty("MAVEN_GPG_PASSPHRASE") as String?
 
     useInMemoryPgpKeys(
         privateKey,
-        ownertrust
+        passphrase
     )
     sign(publishing.publications["mavenJava"])
 }
