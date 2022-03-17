@@ -294,8 +294,6 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         communicationService.shutdown();
     }
 
-//    Temporally disabled until issue openbase/jul#55 has been solved.
-
     /**
      * @throws Exception
      */
@@ -310,11 +308,12 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
         remoteService.init(scope);
         remoteService.activate();
+        remoteService.waitForMiddleware();
 
         GlobalCachedExecutorService.submit(() -> {
             try {
                 // make sure the remote is ready to wait for data
-                Thread.sleep(10);
+                remoteService.waitForConnectionState(CONNECTING);
                 communicationService.activate();
                 // notification should be sent automatically.
             } catch (Exception ex) {
@@ -330,8 +329,8 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
             fail("Even though wait for data returned the pinging immediately afterwards took to long. Please check stacktrace for deadlocks...");
         }
 
-        remoteService.deactivate();
-        communicationService.deactivate();
+        remoteService.shutdown();
+        communicationService.shutdown();
     }
 
     @Timeout(5)
