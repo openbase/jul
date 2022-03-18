@@ -119,10 +119,10 @@ publishing {
     repositories {
         maven {
             name = "SonatypeOSS"
-//            credentials {
-//                username = if (project.hasProperty("ossrhUsername")) (project.property("ossrhUsername") as String) else "N/A"
-//                password = if (project.hasProperty("ossrhPassword")) (project.property("ossrhPassword") as String) else "N/A"
-//            }
+            credentials {
+                username = findProperty("MAVEN_CENTRAL_USERNAME")?.let { it as String? }
+                password = findProperty("MAVEN_CENTRAL_TOKEN")?.let { it as String? }
+            }
             val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
             val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
@@ -136,7 +136,10 @@ signing {
         ?.let { it as String? }
         ?.let { Base64.getDecoder().decode(it) }
         ?.let { String(it) }
-        ?: return@signing
+        ?:run {
+            print("Signing skipped because of missing private key.")
+            return@signing
+        }
 
     val passphrase = findProperty("OPENBASE_GPG_PRIVATE_KEY_PASSPHRASE")
         ?.let { it as String? }
