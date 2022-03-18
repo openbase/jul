@@ -136,9 +136,12 @@ publishing {
 signing {
 
     val privateKey = Base64.getDecoder()
-        .decode(findProperty("MAVEN_GPG_PRIVATE_KEY") as String?)
+        .decode(findProperty("OPENBASE_GPG_PRIVATE_KEY") as String?)
         .let { String(it) }
-    val passphrase = findProperty("MAVEN_GPG_PASSPHRASE") as String?
+
+    val passphrase = Base64.getDecoder()
+        .decode(findProperty("OPENBASE_GPG_PRIVATE_KEY_PASSPHRASE") as String?)
+        .let { String(it) }
 
     useInMemoryPgpKeys(
         privateKey,
