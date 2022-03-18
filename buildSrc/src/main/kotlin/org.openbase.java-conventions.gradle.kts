@@ -1,6 +1,3 @@
-import org.gradle.internal.impldep.org.bouncycastle.asn1.x509.X509ObjectIdentifiers.organization
-import org.gradle.internal.impldep.org.eclipse.jgit.lib.ObjectChecker.type
-import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToElasticSearch.url
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Base64
 
@@ -135,13 +132,17 @@ publishing {
 
 signing {
 
-    val privateKey = Base64.getDecoder()
-        .decode(findProperty("OPENBASE_GPG_PRIVATE_KEY") as String?)
-        .let { String(it) }
+    val privateKey = findProperty("OPENBASE_GPG_PRIVATE_KEY")
+        ?.let { it as String? }
+        ?.let { Base64.getDecoder().decode(it) }
+        ?.let { String(it) }
+        ?: return@signing
 
-    val passphrase = Base64.getDecoder()
-        .decode(findProperty("OPENBASE_GPG_PRIVATE_KEY_PASSPHRASE") as String?)
-        .let { String(it) }
+    val passphrase = findProperty("OPENBASE_GPG_PRIVATE_KEY_PASSPHRASE")
+        ?.let { it as String? }
+        ?.let { Base64.getDecoder().decode(it) }
+        ?.let { String(it) }
+        ?: ""
 
     useInMemoryPgpKeys(
         privateKey,
