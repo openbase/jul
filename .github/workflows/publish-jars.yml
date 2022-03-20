@@ -1,11 +1,10 @@
-name: Publish package to the Maven Central Repository and GitHub Packages
+name: Publish
 on:
   release:
     types: [created]
   push:
     branches:
       - dev
-      - feature/#57_switch_build_system_from_maven_to_gradle
 jobs:
   publish:
     name: Publish Artifacts
