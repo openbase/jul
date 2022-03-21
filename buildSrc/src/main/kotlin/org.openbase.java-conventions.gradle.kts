@@ -137,7 +137,7 @@ signing {
         ?.let { Base64.getDecoder().decode(it) }
         ?.let { String(it) }
         ?:run {
-            print("Signing skipped because of missing private key.")
+            // Signing skipped because of missing private key.
             return@signing
         }
 
