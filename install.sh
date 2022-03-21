@@ -10,17 +10,13 @@ WHITE='\033[0;37m'
 APP_NAME='jul'
 APP_NAME=${BLUE}${APP_NAME}${NC}
 echo -e "=== ${APP_NAME} project ${WHITE}cleanup${NC}" &&
-mvn clean --quiet $@ &&
+./gradlew clean --quiet $@ &&
 echo -e "=== ${APP_NAME} project ${WHITE}installation${NC}" &&
-mvn install \
-        -DassembleDirectory=${prefix} \
-        -DskipTests=true \
-	-Dmaven.javadoc.skip=true \
-        -Dmaven.test.skip=true \
-        -Dlicense.skipAddThirdParty=true \
-        -Dlicense.skipUpdateProjectLicense=true \
-        -Dlicense.skipDownloadLicenses \
-        -Dlicense.skipCheckLicense=true \
-        -Dmaven.license.skip=true \
-        --quiet $@ &&
-echo -e "=== ${APP_NAME} was ${GREEN}successfully${NC} installed to ${WHITE}${prefix}${NC}"
+./gradlew \
+    publishToMavenLocal \
+    --exclude-task test \
+    --exclude-task javaDoc \
+    --parallel \
+    --quiet \
+    $@ &&
+echo -e "=== ${APP_NAME} was ${GREEN}successfully${NC} installed to ${WHITE} local maven and gradle repositories.${NC}"
