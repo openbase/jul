@@ -10,9 +10,9 @@ plugins {
 
 dependencies {
     api(project(":jul.pattern"))
-    api("commons-io:commons-io:2.11.0")
-    api("commons-lang:commons-lang:2.6")
-    api("java3d:vecmath:1.3.1")
+    api("commons-io:commons-io:_")
+    api("commons-lang:commons-lang:_")
+    api("java3d:vecmath:_")
 }
 
 description = "JUL Processing Default"

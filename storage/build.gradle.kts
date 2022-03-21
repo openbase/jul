@@ -15,7 +15,7 @@ dependencies {
     api(project(":jul.processing"))
     api(project(":jul.schedule"))
     api("org.eclipse.jgit:org.eclipse.jgit:[5.1.7,5.1.8-alpha)")
-    api("uk.com.robust-it:cloning:1.9.2")
+    api("uk.com.robust-it:cloning:_")
     api(project(":jul.pattern.controller"))
 }
 

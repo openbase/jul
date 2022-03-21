@@ -12,7 +12,7 @@ dependencies {
     api(project(":jul.interface"))
     api(project(":jul.schedule"))
     api(project(":jul.processing.json"))
-    api("com.google.code.gson:gson:2.6.2")
+    api("com.google.code.gson:gson:_")
     api("org.openbase:type:[1.1,1.2-alpha)")
 }
 

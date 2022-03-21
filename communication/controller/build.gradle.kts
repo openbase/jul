@@ -18,7 +18,7 @@ dependencies {
     api(project(":jul.interface"))
     api(project(":jul.schedule"))
     api(project(":jul.pattern.controller"))
-    testImplementation("org.testcontainers:testcontainers:1.16.3")
+    testImplementation("org.testcontainers:testcontainers:_")
 }
 
 description = "JUL Extension Controller"

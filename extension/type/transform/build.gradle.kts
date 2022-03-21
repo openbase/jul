@@ -11,7 +11,7 @@ plugins {
 dependencies {
     api(project(":jul.processing"))
     api(project(":jul.extension.type.processing"))
-    api("org.openbase:type:1.1.3")
+    api("org.openbase:type:_")
 }
 
 description = "JUL Extension RST Transform"

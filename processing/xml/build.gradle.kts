@@ -10,7 +10,7 @@ plugins {
 
 dependencies {
     api(project(":jul.exception"))
-    api("com.io7m.xom:xom:1.2.10")
+    api("com.io7m.xom:xom:_")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:[2.11,2.12-alpha)")
     api("com.fasterxml.jackson.core:jackson-databind:[2.11,2.12-alpha)")
     api("com.fasterxml.jackson.core:jackson-annotations:[2.11,2.12-alpha)")

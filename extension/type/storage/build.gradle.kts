@@ -10,7 +10,7 @@ plugins {
 
 dependencies {
     api(project(":jul.storage"))
-    api("org.openbase:type:1.1.3")
+    api("org.openbase:type:_")
 }
 
 description = "JUL Extension Type Storage"

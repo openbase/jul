@@ -12,11 +12,11 @@ dependencies {
     api(project(":jul.communication"))
     api(project(":jul.schedule"))
     api(project(":jul.extension.type.processing"))
-    api("com.hivemq:hivemq-mqtt-client:1.2.2")
+    api("com.hivemq:hivemq-mqtt-client:_")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
-    testImplementation("io.mockk:mockk:1.12.3")
-    testImplementation("org.testcontainers:junit-jupiter:1.16.3")
-    testImplementation("io.kotest:kotest-assertions-core-jvm:4.5.0")
+    testImplementation(Testing.mockK)
+    testImplementation("org.testcontainers:junit-jupiter:_")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:_")
 }
 
 description = "JUL Extension MQTT"
