@@ -30,7 +30,7 @@ repositories {
 
 description = "Java Utility Lib"
 group = "org.openbase"
-version = "3.1-SNAPSHOT"
+version = "3.1.0"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
