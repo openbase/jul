@@ -16,7 +16,7 @@ dependencies {
     api("com.googlecode.protobuf-java-format:protobuf-java-format:_")
 }
 
-description = "JUL Processing JSon"
+description = "JUL Processing JSON"
 
 java {
     withJavadocJar()
