@@ -284,8 +284,9 @@ public class IdentifiableMessage<KEY, M extends AbstractMessage, MB extends M.Bu
      * @return the updated message is returned.
      *
      * @throws CouldNotPerformException in thrown in case something went wrong during message processing.
-     * @deprecated since v2.0 and will be removed in v3.0. Please  please use setMessage(final M message, final Object source) instead.
+     * @deprecated since v2.0 and will be removed in v3.0. Please use setMessage(final M message, final Object source) instead.
      */
+    @Deprecated
     public IdentifiableMessage<KEY, M, MB> setMessage(final M message) throws CouldNotPerformException {
         return setMessage(message, this);
     }
