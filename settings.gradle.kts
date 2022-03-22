@@ -1,4 +1,4 @@
-rootProject.name = "JUL"
+rootProject.name = "jul"
 
 include(":jul.pattern.launch")
 include(":jul.schedule")
