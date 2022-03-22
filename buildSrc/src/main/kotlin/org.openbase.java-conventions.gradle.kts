@@ -61,7 +61,6 @@ tasks.withType<Test> {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = "jul"
             from(components["java"])
             versionMapping {
                 usage("java-api") {
@@ -159,4 +158,3 @@ tasks.javadoc {
         (options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
     }
 }
-
