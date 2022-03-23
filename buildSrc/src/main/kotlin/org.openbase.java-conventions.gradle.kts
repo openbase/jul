@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToElasticSearch.url
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Base64
 
@@ -138,6 +139,7 @@ signing {
         ?.let { String(it) }
         ?:run {
             // Signing skipped because of missing private key.
+            println("Signing skipped because of missing private key.")
             return@signing
         }
 
@@ -151,6 +153,7 @@ signing {
         privateKey,
         passphrase
     )
+    println("Sign ${project.name}-${project.version}")
     sign(publishing.publications["mavenJava"])
 }
 
