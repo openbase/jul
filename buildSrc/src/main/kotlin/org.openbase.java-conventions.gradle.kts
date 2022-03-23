@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToElasticSearch.url
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Base64
 
@@ -14,8 +15,6 @@ plugins {
     signing
 }
 
-val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
-
 repositories {
     mavenLocal()
 
@@ -31,6 +30,8 @@ repositories {
 description = "Java Utility Lib"
 group = "org.openbase"
 version = "3.1.0"
+
+val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -122,9 +123,10 @@ publishing {
                 username = findProperty("MAVEN_CENTRAL_USERNAME")?.let { it as String? }
                 password = findProperty("MAVEN_CENTRAL_TOKEN")?.let { it as String? }
             }
-            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
+            url = if (releaseVersion) releasesRepoUrl else snapshotsRepoUrl
+            println("Selected repo to deploy: $url")
         }
     }
 }
@@ -137,6 +139,7 @@ signing {
         ?.let { String(it) }
         ?:run {
             // Signing skipped because of missing private key.
+            println("Signing skipped because of missing private key.")
             return@signing
         }
 
@@ -150,6 +153,7 @@ signing {
         privateKey,
         passphrase
     )
+    println("Sign ${project.name}-${project.version}")
     sign(publishing.publications["mavenJava"])
 }
 
