@@ -122,8 +122,8 @@ publishing {
                 username = findProperty("MAVEN_CENTRAL_USERNAME")?.let { it as String? }
                 password = findProperty("MAVEN_CENTRAL_TOKEN")?.let { it as String? }
             }
-            val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
             url = if (releaseVersion) releasesRepoUrl else snapshotsRepoUrl
             println("Selected repo to deploy: $url")
         }
