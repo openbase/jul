@@ -124,7 +124,7 @@ publishing {
             }
             val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
             val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            url = if (releaseVersion) snapshotsRepoUrl else releasesRepoUrl
+            url = if (releaseVersion) releasesRepoUrl else snapshotsRepoUrl
             println("Selected repo to deploy: $url")
         }
     }
