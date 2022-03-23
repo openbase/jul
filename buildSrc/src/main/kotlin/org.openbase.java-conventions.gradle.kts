@@ -14,8 +14,6 @@ plugins {
     signing
 }
 
-val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
-
 repositories {
     mavenLocal()
 
@@ -31,6 +29,8 @@ repositories {
 description = "Java Utility Lib"
 group = "org.openbase"
 version = "3.1-SNAPSHOT"
+
+val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -122,9 +122,10 @@ publishing {
                 username = findProperty("MAVEN_CENTRAL_USERNAME")?.let { it as String? }
                 password = findProperty("MAVEN_CENTRAL_TOKEN")?.let { it as String? }
             }
-            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
-            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+            val releasesRepoUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            url = if (releaseVersion) snapshotsRepoUrl else releasesRepoUrl
+            println("Selected repo to deploy: $url")
         }
     }
 }
