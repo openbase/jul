@@ -29,7 +29,7 @@ repositories {
 
 description = "Java Utility Lib"
 group = "org.openbase"
-version = "3.1.0"
+version = "3.1.1"
 
 val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
 
