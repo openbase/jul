@@ -19,4 +19,4 @@ echo -e "=== ${APP_NAME} project ${WHITE}installation${NC}" &&
     --parallel \
     --quiet \
     $@ &&
-echo -e "=== ${APP_NAME} was ${GREEN}successfully${NC} installed to ${WHITE} local maven and gradle repositories.${NC}"
+echo -e "=== ${APP_NAME} was ${GREEN}successfully${NC} installed to ${WHITE}local maven and gradle repositories.${NC}"
