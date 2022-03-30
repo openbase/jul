@@ -43,7 +43,6 @@ import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Readyable;
-import org.openbase.jul.iface.Requestable;
 import org.openbase.jul.pattern.Observer;
 import org.openbase.jul.pattern.controller.MessageController;
 import org.openbase.jul.pattern.provider.DataProvider;
@@ -79,7 +78,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     public final static Scope SCOPE_SUFFIX_CONTROL = ScopeProcessor.generateScope(SCOPE_ELEMENT_SUFFIX_CONTROL);
     public final static Scope SCOPE_SUFFIX_STATUS = ScopeProcessor.generateScope(SCOPE_ELEMENT_SUFFIX_STATUS);
 
-    private static final long NOTIFICATILONG_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
+    private static final long NOTIFICATION_TIMEOUT = TimeUnit.SECONDS.toMillis(15);
 
     public final static String RPC_REQUEST_STATUS = "requestStatus";
 
@@ -496,7 +495,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                             return;
                         }
                         try {
-                            publisher.publish(EventType.Event.newBuilder().build());
+                            publisher.publish(EventType.Event.newBuilder().build(), true);
                         } catch (CouldNotPerformException ex) {
                             throw new CouldNotPerformException("Could not notify change of " + this + "!", ex);
                         }
@@ -563,6 +562,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return {@inheritDoc}
      */
     @Override
+    @Deprecated
     public ClosableDataBuilder<MB> getDataBuilder(final Object consumer) {
         return new ClosableDataBuilderImpl<>(getBuilderSetup(), consumer);
     }
@@ -576,6 +576,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @return {@inheritDoc}
      */
     @Override
+    @Deprecated
     public ClosableDataBuilder<MB> getDataBuilder(final Object consumer, final NotificationStrategy notificationStrategy) {
         return new ClosableDataBuilderImpl<>(getBuilderSetup(), consumer, notificationStrategy);
     }
@@ -800,13 +801,13 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             // only publish if controller is active
             if (isActive()) {
                 try {
-                    waitForMiddleware(NOTIFICATILONG_TIMEOUT, TimeUnit.MILLISECONDS);
-                    publisher.publish(event);
+                    waitForMiddleware(NOTIFICATION_TIMEOUT, TimeUnit.MILLISECONDS);
+                    publisher.publish(event, true);
                 } catch (TimeoutException ex) {
                     if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         throw ex;
                     }
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Skip data update notification because middleware is not ready since " + TimeUnit.MILLISECONDS.toSeconds(NOTIFICATILONG_TIMEOUT) + " seconds of " + this + "!", ex), logger, LogLevel.WARN);
+                    ExceptionPrinter.printHistory(new CouldNotPerformException("Skip data update notification because middleware is not ready since " + TimeUnit.MILLISECONDS.toSeconds(NOTIFICATION_TIMEOUT) + " seconds of " + this + "!", ex), logger, LogLevel.WARN);
                 } catch (CouldNotPerformException ex) {
                     if (ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         throw ex;

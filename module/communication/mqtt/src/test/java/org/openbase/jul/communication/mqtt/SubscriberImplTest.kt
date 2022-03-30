@@ -136,6 +136,7 @@ class SubscriberImplTest {
                 Mqtt5Publish.builder()
                     .topic(topic)
                     .payload(event.toByteArray())
+                    .attachTimestamp()
                     .build()
             )
 
@@ -151,6 +152,7 @@ class SubscriberImplTest {
                 Mqtt5Publish.builder()
                     .topic(topic)
                     .payload(event.toByteArray())
+                    .attachTimestamp()
                     .build()
             )
 

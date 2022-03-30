@@ -5,6 +5,7 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.data.RPCResponse
 import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.communication.iface.RPCClient
 import org.openbase.jul.schedule.GlobalCachedExecutorService
@@ -18,8 +19,10 @@ import kotlin.Any
 import kotlin.reflect.KClass
 import com.google.protobuf.Any as protoAny
 
-class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCommunicatorImpl(scope, config),
-    RPCClient {
+class RPCClientImpl(
+    scope: ScopeType.Scope,
+    config: CommunicatorConfig
+) : RPCCommunicatorImpl(scope, config), RPCClient {
 
     private val parameterParserMap: HashMap<String, List<(Any) -> protoAny>> = HashMap()
     private val resultParserMap: HashMap<String, (protoAny) -> Any> = HashMap()
@@ -29,11 +32,11 @@ class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCom
         methodName: String,
         return_clazz: KClass<RETURN>,
         vararg parameters: Any
-    ): Future<RETURN> {
+    ): Future<RPCResponse<RETURN>> {
         lazyRegisterMethod(methodName, return_clazz, *parameters)
 
         val request = generateRequest(methodName, *parameters)
-        val rpcFuture: CompletableFuture<RETURN> = CompletableFuture();
+        val rpcFuture: CompletableFuture<RPCResponse<RETURN>> = CompletableFuture();
 
         mqttClient.subscribe(
             Mqtt5Subscribe.builder()
@@ -51,6 +54,7 @@ class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCom
                         .topic(topic)
                         .qos(MqttQos.EXACTLY_ONCE)
                         .payload(request.toByteArray())
+                        .attachTimestamp()
                         .build()
                 )
             }
@@ -73,7 +77,7 @@ class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCom
 
     private fun <RETURN> handleRPCResponse(
         mqtt5Publish: Mqtt5Publish,
-        rpcFuture: CompletableFuture<RETURN>,
+        rpcFuture: CompletableFuture<RPCResponse<RETURN>>,
         request: Request
     ) {
         val response = Response.parseFrom(mqtt5Publish.payloadAsBytes)
@@ -91,7 +95,15 @@ class RPCClientImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : RPCCom
         if (response.error.isNotEmpty()) {
             rpcFuture.completeExceptionally(RPCException(response.error));
         } else {
-            rpcFuture.complete(resultParserMap[request.methodName]!!(response.result) as RETURN);
+            rpcFuture.complete(
+                RPCResponse(
+                    response = resultParserMap[request.methodName]!!(response.result) as RETURN,
+                    properties = mqtt5Publish
+                        .userProperties
+                        .asList()
+                        .associate { it.name.toString() to it.value.toString() }
+                )
+            )
         }
     }
 
