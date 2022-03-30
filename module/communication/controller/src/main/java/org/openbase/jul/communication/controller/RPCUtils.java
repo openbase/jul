@@ -10,18 +10,19 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
+import org.openbase.jul.communication.data.RPCResponse;
 import org.openbase.jul.communication.iface.RPCClient;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InvalidStateException;
@@ -44,22 +45,34 @@ public class RPCUtils {
     private static final String INTERNAL_CALL_REMOTE_METHOD_NAME = "internalCallRemoteMethod";
 
     public static Future<Object> callRemoteServerMethod(final RPCRemote<?> remote) {
-        return internalCallRemoteMethod(null, remote, Object.class);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(null, remote, Object.class)
+        );
     }
 
     public static Future<Object> callRemoteServerMethod(final Object argument, final RPCRemote<?> remote) {
-        return internalCallRemoteMethod(argument, remote, Object.class);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(argument, remote, Object.class)
+        );
     }
 
     public static <RETURN> Future<RETURN> callRemoteServerMethod(final RPCRemote<?> remote, final Class<RETURN> returnClass) {
-        return internalCallRemoteMethod(null, remote, returnClass);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(null, remote, returnClass)
+        );
     }
 
     public static <RETURN> Future<RETURN> callRemoteServerMethod(final Object argument, final RPCRemote<?> remote, final Class<RETURN> returnClass) {
-        return internalCallRemoteMethod(argument, remote, returnClass);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(argument, remote, returnClass)
+        );
     }
 
-    private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RPCRemote<?> remote, final Class<RETURN> returnClass) {
+    private static <RETURN> Future<RPCResponse<RETURN>> internalCallRemoteMethod(final Object argument, final RPCRemote<?> remote, final Class<RETURN> returnClass) {
 
         String methodName = "?";
         try {
@@ -82,27 +95,39 @@ public class RPCUtils {
             }
             return remote.callMethodAsync(methodName, returnClass, argument);
         } catch (CouldNotPerformException ex) {
-            return (Future<RETURN>) FutureProcessor.canceledFuture(new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex));
+            return (Future<RPCResponse<RETURN>>) FutureProcessor.canceledFuture(new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex));
         }
     }
 
     public static Future<Object> callRemoteServerMethod(final RPCClient remote) {
-        return internalCallRemoteMethod(null, remote, Object.class);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(null, remote, Object.class)
+        );
     }
 
     public static Future<Object> callRemoteServerMethod(final Object argument, final RPCClient remote) {
-        return internalCallRemoteMethod(argument, remote, Object.class);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(argument, remote, Object.class)
+        );
     }
 
     public static <RETURN> Future<RETURN> callRemoteServerMethod(final RPCClient remote, final Class<RETURN> returnClass) {
-        return internalCallRemoteMethod(null, remote, returnClass);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(null, remote, returnClass)
+        );
     }
 
     public static <RETURN> Future<RETURN> callRemoteServerMethod(final Object argument, final RPCClient remote, final Class<RETURN> returnClass) {
-        return internalCallRemoteMethod(argument, remote, returnClass);
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                internalCallRemoteMethod(argument, remote, returnClass)
+        );
     }
 
-    private static <RETURN> Future<RETURN> internalCallRemoteMethod(final Object argument, final RPCClient remote, final Class<RETURN> returnClass) {
+    private static <RETURN> Future<RPCResponse<RETURN>> internalCallRemoteMethod(final Object argument, final RPCClient remote, final Class<RETURN> returnClass) {
 
         String methodName = "?";
         try {
@@ -125,7 +150,7 @@ public class RPCUtils {
             }
             return remote.callMethod(methodName, returnClass, argument);
         } catch (CouldNotPerformException ex) {
-            return (Future<RETURN>) FutureProcessor.canceledFuture(new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex));
+            return (Future<RPCResponse<RETURN>>) FutureProcessor.canceledFuture(new CouldNotPerformException("Could not call remote Message[" + methodName + "]", ex));
         }
     }
 

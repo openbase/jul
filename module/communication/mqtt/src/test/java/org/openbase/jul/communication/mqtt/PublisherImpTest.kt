@@ -43,7 +43,7 @@ class PublisherImpTest {
         val topic = "/test/publish"
         val publisher = PublisherImpl(ScopeProcessor.generateScope(topic), CommunicatorConfig("localhost", 1234))
 
-        publisher.publish(expectedData)
+        publisher.publish(expectedData, false)
 
         verify(exactly = 1) {
             mqttClient.publish(

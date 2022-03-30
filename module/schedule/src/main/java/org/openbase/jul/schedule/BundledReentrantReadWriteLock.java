@@ -25,6 +25,7 @@ package org.openbase.jul.schedule;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.ShutdownInProgressException;
+import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
@@ -103,6 +104,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
             @Override
             public void expired() {
+                StackTracePrinter.printStackTrace(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
             }
         };
@@ -110,6 +112,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
             @Override
             public void expired() {
+                StackTracePrinter.printStackTrace(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
             }
         };

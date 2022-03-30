@@ -182,7 +182,7 @@ internal class RPCServerImplTest {
             simulateMethodCall(methodName = "something")
 
             mqttPublishSlot.size shouldBeGreaterThan 1
-            mqttPublishSlot[0] shouldBe Mqtt5Publish.builder()
+            mqttPublishSlot[0].clearTimestamp() shouldBe Mqtt5Publish.builder()
                 .topic("$baseTopic/rpc/$requestId")
                 .qos(MqttQos.EXACTLY_ONCE)
                 .payload(acknowledgedResponse.toByteArray())

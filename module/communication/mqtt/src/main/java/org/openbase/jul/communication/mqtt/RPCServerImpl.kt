@@ -1,6 +1,8 @@
 package org.openbase.jul.communication.mqtt
 
 import com.hivemq.client.mqtt.datatypes.MqttQos
+import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder
+import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilderBase
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
@@ -17,6 +19,7 @@ import org.openbase.type.communication.mqtt.ResponseType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
@@ -91,6 +94,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
         mqttClient.publish(
             mqttResponseBuilder
                 .payload(responseBuilder.build().toByteArray())
+                .attachTimestamp()
                 .build()
         )
 
@@ -102,6 +106,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
             mqttClient.publish(
                 mqttResponseBuilder
                     .payload(responseBuilder.build().toByteArray())
+                    .attachTimestamp()
                     .build()
             )
             return;
@@ -128,6 +133,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
         mqttClient.publish(
             mqttResponseBuilder
                 .payload(responseBuilder.build().toByteArray())
+                .attachTimestamp()
                 .build()
         )
     }

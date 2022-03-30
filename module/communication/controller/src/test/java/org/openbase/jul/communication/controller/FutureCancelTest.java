@@ -26,6 +26,7 @@ import com.google.protobuf.Any;
 import org.junit.jupiter.api.Test;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.config.CommunicatorConfig;
+import org.openbase.jul.communication.data.RPCResponse;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
 import org.openbase.jul.communication.iface.RPCClient;
 import org.openbase.jul.communication.iface.RPCServer;
@@ -112,7 +113,7 @@ public class FutureCancelTest extends MqttIntegrationTest implements Requestable
         clientWatchDog.activate();
         clientWatchDog.waitForServiceActivation();
 
-        Future<Any> future = client.callMethod("requestStatus", Any.class);
+        Future<RPCResponse<Any>> future = client.callMethod("requestStatus", Any.class);
         try {
             future.get(1000, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {

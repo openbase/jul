@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.data.RPCResponse
 import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
@@ -104,7 +105,7 @@ internal class RPCClientImplTest {
     @Nested
     inner class TestAfterSubscriptionCallback {
 
-        private lateinit var rpcFuture: Future<out Int>
+        private lateinit var rpcFuture: Future<out RPCResponse<out Int>>
         private lateinit var callback: BiConsumer<Mqtt5SubAck, Throwable?>
 
         @BeforeEach
@@ -142,17 +143,17 @@ internal class RPCClientImplTest {
             callback.accept(mockk(), null)
 
             rpcFuture.isDone shouldNotBe true
-            mqttPublishSlot.captured shouldBe expectedMqttPublish
+            mqttPublishSlot.captured.clearTimestamp() shouldBe expectedMqttPublish
         }
     }
 
     @Nested
     inner class TestRPCResponseCallback {
 
-        private var mqtt5Publish = mockk<Mqtt5Publish>()
+        private var mqtt5Publish = mockk<Mqtt5Publish>(relaxed = true)
         private var response = Response.newBuilder()
 
-        private lateinit var rpcFuture: Future<out Int>
+        private lateinit var rpcFuture: Future<out RPCResponse<out Int>>
         private lateinit var callback: Consumer<Mqtt5Publish>
 
         init {
@@ -202,7 +203,7 @@ internal class RPCClientImplTest {
             callback.accept(mqtt5Publish)
 
             rpcFuture.isDone shouldBe true
-            rpcFuture.get() shouldBe expectedResult
+            rpcFuture.get().response shouldBe expectedResult
 
             verify(exactly = 1) {
                 mqttClient.unsubscribe(
