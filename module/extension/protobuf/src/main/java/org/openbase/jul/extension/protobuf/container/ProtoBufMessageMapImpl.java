@@ -138,15 +138,19 @@ public class ProtoBufMessageMapImpl<KEY extends Comparable<KEY>, M extends Abstr
         }
         synchronized (builderSetup) {
             try {
-                builderSetup.lockWrite(this);
+                builderSetup.lockWriteInterruptibly(this);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+            try {
                 SIB builder = builderSetup.getBuilder();
                 builder.clearField(fieldDescriptor);
                 for (IdentifiableMessage<KEY, M, MB> value : values()) {
                     builder.addRepeatedField(fieldDescriptor, value.getMessage());
                 }
             } finally {
-                // todo: validate why is the notification always skipped here?
-                builderSetup.unlockWrite(NotificationStrategy.SKIP);
+                builderSetup.unlockWrite(NotificationStrategy.AFTER_LAST_RELEASE);
             }
         }
     }

@@ -1,5 +1,6 @@
 package org.openbase.jul.communication.iface
 
+import org.openbase.jul.communication.data.RPCResponse
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.InvalidStateException
 import org.openbase.jul.exception.NotAvailableException
@@ -37,12 +38,14 @@ interface RPCClient : RPCCommunicator {
     fun <RETURN: Any> callMethod(
         methodName: String,
         return_clazz: KClass<RETURN>,
-        vararg parameters: Any): Future<RETURN>
+        vararg parameters: Any
+    ): Future<RPCResponse<RETURN>>
 
     fun <RETURN: Any> callMethod(
         methodName: String,
         return_clazz: Class<RETURN>,
-        vararg parameters: Any): Future<RETURN> {
+        vararg parameters: Any
+    ): Future<RPCResponse<RETURN>> {
         return callMethod(
             methodName = methodName,
             return_clazz = Reflection.getOrCreateKotlinClass(return_clazz) as KClass<RETURN>,

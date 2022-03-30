@@ -13,23 +13,25 @@ class PublisherImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : Commun
 
     var active = false
 
-    override fun publish(event: EventType.Event): EventType.Event {
+    override fun publish(event: EventType.Event, attachTimestamp: Boolean): EventType.Event {
         mqttClient.publish(
             Mqtt5Publish.builder()
                 .topic(topic)
                 .qos(MqttQos.EXACTLY_ONCE)
                 .payload(event.toByteArray())
+                .attachTimestamp(attachTimestamp)
                 .build()
         )
         return event
     }
 
-    override fun publish(event: EventType.Event, scope: Scope): EventType.Event {
+    override fun publish(event: EventType.Event, scope: Scope, attachTimestamp: Boolean): EventType.Event {
         mqttClient.publish(
             Mqtt5Publish.builder()
                 .topic(ScopeProcessor.generateStringRep(scope))
                 .qos(MqttQos.EXACTLY_ONCE)
                 .payload(event.toByteArray())
+                .attachTimestamp(attachTimestamp)
                 .build()
         )
         return event

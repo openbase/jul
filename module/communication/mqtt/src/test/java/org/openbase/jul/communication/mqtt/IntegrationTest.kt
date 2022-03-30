@@ -35,7 +35,7 @@ class IntegrationTest : AbstractIntegrationTest() {
         val expectedResult = 45
         val result = rpcClient.callMethod(instance::add.name, Int::class, 3, 42).get(1, TimeUnit.SECONDS)
 
-        result shouldBe expectedResult
+        result.response shouldBe expectedResult
     }
 
     @Test

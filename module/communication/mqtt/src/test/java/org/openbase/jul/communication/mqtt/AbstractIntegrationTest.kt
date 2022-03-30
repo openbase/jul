@@ -1,11 +1,16 @@
 package org.openbase.jul.communication.mqtt
 
+import com.hivemq.client.internal.mqtt.util.MqttChecks.userProperties
+import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5PublishBuilder
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import java.time.Instant
 import kotlin.io.path.absolute
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.writeLines
@@ -74,3 +79,7 @@ abstract class AbstractIntegrationTest {
 }
 
 class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
+
+fun Mqtt5Publish.clearTimestamp() = let {
+    this.extend().userProperties(Mqtt5UserProperties.of()).build()
+}

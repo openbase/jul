@@ -23,10 +23,7 @@ package org.openbase.jul.extension.protobuf;
  */
 
 import com.google.protobuf.AbstractMessage.Builder;
-import org.openbase.jul.exception.CouldNotPerformException;
-import org.openbase.jul.exception.ExceptionProcessor;
-import org.openbase.jul.exception.FatalImplementationErrorException;
-import org.openbase.jul.exception.ShutdownInProgressException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.pattern.ChangeListener;
@@ -74,6 +71,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
+                StackTracePrinter.printStackTrace(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
             }
         };
@@ -81,6 +79,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
+                StackTracePrinter.printStackTrace(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
             }
         };
@@ -96,6 +95,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         return builder;
     }
 
+    @Deprecated
     public void lockRead(final Object consumer) {
         //logger.debug("order lockRead by {}", consumer);
         readLock.lock();
@@ -140,6 +140,12 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         //logger.debug("unlockRead by {}", consumer);
     }
 
+
+    /**
+     * @param consumer the instant that actually locks the builder.
+     * @deprecated please use lockWriteInterruptibly instead
+     */
+    @Deprecated
     public void lockWrite(final Object consumer) {
         //logger.debug("order lockWrite by {}", consumer);
         writeLock.lock();
@@ -156,8 +162,8 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         //logger.debug("lockWrite by {}", consumer);
     }
 
-    public boolean tryLockWrite(final Object consumer) {
-        boolean success = writeLock.tryLock();
+    public boolean tryLockWrite(final Object consumer) throws InterruptedException {
+        boolean success = writeLock.tryLock(0, TimeUnit.MILLISECONDS);
         if (success) {
             writeLockConsumer = consumer;
             restartWriteLockTimeout();
@@ -296,5 +302,14 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
      */
     public boolean isWriteLockHeldByCurrentThread() {
         return writeLock.isHeldByCurrentThread();
+    }
+
+    /**
+     * Method returns the count of hold write locks.
+     *
+     * @return the count of hold locks.
+     */
+    public int getWriteLockHoldCounter() {
+        return writeLock.getHoldCount();
     }
 }

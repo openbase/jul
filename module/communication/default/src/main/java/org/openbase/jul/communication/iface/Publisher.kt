@@ -45,7 +45,7 @@ interface Publisher : Communicator {
      * @throws InterruptedException thrown in case the current thread was internally interrupted.
      */
     @Throws(CouldNotPerformException::class, InterruptedException::class)
-    fun publish(event: Event): Event
+    fun publish(event: Event, attachTimestamp: Boolean = true): Event
 
     /**
      * Send data (of type T) to all subscriber.
@@ -56,7 +56,7 @@ interface Publisher : Communicator {
      * @throws InterruptedException thrown in case the current thread was internally interrupted.
      */
     @Throws(CouldNotPerformException::class, InterruptedException::class)
-    fun publish(data: Message) = publish(Event.newBuilder().setPayload(Any.pack(data)).build())
+    fun publish(data: Message, attachTimestamp: Boolean = true) = publish(Event.newBuilder().setPayload(Any.pack(data)).build(), attachTimestamp)
 
     /**
      * Send an [Event] to all subscriber.
@@ -68,7 +68,7 @@ interface Publisher : Communicator {
      * @throws InterruptedException thrown in case the current thread was internally interrupted.
      */
     @Throws(CouldNotPerformException::class, InterruptedException::class)
-    fun publish(event: Event, scope: Scope): Event
+    fun publish(event: Event, scope: Scope, attachTimestamp: Boolean = true): Event
 
     /**
      * Send data (of type T) to all subscriber.
@@ -80,5 +80,5 @@ interface Publisher : Communicator {
      * @throws InterruptedException thrown in case the current thread was internally interrupted.
      */
     @Throws(CouldNotPerformException::class, InterruptedException::class)
-    fun publish(data: Message, scope: Scope) = publish(Event.newBuilder().setPayload(Any.pack(data)).build(), scope)
+    fun publish(data: Message, scope: Scope, attachTimestamp: Boolean = true) = publish(Event.newBuilder().setPayload(Any.pack(data)).build(), scope, attachTimestamp)
 }

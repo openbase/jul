@@ -35,6 +35,7 @@ import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.extension.type.util.TransactionSynchronizationFuture;
+import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.type.domotic.communication.TransactionValueType.TransactionValue;
 import org.openbase.type.domotic.registry.UnitRegistryDataType.UnitRegistryData;
@@ -231,11 +232,11 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
         }
 
         @RPCMethod
-        public TransactionValue performTransaction() throws CouldNotPerformException {
+        public TransactionValue performTransaction() throws CouldNotPerformException, InterruptedException {
             // update transaction
             updateTransactionId();
             // change data builder to trigger notification
-            try (ClosableDataBuilder<Builder> dataBuilder = getDataBuilder(this)) {
+            try (ClosableDataBuilder<Builder> dataBuilder = getDataBuilderInterruptible(this)) {
                 dataBuilder.getInternalBuilder().getPowerStateBuilder().setValue(State.ON);
             }
             // return transaction value
@@ -250,7 +251,13 @@ public class AbstractRemoteClientTest extends MqttIntegrationTest {
         }
 
         public Future<TransactionValue> performTransaction() {
-            return new TransactionSynchronizationFuture<>(this.callMethodAsync("performTransaction", TransactionValue.class), this);
+            return new TransactionSynchronizationFuture<>(
+                FutureProcessor.postProcess(
+                    (input, timeout, timeUnit) -> input.getResponse(),
+                    this.callMethodAsync("performTransaction", TransactionValue.class)
+                ),
+                this
+            );
         }
     }
 }

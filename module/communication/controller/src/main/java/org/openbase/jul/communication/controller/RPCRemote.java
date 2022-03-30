@@ -24,6 +24,7 @@ package org.openbase.jul.communication.controller;
 
 import com.google.protobuf.Message;
 import org.openbase.jul.communication.config.CommunicatorConfig;
+import org.openbase.jul.communication.data.RPCResponse;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InitializationException;
 import org.openbase.jul.exception.NotAvailableException;
@@ -201,7 +202,7 @@ public interface RPCRemote<M extends Message> extends Remote<M> {
      *
      * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
      */
-    <R> Future<R> callMethodAsync(final String methodName, final Class<R> returnClazz);
+    <R> Future<RPCResponse<R>> callMethodAsync(final String methodName, final Class<R> returnClazz);
 
     /**
      * Method asynchronously calls the given method on the main controller.
@@ -213,5 +214,5 @@ public interface RPCRemote<M extends Message> extends Remote<M> {
      *
      * @return a future instance which gives feedback about the asynchronously method call and when the result is available.
      */
-    <R, T extends Object> Future<R> callMethodAsync(final String methodName, final Class<R> returnClazz, final T argument);
+    <R, T extends Object> Future<RPCResponse<R>> callMethodAsync(final String methodName, final Class<R> returnClazz, final T argument);
 }

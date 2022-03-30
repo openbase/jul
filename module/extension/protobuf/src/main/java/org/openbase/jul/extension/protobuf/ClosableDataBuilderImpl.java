@@ -29,6 +29,7 @@ import org.openbase.jul.extension.protobuf.BuilderSyncSetup.NotificationStrategy
 /**
  * @param <MB>
  */
+@Deprecated
 public class ClosableDataBuilderImpl<MB extends Builder<MB>> implements ClosableDataBuilder<MB> {
 
     private final BuilderSyncSetup<MB> builderSetup;
@@ -38,12 +39,10 @@ public class ClosableDataBuilderImpl<MB extends Builder<MB>> implements Closable
         this(builderSetup, consumer, NotificationStrategy.AFTER_LAST_RELEASE);
     }
 
-    @Deprecated
     public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final boolean notifyChange) {
         this.builderSetup = builderSetup;
         this.builderSetup.lockWrite(consumer);
         this.notificationStrategy = notifyChange ? NotificationStrategy.FORCE : NotificationStrategy.SKIP;
-        ;
     }
 
     public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final NotificationStrategy notificationStrategy) {

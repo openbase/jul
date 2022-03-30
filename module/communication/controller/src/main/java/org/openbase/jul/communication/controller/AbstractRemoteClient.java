@@ -29,6 +29,7 @@ import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.communication.config.CommunicatorConfig;
+import org.openbase.jul.communication.data.RPCResponse;
 import org.openbase.jul.communication.exception.RPCException;
 import org.openbase.jul.communication.exception.RPCResolvedException;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
@@ -737,7 +738,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * {@inheritDoc}
      */
     @Override
-    public <R> Future<R> callMethodAsync(final String methodName, final Class<R> returnClazz) {
+    public <R> Future<RPCResponse<R>> callMethodAsync(final String methodName, final Class<R> returnClazz) {
         return callMethodAsync(methodName, returnClazz, null);
     }
 
@@ -809,7 +810,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                     rpcClientWatchDog.waitForServiceActivation(timeout, TimeUnit.MILLISECONDS);
                     final R returnValue;
                     try {
-                        returnValue = rpcClient.callMethod(methodName, returnClazz, argument).get(retryTimeout, TimeUnit.MILLISECONDS);
+                        returnValue = rpcClient
+                                .callMethod(methodName, returnClazz, argument)
+                                .get(retryTimeout, TimeUnit.MILLISECONDS)
+                                .getResponse();
                     } catch (ExecutionException e) {
                         throw (CouldNotPerformException) e.getCause();
                     }
@@ -862,7 +866,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * @return {@inheritDoc}
      */
     @Override
-    public <R, T extends Object> Future<R> callMethodAsync(final String methodName, final Class<R> returnClazz, final T argument) {
+    public <R, T extends Object> Future<RPCResponse<R>> callMethodAsync(final String methodName, final Class<R> returnClazz, final T argument) {
 
         //todo: refactor this section by implementing a PreFutureHandler, so a future object can directly be returned.
         //      Both, the waitForMiddleware and the method call future should be encapsulated in the PreFutureHandler
@@ -872,17 +876,17 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
             validateMiddleware();
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
-            return (Future<R>) FutureProcessor.canceledFuture(ex);
+            return (Future<RPCResponse<R>>) FutureProcessor.canceledFuture(ex);
         } catch (CouldNotPerformException ex) {
-            return (Future<R>) FutureProcessor.canceledFuture(ex);
+            return (Future<RPCResponse<R>>) FutureProcessor.canceledFuture(ex);
         }
 
-        return GlobalCachedExecutorService.submit(new Callable<R>() {
+        return GlobalCachedExecutorService.submit(new Callable<RPCResponse<R> >() {
 
-            private Future<R> internalCallFuture;
+            private Future<RPCResponse<R>> internalCallFuture;
 
             @Override
-            public R call() throws Exception {
+            public RPCResponse<R> call() throws Exception {
 
                 final String shortArgument = RPCUtils.argumentToString(argument);
 
@@ -895,7 +899,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                                 waitForConnectionState(CONNECTED, CONNECTION_TIMEOUT);
                             } catch (TimeoutException ex) {
                                 throw new CouldNotPerformException("Cannot not call async method[" + methodName + "(" + shortArgument + ")] on [" + this + "] in connectionState[" + connectionState + "]", ex);
-
                             }
                         }
                         final long currentTime = System.nanoTime();
@@ -905,7 +908,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         } else {
                             internalCallFuture = rpcClient.callMethod(methodName, returnClazz, argument);
                         }
-                        while (true) {
+                        while (!Thread.currentThread().isInterrupted()) {
 
                             if (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - currentTime) > RPCUtils.RPC_TIMEOUT) {
                                 throw new TimeoutException("RPCMethod call timeout");
@@ -914,7 +917,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                             try {
                                 return internalCallFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                             } catch (java.util.concurrent.TimeoutException ex) {
-
 
                                 // validate connection
                                 try {
@@ -935,17 +937,9 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                                     throw new RPCResolvedException("Remote call failed!", (RPCException) ex.getCause());
                                 }
                                 throw ex;
-                            } catch (InterruptedException ex) {
-                                Thread.currentThread().interrupt();
-                            }
-
-                            // check if thread was interrupted during processing
-                            if (Thread.currentThread().isInterrupted()) {
-                                throw new InterruptedException();
                             }
                         }
-
-
+                        throw new InterruptedException();
                     } catch (final InterruptedException ex) {
                         if (internalCallFuture != null) {
                             internalCallFuture.cancel(true);
@@ -1039,14 +1033,17 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
     }
 
     protected Future<M> internalRequestStatus() {
-        return rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass());
+        return FutureProcessor.postProcess(
+                (input, timeout, timeUnit) -> input.getResponse(),
+                rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass())
+        );
     }
 
     protected M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
         return applyEventUpdate(event, null);
     }
 
-    private M applyEventUpdate(final Event event, final Future relatedFuture) throws CouldNotPerformException, InterruptedException {
+    private M applyEventUpdate(final Event event, final Future<M> relatedFuture) throws CouldNotPerformException, InterruptedException {
         synchronized (dataUpdateMonitor) {
             if (event == null) {
                 throw new NotAvailableException("event");
@@ -1611,10 +1608,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                     final ConnectionState.State previousConnectionState = connectionState;
                     try {
                         validateMiddleware();
-                        Future<Long> internalTask = null;
+                        Future<RPCResponse<Long>> internalTask = null;
                         try {
                             internalTask = rpcClient.callMethod("ping", Long.class, System.currentTimeMillis());
-                            final Long requestTime = internalTask.get(JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT, TimeUnit.MILLISECONDS);
+                            final Long requestTime = internalTask.get(JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT, TimeUnit.MILLISECONDS).getResponse();
                             lastPingReceived = System.currentTimeMillis();
                             connectionPing = lastPingReceived - requestTime;
                             return connectionPing;
@@ -1848,13 +1845,13 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                                 // compute new timeout
                                 timeout = generateTimeout(timeout);
 
-                                // prevent rapid looping over the same exception which is not caused by an timeout.
+                                // prevent rapid looping over the same exception which is not caused by a timeout.
                                 if (ex instanceof ExecutionException && !(ExceptionProcessor.getInitialCause(ex) instanceof java.util.concurrent.TimeoutException || ExceptionProcessor.getInitialCause(ex) instanceof TimeoutException)) {
                                     if (lastException == null) {
                                         lastException = (ExecutionException) ex;
                                     } else {
                                         if (ExceptionProcessor.getInitialCauseMessage(ex).equals(ExceptionProcessor.getInitialCauseMessage(lastException))) {
-                                            new FatalImplementationErrorException("Sync task failed twice for the same reason", this, ex);
+                                            new FatalImplementationErrorException("Sync task failed twice with the same reason", this, ex);
                                         } else {
                                             lastException = (ExecutionException) ex;
                                         }
@@ -1876,6 +1873,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         }
                     }
                     //TODO: verify that replacing this is okay
+                    synchronized (dataUpdateMonitor) {
+                        // skip sync because data has already been updated by global update
+                        if (relatedFuture != null && relatedFuture.isCancelled()) {
+                            return data;
+                        }
+                    }
                     applyDataUpdate(receivedData);
                     return receivedData;
                     //return applyEventUpdate(event, relatedFuture);
