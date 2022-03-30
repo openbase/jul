@@ -15,7 +15,6 @@ repositories {
 
 description = "Java Utility Lib"
 group = "org.openbase"
-version = rootProject.file("version.txt").readText().trim()
 
 val releaseVersion = !version.toString().endsWith("-SNAPSHOT")
 
