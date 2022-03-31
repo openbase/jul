@@ -35,6 +35,7 @@ import org.openbase.jul.communication.exception.RPCResolvedException;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
 import org.openbase.jul.communication.iface.RPCClient;
 import org.openbase.jul.communication.iface.Subscriber;
+import org.openbase.jul.communication.jp.JPComHost;
 import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
 import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
 import org.openbase.jul.exception.TimeoutException;
@@ -138,7 +139,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         this.middlewareFailureObserver = (source, watchDogState) -> {
             switch (watchDogState) {
                 case FAILED:
-                    logger.warn("Middleware connection lost...");
+                    logger.warn("Broker at "+JPService.getValue(JPComHost.class, "?")+ " not responding.");
                     AbstractRemoteClient.this.setConnectionState(DISCONNECTED);
                     break;
             }

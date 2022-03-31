@@ -4,7 +4,6 @@ import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5PublishBuilder
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCCommunicator
-import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.type.communication.ScopeType
 import java.time.Instant
 
