@@ -288,7 +288,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
     private static MultiException.ExceptionStack errorExceptionStack = null;
     private static MultiException.ExceptionStack verificationExceptionStack = null;
 
-    private static final List<Future> waitingTaskList = new ArrayList<>();
+    private static final List<Future<?>> waitingTaskList = new ArrayList<>();
 
 
     private static void loadCustomLoggerSettings() throws CouldNotPerformException {
