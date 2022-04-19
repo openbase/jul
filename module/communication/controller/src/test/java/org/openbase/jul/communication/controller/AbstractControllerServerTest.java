@@ -22,7 +22,7 @@ package org.openbase.jul.communication.controller;
  * #L%
  */
 
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.openbase.jul.communication.iface.RPCServer;
@@ -300,7 +300,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
      */
     @Timeout(10)
     @Test
-    @Ignore // Ignore test since it's pretty unstable.
+    @Disabled // Ignore test since it's pretty unstable.
     public void testNotification() throws Exception {
         String scope = "/test/notification";
         UnitConfig location = UnitConfig.newBuilder().setId("id").build();

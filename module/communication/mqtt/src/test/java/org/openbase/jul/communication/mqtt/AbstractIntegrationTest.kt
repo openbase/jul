@@ -10,6 +10,7 @@ import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import java.time.Duration
 import java.time.Instant
 import kotlin.io.path.absolute
 import kotlin.io.path.deleteIfExists
@@ -43,7 +44,7 @@ abstract class AbstractIntegrationTest {
                     "/mosquitto/config/mosquitto.conf",
                     BindMode.READ_ONLY
                 )
-            broker.start()
+            broker.withStartupTimeout(Duration.ofSeconds(30)).start()
         }
 
         /*init {
