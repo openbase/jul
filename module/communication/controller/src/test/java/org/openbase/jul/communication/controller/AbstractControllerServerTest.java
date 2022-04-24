@@ -251,7 +251,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
      * Test if when there are 2 remotes connected to a communication service
      * the shutdown of one remote affects the communication of the other one.
      */
-    @Timeout(5)
+    @Timeout(60)
     @Test
     public void testRemoteInterference() throws Exception {
         String scope = "/test/interference";
@@ -271,7 +271,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
 
         remoteService1.waitForConnectionState(CONNECTED);
         remoteService2.waitForConnectionState(CONNECTED);
-
+        System.out.println("shutdown remote 1");
         remoteService1.shutdown();
         remoteService1.waitForConnectionState(DISCONNECTED);
 
@@ -281,9 +281,11 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
                 "Remote connected to the same service got shutdown too");
         remoteService2.requestData().get();
 
+        System.out.println("deactivate server");
         communicationService.deactivate();
         remoteService2.waitForConnectionState(CONNECTING);
 
+        System.out.println("activate server");
         communicationService.activate();
         remoteService2.waitForConnectionState(CONNECTED);
         assertEquals(

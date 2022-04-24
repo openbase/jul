@@ -361,7 +361,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             logger.debug("Deactivate AbstractControllerServer for: " + this);
             // The order is important: The publisher publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
             // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
-            // and the remotes will think that the server is still there..
+            // and the remotes will think that the server is still there.
             if (serverWatchDog != null) {
                 serverWatchDog.deactivate();
             }

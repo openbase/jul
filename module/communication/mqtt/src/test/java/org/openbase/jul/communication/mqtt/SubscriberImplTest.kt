@@ -53,6 +53,7 @@ class SubscriberImplTest {
     private val config = CommunicatorConfig("localhost", 1873)
 
     @Test
+    @Timeout(value = 30)
     fun `test activate`() {
         val callbackSlot = slot<Consumer<Mqtt5Publish>>()
         every {
@@ -80,6 +81,7 @@ class SubscriberImplTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test deactivate`() {
         every { mqttClient.unsubscribe(any()) } returns CompletableFuture()
 
@@ -94,6 +96,12 @@ class SubscriberImplTest {
                     .build()
             )
         }
+    }
+
+    @Test
+    @Timeout(value = 30)
+    fun `test connection sharing`() {
+
     }
 
     @Nested
@@ -119,6 +127,7 @@ class SubscriberImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test handler management`() {
             val payload = Primitive.newBuilder()
                 .setString("Payload")
@@ -159,6 +168,5 @@ class SubscriberImplTest {
             // validate callback was not executed
             receivedEvents.size shouldBe 1
         }
-
     }
 }

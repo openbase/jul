@@ -73,6 +73,7 @@ internal class RPCServerImplTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test activation`() {
         val expectedMqtt5Subscribe = Mqtt5Subscribe.builder()
             .topicFilter("$baseTopic/rpc")
@@ -93,6 +94,7 @@ internal class RPCServerImplTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test deactivation`() {
         val expectedMqttUnsubscribe = Mqtt5Unsubscribe.builder()
             .topicFilter("$baseTopic/rpc")
@@ -164,6 +166,7 @@ internal class RPCServerImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test bad request id`() {
             //TODO: verify that id is a valid uuid
         }
@@ -173,6 +176,7 @@ internal class RPCServerImplTest {
          * always responds with an acknowledgement first.
          */
         @Test
+        @Timeout(value = 30)
         fun `test acknowledgement`() {
             val acknowledgedResponse = Response.newBuilder()
                 .setId(requestId)
@@ -190,6 +194,7 @@ internal class RPCServerImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test unknown method request`() {
             val methodName = "UnavailableMethod"
             simulateMethodCall(methodName = methodName)
@@ -208,6 +213,7 @@ internal class RPCServerImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test error in invoked method`() {
             simulateMethodCall(
                 methodName = Adder::add.name,
@@ -228,6 +234,7 @@ internal class RPCServerImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test erroneous parameter count`() {
             simulateMethodCall(
                 methodName = Adder::add.name,
@@ -248,6 +255,7 @@ internal class RPCServerImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test successful method request`() {
             simulateMethodCall(
                 methodName = Adder::add.name,

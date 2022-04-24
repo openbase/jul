@@ -13,7 +13,6 @@ dependencies {
     api(project(":jul.schedule"))
     api(project(":jul.extension.type.processing"))
     api("com.hivemq:hivemq-mqtt-client:_")
-    testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
     testImplementation(Testing.mockK)
     testImplementation("org.testcontainers:junit-jupiter:_")
     testImplementation("io.kotest:kotest-assertions-core-jvm:_")

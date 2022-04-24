@@ -10,9 +10,11 @@ import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect
 import com.hivemq.client.mqtt.mqtt5.message.disconnect.Mqtt5Disconnect
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
+import com.hivemq.client.mqtt.mqtt5.message.subscribe.suback.Mqtt5SubAck
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5UnsubscribeBuilder
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.unsuback.Mqtt5UnsubAck
+import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.unsuback.Mqtt5UnsubAckReasonCode
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.iface.Shutdownable
 import java.util.*
@@ -79,10 +81,10 @@ object SharedMqttClient : Shutdownable {
         fun isConnected() = internalClient.config.state.isConnected
 
         @Synchronized
-        private fun increaseTopicCounter(topic: MqttTopicFilter): Unit = topic
+        private fun increaseTopicCounter(topic: MqttTopicFilter): Boolean = topic
             .toString()
             .also { subscriptionsCounterMap[it] = subscriptionsCounterMap.getOrPut(it) { 0 } + 1 }
-            .let { }
+            .let { subscriptionsCounterMap[it] == 1 }
 
         @Synchronized
         private fun decreaseTopicCounter(topicFilter: MqttTopicFilter): Boolean = topicFilter
@@ -90,7 +92,7 @@ object SharedMqttClient : Shutdownable {
             .let { topic ->
                 subscriptionsCounterMap[topic]
                     .let { it == null || it == 0 }
-                    .also { if (it) return false }
+                    .also { if (it) return true }
 
                 subscriptionsCounterMap[topic] = subscriptionsCounterMap[topic]!! - 1
                 subscriptionsCounterMap[topic] == 0
@@ -164,8 +166,10 @@ object SharedMqttClient : Shutdownable {
             p0: Mqtt5Unsubscribe
         ): CompletableFuture<Mqtt5UnsubAck> = p0.topicFilters
             .filter { decreaseTopicCounter(it) }
-            .let {  Mqtt5Unsubscribe.builder().addTopicFilters(it).build() }
-            .let { internalClient.unsubscribe(it) }
+            .takeIf { it.isNotEmpty() }
+            ?.let {  Mqtt5Unsubscribe.builder().addTopicFilters(it).build() }
+            ?.let { internalClient.unsubscribe(it) }
+            ?: CompletableFuture.completedFuture(null)
 
         override fun unsubscribeWith(): Mqtt5UnsubscribeBuilder.Send.Start<CompletableFuture<Mqtt5UnsubAck>> =
             throw NotImplementedError("This method is not supported by this implementation.")
