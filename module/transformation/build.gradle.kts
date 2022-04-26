@@ -11,8 +11,8 @@ plugins {
 dependencies {
     api(project(":jul.extension.type.processing"))
     api(project(":jul.communication.mqtt"))
-    api("java3d:vecmath:1.3.1")
-    api("java3d:j3d-core:1.3.1")
+    api("java3d:vecmath:_")
+    api("java3d:j3d-core:_")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
     testImplementation ("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:[5.8,5.9-alpha)")
