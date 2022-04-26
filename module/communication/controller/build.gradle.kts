@@ -18,7 +18,10 @@ dependencies {
     api(project(":jul.interface"))
     api(project(":jul.schedule"))
     api(project(":jul.pattern.controller"))
-    testImplementation("org.testcontainers:testcontainers:_")
+    testImplementation("org.testcontainers:junit-jupiter:_")  {
+        exclude(group = "junit", module = "junit")
+    }
+    testImplementation("io.quarkus:quarkus-junit4-mock:_") // required as long as testcontainers depends on junit4
 }
 
 description = "JUL Extension Controller"
