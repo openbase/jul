@@ -96,7 +96,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     private final SyncObject transactionIdLock = new SyncObject(getClass());
 
-    private final ReentrantReadWriteLock dataLock;
+    protected final ReentrantReadWriteLock dataLock;
     private final BundledReentrantReadWriteLock manageLock;
     private final ReentrantReadWriteLock.ReadLock dataBuilderReadLock;
     private final ReentrantReadWriteLock.WriteLock dataBuilderWriteLock;
