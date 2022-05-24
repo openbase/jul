@@ -77,65 +77,62 @@ public class RPCResolvedException extends CouldNotPerformException {
      * @return the reconstruced excetion cause chain.
      */
     public static Exception resolveRPCException(final RPCException rpcException) {
-        return rpcException;
+        Exception exception = null;
 
-// todo: enable after https://github.com/openbase/jul/issues/72 was fixed.
-//        Exception exception = null;
-//
-//        // build stacktrace array where each line is stored as entry. entry is extract each line stacktrace into arr
-//        final String[] stacktrace = ("Caused by: " + rpcException.getMessage()).split("\n");
-//
-//        // iterate in reverse order to build exception chain.
-//        for (int i = stacktrace.length - 1; i >= 0; i--) {
-//            try {
-//                // only parse cause lines containing the exception class and message.
-//                if (stacktrace[i].startsWith("Caused by:")) {
-//                    final String[] causes = stacktrace[i].split(":");
-//                    final String exceptionClassName = causes[1].substring(1);
-//
-//                    // System.out.println("parse: " + stacktrace[i]);
-//                    // System.out.println("match: " + causes.length);
-//
-//                    final String message = causes.length <= 2 ? "" : stacktrace[i].substring(stacktrace[i].lastIndexOf(exceptionClassName) + exceptionClassName.length() + 2).trim();
-//
-//                    // detect exception class
-//                    final Class<Exception> exceptionClass;
-//                    try {
-//                        exceptionClass = (Class<Exception>) Class.forName(exceptionClassName);
-//
-//                        // build exception
-//                        try {
-//                            // try default constructor
-//                            exception = exceptionClass.getConstructor(String.class, Throwable.class).newInstance(message, exception);
-//                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassCastException ex) {
-//                            try {
-//                                // try to handle missing fields
-//                                if (exception == null && message.isEmpty()) {
-//                                    exception = exceptionClass.getConstructor().newInstance();
-//                                } else if (exception == null && !message.isEmpty()) {
-//                                    exception = exceptionClass.getConstructor(String.class).newInstance(message);
-//                                } else if (exception != null && message.isEmpty()) {
-//                                    exception = exceptionClass.getConstructor(Throwable.class).newInstance(exception);
-//                                } else {
-//                                    throw ex;
-//                                }
-//                            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException exx) {
-//                                throw new CouldNotPerformException("No compatible constructor found!", exx);
-//                            }
-//                        }
-//                        //System.out.println("create "+ exception.getClass().getSimpleName() + ":" + exception.getMessage());
-//                    } catch (ClassNotFoundException | ClassCastException | CouldNotPerformException ex) {
-//                        ExceptionPrinter.printHistory(new CouldNotPerformException("Exception[" + exceptionClassName + "] could not be recovered because no compatible Constructor(String, Throwable) was available!", ex), LOGGER, LogLevel.WARN);
-//
-//                        // apply fallback solution
-//                        exception = new CouldNotPerformException(message, exception);
-//                    }
-//                }
-//            } catch (IndexOutOfBoundsException | NullPointerException ex) {
-//                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not extract exception cause or message out of Line[" + stacktrace[i] + "]!", ex), LOGGER, LogLevel.WARN);
-//            }
-//        }
-//        return exception;
+        // build stacktrace array where each line is stored as entry. entry is extract each line stacktrace into arr
+        final String[] stacktrace = ("Caused by: " + rpcException.getMessage()).split("\n");
+
+        // iterate in reverse order to build exception chain.
+        for (int i = stacktrace.length - 1; i >= 0; i--) {
+            try {
+                // only parse cause lines containing the exception class and message.
+                if (stacktrace[i].startsWith("Caused by:")) {
+                    final String[] causes = stacktrace[i].split(":");
+                    final String exceptionClassName = causes[1].substring(1);
+
+                    // System.out.println("parse: " + stacktrace[i]);
+                    // System.out.println("match: " + causes.length);
+
+                    final String message = causes.length <= 2 ? "" : stacktrace[i].substring(stacktrace[i].lastIndexOf(exceptionClassName) + exceptionClassName.length() + 2).trim();
+
+                    // detect exception class
+                    final Class<Exception> exceptionClass;
+                    try {
+                        exceptionClass = (Class<Exception>) Class.forName(exceptionClassName);
+
+                        // build exception
+                        try {
+                            // try default constructor
+                            exception = exceptionClass.getConstructor(String.class, Throwable.class).newInstance(message, exception);
+                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassCastException ex) {
+                            try {
+                                // try to handle missing fields
+                                if (exception == null && message.isEmpty()) {
+                                    exception = exceptionClass.getConstructor().newInstance();
+                                } else if (exception == null && !message.isEmpty()) {
+                                    exception = exceptionClass.getConstructor(String.class).newInstance(message);
+                                } else if (exception != null && message.isEmpty()) {
+                                    exception = exceptionClass.getConstructor(Throwable.class).newInstance(exception);
+                                } else {
+                                    throw ex;
+                                }
+                            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException exx) {
+                                throw new CouldNotPerformException("No compatible constructor found!", exx);
+                            }
+                        }
+                        //System.out.println("create "+ exception.getClass().getSimpleName() + ":" + exception.getMessage());
+                    } catch (ClassNotFoundException | ClassCastException | CouldNotPerformException ex) {
+                        ExceptionPrinter.printHistory(new CouldNotPerformException("Exception[" + exceptionClassName + "] could not be recovered because no compatible Constructor(String, Throwable) was available!", ex), LOGGER, LogLevel.WARN);
+
+                        // apply fallback solution
+                        exception = new CouldNotPerformException(message, exception);
+                    }
+                }
+            } catch (IndexOutOfBoundsException | NullPointerException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not extract exception cause or message out of Line[" + stacktrace[i] + "]!", ex), LOGGER, LogLevel.WARN);
+            }
+        }
+        return exception;
     }
 
     /**
