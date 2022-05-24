@@ -26,7 +26,7 @@ java {
 }
 
 dependencies {
-    api("org.openbase:jps:[3.5,3.6-alpha)")
+    api("org.openbase:jps:_")
     api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10")
     implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.5.21")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")

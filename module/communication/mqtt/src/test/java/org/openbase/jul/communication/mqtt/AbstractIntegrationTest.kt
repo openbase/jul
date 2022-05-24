@@ -1,9 +1,7 @@
 package org.openbase.jul.communication.mqtt
 
-import com.hivemq.client.internal.mqtt.util.MqttChecks.userProperties
 import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
-import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5PublishBuilder
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.BindMode
@@ -11,7 +9,6 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import java.time.Duration
-import java.time.Instant
 import kotlin.io.path.absolute
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.writeLines
@@ -27,50 +24,45 @@ abstract class AbstractIntegrationTest {
         private val mosquittoConfig = kotlin.io.path.createTempFile(prefix = "mosquitto_", suffix = ".conf")
         private lateinit var broker: MqttBrokerContainer
 
+        private var usageCounter = 0
+        private val lock = Any()
+
         @JvmStatic
         @BeforeAll
         fun setup() {
-            mosquittoConfig.writeLines(
-                listOf(
-                    "allow_anonymous true",
-                    "listener 1883"
-                )
-            )
+            synchronized(lock) {
+                if (usageCounter == 0) {
+                    mosquittoConfig.writeLines(
+                        listOf(
+                            "allow_anonymous true",
+                            "listener 1883"
+                        )
+                    )
 
-            broker = MqttBrokerContainer()
-                .withExposedPorts(port)
-                .withFileSystemBind(
-                    mosquittoConfig.absolute().toString(),
-                    "/mosquitto/config/mosquitto.conf",
-                    BindMode.READ_ONLY
-                )
-            broker.withStartupTimeout(Duration.ofSeconds(30)).start()
+                    broker = MqttBrokerContainer()
+                        .withExposedPorts(port)
+                        .withFileSystemBind(
+                            mosquittoConfig.absolute().toString(),
+                            "/mosquitto/config/mosquitto.conf",
+                            BindMode.READ_ONLY
+                        )
+                    broker.withStartupTimeout(Duration.ofSeconds(30)).start()
+                }
+                usageCounter++
+            }
         }
-
-        /*init {
-            mosquittoConfig.writeLines(
-                listOf(
-                    "allow_anonymous true",
-                    "listener 1883"
-                )
-            )
-
-            broker = MqttBrokerContainer()
-                .withExposedPorts(port)
-                .withFileSystemBind(
-                    mosquittoConfig.absolute().toString(),
-                    "/mosquitto/config/mosquitto.conf",
-                    BindMode.READ_ONLY
-                )
-            broker.start()
-        }*/
 
         @JvmStatic
         @AfterAll
         fun cleanup() {
-            SharedMqttClient.waitForShutdown()
-            broker.stop()
-            mosquittoConfig.deleteIfExists()
+            synchronized(lock) {
+                usageCounter--
+                if (usageCounter == 0) {
+                    SharedMqttClient.waitForShutdown()
+                    broker.stop()
+                    mosquittoConfig.deleteIfExists()
+                }
+            }
         }
     }
 
