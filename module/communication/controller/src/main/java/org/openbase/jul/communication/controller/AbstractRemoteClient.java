@@ -1817,12 +1817,34 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         try {
                             // get() is fine because ping task has internal timeout, so task will fail after timeout anyway.
                             ping().get();
-                            internalFuture = FutureProcessor.postProcess(
-                                    (input, internalTimeout, timeUnit) -> input.getResponse(),
-                                    internalRequestStatus());
-                            //internalFuture = internalRequestStatus();
                             //event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-                            receivedData = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                            final RPCResponse<M> response = internalRequestStatus().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+                            // skip events which were send later than the last received update
+                            long userTime = RPCUtils.USER_TIME_VALUE_INVALID;
+                                if (response.getProperties().containsKey(RPCUtils.USER_TIME_KEY)) {
+                                    userTime = Long.parseLong(response.getProperties().get(RPCUtils.USER_TIME_KEY));
+                                } else {
+                                    logger.warn("Data message does not contain user time key on scope " + getScopeStringRep());
+                                }
+
+                            // filter outdated events
+                            try {
+                                long createTime = Long.parseLong(response.getProperties().get(RPCUtils.USER_TIME_KEY));
+                                if (createTime < newestEventTime || (createTime == newestEventTime && userTime < newestEventTimeNano)) {
+                                    logger.debug("Skip event on scope[" + getScopeStringRep() + "] because event seems to be outdated! Received event time < latest event time [" + createTime + "<= " + newestEventTime + "][" + userTime + " < " + newestEventTimeNano + "]");
+                                    return data;
+                                }
+                                newestEventTime = createTime;
+                            } catch (NullPointerException ex) {
+                                ExceptionPrinter.printHistory("Data message does not contain valid creation timestamp on scope " + getScopeStringRep(), ex, logger);
+                            }
+
+                            if (userTime != RPCUtils.USER_TIME_VALUE_INVALID) {
+                                newestEventTimeNano = userTime;
+                            }
+                            receivedData = response.getResponse();
+
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] and continue processing.");
