@@ -1033,11 +1033,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         return rpcClient;
     }
 
-    protected Future<M> internalRequestStatus() {
-        return FutureProcessor.postProcess(
+    protected Future<RPCResponse<M>> internalRequestStatus() {
+        /*return FutureProcessor.postProcess(
                 (input, timeout, timeUnit) -> input.getResponse(),
                 rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass())
-        );
+        );*/
+        return rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass());
     }
 
     protected M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
@@ -1816,7 +1817,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         try {
                             // get() is fine because ping task has internal timeout, so task will fail after timeout anyway.
                             ping().get();
-                            internalFuture = internalRequestStatus();
+                            internalFuture = FutureProcessor.postProcess(
+                                    (input, internalTimeout, timeUnit) -> input.getResponse(),
+                                    internalRequestStatus());
+                            //internalFuture = internalRequestStatus();
                             //event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                             receivedData = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
 
