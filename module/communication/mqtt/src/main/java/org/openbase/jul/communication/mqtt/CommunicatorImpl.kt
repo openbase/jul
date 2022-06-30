@@ -14,6 +14,9 @@ abstract class CommunicatorImpl(
 
     companion object {
         const val ACTIVATION_TIMEOUT = 2000L
+
+        const val TIMESTAMP_KEY_MS = "TIMESTAMP_MS"
+        const val TIMESTAMP_KEY_NANO = "TIMESTAMP_NANO";
     }
 
     final override val id: UUID = UUID.randomUUID()
