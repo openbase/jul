@@ -793,9 +793,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             newData = updateDataToPublish(cloneDataBuilder());
             final Event event = Event.newBuilder()
                     .setPayload(Any.pack(newData))
-                    .putHeader(
-                            RPCUtils.USER_TIME_KEY,
-                            Any.pack(Primitive.newBuilder().setLong(System.nanoTime()).build()))
                     .build();
 
             // only publish if controller is active
