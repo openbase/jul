@@ -34,5 +34,6 @@ import java.util.*
  */
 interface Subscriber : Communicator {
     fun registerDataHandler(callback: (Event) -> Any): UUID
+    fun registerDataHandler(callback: (Event, Map<String, String>) -> Any): UUID
     fun removeDataHandler(handlerId: UUID)
 }
