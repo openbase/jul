@@ -13,8 +13,8 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:_")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:_")
+    implementation(Kotlin.stdlib.jdk8)
     implementation(Kotlin.scriptRuntime)
 }
 

@@ -27,8 +27,8 @@ java {
 
 dependencies {
     api("org.openbase:jps:_")
-    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10")
-    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.5.21")
+    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.0")
+    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.7.0")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
     testImplementation ("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:[5.8,5.9-alpha)")
