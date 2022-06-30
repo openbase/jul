@@ -21,8 +21,8 @@ fun Mqtt5PublishBuilder.Complete.attachTimestamp(attachTimestamp: Boolean = true
         val now = Instant.now()
         this.userProperties(
             Mqtt5UserProperties.builder()
-                .add("TIMESTAMP_MS", now.epochSecond.toString())
-                .add("TIMESTAMP_NANO", now.nano.toString())
+                .add(CommunicatorImpl.TIMESTAMP_KEY_MS, now.epochSecond.toString())
+                .add(CommunicatorImpl.TIMESTAMP_KEY_NANO, now.nano.toString())
                 .build()
         )
     }
