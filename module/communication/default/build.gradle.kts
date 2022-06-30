@@ -13,7 +13,7 @@ dependencies {
     api(project(":jul.extension.type.processing"))
     api(project(":jul.interface"))
     api(project(":jul.exception"))
-    api("org.jetbrains.kotlin:kotlin-reflect:_")
+    api("org.jetbrains.kotlin:kotlin-reflect:1.7.0")
 }
 
 description = "JUL Communication Default"
