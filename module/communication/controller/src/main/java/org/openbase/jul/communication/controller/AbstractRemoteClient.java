@@ -1037,7 +1037,6 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
     }
 
     protected Future<RPCResponse<M>> internalRequestStatus() {
-        /*return FutureProcessor.postProcess(
                 (input, timeout, timeUnit) -> input.getResponse(),
                 rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass())
         );*/
