@@ -7,6 +7,7 @@ import io.mockk.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Timeout
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.type.communication.EventType.Event
@@ -32,6 +33,7 @@ class PublisherImpTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test publish`() {
         val expectedData = Primitive.newBuilder()
             .setString("Hello World")

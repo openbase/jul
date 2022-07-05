@@ -36,6 +36,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 
 public class MqttIntegrationTest {
@@ -49,7 +50,7 @@ public class MqttIntegrationTest {
         mosquittoConfig = Files.createTempFile("mosquitto_", ".conf");
         Files.write(mosquittoConfig, Arrays.asList(
                 "allow_anonymous true",
-                "listener 1883")
+                "listener "+port)
         );
 
         broker = new GenericContainer<>(DockerImageName.parse("eclipse-mosquitto"))
@@ -59,7 +60,7 @@ public class MqttIntegrationTest {
                         "/mosquitto/config/mosquitto.conf",
                         BindMode.READ_ONLY
                 );
-        broker.start();
+        broker.withStartupTimeout(Duration.ofSeconds(30)).start();
 
         JPService.registerProperty(JPComPort.class, broker.getFirstMappedPort());
         JPService.registerProperty(JPComHost.class, broker.getHost());

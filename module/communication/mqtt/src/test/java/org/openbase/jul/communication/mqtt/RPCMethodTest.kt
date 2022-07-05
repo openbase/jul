@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Timeout
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
 import org.openbase.type.communication.mqtt.ResponseType
@@ -15,6 +16,7 @@ import com.google.protobuf.Any as protoAny
 internal class RPCMethodTest {
 
     @Test
+    @Timeout(value = 30)
     fun `test anyToProtoAny and protoAnyToAny Conversion`() {
         fun <T : Any> backAndForth(value: T): T {
             val anyToProtoAnyConverter = RPCMethod.anyToProtoAny(value::class)
@@ -65,6 +67,7 @@ internal class RPCMethodTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test invoke rpc method`() {
         val returnValue = 68.32
         val arg = 21.76
@@ -84,6 +87,7 @@ internal class RPCMethodTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test invoke rpc method with class function`() {
         val instance = FunctionProvider()
 
@@ -95,6 +99,7 @@ internal class RPCMethodTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test invoke rpc method errors`() {
         val instance = FunctionProvider()
 

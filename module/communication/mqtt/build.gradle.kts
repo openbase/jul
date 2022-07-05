@@ -5,7 +5,7 @@
  */
 
 plugins {
-    id("org.openbase.java-conventions")
+    id("org.openbase.jul")
 }
 
 dependencies {
@@ -13,9 +13,11 @@ dependencies {
     api(project(":jul.schedule"))
     api(project(":jul.extension.type.processing"))
     api("com.hivemq:hivemq-mqtt-client:_")
-    testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
     testImplementation(Testing.mockK)
-    testImplementation("org.testcontainers:junit-jupiter:_")
+    testImplementation("org.testcontainers:junit-jupiter:_")  {
+        exclude(group = "junit", module = "junit")
+    }
+    testImplementation("io.quarkus:quarkus-junit4-mock:_") // required as long as testcontainers depends on junit4
     testImplementation("io.kotest:kotest-assertions-core-jvm:_")
 }
 

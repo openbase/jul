@@ -26,12 +26,12 @@ java {
 }
 
 dependencies {
-    api("org.openbase:jps:[3.5,3.6-alpha)")
-    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.10")
-    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.5.21")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    api("org.openbase:jps:_")
+    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.0")
+    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.7.0")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
+    testImplementation ("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
+    testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:[5.8,5.9-alpha)")
 }
 
 tasks.withType<KotlinCompile> {
@@ -102,18 +102,6 @@ publishing {
             }
         }
     }
-//    repositories {
-//        maven {
-//            name = "SonatypeOSS"
-//            credentials {
-//                username = findProperty("MAVEN_CENTRAL_USERNAME")?.let { it as String? }
-//                password = findProperty("MAVEN_CENTRAL_TOKEN")?.let { it as String? }
-//            }
-//            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-//            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-//            url = if (version.toString().endsWith("-SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-//        }
-//    }
 }
 
 signing {

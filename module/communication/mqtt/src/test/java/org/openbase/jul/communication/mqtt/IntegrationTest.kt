@@ -22,6 +22,7 @@ class IntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test rpc over mqtt`() {
         val instance = Adder()
 
@@ -39,7 +40,7 @@ class IntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
-    @Timeout(value = 1, unit = TimeUnit.SECONDS)
+    @Timeout(value = 30)
     fun `test pubsub over mqtt`() {
         val data = PrimitiveType.Primitive.newBuilder()
             .setString("IMPORTANT Message")

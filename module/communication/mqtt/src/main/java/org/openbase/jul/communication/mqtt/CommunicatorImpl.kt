@@ -12,6 +12,13 @@ abstract class CommunicatorImpl(
     final override val config: CommunicatorConfig
 ) : Communicator {
 
+    companion object {
+        const val ACTIVATION_TIMEOUT = 2000L
+
+        const val TIMESTAMP_KEY_MS = "TIMESTAMP_MS"
+        const val TIMESTAMP_KEY_NANO = "TIMESTAMP_NANO";
+    }
+
     final override val id: UUID = UUID.randomUUID()
     val mqttClient: Mqtt5AsyncClient = SharedMqttClient.get(config)
     open val topic: String = ScopeProcessor.generateStringRep(scope)

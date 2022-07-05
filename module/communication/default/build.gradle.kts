@@ -5,11 +5,11 @@
  */
 
 plugins {
-    id("org.openbase.java-conventions")
+    id("org.openbase.jul")
 }
 
 dependencies {
-    api("org.openbase:type:[1.1,1.2-alpha)")
+    api("org.openbase:type:_")
     api(project(":jul.extension.type.processing"))
     api(project(":jul.interface"))
     api(project(":jul.exception"))

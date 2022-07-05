@@ -74,7 +74,7 @@ jobs:
             ${{ runner.os }}-gradle
 
       - name: "test backend"
-        run: ./gradlew check
+        run: ./gradlew cleanTest check --no-build-cache
         env:
           RUN_LONG_INTEGRATION_TESTS: false
 

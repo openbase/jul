@@ -5,7 +5,7 @@
  */
 
 plugins {
-    id("org.openbase.java-conventions")
+    id("org.openbase.jul")
 }
 
 description = "JUL Exception"

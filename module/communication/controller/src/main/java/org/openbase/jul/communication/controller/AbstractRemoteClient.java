@@ -27,6 +27,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function2;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.data.RPCResponse;
@@ -35,7 +36,9 @@ import org.openbase.jul.communication.exception.RPCResolvedException;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
 import org.openbase.jul.communication.iface.RPCClient;
 import org.openbase.jul.communication.iface.Subscriber;
+import org.openbase.jul.communication.jp.JPComHost;
 import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
+import org.openbase.jul.communication.mqtt.CommunicatorImpl;
 import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
 import org.openbase.jul.exception.TimeoutException;
 import org.openbase.jul.exception.*;
@@ -61,6 +64,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -87,7 +91,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
     private static final Random JITTER_RANDOM = new Random();
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
-    private final Function1<Event, Unit> mainHandler;
+    private final Function2<Event, Map<String, String>, Unit> mainHandler;
     private final SyncObject syncMonitor = new SyncObject("SyncMonitor");
     private final SyncObject connectionMonitor = new SyncObject("ConnectionMonitor");
     private final SyncObject maintainerLock = new SyncObject("MaintainerLock");
@@ -138,7 +142,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         this.middlewareFailureObserver = (source, watchDogState) -> {
             switch (watchDogState) {
                 case FAILED:
-                    logger.warn("Middleware connection lost...");
+                    logger.warn("Broker at "+JPService.getValue(JPComHost.class, "?")+ " not responding.");
                     AbstractRemoteClient.this.setConnectionState(DISCONNECTED);
                     break;
             }
@@ -360,15 +364,15 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * @throws InterruptedException
      * @throws CouldNotPerformException
      */
-    public void addHandler(final Function1<Event, Unit> handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
+    public void addHandler(final Function2<Event, Map<String, String>, Unit> handler, final boolean wait) throws InterruptedException, CouldNotPerformException {
         subscriber.registerDataHandler(handler);
     }
 
-    protected Function1<Event, Unit> generateHandler() {
-        return (event) -> {
+    protected Function2<Event, Map<String, String>, Unit> generateHandler() {
+        return (event, userProperties) -> {
             try {
                 logger.debug("Internal notification: " + event.toString());
-                applyEventUpdate(event);
+                applyEventUpdate(event, userProperties);
             } catch (Exception ex) {
                 if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
@@ -978,23 +982,16 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
             validateInitialization();
             synchronized (syncMonitor) {
 
-                // Check if sync is in process.
-                if (syncFuture != null && !syncFuture.isDone()) {
-
-                    // Recover sync task if it was canceled for instance during remote reinitialization.
-                    if (syncTask == null || syncTask.isDone()) {
-                        syncTask = sync();
-                    }
-                    return syncFuture;
-                } else {
-                    // cleanup old sync task
-                    if (syncTask != null && !syncTask.isDone()) {
-                        syncTask.cancel(true);
-                    }
+                // cleanup old sync task
+                if (syncTask != null && !syncTask.isDone()) {
+                    syncTask.cancel(true);
                 }
 
                 // Create new sync process
-                syncFuture = new CompletableFutureLite();
+                if(syncFuture == null || syncFuture.isDone()) {
+                    syncFuture = new CompletableFutureLite<>();
+                }
+
                 syncTask = sync();
                 return syncFuture;
             }
@@ -1032,18 +1029,15 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         return rpcClient;
     }
 
-    protected Future<M> internalRequestStatus() {
-        return FutureProcessor.postProcess(
-                (input, timeout, timeUnit) -> input.getResponse(),
-                rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass())
-        );
+    protected Future<RPCResponse<M>> internalRequestStatus() {
+        return rpcClient.callMethod(RPC_REQUEST_STATUS, getDataClass());
     }
 
-    protected M applyEventUpdate(final Event event) throws CouldNotPerformException, InterruptedException {
-        return applyEventUpdate(event, null);
+    protected M applyEventUpdate(final Event event, final Map<String, String> userProperties) throws CouldNotPerformException, InterruptedException {
+        return applyEventUpdate(event, userProperties, null);
     }
 
-    private M applyEventUpdate(final Event event, final Future<M> relatedFuture) throws CouldNotPerformException, InterruptedException {
+    private M applyEventUpdate(final Event event, final Map<String, String> userProperties, final Future<M> relatedFuture) throws CouldNotPerformException, InterruptedException {
         synchronized (dataUpdateMonitor) {
             if (event == null) {
                 throw new NotAvailableException("event");
@@ -1091,37 +1085,52 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                     throw new CouldNotPerformException("Received data of unexpected type!. Expected [" + getDataClass().getSimpleName() + "]", ex);
                 }
 
-                // skip events which were send later than the last received update
-                long userTime = RPCUtils.USER_TIME_VALUE_INVALID;
                 try {
-                    if (event.getHeaderMap().containsKey(RPCUtils.USER_TIME_KEY)) {
-                        userTime = event.getHeaderMap().get(RPCUtils.USER_TIME_KEY).unpack(Primitive.class).getLong();
-                    } else {
-                        logger.warn("Data message does not contain user time key on scope " + getScopeStringRep());
-                    }
-                } catch (InvalidProtocolBufferException ex) {
-                    logger.warn("Data message contains corrupt user time entry on scope " + getScopeStringRep());
-                }
-
-
-                // filter outdated events
-                try {
-                    long createTime = event.getHeaderMap().get(RPCUtils.USER_TIME_KEY).unpack(Primitive.class).getLong();
-                    if (createTime < newestEventTime || (createTime == newestEventTime && userTime < newestEventTimeNano)) {
-                        logger.debug("Skip event on scope[" + getScopeStringRep() + "] because event seems to be outdated! Received event time < latest event time [" + createTime + "<= " + newestEventTime + "][" + userTime + " < " + newestEventTimeNano + "]");
+                    if(!validateAndUpdateEventTimestamp(userProperties)) {
+                        logger.debug("Skip event on scope[" + getScopeStringRep() + "] because event seems to be outdated!");
                         return data;
                     }
-                    newestEventTime = createTime;
-                } catch (NullPointerException | InvalidProtocolBufferException ex) {
+                } catch (CouldNotPerformException ex) {
                     ExceptionPrinter.printHistory("Data message does not contain valid creation timestamp on scope " + getScopeStringRep(), ex, logger);
                 }
 
-                if (userTime != RPCUtils.USER_TIME_VALUE_INVALID) {
-                    newestEventTimeNano = userTime;
-                }
                 applyDataUpdate(dataUpdate);
                 return dataUpdate;
             }
+        }
+    }
+
+    public boolean validateAndUpdateEventTimestamp(final Map<String, String> userProperties) throws CouldNotPerformException {
+        if (!userProperties.containsKey(CommunicatorImpl.TIMESTAMP_KEY_MS) || !userProperties.containsKey(CommunicatorImpl.TIMESTAMP_KEY_NANO)) {
+            throw new NotAvailableException("Timestamp in MQTT user properties!");
+        }
+
+        try {
+            final long eventTimeMs = Long.parseLong(userProperties.get(CommunicatorImpl.TIMESTAMP_KEY_MS));
+            final long eventTimeNano = Long.parseLong(userProperties.get(CommunicatorImpl.TIMESTAMP_KEY_NANO));
+
+            if (eventTimeMs < newestEventTime) {
+                return false;
+            }
+
+            if (eventTimeMs > newestEventTime) {
+                newestEventTime = eventTimeMs;
+                newestEventTimeNano = eventTimeNano;
+                return true;
+            }
+
+            // time in milliseconds is equal, so we have to compare the nano time
+            if (eventTimeNano <= newestEventTimeNano) {
+                return false;
+            } else {
+                newestEventTime = eventTimeMs;
+                newestEventTimeNano = eventTimeNano;
+                return true;
+            }
+        } catch (NumberFormatException ex) {
+            final String timeMs = userProperties.get(CommunicatorImpl.TIMESTAMP_KEY_MS);
+            final String timeNano = userProperties.get(CommunicatorImpl.TIMESTAMP_KEY_NANO);
+            throw new CouldNotPerformException("One of the timestamps milliseconds["+timeMs+"] or nanoseconds["+timeNano+"] cannot be interpreted as a number", ex);
         }
     }
 
@@ -1815,9 +1824,19 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         try {
                             // get() is fine because ping task has internal timeout, so task will fail after timeout anyway.
                             ping().get();
-                            internalFuture = internalRequestStatus();
                             //event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
-                            receivedData = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                            final RPCResponse<M> response = internalRequestStatus().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+
+                            try {
+                                if (!validateAndUpdateEventTimestamp(response.getProperties())) {
+                                    logger.debug("Skip request data on scope[" + getScopeStringRep() + "] because an outdated event was received!");
+                                    applyDataUpdate(data);
+                                }
+                            } catch (CouldNotPerformException ex) {
+                                ExceptionPrinter.printHistory("Request data response does not contain valid creation timestamp on scope " + getScopeStringRep(), ex, logger);
+                            }
+
+                            receivedData = response.getResponse();
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] and continue processing.");

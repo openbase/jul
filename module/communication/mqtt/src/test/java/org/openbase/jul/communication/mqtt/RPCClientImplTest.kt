@@ -84,6 +84,7 @@ internal class RPCClientImplTest {
     }
 
     @Test
+    @Timeout(value = 30)
     fun `test method call subscription`() {
         val expectedMqttSubscribe = Mqtt5Subscribe.builder()
             .topicFilter("$baseTopic/rpc/$requestId")
@@ -115,6 +116,7 @@ internal class RPCClientImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test subscription failed`() {
             val expectedException = CouldNotPerformException("Could not subscribe to topic")
 
@@ -125,6 +127,7 @@ internal class RPCClientImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test successful subscription`() {
             val expectedRequest: Request = Request.newBuilder()
                 .setId(requestId)
@@ -167,6 +170,7 @@ internal class RPCClientImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test error response`() {
             response.error = "RPCServer answered with an error"
 
@@ -196,6 +200,7 @@ internal class RPCClientImplTest {
         }
 
         @Test
+        @Timeout(value = 30)
         fun `test successful response`() {
             response.status = Response.Status.FINISHED
             response.result = RPCMethod.anyToProtoAny(expectedResult::class)(expectedResult)

@@ -1,8 +1,8 @@
-package org.junit.rules;
+package org.openbase.rct.impl;
 
 /*-
  * #%L
- * JUL Extension Controller
+ * RCT
  * %%
  * Copyright (C) 2015 - 2022 openbase.org
  * %%
@@ -22,10 +22,9 @@ package org.junit.rules;
  * #L%
  */
 
-//Note: workaround to exclude junit4 transitive dependency
-// https://github.com/testcontainers/testcontainers-java/issues/970#issuecomment-625044008
-// remove when testcontainers is updated
-@SuppressWarnings("unused")
-public interface TestRule {
-}
+import org.openbase.rct.Transform;
 
+public interface TransformListener {
+
+    void newTransformAvailable(Transform transform, boolean isStatic);
+}

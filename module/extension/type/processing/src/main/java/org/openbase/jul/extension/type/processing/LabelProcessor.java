@@ -43,6 +43,7 @@ import java.util.Locale;
  */
 public class LabelProcessor {
 
+    public static final String LANGUAGE_CODE_TECHNICAL = "technical";
     public static final Label UNKNOWN_LABEL = LabelProcessor.addLabel(Label.newBuilder(), Locale.ENGLISH, "?").build();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LabelProcessor.class);
@@ -195,11 +196,23 @@ public class LabelProcessor {
      * @throws NotAvailableException if now label is contained in the label type.
      */
     public static String getFirstLabel(final LabelOrBuilder label) throws NotAvailableException {
-        for (Label.MapFieldEntry entry : label.getEntryList()) {
+        String technical = null;
+        outer: for (Label.MapFieldEntry entry : label.getEntryList()) {
             for (String value : entry.getValueList()) {
+                // avoid technical
+                if(entry.getKey().equals(LANGUAGE_CODE_TECHNICAL)) {
+                    technical = value;
+                    continue outer;
+                }
                 return value;
             }
         }
+
+        // use technical as last possibility
+        if(technical != null) {
+            return technical;
+        }
+
         throw new NotAvailableException("Label");
     }
 
@@ -217,6 +230,12 @@ public class LabelProcessor {
      */
     public static String getBestMatch(final String languageCode, final LabelOrBuilder label) throws NotAvailableException {
         try {
+
+            // handle technical case
+            if(languageCode.equals(LANGUAGE_CODE_TECHNICAL)) {
+                return getLabelByLanguage(languageCode, label);
+            }
+
             // resolve label via preferred locale.
             return getLabelByLanguage(Locale.forLanguageTag(languageCode).getLanguage(), label);
         } catch (NotAvailableException ex) {

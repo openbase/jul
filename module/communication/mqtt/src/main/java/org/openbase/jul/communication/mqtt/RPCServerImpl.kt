@@ -1,5 +1,6 @@
 package org.openbase.jul.communication.mqtt
 
+import com.hivemq.client.internal.util.AsyncRuntimeException
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder
 import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilderBase
@@ -13,6 +14,7 @@ import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
 import org.openbase.jul.schedule.GlobalCachedExecutorService
+import org.openbase.jul.schedule.SyncObject
 import org.openbase.type.communication.ScopeType.Scope
 import org.openbase.type.communication.mqtt.RequestType
 import org.openbase.type.communication.mqtt.ResponseType
@@ -33,44 +35,63 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
     private val methods: HashMap<String, RPCMethod> = HashMap()
     private var activationFuture: Future<out Any>? = null
 
+    private val lock = SyncObject("Activation Lock")
+
     internal fun getActivationFuture(): Future<out Any>? {
         return this.activationFuture
     }
 
     override fun isActive(): Boolean {
-        return (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
+        synchronized(lock) {
+            return (activationFuture != null && activationFuture!!.isDone && !activationFuture!!.isCancelled)
+        }
     }
 
     override fun activate() {
-        if (isActive) {
-            return
-        }
+        synchronized(lock) {
+            if (isActive) {
+                return
+            }
 
-        activationFuture = mqttClient.subscribe(
-            Mqtt5Subscribe.builder()
-                .topicFilter(topic)
-                .qos(MqttQos.EXACTLY_ONCE)
-                .build(),
-            { mqtt5Publish -> handleRemoteCall(mqtt5Publish) },
-            GlobalCachedExecutorService.getInstance().executorService
-        )
-        try {
-            activationFuture!!.get(2, TimeUnit.SECONDS)
-        } catch (e: TimeoutException) {
-            activationFuture!!.cancel(true)
-            throw CouldNotPerformException("Could not activate RPCServer", e)
-        } catch (e: InterruptedException) {
-            activationFuture!!.cancel(true)
+            activationFuture = mqttClient.subscribe(
+                Mqtt5Subscribe.builder()
+                    .topicFilter(topic)
+                    .qos(MqttQos.EXACTLY_ONCE)
+                    .build(),
+                { mqtt5Publish ->
+                    // Note: this is a wrapper for the usage of a shared client
+                    //       which may remain subscribed even if deactivate is called
+                    if (isActive) {
+                        handleRemoteCall(mqtt5Publish)
+                    }
+                },
+                GlobalCachedExecutorService.getInstance().executorService
+            )
+
+            try {
+                activationFuture!!.get(ACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS)
+            } catch (e: TimeoutException) {
+                activationFuture!!.cancel(true)
+                throw CouldNotPerformException("Could not activate Subscriber", e)
+            } catch (e: AsyncRuntimeException) {
+                activationFuture!!.cancel(true)
+                throw CouldNotPerformException("Could not activate Subscriber", e)
+            } catch (e: InterruptedException) {
+                activationFuture!!.cancel(true)
+                throw e;
+            }
         }
     }
 
     override fun deactivate() {
-        activationFuture = null
-        mqttClient.unsubscribe(
-            Mqtt5Unsubscribe.builder()
-                .topicFilter(topic)
-                .build()
-        )
+        synchronized(lock) {
+            activationFuture = null
+            mqttClient.unsubscribe(
+                Mqtt5Unsubscribe.builder()
+                    .topicFilter(topic)
+                    .build()
+            )
+        }
     }
 
     override fun registerMethod(method: KFunction<*>, instance: Any) {

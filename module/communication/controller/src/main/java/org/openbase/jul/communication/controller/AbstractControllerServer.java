@@ -96,7 +96,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     private final SyncObject transactionIdLock = new SyncObject(getClass());
 
-    private final ReentrantReadWriteLock dataLock;
+    protected final ReentrantReadWriteLock dataLock;
     private final BundledReentrantReadWriteLock manageLock;
     private final ReentrantReadWriteLock.ReadLock dataBuilderReadLock;
     private final ReentrantReadWriteLock.WriteLock dataBuilderWriteLock;
@@ -361,7 +361,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             logger.debug("Deactivate AbstractControllerServer for: " + this);
             // The order is important: The publisher publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
             // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
-            // and the remotes will think that the server is still there..
+            // and the remotes will think that the server is still there.
             if (serverWatchDog != null) {
                 serverWatchDog.deactivate();
             }
@@ -793,9 +793,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             newData = updateDataToPublish(cloneDataBuilder());
             final Event event = Event.newBuilder()
                     .setPayload(Any.pack(newData))
-                    .putHeader(
-                            RPCUtils.USER_TIME_KEY,
-                            Any.pack(Primitive.newBuilder().setLong(System.nanoTime()).build()))
                     .build();
 
             // only publish if controller is active
