@@ -982,23 +982,16 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
             validateInitialization();
             synchronized (syncMonitor) {
 
-                // Check if sync is in process.
-                if (syncFuture != null && !syncFuture.isDone()) {
-
-                    // Recover sync task if it was canceled for instance during remote reinitialization.
-                    if (syncTask == null || syncTask.isDone()) {
-                        syncTask = sync();
-                    }
-                    return syncFuture;
-                } else {
-                    // cleanup old sync task
-                    if (syncTask != null && !syncTask.isDone()) {
-                        syncTask.cancel(true);
-                    }
+                // cleanup old sync task
+                if (syncTask != null && !syncTask.isDone()) {
+                    syncTask.cancel(true);
                 }
 
                 // Create new sync process
-                syncFuture = new CompletableFutureLite();
+                if(syncFuture == null || syncFuture.isDone()) {
+                    syncFuture = new CompletableFutureLite<>();
+                }
+
                 syncTask = sync();
                 return syncFuture;
             }
