@@ -1,13 +1,18 @@
 package org.openbase.jul.communication.mqtt
 
 import com.google.protobuf.Any
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.communication.exception.RPCResolvedException
+import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.type.communication.EventType
 import org.openbase.type.communication.mqtt.PrimitiveType
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
 class IntegrationTest : AbstractIntegrationTest() {
@@ -18,6 +23,39 @@ class IntegrationTest : AbstractIntegrationTest() {
     internal class Adder {
         fun add(a: Int, b: Int): Int {
             return a + b
+        }
+
+        val errorMessage = "I cannot do this!"
+        fun couldNotPerform() {
+            throw CouldNotPerformException(errorMessage)
+        }
+    }
+
+    @Test
+    fun `test Exception resolving`() {
+        val instance = Adder()
+        val scope = ScopeProcessor.concat(scope, ScopeProcessor.generateScope("error_handling"))
+
+        val rpcServer = RPCServerImpl(scope, config)
+        rpcServer.registerMethod(Adder::couldNotPerform, instance)
+        rpcServer.activate()
+        rpcServer.getActivationFuture()!!.get()
+
+        val rpcClient = RPCClientImpl(scope, config)
+        shouldThrow<ExecutionException> {
+            rpcClient.callMethod(instance::couldNotPerform.name, Unit::class).get(1, TimeUnit.SECONDS)
+        }
+        try {
+            rpcClient.callMethod(instance::couldNotPerform.name, Unit::class).get(1, TimeUnit.SECONDS)
+        } catch (ex: ExecutionException) {
+            ex.cause shouldNotBe null
+            ex.cause!!::class.java shouldBe RPCResolvedException::class.java
+            val rpcException = ex.cause!! as RPCResolvedException
+
+            rpcException.cause shouldNotBe null
+            rpcException.cause!!::class.java shouldBe CouldNotPerformException::class.java
+            val initialCause: CouldNotPerformException = rpcException.cause!! as CouldNotPerformException
+            initialCause.message shouldBe instance.errorMessage
         }
     }
 
