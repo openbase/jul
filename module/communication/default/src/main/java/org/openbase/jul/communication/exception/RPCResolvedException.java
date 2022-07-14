@@ -10,12 +10,12 @@ package org.openbase.jul.communication.exception;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -27,6 +27,7 @@ import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -52,8 +53,9 @@ public class RPCResolvedException extends CouldNotPerformException {
 
     /**
      * Default constructor only used
-     * @param message      an error description.
-     * @param cause the cause.
+     *
+     * @param message an error description.
+     * @param cause   the cause.
      */
     public RPCResolvedException(final String message, final Throwable cause) {
         super(message, cause);
@@ -73,7 +75,6 @@ public class RPCResolvedException extends CouldNotPerformException {
      * Method parses the RPCException message and resolves the causes and messagen and use those to reconstruct the exception chain.
      *
      * @param rpcException the origin RPCException
-     *
      * @return the reconstruced excetion cause chain.
      */
     public static Exception resolveRPCException(final RPCException rpcException) {
