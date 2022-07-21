@@ -28,6 +28,7 @@ internal class RPCResolvedExceptionTest {
 
         RPCException(message = testException.stackTraceToString()).let { rpcException ->
 
+            // resolve exception via explicit method call
             RPCResolvedException
                 .resolveRPCException(rpcException)
                 .let { result ->
@@ -36,6 +37,7 @@ internal class RPCResolvedExceptionTest {
                     }
                 }
 
+            // resolve exception via constructor call
             RPCResolvedException(rpcException)
                 .let { result ->
                     ExceptionProcessor.getInitialCause(result).let { initialCause ->
