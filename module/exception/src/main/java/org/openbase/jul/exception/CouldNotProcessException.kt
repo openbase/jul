@@ -1,4 +1,4 @@
-package org.openbase.jul.exception;
+package org.openbase.jul.exception
 
 /*
  * #%L
@@ -20,28 +20,19 @@ package org.openbase.jul.exception;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-/**
+ */ /**
  *
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
+ * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
-public class CouldNotProcessException extends RuntimeException {
-
-    public CouldNotProcessException(String message) {
-        super(message);
+class CouldNotProcessException : RuntimeException {
+    constructor(message: String?) : super(message) {}
+    constructor(message: String?, cause: Throwable?) : super(message, cause) {}
+    constructor(cause: Throwable?) : super(cause) {}
+    constructor(message: String?, cause: Throwable?, enableSuppression: Boolean, writableStackTrace: Boolean) : super(
+        message,
+        cause,
+        enableSuppression,
+        writableStackTrace
+    ) {
     }
-
-    public CouldNotProcessException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public CouldNotProcessException(Throwable cause) {
-        super(cause);
-    }
-
-    public CouldNotProcessException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
 }
