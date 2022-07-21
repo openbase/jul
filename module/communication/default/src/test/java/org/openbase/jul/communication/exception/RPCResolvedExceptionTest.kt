@@ -18,7 +18,6 @@ internal class RPCResolvedExceptionTest {
     @Test
     fun testExceptionResolution() {
 
-
         val testException = CouldNotPerformException(
             message = rootMessage,
             cause = CouldNotPerformException(
