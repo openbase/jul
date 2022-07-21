@@ -1,4 +1,4 @@
-package org.openbase.jul.exception;
+package org.openbase.jul.exception
 
 /*
  * #%L
@@ -20,22 +20,17 @@ package org.openbase.jul.exception;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
+ */ /**
+ *
+ * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
-
-
-/**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- */
-public class CouldNotPerformException extends Exception {
-
+class CouldNotProcessException : RuntimeException {
     /**
      * {@inheritDoc}
      *
      * @param message {@inheritDoc}
      */
-    public CouldNotPerformException(String message) {
-        super(message);
-    }
+    constructor(message: String?) : super(message)
 
     /**
      * {@inheritDoc}
@@ -43,18 +38,14 @@ public class CouldNotPerformException extends Exception {
      * @param message {@inheritDoc}
      * @param cause   {@inheritDoc}
      */
-    public CouldNotPerformException(String message, Throwable cause) {
-        super(message, cause);
-    }
+    constructor(message: String?, cause: Throwable?) : super(message, cause)
 
     /**
      * {@inheritDoc}
      *
      * @param cause {@inheritDoc}
      */
-    public CouldNotPerformException(Throwable cause) {
-        super(cause);
-    }
+    constructor(cause: Throwable?) : super(cause)
 
     /**
      * {@inheritDoc}
@@ -64,7 +55,10 @@ public class CouldNotPerformException extends Exception {
      * @param enableSuppression  {@inheritDoc}
      * @param writableStackTrace {@inheritDoc}
      */
-    public CouldNotPerformException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
+    constructor(message: String?, cause: Throwable?, enableSuppression: Boolean, writableStackTrace: Boolean) : super(
+        message,
+        cause,
+        enableSuppression,
+        writableStackTrace
+    )
 }
