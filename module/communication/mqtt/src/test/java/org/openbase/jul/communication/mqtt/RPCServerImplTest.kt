@@ -225,7 +225,7 @@ internal class RPCServerImplTest {
             actualResponse.hasResult() shouldBe false
 
             val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
-            error.shouldBeTypeOf<InvocationTargetException>()
+            error.shouldBeTypeOf<CouldNotPerformException>()
         }
 
         @Test
