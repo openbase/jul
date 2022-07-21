@@ -143,7 +143,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
         } catch (ex: Exception) {
             when (ex) {
                 is InvocationTargetException -> responseBuilder.error =
-                    ex.cause!!.stackTraceToString()
+                    ex.cause?.stackTraceToString()?:ex.stackTraceToString()
                 else -> {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN)
                     responseBuilder.error = CouldNotPerformException("Server error ${ex.message}").stackTraceToString()

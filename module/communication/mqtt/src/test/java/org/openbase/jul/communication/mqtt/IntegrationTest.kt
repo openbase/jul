@@ -32,7 +32,7 @@ class IntegrationTest : AbstractIntegrationTest() {
     }
 
     @Test
-    fun `test Exception resolving`() {
+    fun `test exception resolving`() {
         val instance = Adder()
         val scope = ScopeProcessor.concat(scope, ScopeProcessor.generateScope("error_handling"))
 
@@ -49,13 +49,17 @@ class IntegrationTest : AbstractIntegrationTest() {
             rpcClient.callMethod(instance::couldNotPerform.name, Unit::class).get(1, TimeUnit.SECONDS)
         } catch (ex: ExecutionException) {
             ex.cause shouldNotBe null
-            ex.cause!!::class.java shouldBe RPCResolvedException::class.java
-            val rpcException = ex.cause!! as RPCResolvedException
+            ex.cause?.let { cause ->
+                cause::class.java shouldBe RPCResolvedException::class.java
+                val rpcException = cause as RPCResolvedException
 
-            rpcException.cause shouldNotBe null
-            rpcException.cause!!::class.java shouldBe CouldNotPerformException::class.java
-            val initialCause: CouldNotPerformException = rpcException.cause!! as CouldNotPerformException
-            initialCause.message shouldBe instance.errorMessage
+                rpcException.cause shouldNotBe null
+                rpcException.cause?.let { rpcExceptionCause ->
+                    rpcExceptionCause::class.java shouldBe CouldNotPerformException::class.java
+                    val initialCause: CouldNotPerformException = rpcExceptionCause as CouldNotPerformException
+                    initialCause.message shouldBe instance.errorMessage
+                }
+            }
         }
     }
 
