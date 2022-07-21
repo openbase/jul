@@ -28,7 +28,7 @@ open class CouldNotPerformException : Exception {
      *
      * @param message {@inheritDoc}
      */
-    constructor(message: String?) : super(message) {}
+    constructor(message: String?) : super(message)
 
     /**
      * {@inheritDoc}
@@ -36,14 +36,14 @@ open class CouldNotPerformException : Exception {
      * @param message {@inheritDoc}
      * @param cause   {@inheritDoc}
      */
-    constructor(message: String?, cause: Throwable?) : super(message, cause) {}
+    constructor(message: String?, cause: Throwable?) : super(message, cause)
 
     /**
      * {@inheritDoc}
      *
      * @param cause {@inheritDoc}
      */
-    constructor(cause: Throwable?) : super(cause) {}
+    constructor(cause: Throwable?) : super(cause)
 
     /**
      * {@inheritDoc}
@@ -58,6 +58,5 @@ open class CouldNotPerformException : Exception {
         cause,
         enableSuppression,
         writableStackTrace
-    ) {
-    }
+    )
 }
