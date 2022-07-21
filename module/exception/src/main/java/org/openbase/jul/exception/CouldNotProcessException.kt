@@ -25,9 +25,36 @@ package org.openbase.jul.exception
  * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
 class CouldNotProcessException : RuntimeException {
+    /**
+     * {@inheritDoc}
+     *
+     * @param message {@inheritDoc}
+     */
     constructor(message: String?) : super(message)
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param message {@inheritDoc}
+     * @param cause   {@inheritDoc}
+     */
     constructor(message: String?, cause: Throwable?) : super(message, cause)
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param cause {@inheritDoc}
+     */
     constructor(cause: Throwable?) : super(cause)
+
+    /**
+     * {@inheritDoc}
+     *
+     * @param message            {@inheritDoc}
+     * @param cause              {@inheritDoc}
+     * @param enableSuppression  {@inheritDoc}
+     * @param writableStackTrace {@inheritDoc}
+     */
     constructor(message: String?, cause: Throwable?, enableSuppression: Boolean, writableStackTrace: Boolean) : super(
         message,
         cause,
