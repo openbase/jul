@@ -113,37 +113,14 @@ public class StackTracePrinter {
     }
 
     /**
-     * Marked as deprecated because of the erroneous name. Call printAllStackTraces instead.
-     *
-     * @param logger   the logger used for printing.
-     * @param logLevel the level to print.
-     */
-    @Deprecated
-    public static void printAllStackTrackes(final Logger logger, final LogLevel logLevel) {
-        printAllStackTraces(null, logger, logLevel);
-    }
-
-    /**
-     * Marked as deprecated because of the erroneous name. Call printAllStackTraces instead.
-     *
-     * @param filter   only thread where the name of the thread contains this given {@code filter} key are printed. If the filter is null, no filtering will be performed.
-     * @param logger   the logger used for printing.
-     * @param logLevel the level to print.
-     */
-    @Deprecated
-    public static void printAllStackTrackes(final String filter, final Logger logger, final LogLevel logLevel) {
-        printAllStackTraces(filter, logger, logLevel);
-    }
-
-    /**
      * Method prints the stack traces of all running java threads.
      * <p>
      * Note: The used log level will be ERROR.
      *
      * @param responsibleClass the class which is responsible for the printing.
      */
-    public static void printAllStackTrace(final Class responsibleClass) {
-        printStackTrace((String) null, LoggerFactory.getLogger(responsibleClass), LogLevel.ERROR);
+    public static void printAllStackTraces(final Class responsibleClass) {
+        printStackTrace((String) null, null, LoggerFactory.getLogger(responsibleClass), LogLevel.ERROR);
     }
 
     /**
@@ -153,21 +130,31 @@ public class StackTracePrinter {
      * @param logLevel the level to print.
      */
     public static void printAllStackTraces(final Logger logger, final LogLevel logLevel) {
-        printAllStackTraces(null, logger, logLevel);
+        printAllStackTraces(null, null, logger, logLevel);
     }
 
     /**
      * Method prints the stack traces of all running java threads via the given logger.
      *
-     * @param filter   only thread where the name of the thread contains this given {@code filter} key are printed. If the filter is null, no filtering will be performed.
+     * @param threadFilter   only threads where the name of the thread contains this given {@code threadFilter} key are printed. If the filter is null, no filtering will be performed.
+     * @param classFilter    only stacktraces that contain any relation to the given class are printed.
      * @param logger   the logger used for printing.
      * @param logLevel the level to print.
      */
-    public static void printAllStackTraces(final String filter, final Logger logger, final LogLevel logLevel) {
+    public static void printAllStackTraces(final String threadFilter, final Class<?> classFilter, final Logger logger, final LogLevel logLevel) {
         for (Map.Entry<Thread, StackTraceElement[]> entry : Thread.getAllStackTraces().entrySet()) {
-            if (filter == null || entry.getKey().getName().contains(filter)) {
-                StackTracePrinter.printStackTrace("Thread[" + entry.getKey().getName() + "] state[" + entry.getKey().getState().name() + "]", entry.getValue(), logger, logLevel);
+
+            // apply thread filter
+            if (threadFilter != null && !entry.getKey().getName().contains(threadFilter)) {
+                continue;
             }
+
+            // apply class filter
+            if (classFilter != null && Arrays.stream(entry.getValue()).noneMatch(it -> it.getClassName().contains(classFilter.getSimpleName())) ) {
+                continue;
+            }
+
+            StackTracePrinter.printStackTrace("Thread[" + entry.getKey().getName() + "] state[" + entry.getKey().getState().name() + "]", entry.getValue(), logger, logLevel);
         }
     }
 
