@@ -24,6 +24,7 @@ package org.openbase.jul.storage.registry;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -53,6 +54,7 @@ public class AbstractRegistryTest {
     }
 
     @Test
+    @Timeout(5)
     public void testDependentRegistryLocking() throws Exception {
         AbstractRegistry mainRegistry = new AbstractRegistryImpl();
         AbstractRegistry dependentRegistry = new AbstractRegistryImpl();

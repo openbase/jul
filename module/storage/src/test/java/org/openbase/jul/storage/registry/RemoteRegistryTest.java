@@ -67,6 +67,7 @@ public class RemoteRegistryTest {
      *
      * @throws java.lang.Exception
      */
+    @Timeout(10)
     @Test
     public void testNotifyRegistryUpdate() throws Exception {
         System.out.println("notifyRegistryUpdate");

@@ -49,8 +49,8 @@ public class ExceptionPrinterTest {
     /**
      * Test of printHistory method, of class ExceptionPrinter.
      */
-    @Timeout(5)
     @Test
+    @Timeout(5)
     public void testPrintHistory() {
         System.out.println("printHistory");
         Logger logger = LoggerFactory.getLogger(ExceptionPrinterTest.class);
@@ -109,8 +109,8 @@ public class ExceptionPrinterTest {
     /**
      * Test of printHistory method, of class ExceptionPrinter.
      */
-    @Timeout(5)
     @Test
+    @Timeout(5)
     public void testPrintMultiExceptionHistory() {
         System.out.println("printHistory");
         Logger logger = LoggerFactory.getLogger(ExceptionPrinterTest.class);

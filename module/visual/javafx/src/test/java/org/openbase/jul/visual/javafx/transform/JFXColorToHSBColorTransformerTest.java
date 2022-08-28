@@ -38,6 +38,7 @@ public class JFXColorToHSBColorTransformerTest {
     /**
      * Test of transform method, of class JFXColorToHSBColorTransformer.
      */
+    @Timeout(10)
     @Test
     public void testTransform() throws Exception {
         System.out.println("transform color");

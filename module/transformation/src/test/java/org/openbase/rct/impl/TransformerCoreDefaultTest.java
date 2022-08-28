@@ -35,6 +35,7 @@ import javax.vecmath.Vector3d;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.rct.Transform;
 import org.openbase.rct.TransformerException;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,8 @@ public class TransformerCoreDefaultTest {
 		return transform;
 	}
 
-	@Test
+	@Timeout(10)
+    @Test
 	public void testSetTransformIllegalArguments() throws TransformerException {
 
 		Transform transform = generateDefaultTransform();
@@ -96,7 +98,8 @@ public class TransformerCoreDefaultTest {
 		}
 	}
 
-	@Test
+	@Timeout(10)
+    @Test
 	public void testSetTransformNonStatic() throws TransformerException {
 
 		Transform transform = generateDefaultTransform();
@@ -125,7 +128,8 @@ public class TransformerCoreDefaultTest {
 		Assertions.assertTrue(framesAsString.contains("baz"));
 	}
 
-	@Test
+	@Timeout(10)
+    @Test
 	public void testSetTransformStatic() throws TransformerException {
 
 		Transform transform = generateDefaultTransform();
@@ -154,7 +158,8 @@ public class TransformerCoreDefaultTest {
 		Assertions.assertTrue(framesAsString.contains("baz"));
 	}
 
-	@Test
+	@Timeout(10)
+    @Test
 	public void testLookupTransformIllegalArguments() throws TransformerException, InterruptedException {
 
 		Transform transform1 = generateDefaultTransform();
@@ -180,7 +185,8 @@ public class TransformerCoreDefaultTest {
 			// expected
 		}
 	}
-	@Test
+	@Timeout(10)
+    @Test
 	public void testLookupTransformNonStatic() throws TransformerException, InterruptedException {
 
 		Transform transform = generateDefaultTransform();
@@ -226,7 +232,8 @@ public class TransformerCoreDefaultTest {
 		Assertions.assertEquals(new Vector3d(0, -2, -4), out3.getTranslation());
 	}
 	
-	@Test
+	@Timeout(10)
+    @Test
 	public void testLookupTransformStatic() throws TransformerException, InterruptedException {
 
 		Transform transform = generateDefaultTransform();
@@ -269,7 +276,8 @@ public class TransformerCoreDefaultTest {
 	}
 	
 
-	@Test
+	@Timeout(10)
+    @Test
 	public void testcanTransformIllegalArguments() throws TransformerException, InterruptedException {
 
 		Transform transform1 = generateDefaultTransform();
@@ -286,7 +294,8 @@ public class TransformerCoreDefaultTest {
 		Assertions.assertFalse(core.canTransform("foo", "bar", 100));
 	}
 	
-	@Test
+	@Timeout(10)
+    @Test
 	public void testCanTransformNonStatic() throws TransformerException, InterruptedException {
 
 		Transform transform = generateDefaultTransform();
@@ -316,7 +325,8 @@ public class TransformerCoreDefaultTest {
 		Assertions.assertTrue(core.canTransform("baz", "foo", 5));
 	}
 	
-	@Test
+	@Timeout(10)
+    @Test
 	public void testCanTransformStatic() throws TransformerException, InterruptedException {
 
 		Transform transform = generateDefaultTransform();
@@ -342,7 +352,8 @@ public class TransformerCoreDefaultTest {
 		Assertions.assertTrue(core.canTransform("baz", "foo", 5));
 	}
 	
-	@Test
+	@Timeout(10)
+    @Test
 	public void testRequestTransform() throws InterruptedException, ExecutionException, TransformerException, TimeoutException {
 		TransformerCoreDefault core = new TransformerCoreDefault(1000);
 		Future<Transform> future = core.requestTransform("foo", "bar", 5);
