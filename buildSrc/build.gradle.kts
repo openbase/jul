@@ -16,6 +16,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:_")
     implementation(Kotlin.stdlib.jdk8)
     implementation(Kotlin.scriptRuntime)
+    implementation("com.adarshr:gradle-test-logger-plugin:_")
 }
 
 tasks.withType<KotlinCompile> {
@@ -24,4 +25,3 @@ tasks.withType<KotlinCompile> {
         jvmTarget = "11"
     }
 }
-

@@ -71,7 +71,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                StackTracePrinter.printStackTrace(logger);
+                StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
             }
         };
@@ -79,7 +79,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                StackTracePrinter.printStackTrace(logger);
+                StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
             }
         };
