@@ -13,7 +13,7 @@ dependencies {
     api(project(":jul.schedule"))
     api(project(":jul.processing.json"))
     api("com.google.code.gson:gson:_")
-    api("org.openbase:type:[1.1,1.2-alpha)")
+    api("org.openbase:type:_")
 }
 
 description = "JUL Extension Protobuf"
