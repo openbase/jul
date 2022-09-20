@@ -129,11 +129,16 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 }
             };
             setHashGenerator(value -> {
-                registryLock.readLock().lock();
                 try {
-                    return value.hashCode();
-                } finally {
-                    registryLock.readLock().unlock();
+                    registryLock.readLock().lockInterruptibly();
+                    try {
+                        return value.hashCode();
+                    } finally {
+                        registryLock.readLock().unlock();
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw new CouldNotPerformException(ex);
                 }
             });
 
