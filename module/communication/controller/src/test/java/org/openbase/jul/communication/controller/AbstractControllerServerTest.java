@@ -302,7 +302,6 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
      */
     @Timeout(10)
     @Test
-    @Disabled // Ignore test since it's pretty unstable.
     public void testNotification() throws Exception {
         String scope = "/test/notification";
         UnitConfig location = UnitConfig.newBuilder().setId("id").build();
