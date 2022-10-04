@@ -51,7 +51,7 @@ import javax.vecmath.Vector3d
         val transform = generateDefaultTransform()
         try {
             // test same frame name
-            val transform0 = Transform(transform)
+            val transform0 = transform.copy()
             transform0.parentNode = "foo"
             transform0.childNode = "foo"
             val core = TransformerCoreDefault(1000)
@@ -62,7 +62,7 @@ import javax.vecmath.Vector3d
         }
         try {
             // test empty frame name
-            val transform0 = Transform(transform)
+            val transform0 = transform.copy()
             transform0.parentNode = ""
             transform0.childNode = "foo"
             val core = TransformerCoreDefault(1000)
@@ -76,7 +76,7 @@ import javax.vecmath.Vector3d
             val v0 = Vector3d(0.0, 1.0, Double.NaN)
             val q = Quat4d(0.0, 1.0, 2.0, 1.0)
             val t0 = Transform3D(q, v0, 1.0)
-            val transform0 = Transform(transform)
+            val transform0 = transform.copy()
             transform0.transform = t0
             val core = TransformerCoreDefault(1000)
             core.setTransform(listOf(transform0), false)
@@ -91,7 +91,7 @@ import javax.vecmath.Vector3d
     @Throws(TransformerException::class)
     fun testSetTransformNonStatic() {
         val transform = generateDefaultTransform()
-        val transform1 = Transform(transform)
+        val transform1 = transform.copy()
         val core = TransformerCoreDefault(1000)
         core.setTransform(listOf(transform1), false)
         var framesAsString = core.allFramesAsString()
@@ -99,7 +99,7 @@ import javax.vecmath.Vector3d
         Assertions.assertTrue(framesAsString.contains("foo"))
         Assertions.assertTrue(framesAsString.contains("bar"))
         Assertions.assertFalse(framesAsString.contains("baz"))
-        val transform2 = Transform(transform)
+        val transform2 = transform.copy()
         transform2.parentNode = "bar"
         transform2.childNode = "baz"
         core.setTransform(listOf(transform2), false)
@@ -115,7 +115,7 @@ import javax.vecmath.Vector3d
     @Throws(TransformerException::class)
     fun testSetTransformStatic() {
         val transform = generateDefaultTransform()
-        val transform1 = Transform(transform)
+        val transform1 = transform.copy()
         val core = TransformerCoreDefault(1000)
         core.setTransform(listOf(transform1), true)
         var framesAsString = core.allFramesAsString()
@@ -123,7 +123,7 @@ import javax.vecmath.Vector3d
         Assertions.assertTrue(framesAsString.contains("foo"))
         Assertions.assertTrue(framesAsString.contains("bar"))
         Assertions.assertFalse(framesAsString.contains("baz"))
-        val transform2 = Transform(transform)
+        val transform2 = transform.copy()
         transform2.parentNode = "bar"
         transform2.childNode = "baz"
         core.setTransform(listOf(transform2), true)

@@ -40,24 +40,24 @@ data class Transform(
     /**
      * The geometric transform representation.
      */
-    val transform: Transform3D,
+    var transform: Transform3D,
     /**
      * The ID of the parent coordinate frame.
      */
-    val parentNode: String,
+    var parentNode: String,
 
     /**
      * The ID of the child coordinate frame.
      */
-    val childNode: String,
+    var childNode: String,
     /**
      * The timestamp of the moment this object was created.
      */
-    val time: Long,
+    var time: Long,
     /**
      * The ID of the authority that created this object.
      */
-    val authority: String? = null,
+    var authority: String? = null,
 ) {
 
     /**
