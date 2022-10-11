@@ -222,8 +222,6 @@ class TransformCommunicatorImpl(private val authority: String) : TransformCommun
                         scope = RCT_SCOPE_TRANSFORM_DYNAMIC
                         setStatic(false, eventBuilder)
                     }
-
-                    else -> throw TransformerException("Unknown TransformType: " + type.name)
                 }
                 log.debug("Publishing transform from " + transformationPublisher!!.id + " initiated.")
                 transformationPublisher!!.publish(eventBuilder.build(), scope, true)
