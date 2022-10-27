@@ -434,5 +434,21 @@ object ProtoBufBuilderProcessor {
      */
     @JvmStatic
     fun Message.Builder.mergeFromWithoutRepeatedFields(message: Message): Message.Builder =
-        mergeFromWithoutRepeatedFields(message)
+        message.toBuilder()
+            .let { messageBuilder -> messageBuilder.clearRepeatedFields() }
+            .let { messageBuilder -> mergeFrom(messageBuilder.build()) }
+
+
+    /**
+     * This method recursively clears all repeated fields from the builder instance.
+     */
+    @JvmStatic
+    fun Message.Builder.clearRepeatedFields(): Message.Builder = also {
+        allFields.keys.forEach { descriptor ->
+            descriptor.takeIf { it.isRepeated }?.also { clearField(it) }
+            descriptor.takeIf { it.javaType == Descriptors.FieldDescriptor.JavaType.MESSAGE } ?.also {
+                getFieldBuilder(it).clearRepeatedFields()
+            }
+        }
+    }
 }
