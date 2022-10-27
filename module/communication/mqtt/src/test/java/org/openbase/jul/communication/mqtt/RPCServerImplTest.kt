@@ -16,6 +16,7 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.communication.exception.RPCResolvedException
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
@@ -165,12 +166,6 @@ internal class RPCServerImplTest {
             callback.accept(clientRequest)
         }
 
-        @Test
-        @Timeout(value = 30)
-        fun `test bad request id`() {
-            //TODO: verify that id is a valid uuid
-        }
-
         /**
          * Verify that no matter the request, the server
          * always responds with an acknowledgement first.
@@ -209,7 +204,7 @@ internal class RPCServerImplTest {
             actualResponse.hasResult() shouldBe false
 
             val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
-            error shouldBe NotAvailableException("Method $methodName")
+            ExceptionProcessor.getInitialCause(error) shouldBe NotAvailableException("Method $methodName")
         }
 
         @Test
@@ -230,7 +225,7 @@ internal class RPCServerImplTest {
             actualResponse.hasResult() shouldBe false
 
             val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
-            error.shouldBeTypeOf<InvocationTargetException>()
+            error.shouldBeTypeOf<CouldNotPerformException>()
         }
 
         @Test

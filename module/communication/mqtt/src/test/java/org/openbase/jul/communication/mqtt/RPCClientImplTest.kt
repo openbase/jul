@@ -16,7 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.data.RPCResponse
-import org.openbase.jul.communication.exception.RPCException
+import org.openbase.jul.communication.exception.RPCResolvedException
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
@@ -172,13 +172,22 @@ internal class RPCClientImplTest {
         @Test
         @Timeout(value = 30)
         fun `test error response`() {
-            response.error = "RPCServer answered with an error"
+            val errorMessage = "RPCServer answered with an error"
+            response.error = CouldNotPerformException(errorMessage).stackTraceToString()
 
             callback.accept(mqtt5Publish)
 
             val exception = shouldThrow<ExecutionException> { rpcFuture.get() }
-            exception.cause!!::class.java shouldBe RPCException::class.java
-            exception.cause!!.message shouldBe response.error
+            exception.cause shouldNotBe null
+            exception.cause?.let { cause ->
+                cause::class.java shouldBe RPCResolvedException::class.java
+
+                cause.cause shouldNotBe null
+                cause.cause?.let { initialCause ->
+                    initialCause::class.java shouldBe CouldNotPerformException::class.java
+                    initialCause.message shouldBe errorMessage
+                }
+            }
 
             verify(exactly = 1) {
                 mqttClient.unsubscribe(
