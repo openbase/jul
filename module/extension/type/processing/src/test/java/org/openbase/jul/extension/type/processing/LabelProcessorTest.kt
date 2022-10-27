@@ -2,7 +2,7 @@ package org.openbase.jul.extension.type.processing
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.openbase.jul.extension.type.processing.LabelProcessor.Companion.LANGUAGE_CODE_TECHNICAL
+import org.openbase.jul.extension.type.processing.LabelProcessor.LANGUAGE_CODE_TECHNICAL
 import org.openbase.type.language.LabelType.Label
 import java.util.*
 
@@ -71,8 +71,6 @@ class LabelProcessorTest {
 
     @Test
     fun bestMatch() {
-
-
         val builder = Label.newBuilder()
         LabelProcessor.addLabel(builder, Locale.GERMAN, DE)
         LabelProcessor.addLabel(builder, Locale.ENGLISH, EN)
@@ -88,7 +86,6 @@ class LabelProcessorTest {
 
     @Test
     fun bestMatchShouldAvoidTechnical() {
-
         val builder = Label.newBuilder()
         LabelProcessor.addLabel(builder, LANGUAGE_CODE_TECHNICAL, TECH)
         LabelProcessor.addLabel(builder, Locale.GERMAN, DE)
