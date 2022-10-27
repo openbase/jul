@@ -21,7 +21,7 @@ internal class ProtoBufBuilderProcessorTest {
     }
 
     @Test
-    fun clearRepeatedFields() {
+    fun `should remove repeated fields` () {
         ActionDescription.newBuilder().also {
             it.descriptionBuilder.addAllEntry(
                 mutableListOf(
@@ -36,7 +36,7 @@ internal class ProtoBufBuilderProcessorTest {
     }
 
     @Test
-    fun mergeFromWithoutRepeatedFields() {
+    fun `should only merge from non-repeated fields`() {
         val originBuilder = ActionDescription.newBuilder().also {
             it.descriptionBuilder.addAllEntry(
                 mutableListOf(
