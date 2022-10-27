@@ -426,11 +426,13 @@ object ProtoBufBuilderProcessor {
         }
     }
 
-    fun mergeFromWithoutRepeatedFields(message: Message): Message.Builder = TODO()
-
     /**
      * This method clears all repeated fields from the given message before the `mergeFrom` is performed.
-     * This functionality can be useful, since `mergeFrom` would always dublicate
+     * This functionality can be useful, since `mergeFrom` would always duplicate all repeated fields
+     * which can be avoided by using this function instead.
+     * @param message the message to merge from.
      */
-    fun Message.Builder.mergeFromWithoutRepeatedFields(message: Message): Message.Builder = TODO()
+    @JvmStatic
+    fun Message.Builder.mergeFromWithoutRepeatedFields(message: Message): Message.Builder =
+        mergeFromWithoutRepeatedFields(message)
 }
