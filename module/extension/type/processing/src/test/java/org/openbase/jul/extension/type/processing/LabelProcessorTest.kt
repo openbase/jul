@@ -36,7 +36,7 @@ class LabelProcessorTest {
     }
 
     @Test
-    fun format() {
+    fun formatString() {
         println("format")
         Assertions.assertEquals("Lamp 1", LabelProcessor.format(" Lamp1"))
         Assertions.assertEquals("LAMP9", LabelProcessor.format(" LAMP9"))
@@ -50,9 +50,25 @@ class LabelProcessorTest {
     }
 
     @Test
+    fun `test format removes language with empty label`() {
+        val deDog = "HUND"
+        val enDog = "DOG"
+
+        val deLabel = Label.MapFieldEntry.newBuilder().setKey("de").addValue(deDog).build()
+        val enLabel = Label.MapFieldEntry.newBuilder().setKey("en").addValue(enDog).build()
+        val frEmptyLabel = Label.MapFieldEntry.newBuilder().setKey("fr").build()
+        val labels = listOf(deLabel, enLabel, frEmptyLabel)
+
+        val formattedLabel = LabelProcessor.format(Label.newBuilder().addAllEntry(labels))
+
+        Assertions.assertEquals(deDog, LabelProcessor.getBestMatch(Locale.GERMAN, formattedLabel))
+        Assertions.assertEquals(enDog, LabelProcessor.getBestMatch(Locale.ENGLISH, formattedLabel))
+        Assertions.assertEquals(enDog, LabelProcessor.getBestMatch(Locale.FRENCH, formattedLabel))
+        Assertions.assertNull(formattedLabel.entryList.firstOrNull() { it.key == "fr" })
+    }
+
+    @Test
     fun bestMatch() {
-
-
         val builder = Label.newBuilder()
         LabelProcessor.addLabel(builder, Locale.GERMAN, DE)
         LabelProcessor.addLabel(builder, Locale.ENGLISH, EN)
@@ -68,7 +84,6 @@ class LabelProcessorTest {
 
     @Test
     fun bestMatchShouldAvoidTechnical() {
-
         val builder = Label.newBuilder()
         LabelProcessor.addLabel(builder, LANGUAGE_CODE_TECHNICAL, TECH)
         LabelProcessor.addLabel(builder, Locale.GERMAN, DE)
