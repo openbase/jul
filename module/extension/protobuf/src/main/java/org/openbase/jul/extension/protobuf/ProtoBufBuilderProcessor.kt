@@ -426,5 +426,5 @@ object ProtoBufBuilderProcessor {
         }
     }
 
-
+    fun Message.Builder.mergeFromWithoutRepeatedFields(message: Message): Message.Builder = TODO()
 }
