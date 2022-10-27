@@ -2,7 +2,7 @@ package org.openbase.jul.extension.type.processing
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.openbase.jul.extension.type.processing.LabelProcessor.LANGUAGE_CODE_TECHNICAL
+import org.openbase.jul.extension.type.processing.LabelProcessor.Companion.LANGUAGE_CODE_TECHNICAL
 import org.openbase.type.language.LabelType.Label
 import java.util.*
 
@@ -36,7 +36,7 @@ class LabelProcessorTest {
     }
 
     @Test
-    fun format() {
+    fun formatString() {
         println("format")
         Assertions.assertEquals("Lamp 1", LabelProcessor.format(" Lamp1"))
         Assertions.assertEquals("LAMP9", LabelProcessor.format(" LAMP9"))
@@ -47,6 +47,26 @@ class LabelProcessorTest {
         Assertions.assertEquals("Living Ceiling Lamp", LabelProcessor.format("LivingCeilingLamp "))
         Assertions.assertEquals("Living Ceiling Lamp", LabelProcessor.format("LivingCeilingLamp"))
         Assertions.assertEquals("Living Cei Ling Lamp", LabelProcessor.format("Living   CeiLing      Lamp"))
+    }
+
+    @Test
+    fun formatLabel() {
+        println("formatLabel")
+
+        val deDog = "HUND"
+        val enDog = "DOG"
+
+        val deLabel = Label.MapFieldEntry.newBuilder().setKey("de").addValue(deDog).build()
+        val enLabel = Label.MapFieldEntry.newBuilder().setKey("en").addValue(enDog).build()
+        val frEmptyLabel = Label.MapFieldEntry.newBuilder().setKey("fr").build()
+        val labels = listOf(deLabel, enLabel, frEmptyLabel)
+
+        val formattedLabel = LabelProcessor.format(Label.newBuilder().addAllEntry(labels))
+
+        Assertions.assertEquals(deDog, LabelProcessor.getBestMatch(Locale.GERMAN, formattedLabel))
+        Assertions.assertEquals(enDog, LabelProcessor.getBestMatch(Locale.ENGLISH, formattedLabel))
+        Assertions.assertEquals(enDog, LabelProcessor.getBestMatch(Locale.FRENCH, formattedLabel))
+        Assertions.assertNull(formattedLabel.entryList.firstOrNull() { it.key == "fr" })
     }
 
     @Test
