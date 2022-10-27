@@ -37,7 +37,7 @@ object LabelProcessor {
     const val LANGUAGE_CODE_TECHNICAL = "technical"
 
     @JvmField
-    val UNKNOWN_LABEL = addLabel(LabelType.Label.newBuilder(), Locale.ENGLISH, "?").build()
+    val UNKNOWN_LABEL = buildLabel(Locale.ENGLISH, "?")
     private val LOGGER = LoggerFactory.getLogger(LabelProcessor::class.java)
 
     /**

@@ -50,9 +50,7 @@ class LabelProcessorTest {
     }
 
     @Test
-    fun formatLabel() {
-        println("formatLabel")
-
+    fun `test format removes language with empty label`() {
         val deDog = "HUND"
         val enDog = "DOG"
 
