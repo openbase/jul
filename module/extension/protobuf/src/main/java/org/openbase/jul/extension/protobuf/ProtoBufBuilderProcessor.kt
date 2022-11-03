@@ -426,5 +426,41 @@ object ProtoBufBuilderProcessor {
         }
     }
 
+    /**
+     * This method clears all repeated fields from the given message before the `mergeFrom` is performed.
+     * This functionality can be useful, since `mergeFrom` would always duplicate all repeated fields
+     * which can be avoided by using this function instead.
+     * @param message the message to merge from.
+     */
+    @JvmStatic
+    fun <MB : Message.Builder> MB.mergeFromWithoutRepeatedFields(builder: Message.Builder): MB =
+        // we should not modify the passed builder, so we need to transform it into a message first.
+        mergeFromWithoutRepeatedFields(builder.build())
 
+    /**
+     * This method clears all repeated fields from the given message before the `mergeFrom` is performed.
+     * This functionality can be useful, since `mergeFrom` would always duplicate all repeated fields
+     * which can be avoided by using this function instead.
+     * @param message the message to merge from.
+     */
+    @JvmStatic
+    fun <MB : Message.Builder> MB.mergeFromWithoutRepeatedFields(message: Message): MB =
+        message.toBuilder()
+            .let { messageBuilder -> messageBuilder.clearRepeatedFields() }
+            .let { messageBuilder -> mergeFrom(messageBuilder.build()) as MB }
+
+    /**
+     * This method recursively clears all repeated fields from the builder instance.
+     */
+    @JvmStatic
+    fun <MB : Message.Builder> MB.clearRepeatedFields(): MB = also { builder ->
+        allFields.keys.forEach { descriptor ->
+            descriptor
+                .takeIf { it.isRepeated }
+                ?.also {clearField(it) ; return@forEach }
+            descriptor
+                .takeIf { it.javaType == Descriptors.FieldDescriptor.JavaType.MESSAGE }
+                ?.also { builder.getFieldBuilder(it).clearRepeatedFields() }
+        }
+    }
 }
