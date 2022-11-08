@@ -1205,13 +1205,18 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     public void updateTransactionId() throws CouldNotPerformException {
         // we need to lock the data builder lock first to avoid deadlocks because its needed anyway when the id is updated.
-        dataBuilderWriteLock.lock();
         try {
-            synchronized (transactionIdLock) {
-                setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
+            dataBuilderWriteLock.lockInterruptibly();
+            try {
+                synchronized (transactionIdLock) {
+                    setDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, generateTransactionId());
+                }
+            } finally {
+                dataBuilderWriteLock.unlock();
             }
-        } finally {
-            dataBuilderWriteLock.unlock();
+        } catch (InterruptedException ex) {
+            // recover interruption
+            Thread.currentThread().interrupt();
         }
     }
 

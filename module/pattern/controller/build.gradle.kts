@@ -10,7 +10,7 @@ plugins {
 
 dependencies {
     api(project(":jul.interface"))
-    api("org.openbase:type:[1.1,1.2-alpha)")
+    api("org.openbase:type:_")
     api(project(":jul.pattern"))
     api(project(":jul.extension.protobuf"))
 }

@@ -24,6 +24,7 @@ package org.openbase.jul.exception;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 /**
  *
@@ -35,6 +36,7 @@ public class ExceptionProcessorTest {
     }
 
     @Test
+    @Timeout(5)
     public void getFromNested() throws Exception {
         Throwable cause = new RuntimeException("The Message");
         Exception exception = new Exception(cause);
@@ -44,6 +46,7 @@ public class ExceptionProcessorTest {
     }
 
     @Test
+    @Timeout(5)
     public void get() throws Exception {
         Exception exception = new Exception("The Message");
 

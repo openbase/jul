@@ -113,15 +113,6 @@ public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> 
         logger.debug("Save " + data + " into " + file);
 
         try {
-            if (JPService.getProperty(JPTestMode.class).getValue()) {
-                logger.debug("Skip data save because " + JPTestMode.class.getSimpleName() + " is enabled!");
-                return file;
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-        }
-
-        try {
             if (data == null) {
                 throw new NotAvailableException("data");
             }
@@ -163,15 +154,6 @@ public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> 
         logger.debug("Create " + file);
 
         try {
-            if (JPService.getProperty(JPTestMode.class).getValue()) {
-                logger.debug("Skip file creation because " + JPTestMode.class.getSimpleName() + " is enabled!");
-                return file;
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-        }
-
-        try {
             if (data == null) {
                 throw new NotAvailableException("data");
             }
@@ -185,15 +167,6 @@ public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> 
     }
 
     public void delete() throws CouldNotPerformException {
-
-        try {
-            if (JPService.getProperty(JPTestMode.class).getValue()) {
-                logger.debug("Skip file deletion because " + JPTestMode.class.getSimpleName() + " is enabled!");
-                return;
-            }
-        } catch (JPServiceException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not access java property!", ex), logger);
-        }
 
         try {
             if (!file.exists()) {

@@ -22,6 +22,7 @@ package org.openbase.rct.impl;
  * #L%
  */
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -38,15 +39,15 @@ public interface TransformerCore extends TransformListener {
     /**
      * Add transform information to the rct data structure
      *
-     * @param transform The transform to store
+     * @param transforms The transforms to store
      * @param isStatic Record this transform as a static transform. It will be good across all time. (This cannot be changed after the first call.)
      * @return True unless an error occured
      * @throws TransformerException
      */
-    boolean setTransform(Transform transform, boolean isStatic) throws TransformerException;
+    boolean setTransform(List<Transform> transforms, boolean isStatic) throws TransformerException;
 
     /**
-     * Get the transform between two frames by frame ID.
+     * Get the transform between two frames by node ID.
      *
      * @param targetFrame The frame to which data should be transformed
      * @param sourceFrame The frame where the data originated
@@ -58,7 +59,7 @@ public interface TransformerCore extends TransformListener {
     Transform lookupTransform(String targetFrame, String sourceFrame, long time) throws TransformerException;
 
     /**
-     * Get the transform between two frames by frame ID assuming fixed frame.
+     * Get the transform between two frames by node ID assuming fixed frame.
      *
      * @param targetFrame The frame to which data should be transformed
      * @param targetTime The time to which the data should be transformed. (0 will get the latest)
@@ -72,7 +73,7 @@ public interface TransformerCore extends TransformListener {
     Transform lookupTransform(String targetFrame, long targetTime, String sourceFrame, long sourceTime, String fixedFrame) throws TransformerException;
 
     /**
-     * Request the transform between two frames by frame ID.
+     * Request the transform between two frames by node ID.
      *
      * @param targetFrame The frame to which data should be transformed
      * @param sourceFrame The frame where the data originated
@@ -105,7 +106,7 @@ public interface TransformerCore extends TransformListener {
     boolean canTransform(String targetFrame, long targetTime, String sourceFrame, long sourceTime, String fixedFrame);
 
     /**
-     * A way to get a set of available frame ids
+     * A way to get a set of available node IDs
      *
      * @return
      */
@@ -113,7 +114,7 @@ public interface TransformerCore extends TransformListener {
 
     /**
      * Check if a frame exists in the tree
-     * @param frameId The frame id in question
+     * @param frameId The node ID in question
      * @return if the frame with the id exists
      */
     boolean frameExists(String frameId);
@@ -121,7 +122,7 @@ public interface TransformerCore extends TransformListener {
     /**
      * Returns the parent of a frame.
      * @param time the timestamp used for the lookup.
-     * @param frameId The frame id of the frame in question
+     * @param frameId The node ID of the frame in question
      * @throws TransformerException
      * @return the id of the parent
      */

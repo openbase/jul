@@ -105,7 +105,7 @@ public class RPCResolvedException extends CouldNotPerformException {
                         try {
                             // try default constructor
                             exception = exceptionClass.getConstructor(String.class, Throwable.class).newInstance(message, exception);
-                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassCastException ex) {
+                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassCastException | UnsupportedOperationException ex) {
                             try {
                                 // try to handle missing fields
                                 if (exception == null && message.isEmpty()) {

@@ -104,7 +104,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
             @Override
             public void expired() {
-                StackTracePrinter.printStackTrace(logger);
+                StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
             }
         };
@@ -112,7 +112,7 @@ public class BundledReentrantReadWriteLock implements ReadWriteLock {
 
             @Override
             public void expired() {
-                StackTracePrinter.printStackTrace(logger);
+                StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + holder + " was locked for more than " + DEFAULT_LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
             }
         };

@@ -1,4 +1,6 @@
-package org.openbase.rct.impl;
+package org.openbase.rct.impl
+
+import org.openbase.rct.Transform
 
 /*-
  * #%L
@@ -21,10 +23,6 @@ package org.openbase.rct.impl;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
-import org.openbase.rct.Transform;
-
-public interface TransformListener {
-
-    void newTransformAvailable(Transform transform, boolean isStatic);
+interface TransformListener {
+    fun newTransformAvailable(transform: List<Transform>, isStatic: Boolean)
 }

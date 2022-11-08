@@ -37,7 +37,7 @@ internal class RPCResolvedExceptionTest {
                 .resolveRPCException(rpcException)
                 .let { result ->
                     ExceptionProcessor.getInitialCause(result).let { initialCause ->
-                        Assertions.assertEquals(initialCause.message, NotAvailableException(missingEntity).message)
+                        Assertions.assertEquals(initialCause?.message, NotAvailableException(missingEntity).message)
                     }
                 }
 
@@ -45,7 +45,7 @@ internal class RPCResolvedExceptionTest {
             RPCResolvedException(rpcException)
                 .let { result ->
                     ExceptionProcessor.getInitialCause(result).let { initialCause ->
-                        Assertions.assertEquals(initialCause.message, NotAvailableException(missingEntity).message)
+                        Assertions.assertEquals(initialCause?.message, NotAvailableException(missingEntity).message)
                     }
                 }
         }

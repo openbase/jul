@@ -16,12 +16,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:_")
     implementation(Kotlin.stdlib.jdk8)
     implementation(Kotlin.scriptRuntime)
+    implementation("com.adarshr:gradle-test-logger-plugin:_")
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
-

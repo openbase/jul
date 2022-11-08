@@ -129,11 +129,16 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 }
             };
             setHashGenerator(value -> {
-                registryLock.readLock().lock();
                 try {
-                    return value.hashCode();
-                } finally {
-                    registryLock.readLock().unlock();
+                    registryLock.readLock().lockInterruptibly();
+                    try {
+                        return value.hashCode();
+                    } finally {
+                        registryLock.readLock().unlock();
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw new CouldNotPerformException(ex);
                 }
             });
 
@@ -821,7 +826,9 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             }
             notificationSkipped = false;
         } catch (CouldNotPerformException ex) {
-            ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all registry observer!", ex), logger, LogLevel.ERROR);
+            if(!ExceptionProcessor.isCausedByInterruption(ex) && !ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all registry observer!", ex), logger, LogLevel.ERROR);
+            }
             return false;
         }
         return true;

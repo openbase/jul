@@ -24,6 +24,7 @@ package org.openbase.jul.storage.registry;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.RejectedException;
@@ -52,6 +53,7 @@ public class RegistryLockingTest {
     }
 
     @Test
+    @Timeout(5)
     public void registryLockingTest() throws Exception {
         System.out.println("registryLockingTest");
         final AbstractRegistry registry1 = new AbstractRegistryImpl();
