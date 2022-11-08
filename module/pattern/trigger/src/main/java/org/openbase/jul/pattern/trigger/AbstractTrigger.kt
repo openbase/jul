@@ -35,7 +35,9 @@ import org.slf4j.LoggerFactory
  *
  * @author [Timo Michalski](mailto:tmichalski@techfak.uni-bielefeld.de)
  */
-abstract class AbstractTrigger : Shutdownable, Trigger {
+abstract class AbstractTrigger(
+    override var priority: TriggerPriority = TriggerPriority.LOW
+) : Shutdownable, Trigger {
     private val triggerObservable: ObservableImpl<Trigger, ActivationStateType.ActivationState>
 
     init {

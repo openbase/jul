@@ -33,4 +33,6 @@ interface Trigger : Activatable {
     val activationState: ActivationStateType.ActivationState
     fun removeObserver(observer: Observer<Trigger, ActivationStateType.ActivationState>?)
     fun addObserver(observer: Observer<Trigger, ActivationStateType.ActivationState>?)
+
+    var priority: TriggerPriority
 }

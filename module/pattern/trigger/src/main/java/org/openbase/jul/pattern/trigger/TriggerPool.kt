@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory
  */ /**
  * @author [Timo Michalski](mailto:tmichalski@techfak.uni-bielefeld.de)
  */
-class TriggerPool : AbstractTrigger() {
+class TriggerPool: AbstractTrigger() {
     enum class TriggerAggregation {
         AND, OR
     }
