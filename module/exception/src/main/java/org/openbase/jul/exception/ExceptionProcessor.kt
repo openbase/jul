@@ -95,11 +95,8 @@ object ExceptionProcessor {
      */
     @JvmStatic
     fun isCausedByInterruption(throwable: Throwable?): Boolean {
-        if (throwable == null) {
-            FatalImplementationErrorException(ExceptionProcessor::class.java, NotAvailableException("cause"))
-            return false
-        }
         var cause = throwable
+            ?: return false
 
         // initial check
         if (cause is InterruptedException) {
@@ -107,8 +104,8 @@ object ExceptionProcessor {
         }
 
         // check causes
-        while (cause!!.cause != null) {
-            cause = cause.cause
+        while (cause.cause != null) {
+            cause = cause.cause?: return false
             if (cause is InterruptedException) {
                 return true
             }
