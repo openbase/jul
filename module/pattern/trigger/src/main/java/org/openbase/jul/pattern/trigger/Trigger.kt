@@ -1,5 +1,9 @@
+package org.openbase.jul.pattern.trigger
 
-package org.openbase.jul.pattern.trigger;
+import org.openbase.jul.exception.NotAvailableException
+import org.openbase.jul.iface.Activatable
+import org.openbase.jul.pattern.Observer
+import org.openbase.type.domotic.state.ActivationStateType
 
 /*-
  * #%L
@@ -21,23 +25,14 @@ package org.openbase.jul.pattern.trigger;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
+ */ /**
+ * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
+interface Trigger : Activatable {
+    @get:Throws(NotAvailableException::class)
+    val activationState: ActivationStateType.ActivationState
+    fun removeObserver(observer: Observer<Trigger, ActivationStateType.ActivationState>?)
+    fun addObserver(observer: Observer<Trigger, ActivationStateType.ActivationState>?)
 
-import org.openbase.jul.exception.NotAvailableException;
-import org.openbase.jul.iface.Activatable;
-import org.openbase.jul.pattern.Observer;
-import org.openbase.type.domotic.state.ActivationStateType;
-import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
-
-/**
- * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
- */
-public interface Trigger extends Activatable {
-
-    ActivationStateType.ActivationState getActivationState() throws NotAvailableException;
-
-    void removeObserver(final Observer<Trigger, ActivationState> observer);
-
-    void addObserver(final Observer<Trigger, ActivationState> observer);
-
+    var priority: TriggerPriority
 }
