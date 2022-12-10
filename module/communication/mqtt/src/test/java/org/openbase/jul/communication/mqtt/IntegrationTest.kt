@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.fail
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.exception.RPCResolvedException
 import org.openbase.jul.exception.CouldNotPerformException
@@ -14,13 +15,15 @@ import org.openbase.type.communication.EventType
 import org.openbase.type.communication.mqtt.PrimitiveType
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
 
 class IntegrationTest : AbstractIntegrationTest() {
 
     private val scope = ScopeProcessor.generateScope("/test/integration")
     private val config = CommunicatorConfig(brokerHost, brokerPort)
 
-    internal class Adder {
+    internal class MethodMock {
         fun add(a: Int, b: Int): Int {
             return a + b
         }
@@ -29,15 +32,29 @@ class IntegrationTest : AbstractIntegrationTest() {
         fun couldNotPerform() {
             throw CouldNotPerformException(errorMessage)
         }
+
+        fun ping(time: Long): Long {
+            return time
+        }
+
+        val lock = ReentrantLock()
+        fun blockingRPC(msg: String): String {
+            lock.lock()
+            try {
+                return msg
+            } finally {
+                lock.unlock()
+            }
+        }
     }
 
     @Test
     fun `test exception resolving`() {
-        val instance = Adder()
+        val instance = MethodMock()
         val scope = ScopeProcessor.concat(scope, ScopeProcessor.generateScope("error_handling"))
 
         val rpcServer = RPCServerImpl(scope, config)
-        rpcServer.registerMethod(Adder::couldNotPerform, instance)
+        rpcServer.registerMethod(MethodMock::couldNotPerform, instance)
         rpcServer.activate()
         rpcServer.getActivationFuture()!!.get()
 
@@ -66,10 +83,10 @@ class IntegrationTest : AbstractIntegrationTest() {
     @Test
     @Timeout(value = 30)
     fun `test rpc over mqtt`() {
-        val instance = Adder()
+        val instance = MethodMock()
 
         val rpcServer = RPCServerImpl(scope, config)
-        rpcServer.registerMethod(Adder::add, instance)
+        rpcServer.registerMethod(MethodMock::add, instance)
         rpcServer.activate()
         rpcServer.getActivationFuture()!!.get()
 
@@ -107,6 +124,42 @@ class IntegrationTest : AbstractIntegrationTest() {
 
         synchronized(lock) {
             lock.wait()
+        }
+    }
+
+    @Test
+    fun `test parallel method call`() {
+        val instance = MethodMock()
+        val scope = ScopeProcessor.concat(scope, ScopeProcessor.generateScope("parallel_execution"))
+
+        val rpcServer = RPCServerImpl(scope, config)
+        rpcServer.registerMethod(MethodMock::blockingRPC, instance)
+        rpcServer.registerMethod(MethodMock::ping, instance)
+        rpcServer.activate()
+        rpcServer.getActivationFuture()!!.get()
+
+        val rpcClient = RPCClientImpl(scope, config)
+
+        instance.lock.lock()
+        try {
+            val expectedMsg = "hello"
+            val blockingFuture = rpcClient.callMethod(instance::blockingRPC.name, String::class, expectedMsg)
+
+            val time = 42L
+            try {
+                val pingResult =
+                    rpcClient.callMethod(instance::ping.name, Long::class, time).get(100, TimeUnit.MILLISECONDS)
+                pingResult shouldBe time
+            } catch (ex: TimeoutException) {
+                fail("Could not ping while another RPCMethod is blocking!", ex)
+            }
+            blockingFuture.isDone shouldBe false
+
+            instance.lock.unlock()
+            val blockingResult = blockingFuture.get(100, TimeUnit.MILLISECONDS)
+            blockingResult shouldBe expectedMsg
+        } finally {
+            instance.lock.unlock()
         }
     }
 }
