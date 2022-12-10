@@ -148,7 +148,7 @@ class IntegrationTest : AbstractIntegrationTest() {
             val time = 42L
             try {
                 val pingResult =
-                    rpcClient.callMethod(instance::ping.name, Long::class, time).get(100, TimeUnit.MILLISECONDS)
+                    rpcClient.callMethod(instance::ping.name, Long::class, time).get(100, TimeUnit.MILLISECONDS).response
                 pingResult shouldBe time
             } catch (ex: TimeoutException) {
                 fail("Could not ping while another RPCMethod is blocking!", ex)
@@ -156,10 +156,12 @@ class IntegrationTest : AbstractIntegrationTest() {
             blockingFuture.isDone shouldBe false
 
             instance.lock.unlock()
-            val blockingResult = blockingFuture.get(100, TimeUnit.MILLISECONDS)
+            val blockingResult = blockingFuture.get(100, TimeUnit.MILLISECONDS).response
             blockingResult shouldBe expectedMsg
         } finally {
-            instance.lock.unlock()
+            if (instance.lock.isLocked) {
+                instance.lock.unlock()
+            }
         }
     }
 }
