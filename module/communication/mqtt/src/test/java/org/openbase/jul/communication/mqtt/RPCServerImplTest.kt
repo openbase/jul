@@ -50,7 +50,7 @@ internal class RPCServerImplTest {
         mockkObject(SharedMqttClient)
         every { SharedMqttClient.get(any()) } returns mqttClient
 
-        rpcServer = RPCServerImpl(ScopeProcessor.generateScope(baseTopic), CommunicatorConfig("localhost", 1234))
+        rpcServer = RPCServerImpl(ScopeProcessor.generateScope(baseTopic), CommunicatorConfig("localhost", 1234), dispatcher = null)
     }
 
     @AfterAll
