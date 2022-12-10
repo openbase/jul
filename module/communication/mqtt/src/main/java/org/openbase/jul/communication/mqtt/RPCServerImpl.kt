@@ -2,11 +2,10 @@ package org.openbase.jul.communication.mqtt
 
 import com.hivemq.client.internal.util.AsyncRuntimeException
 import com.hivemq.client.mqtt.datatypes.MqttQos
-import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder
-import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilderBase
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
+import kotlinx.coroutines.*
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCServer
 import org.openbase.jul.exception.CouldNotPerformException
@@ -21,14 +20,17 @@ import org.openbase.type.communication.mqtt.ResponseType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlin.reflect.KFunction
 
-class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorImpl(scope, config), RPCServer {
+class RPCServerImpl(
+    scope: Scope,
+    config: CommunicatorConfig,
+    dispatcher: CoroutineDispatcher? = GlobalCachedExecutorService.getInstance().executorService.asCoroutineDispatcher()
+) : RPCCommunicatorImpl(scope, config), RPCServer {
 
     private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
@@ -36,6 +38,8 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
     private var activationFuture: Future<out Any>? = null
 
     private val lock = SyncObject("Activation Lock")
+
+    private val coroutineScope = if (dispatcher != null) CoroutineScope(dispatcher) else null
 
     internal fun getActivationFuture(): Future<out Any>? {
         return this.activationFuture
@@ -62,7 +66,13 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
                     // Note: this is a wrapper for the usage of a shared client
                     //       which may remain subscribed even if deactivate is called
                     if (isActive) {
-                        handleRemoteCall(mqtt5Publish)
+                        if (coroutineScope != null) {
+                            coroutineScope.launch {
+                                handleRemoteCall(mqtt5Publish)
+                            }
+                        } else {
+                            handleRemoteCall(mqtt5Publish)
+                        }
                     }
                 },
                 GlobalCachedExecutorService.getInstance().executorService
@@ -92,6 +102,7 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
                     .build()
             )
         }
+        coroutineScope?.cancel()
     }
 
     override fun registerMethod(method: KFunction<*>, instance: Any) {
@@ -143,7 +154,8 @@ class RPCServerImpl(scope: Scope, config: CommunicatorConfig) : RPCCommunicatorI
         } catch (ex: Exception) {
             when (ex) {
                 is InvocationTargetException -> responseBuilder.error =
-                    ex.cause?.stackTraceToString()?:ex.stackTraceToString()
+                    ex.cause?.stackTraceToString() ?: ex.stackTraceToString()
+
                 else -> {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN)
                     responseBuilder.error = CouldNotPerformException("Server error ${ex.message}").stackTraceToString()
