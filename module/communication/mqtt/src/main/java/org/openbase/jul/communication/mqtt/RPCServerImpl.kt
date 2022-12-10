@@ -32,6 +32,7 @@ class RPCServerImpl(
     dispatcher: CoroutineDispatcher? = GlobalCachedExecutorService.getInstance().executorService.asCoroutineDispatcher()
 ) : RPCCommunicatorImpl(scope, config), RPCServer {
 
+    //private val RPC_TIMEOUT = TimeUnit.SECONDS.convert(30, TimeUnit.MILLISECONDS)
     private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
     private val methods: HashMap<String, RPCMethod> = HashMap()
@@ -66,13 +67,11 @@ class RPCServerImpl(
                     // Note: this is a wrapper for the usage of a shared client
                     //       which may remain subscribed even if deactivate is called
                     if (isActive) {
-                        if (coroutineScope != null) {
-                            coroutineScope.launch {
-                                handleRemoteCall(mqtt5Publish)
-                            }
-                        } else {
+                        coroutineScope?.launch {
+                            //withTimeout(RPC_TIMEOUT) {
                             handleRemoteCall(mqtt5Publish)
-                        }
+                            //}
+                        } ?: handleRemoteCall(mqtt5Publish)
                     }
                 },
                 GlobalCachedExecutorService.getInstance().executorService
