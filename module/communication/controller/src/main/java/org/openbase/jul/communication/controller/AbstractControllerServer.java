@@ -25,6 +25,8 @@ package org.openbase.jul.communication.controller;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors;
+import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
+import kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
@@ -82,7 +84,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     public final static String RPC_REQUEST_STATUS = "requestStatus";
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+    protected final LambdaLogger logger = LambdaLoggerFactory.getLogger(getClass());
 
     private final ShutdownDaemon shutdownDaemon;
 
