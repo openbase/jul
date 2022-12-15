@@ -33,9 +33,7 @@ class IntegrationTest : AbstractIntegrationTest() {
             throw CouldNotPerformException(errorMessage)
         }
 
-        fun ping(time: Long): Long {
-            return time
-        }
+        fun ping(time: Long) = time
 
         val lock = ReentrantLock()
         fun blockingRPC(msg: String): String {
