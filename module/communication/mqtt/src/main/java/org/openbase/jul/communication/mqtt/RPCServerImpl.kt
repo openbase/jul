@@ -33,7 +33,11 @@ class RPCServerImpl(
     dispatcher: CoroutineDispatcher? = GlobalCachedExecutorService.getInstance().executorService.asCoroutineDispatcher()
 ) : RPCCommunicatorImpl(scope, config), RPCServer {
 
-    private val RPC_TIMEOUT = Duration.ofMinutes(3)
+    companion object {
+        val NO_DISPATCHER: CoroutineDispatcher? = null
+        val RPC_TIMEOUT: Duration = Duration.ofMinutes(3)
+    }
+
     private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
     private val methods: HashMap<String, RPCMethod> = HashMap()
