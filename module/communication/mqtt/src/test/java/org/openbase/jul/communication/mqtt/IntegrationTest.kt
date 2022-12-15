@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 class IntegrationTest : AbstractIntegrationTest() {
 
@@ -24,26 +25,16 @@ class IntegrationTest : AbstractIntegrationTest() {
     private val config = CommunicatorConfig(brokerHost, brokerPort)
 
     internal class MethodMock {
-        fun add(a: Int, b: Int): Int {
-            return a + b
-        }
-
+        val lock = ReentrantLock()
         val errorMessage = "I cannot do this!"
-        fun couldNotPerform() {
-            throw CouldNotPerformException(errorMessage)
-        }
+
+        fun add(a: Int, b: Int) = a + b
+
+        fun couldNotPerform(): Nothing = throw CouldNotPerformException(errorMessage)
 
         fun ping(time: Long) = time
 
-        val lock = ReentrantLock()
-        fun blockingRPC(msg: String): String {
-            lock.lock()
-            try {
-                return msg
-            } finally {
-                lock.unlock()
-            }
-        }
+        fun blockingRPC(msg: String) = lock.withLock { msg }
     }
 
     @Test
@@ -138,28 +129,24 @@ class IntegrationTest : AbstractIntegrationTest() {
 
         val rpcClient = RPCClientImpl(scope, config)
 
-        instance.lock.lock()
-        try {
-            val expectedMsg = "hello"
-            val blockingFuture = rpcClient.callMethod(instance::blockingRPC.name, String::class, expectedMsg)
-
-            val time = 42L
-            try {
-                val pingResult =
-                    rpcClient.callMethod(instance::ping.name, Long::class, time).get(100, TimeUnit.MILLISECONDS).response
-                pingResult shouldBe time
-            } catch (ex: TimeoutException) {
-                fail("Could not ping while another RPCMethod is blocking!", ex)
-            }
-            blockingFuture.isDone shouldBe false
-
-            instance.lock.unlock()
-            val blockingResult = blockingFuture.get(100, TimeUnit.MILLISECONDS).response
-            blockingResult shouldBe expectedMsg
-        } finally {
-            if (instance.lock.isLocked) {
-                instance.lock.unlock()
-            }
+        val expectedMsg = "hello"
+        val time = 42L
+        instance.lock.withLock {
+            rpcClient
+                .callMethod(instance::blockingRPC.name, String::class, expectedMsg)
+                .also { blockingFuture ->
+                    try {
+                        rpcClient
+                            .callMethod(instance::ping.name, Long::class, time)
+                            .get(100, TimeUnit.MILLISECONDS)
+                            .response shouldBe time
+                    } catch (ex: TimeoutException) {
+                        fail("Could not ping while another RPCMethod is blocking!", ex)
+                    }
+                    blockingFuture.isDone shouldBe false
+                }
+        }.also { blockingFuture ->
+            blockingFuture.get(100, TimeUnit.MILLISECONDS).response shouldBe expectedMsg
         }
     }
 }
