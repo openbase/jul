@@ -20,6 +20,7 @@ import org.openbase.type.communication.mqtt.ResponseType
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
@@ -32,7 +33,7 @@ class RPCServerImpl(
     dispatcher: CoroutineDispatcher? = GlobalCachedExecutorService.getInstance().executorService.asCoroutineDispatcher()
 ) : RPCCommunicatorImpl(scope, config), RPCServer {
 
-    //private val RPC_TIMEOUT = TimeUnit.SECONDS.convert(30, TimeUnit.MILLISECONDS)
+    private val RPC_TIMEOUT = Duration.ofMinutes(3)
     private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
     private val methods: HashMap<String, RPCMethod> = HashMap()
@@ -68,9 +69,9 @@ class RPCServerImpl(
                     //       which may remain subscribed even if deactivate is called
                     if (isActive) {
                         coroutineScope?.launch {
-                            //withTimeout(RPC_TIMEOUT) {
-                            handleRemoteCall(mqtt5Publish)
-                            //}
+                            withTimeout(RPC_TIMEOUT.toMillis()) {
+                                handleRemoteCall(mqtt5Publish)
+                            }
                         } ?: handleRemoteCall(mqtt5Publish)
                     }
                 },
