@@ -10,19 +10,18 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.openbase.jul.communication.iface.RPCServer;
@@ -32,6 +31,8 @@ import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.StackTracePrinter;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
+import org.openbase.jul.extension.protobuf.BuilderSyncSetup;
+import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.Stopwatch;
 import org.openbase.jul.schedule.SyncObject;
@@ -151,7 +152,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
     /**
      * Test if a RemoteService will reconnect when the communication service
      * restarts.
-     *
+     * <p>
      * This test validates, that at least 10 re-connection cycles can be repeated
      * within a timeout of 5 seconds.
      */
@@ -393,6 +394,50 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
             fail("No exception occurred.");
         } catch (CouldNotPerformException ex) {
             // this should happen
+        }
+    }
+
+    /**
+     * Test if methods of the controller can be called in parallel by blocking one call and
+     * then pinging while the method is blocked.
+     *
+     * @throws Exception if any error occurs
+     */
+    @Timeout(5)
+    @Test
+    public void testParallelMethodCall() throws Exception {
+        final String scope = "/test/parallel";
+
+        // create and activate controller
+        communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder());
+        communicationService.init(scope);
+        communicationService.activate();
+
+        // create and activate remote
+        AbstractRemoteClient<UnitRegistryData> remoteService = new AbstractRemoteClientImpl();
+        remoteService.init(scope);
+        remoteService.activate();
+        // wait for synchronization
+        remoteService.requestData().get();
+
+        // acquire the data lock, this means that all requestStatus calls are blocked
+        try (ClosableDataBuilder<UnitRegistryData.Builder> ignored = communicationService.getDataBuilderInterruptible(scope, BuilderSyncSetup.NotificationStrategy.SKIP)) {
+
+
+            // initiate request data call which is blocked
+            final Future<UnitRegistryData> dataFuture = remoteService.requestData();
+
+            // verify that pinging is still possible
+            remoteService.ping().get();
+
+            // verify that the data request is really blocked
+            TimeoutException timeoutException = null;
+            try {
+                dataFuture.get(500, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException ex) {
+                timeoutException = ex;
+            }
+            assertNotNull(timeoutException, "Request data could be called even though the test thread holds the data lock!");
         }
     }
 
