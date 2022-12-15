@@ -24,6 +24,7 @@ package org.openbase.jul.communication.controller;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.function.Executable;
 import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
@@ -409,7 +410,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
         final String scope = "/test/parallel";
 
         // create and activate controller
-        communicationService = new AbstractControllerServerImpl(UnitRegistryData.getDefaultInstance().toBuilder());
+        communicationService = new AbstractControllerServerImpl(UnitRegistryData.newBuilder());
         communicationService.init(scope);
         communicationService.activate();
 
@@ -431,13 +432,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
             remoteService.ping().get();
 
             // verify that the data request is really blocked
-            TimeoutException timeoutException = null;
-            try {
-                dataFuture.get(500, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException ex) {
-                timeoutException = ex;
-            }
-            assertNotNull(timeoutException, "Request data could be called even though the test thread holds the data lock!");
+            assertThrows(TimeoutException.class, () -> dataFuture.get(500, TimeUnit.MILLISECONDS));
         }
     }
 
