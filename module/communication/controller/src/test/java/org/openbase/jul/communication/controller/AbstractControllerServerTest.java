@@ -422,8 +422,6 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
 
         // acquire the data lock, this means that all requestStatus calls are blocked
         try (ClosableDataBuilder<UnitRegistryData.Builder> ignored = communicationService.getDataBuilderInterruptible(scope, BuilderSyncSetup.NotificationStrategy.SKIP)) {
-
-
             // initiate request data call which is blocked
             final Future<UnitRegistryData> dataFuture = remoteService.requestData();
 
