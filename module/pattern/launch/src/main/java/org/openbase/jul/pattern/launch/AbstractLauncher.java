@@ -531,7 +531,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
                 launcherRemote.waitForConnectionState(State.CONNECTED, 1000);
                 throw new VerificationFailedException("Redundant execution of Launcher[" + getName() + "] detected!");
             } catch (org.openbase.jul.exception.TimeoutException e) {
-                // this is the default since to other instant should be launched
+                // this is the default since no other instant should be launched yet.
             } finally {
                 launcherRemote.shutdown();
             }
