@@ -10,12 +10,12 @@ package org.openbase.jul.pattern.launch;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -29,11 +29,11 @@ import ch.qos.logback.core.util.StatusPrinter;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPNotAvailableException;
 import org.openbase.jul.communication.controller.AbstractIdentifiableController;
-import org.openbase.jul.communication.controller.RPCUtils;
 import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
+import org.openbase.jul.extension.protobuf.ClosableDataBuilder;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Launchable;
 import org.openbase.jul.iface.VoidInitializable;
@@ -44,9 +44,13 @@ import org.openbase.jul.processing.StringProcessor;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
-import org.openbase.type.domotic.state.ActivationStateType.ActivationState;
+import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState.State;
+import org.openbase.type.execution.LauncherDataType.LauncherData;
+import org.openbase.type.execution.LauncherDataType.LauncherData.Builder;
+import org.openbase.type.execution.LauncherDataType.LauncherData.LauncherState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
@@ -59,21 +63,25 @@ import java.util.concurrent.*;
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
-public abstract class AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<ActivationState, ActivationState.Builder> implements Launcher, VoidInitializable, NameProvider {
-
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
+public abstract class
+AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<LauncherData, LauncherData.Builder> implements Launcher, VoidInitializable, NameProvider {
 
     public static final long LAUNCHER_TIMEOUT = 60000;
     public static final String SCOPE_PREFIX_LAUNCHER = ScopeProcessor.COMPONENT_SEPARATOR + "launcher";
-
+    private static final List<Future<?>> waitingTaskList = new ArrayList<>();
+    private static final SyncObject VERIFICATION_STACK_LOCK = new SyncObject("VerificationStackLock");
+    private static final SyncObject ERROR_STACK_LOCK = new SyncObject("ErrorStackLock");
+    private static final SyncObject WAITING_TASK_LIST_LOCK = new SyncObject("WaitingStopLock");
+    private static MultiException.ExceptionStack errorExceptionStack = null;
+    private static MultiException.ExceptionStack verificationExceptionStack = null;
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final Class<L> launchableClass;
+    private final SyncObject LAUNCHER_LOCK = new SyncObject(this);
     private final Class<?> applicationClass;
     private L launchable;
     private long launchTime = -1;
-    private LauncherState state;
     private boolean verified;
     private VerificationFailedException verificationFailedException;
-
     private Future<Void> launcherTask;
 
     /**
@@ -88,208 +96,10 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
      * @throws org.openbase.jul.exception.InstantiationException
      */
     public AbstractLauncher(final Class<?> applicationClass, final Class<L> launchableClass) throws InstantiationException {
-        super(ActivationState.newBuilder());
+        super(LauncherData.newBuilder());
         this.launchableClass = launchableClass;
         this.applicationClass = applicationClass;
     }
-
-    @Override
-    public void init() throws InitializationException, InterruptedException {
-        super.init(SCOPE_PREFIX_LAUNCHER + ScopeProcessor.COMPONENT_SEPARATOR + ScopeProcessor.convertIntoValidScopeComponent(getName()));
-    }
-
-
-    /**
-     * This method can be overwritten to identify a core launcher.
-     * This means that if the start of this launcher fails the whole launching
-     * process will be stopped.
-     *
-     * @return false, can be overwritten to return true
-     */
-    public boolean isCoreLauncher() {
-        return false;
-    }
-
-    public L getLaunchable() {
-        return launchable;
-    }
-
-    /**
-     * Method returns the application name.
-     * <p>
-     * By default the application name is the name of the given application class name.
-     *
-     * @return the name as string.
-     */
-    @Override
-    public String getName() {
-        return generateName();
-    }
-
-    /**
-     * Method creates a launchable instance without any arguments.. In case the launchable needs arguments you can overwrite this method and instantiate the launchable by ourself.
-     *
-     * @return the new instantiated launchable.
-     *
-     * @throws CouldNotPerformException is thrown in case the launchable could not properly be instantiated.
-     */
-    protected L instantiateLaunchable() throws CouldNotPerformException {
-        try {
-            return launchableClass.getConstructor().newInstance();
-        } catch (java.lang.InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException ex) {
-            throw new CouldNotPerformException("Could not load launchable class!", ex);
-        }
-    }
-
-    // Load application specific java properties.
-    protected abstract void loadProperties();
-
-    /**
-     * Method verifies a running application.
-     *
-     * @throws VerificationFailedException is thrown if the application is started with any restrictions.
-     * @throws InterruptedException        is thrown if the verification process is externally interrupted.
-     */
-    protected void verify() throws VerificationFailedException, InterruptedException {
-        // overwrite for verification.
-    }
-
-    private final SyncObject LAUNCHER_LOCK = new SyncObject(this);
-
-    public enum LauncherState {
-
-        INITIALIZING,
-        LAUNCHING,
-        RUNNING,
-        STOPPING,
-        STOPPED,
-        ERROR,
-        INTERRUPTED
-    }
-
-    private void setState(final LauncherState state) {
-        this.state = state;
-    }
-
-    @Override
-    public Future<Void> launch() {
-
-        if (launcherTask != null && !launcherTask.isDone()) {
-            return FutureProcessor.canceledFuture(Void.class, new InvalidStateException("Could not launch " + getName() + "! Application still running!"));
-        }
-
-        launcherTask = GlobalCachedExecutorService.submit(() -> {
-            synchronized (LAUNCHER_LOCK) {
-                setState(LauncherState.INITIALIZING);
-                launchable = instantiateLaunchable();
-                try {
-                    launchable.init();
-                    setState(LauncherState.LAUNCHING);
-                    launchable.activate();
-                    launchTime = System.currentTimeMillis();
-                    setState(LauncherState.RUNNING);
-                    try {
-                        verify();
-                        verified = true;
-                    } catch (VerificationFailedException ex) {
-                        verified = false;
-                        verificationFailedException = ex;
-                    }
-                } catch (InterruptedException ex) {
-                    setState(LauncherState.INTERRUPTED);
-                    return null;
-                } catch (Exception ex) {
-                    setState(LauncherState.ERROR);
-                    launchable.shutdown();
-                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                        ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not launch " + getName(), ex), logger);
-                    }
-                }
-                return null;
-            }
-        });
-        return launcherTask;
-    }
-
-    @Override
-    public void relaunch() throws CouldNotPerformException, InterruptedException {
-        synchronized (LAUNCHER_LOCK) {
-            stop();
-            try {
-                launch().get();
-            } catch (ExecutionException | CancellationException ex) {
-                throw new CouldNotPerformException(ex);
-            }
-        }
-    }
-
-    @Override
-    public void stop() {
-
-        interruptBoot();
-
-        synchronized (LAUNCHER_LOCK) {
-            setState(LauncherState.STOPPING);
-            if (launchable != null) {
-                launchable.shutdown();
-            }
-            setState(LauncherState.STOPPED);
-        }
-    }
-
-    /**
-     * Method cancels the boot process of this launcher.
-     */
-    private void interruptBoot() {
-        if (isBooting()) {
-            launcherTask.cancel(true);
-        }
-    }
-
-    /**
-     * @return true if the launcher is currently booting.
-     */
-    private boolean isBooting() {
-        return launcherTask != null && !launcherTask.isDone();
-    }
-
-    @Override
-    public void shutdown() {
-        stop();
-        super.shutdown();
-    }
-
-    @Override
-    public long getUpTime() {
-        if (launchTime < 0) {
-            return 0;
-        }
-        return (System.currentTimeMillis() - launchTime);
-    }
-
-    @Override
-    public long getLaunchTime() {
-        return launchTime;
-    }
-
-    @Override
-    public boolean isVerified() {
-        return verified;
-    }
-
-    public VerificationFailedException getVerificationFailedCause() {
-        return verificationFailedException;
-    }
-
-    public Future<Void> getLauncherTask() {
-        return launcherTask;
-    }
-
-    private static MultiException.ExceptionStack errorExceptionStack = null;
-    private static MultiException.ExceptionStack verificationExceptionStack = null;
-
-    private static final List<Future<?>> waitingTaskList = new ArrayList<>();
-
 
     private static void loadCustomLoggerSettings() throws CouldNotPerformException {
         // assume SLF4J is bound to logback in the current environment
@@ -401,7 +211,8 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         for (final Class<? extends AbstractLauncher> launcherClass : launchers) {
             try {
                 launcherMap.put(launcherClass, launcherClass.getConstructor().newInstance());
-            } catch (java.lang.InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException ex) {
+            } catch (java.lang.InstantiationException | IllegalAccessException | NoSuchMethodException |
+                     InvocationTargetException ex) {
                 errorExceptionStack = MultiException.push(application, new CouldNotPerformException("Could not load launcher class!", ex), errorExceptionStack);
             }
         }
@@ -434,7 +245,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         try {
             if (JPService.getProperty(JPPrintLauncher.class).getValue()) {
                 if (launcherMap.isEmpty()) {
-                    System.out.println(generateName() + " does not provide any launcher!");
+                    System.out.println(generateAppName() + " does not provide any launcher!");
                     System.exit(255);
                 }
                 System.out.println("Available launcher:");
@@ -453,12 +264,13 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             ExceptionPrinter.printHistory("Could not check if launcher should be printed.", ex, logger);
         }
 
-        logger.info("Start " + generateName() + "...");
+        logger.info("Start " + generateAppName() + "...");
 
         for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntry : new HashSet<>(launcherMap.entrySet())) {
 
             // check if launcher was excluded
             boolean exclude = false;
+
             try {
                 //filter excluded launcher
                 for (String exclusionPatter : JPService.getProperty(JPExcludeLauncher.class).getValue()) {
@@ -469,6 +281,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             } catch (JPNotAvailableException ex) {
                 ExceptionPrinter.printHistory("Could not process launcher exclusion!", ex, logger);
             }
+
             if (exclude) {
                 logger.info(launcherEntry.getKey().getSimpleName() + " excluded from execution.");
                 launcherMap.remove(launcherEntry.getKey());
@@ -553,16 +366,12 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             Thread.currentThread().interrupt();
 
             // print a summary containing the exceptions
-            printSummary(application, logger, generateName() + " caught shutdown signal during startup phase!");
+            printSummary(application, logger, generateAppName() + " caught shutdown signal during startup phase!");
 
             return;
         }
-        printSummary(application, logger, generateName() + " was started with restrictions!");
+        printSummary(application, logger, generateAppName() + " was started with restrictions!");
     }
-
-    private static final SyncObject VERIFICATION_STACK_LOCK = new SyncObject("VerificationStackLock");
-    private static final SyncObject ERROR_STACK_LOCK = new SyncObject("ErrorStackLock");
-    private static final SyncObject WAITING_TASK_LIST_LOCK = new SyncObject("WaitingStopLock");
 
     private static void pushToVerificationExceptionStack(Object source, Exception ex) {
         synchronized (VERIFICATION_STACK_LOCK) {
@@ -607,7 +416,7 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
         }
     }
 
-    private static String generateName() {
+    private static String generateAppName() {
         return JPService.getApplicationName() + (JPService.getSubmoduleName().isEmpty() ? "" : "-" + JPService.getSubmoduleName());
     }
 
@@ -627,16 +436,237 @@ public abstract class AbstractLauncher<L extends Launchable> extends AbstractIde
             }
 
             if (Thread.currentThread().isInterrupted()) {
-                logger.info(generateName() + " was interrupted.");
+                logger.info(generateAppName() + " was interrupted.");
                 return;
             }
 
             MultiException.checkAndThrow(() -> errorMessage, exceptionStack);
-            logger.info(generateName()+" successfully started.");
+            logger.info(generateAppName() + " successfully started.");
 
         } catch (MultiException ex) {
             ExceptionPrinter.printHistory(ex, logger);
         }
+    }
+
+    @Override
+    public void init() throws InitializationException, InterruptedException {
+        super.init(SCOPE_PREFIX_LAUNCHER + ScopeProcessor.COMPONENT_SEPARATOR + JPService.getApplicationName() + ScopeProcessor.COMPONENT_SEPARATOR + ScopeProcessor.convertIntoValidScopeComponent(getName()));
+
+        try {
+            verifyNonRedundantExecution();
+        } catch (VerificationFailedException e) {
+            ExceptionPrinter.printHistoryAndExit("Application startup skipped!", e, logger);
+        }
+    }
+
+    /**
+     * This method can be overwritten to identify a core launcher.
+     * This means that if the start of this launcher fails the whole launching
+     * process will be stopped.
+     *
+     * @return false, can be overwritten to return true
+     */
+    public boolean isCoreLauncher() {
+        return false;
+    }
+
+    public L getLaunchable() {
+        return launchable;
+    }
+
+    /**
+     * Method returns the name of this launcher.
+     *
+     * @return the name as string.
+     */
+    @Override
+    public String getName() {
+        return getClass().getSimpleName().replace("Launcher", "");
+    }
+
+    /**
+     * Method creates a launchable instance without any arguments.. In case the launchable needs arguments you can overwrite this method and instantiate the launchable by ourself.
+     *
+     * @return the new instantiated launchable.
+     *
+     * @throws CouldNotPerformException is thrown in case the launchable could not properly be instantiated.
+     */
+    protected L instantiateLaunchable() throws CouldNotPerformException {
+        try {
+            return launchableClass.getConstructor().newInstance();
+        } catch (java.lang.InstantiationException | IllegalAccessException | NoSuchMethodException |
+                 InvocationTargetException ex) {
+            throw new CouldNotPerformException("Could not load launchable class!", ex);
+        }
+    }
+
+    // Load application specific java properties.
+    protected abstract void loadProperties();
+
+    /**
+     * Method verifies a running application.
+     *
+     * @throws VerificationFailedException is thrown if the application is started with any restrictions.
+     * @throws InterruptedException        is thrown if the verification process is externally interrupted.
+     */
+    protected void verify() throws VerificationFailedException, InterruptedException {
+        // overwrite for verification.
+    }
+
+    private void setState(final LauncherState state) {
+        try (ClosableDataBuilder<Builder> dataBuilder = getDataBuilder(this)) {
+            dataBuilder.getInternalBuilder().setLauncherState(state);
+        } catch (Exception e) {
+            ExceptionPrinter.printHistory("Could not apply state change!", e, logger);
+        }
+    }
+
+    public void verifyNonRedundantExecution() throws VerificationFailedException {
+        // verify that launcher was not already externally started
+        try {
+            final LauncherRemote launcherRemote = new LauncherRemote();
+            launcherRemote.init(getScope());
+            try {
+                launcherRemote.activate();
+                launcherRemote.waitForConnectionState(State.CONNECTED, 1000);
+                throw new VerificationFailedException("Redundant execution of Launcher[" + getName() + "] detected!");
+            } catch (org.openbase.jul.exception.TimeoutException e) {
+                // this is the default since to other instant should be launched
+            } finally {
+                launcherRemote.shutdown();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (VerificationFailedException e) {
+            throw e;
+        } catch (CouldNotPerformException e) {
+            ExceptionPrinter.printHistory("Could not properly detect redundant launcher!", e, logger);
+        }
+    }
+
+    @Override
+    public Future<Void> launch() {
+
+        if (launcherTask != null && !launcherTask.isDone()) {
+            return FutureProcessor.canceledFuture(Void.class, new InvalidStateException("Could not launch " + getName() + "! Application still running!"));
+        }
+
+        launcherTask = GlobalCachedExecutorService.submit(() -> {
+
+            try {
+                init();
+                activate();
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not activate Launcher[" + getName() + "]!", ex, logger);
+            } catch (InterruptedException e) {
+                throw e;
+            }
+
+            synchronized (LAUNCHER_LOCK) {
+                setState(LauncherState.INITIALIZING);
+                launchable = instantiateLaunchable();
+                try {
+                    launchable.init();
+                    setState(LauncherState.LAUNCHING);
+
+                    launchable.activate();
+                    launchTime = System.currentTimeMillis();
+                    setState(LauncherState.RUNNING);
+                    try {
+                        verify();
+                        verified = true;
+                    } catch (VerificationFailedException ex) {
+                        verified = false;
+                        verificationFailedException = ex;
+                    }
+                } catch (InterruptedException ex) {
+                    setState(LauncherState.STOPPING);
+                    return null;
+                } catch (Exception ex) {
+                    setState(LauncherState.ERROR);
+                    launchable.shutdown();
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                        ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not launch " + getName(), ex), logger);
+                    }
+                }
+                return null;
+            }
+        });
+        return launcherTask;
+    }
+
+    @Override
+    public void relaunch() throws CouldNotPerformException, InterruptedException {
+        synchronized (LAUNCHER_LOCK) {
+            stop();
+            try {
+                launch().get();
+            } catch (ExecutionException | CancellationException ex) {
+                throw new CouldNotPerformException(ex);
+            }
+        }
+    }
+
+    @Override
+    public void stop() {
+
+        interruptBoot();
+
+        synchronized (LAUNCHER_LOCK) {
+            setState(LauncherState.STOPPING);
+            if (launchable != null) {
+                launchable.shutdown();
+            }
+            setState(LauncherState.STOPPED);
+        }
+    }
+
+    /**
+     * Method cancels the boot process of this launcher.
+     */
+    private void interruptBoot() {
+        if (isBooting()) {
+            launcherTask.cancel(true);
+        }
+    }
+
+    /**
+     * @return true if the launcher is currently booting.
+     */
+    private boolean isBooting() {
+        return launcherTask != null && !launcherTask.isDone();
+    }
+
+    @Override
+    public void shutdown() {
+        stop();
+        super.shutdown();
+    }
+
+    @Override
+    public long getUpTime() {
+        if (launchTime < 0) {
+            return 0;
+        }
+        return (System.currentTimeMillis() - launchTime);
+    }
+
+    @Override
+    public long getLaunchTime() {
+        return launchTime;
+    }
+
+    @Override
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public VerificationFailedException getVerificationFailedCause() {
+        return verificationFailedException;
+    }
+
+    public Future<Void> getLauncherTask() {
+        return launcherTask;
     }
 
     @Override
