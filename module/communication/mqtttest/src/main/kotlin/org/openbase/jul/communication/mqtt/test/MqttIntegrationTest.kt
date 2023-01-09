@@ -66,7 +66,8 @@ open class MqttIntegrationTest {
                     BindMode.READ_ONLY
                 )
                 .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
-                .also { if (broker?.takeIf { it.containerId != null } != null) error("broker was already initialized!") }
+                .also { if (broker?.takeIf { it.containerId != null } != null)
+                    error("broker was already initialized!") }
                 .also { broker = it }
                 .also { setupProperties() }
         }
