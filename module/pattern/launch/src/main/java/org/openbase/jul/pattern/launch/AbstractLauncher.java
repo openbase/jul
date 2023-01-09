@@ -553,17 +553,23 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
 
         launcherTask = GlobalCachedExecutorService.submit(() -> {
 
-            try {
-                init();
-                activate();
-            } catch (CouldNotPerformException ex) {
-                ExceptionPrinter.printHistory("Could not activate Launcher[" + getName() + "]!", ex, logger);
-            } catch (InterruptedException e) {
-                throw e;
-            }
-
             synchronized (LAUNCHER_LOCK) {
+
                 setState(LauncherState.INITIALIZING);
+
+                try {
+                    init();
+                    activate();
+                } catch (CouldNotPerformException ex) {
+                    ExceptionPrinter.printHistory("Could not activate Launcher[" + getName() + "]!", ex, logger);
+                } catch (RuntimeException e) {
+                    setState(LauncherState.ERROR);
+                    throw e;
+                } catch (InterruptedException e) {
+                    setState(LauncherState.STOPPED);
+                    throw e;
+                }
+
                 launchable = instantiateLaunchable();
                 try {
                     launchable.init();

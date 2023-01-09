@@ -266,10 +266,17 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     return;
+                } catch (NotInitializedException ex) {
+                    // do nothing if service is not initialized yet
                 } catch (CouldNotPerformException ex) {
                     // only print error if the exception was not caused by a system shutdown.
                     if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
+                        ExceptionPrinter.printHistory(
+                                "Could not inform builder holder about data update!",
+                                ex,
+                                logger,
+                                LogLevel.ERROR
+                        );
                     }
                 }
         }

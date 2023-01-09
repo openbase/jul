@@ -32,6 +32,7 @@ import org.openbase.jul.communication.iface.RPCClient;
 import org.openbase.jul.communication.iface.RPCServer;
 import org.openbase.jul.communication.mqtt.CommunicatorFactoryImpl;
 import org.openbase.jul.communication.mqtt.DefaultCommunicatorConfig;
+import org.openbase.jul.communication.mqtt.test.MqttIntegrationTest;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
 import org.openbase.jul.iface.Requestable;

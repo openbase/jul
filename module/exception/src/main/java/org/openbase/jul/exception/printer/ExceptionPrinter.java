@@ -36,6 +36,7 @@ import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.FatalImplementationErrorException;
 import org.openbase.jul.exception.MultiException;
 import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
+import org.openbase.jul.exception.ShutdownException;
 import org.slf4j.Logger;
 
 /**
@@ -214,8 +215,7 @@ public class ExceptionPrinter {
     public static <T extends Throwable> void printHistoryAndExit(final String message, T th, final Logger logger) {
         printHistory(new CouldNotPerformException(message, th), logger, LogLevel.ERROR);
         if (JPService.testMode()) {
-            assert false;
-            return;
+            throw new RuntimeException(new ShutdownException(message, th));
         }
         exit(255);
     }
