@@ -71,7 +71,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
     private static final List<Future<?>> waitingTaskList = new ArrayList<>();
     private static final SyncObject VERIFICATION_STACK_LOCK = new SyncObject("VerificationStackLock");
     private static final SyncObject ERROR_STACK_LOCK = new SyncObject("ErrorStackLock");
-    private static final SyncObject WAITING_TASK_LIST_LOCK = new SyncObject("WaitingStopLock");
+    private static final SyncObject WAITING_TASK_LIST_LOCK = new SyncObject("WaitingTaskLock");
     private static MultiException.ExceptionStack errorExceptionStack = null;
     private static MultiException.ExceptionStack verificationExceptionStack = null;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
