@@ -402,7 +402,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
 
         // interrupt all launcher
         for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntryToStop : launcherMap.entrySet()) {
-            launcherEntryToStop.getValue().interruptBoot();
+            launcherEntryToStop.getValue().interruptLaunch();
         }
     }
 
@@ -616,7 +616,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
     @Override
     public void stop() {
 
-        interruptBoot();
+        interruptLaunch();
 
         synchronized (LAUNCHER_LOCK) {
             setState(LauncherState.STOPPING);
@@ -628,18 +628,18 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
     }
 
     /**
-     * Method cancels the boot process of this launcher.
+     * Method cancels the launch process of this launcher.
      */
-    private void interruptBoot() {
-        if (isBooting()) {
+    private void interruptLaunch() {
+        if (isLaunching()) {
             launcherTask.cancel(true);
         }
     }
 
     /**
-     * @return true if the launcher is currently booting.
+     * @return true if the launcher is currently launching.
      */
-    private boolean isBooting() {
+    private boolean isLaunching() {
         return launcherTask != null && !launcherTask.isDone();
     }
 
