@@ -41,6 +41,7 @@ import org.openbase.jul.iface.provider.NameProvider;
 import org.openbase.jul.pattern.Launcher;
 import org.openbase.jul.pattern.launch.jp.*;
 import org.openbase.jul.processing.StringProcessor;
+import org.openbase.jul.schedule.CloseableWriteLockWrapper;
 import org.openbase.jul.schedule.FutureProcessor;
 import org.openbase.jul.schedule.GlobalCachedExecutorService;
 import org.openbase.jul.schedule.SyncObject;
@@ -76,13 +77,12 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
     private static MultiException.ExceptionStack verificationExceptionStack = null;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private final Class<L> launchableClass;
-    private final SyncObject LAUNCHER_LOCK = new SyncObject(this);
     private final Class<?> applicationClass;
     private L launchable;
     private long launchTime = -1;
     private boolean verified;
     private VerificationFailedException verificationFailedException;
-    private Future<Void> launcherTask;
+    volatile private Future<Void> launcherTask;
 
     /**
      * Constructor prepares the launcher and registers already a shutdown hook.
@@ -326,15 +326,13 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
                         } catch (Exception ex) {
                             final CouldNotPerformException exx = new CouldNotPerformException("Could not launch " + launcherEntry.getKey().getSimpleName() + "!", ex);
 
+                            pushToErrorExceptionStack(application, exx);
+
                             // if a core launcher could not be started the whole startup failed so interrupt
                             if (launcherEntry.getValue().isCoreLauncher()) {
-                                pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
-
                                 // shutdown all launcher
                                 forceStopLauncher(launcherMap);
                             }
-
-                            pushToErrorExceptionStack(application, ExceptionPrinter.printHistoryAndReturnThrowable(exx, logger));
 
                             // finish launcher
                             return null;
@@ -354,16 +352,17 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
                     // these exception will be pushed to the error exception stack anyway and printed in the summary
                 } catch (CancellationException ex) {
                     // if a core launcher fails a cancellation exception will be thrown
-                    throw new InterruptedException();
+                    printSummary(application, logger, generateAppName() + " will be stopped because at least one core laucher could not be started.");
+                    System.exit(200);
                 }
             }
         } catch (InterruptedException ex) {
 
-            // shutdown all launcher
-            forceStopLauncher(launcherMap);
-
             // recover interruption
             Thread.currentThread().interrupt();
+
+            // shutdown all launcher
+            forceStopLauncher(launcherMap);
 
             // print a summary containing the exceptions
             printSummary(application, logger, generateAppName() + " caught shutdown signal during startup phase!");
@@ -395,7 +394,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
         }
     }
 
-    private static void interruptLauncherBoot(final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap) {
+    private static void interruptLaunch(final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap) {
 
         // stop boot
         stopWaiting();
@@ -408,7 +407,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
 
     private static void forceStopLauncher(final Map<Class<? extends AbstractLauncher>, AbstractLauncher> launcherMap) {
 
-        interruptLauncherBoot(launcherMap);
+        interruptLaunch(launcherMap);
 
         // stop all launcher. This is done in an extra loop since stop can block if the launcher is not yet fully interrupted.
         for (final Entry<Class<? extends AbstractLauncher>, AbstractLauncher> launcherEntryToStop : launcherMap.entrySet()) {
@@ -455,7 +454,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
         try {
             verifyNonRedundantExecution();
         } catch (VerificationFailedException e) {
-            ExceptionPrinter.printHistoryAndExit("Application startup skipped!", e, logger);
+            throw new InitializationException(this, e);
         }
     }
 
@@ -529,7 +528,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
             try {
                 launcherRemote.activate();
                 launcherRemote.waitForConnectionState(State.CONNECTED, 1000);
-                throw new VerificationFailedException("Redundant execution of Launcher[" + getName() + "] detected!");
+                throw new RedundantExecutionException("Launcher[" + getName() + "]");
             } catch (org.openbase.jul.exception.TimeoutException e) {
                 // this is the default since no other instance should be launched yet.
             } finally {
@@ -547,63 +546,67 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
     @Override
     public Future<Void> launch() {
 
-        if (launcherTask != null && !launcherTask.isDone()) {
-            return FutureProcessor.canceledFuture(Void.class, new InvalidStateException("Could not launch " + getName() + "! Application still running!"));
-        }
+        try(final CloseableWriteLockWrapper ignored = getManageWriteLockInterruptible(this)) {
 
-        launcherTask = GlobalCachedExecutorService.submit(() -> {
-
-            synchronized (LAUNCHER_LOCK) {
-
-                setState(LauncherState.INITIALIZING);
-
-                try {
-                    init();
-                    activate();
-                } catch (CouldNotPerformException ex) {
-                    ExceptionPrinter.printHistory("Could not activate Launcher[" + getName() + "]!", ex, logger);
-                } catch (RuntimeException e) {
-                    setState(LauncherState.ERROR);
-                    throw e;
-                } catch (InterruptedException e) {
-                    setState(LauncherState.STOPPED);
-                    throw e;
-                }
-
-                launchable = instantiateLaunchable();
-                try {
-                    launchable.init();
-                    setState(LauncherState.LAUNCHING);
-
-                    launchable.activate();
-                    launchTime = System.currentTimeMillis();
-                    setState(LauncherState.RUNNING);
-                    try {
-                        verify();
-                        verified = true;
-                    } catch (VerificationFailedException ex) {
-                        verified = false;
-                        verificationFailedException = ex;
-                    }
-                } catch (InterruptedException ex) {
-                    setState(LauncherState.STOPPING);
-                    return null;
-                } catch (Exception ex) {
-                    setState(LauncherState.ERROR);
-                    launchable.shutdown();
-                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                        ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not launch " + getName(), ex), logger);
-                    }
-                }
-                return null;
+            if (launcherTask != null && !launcherTask.isDone()) {
+                return FutureProcessor.canceledFuture(Void.class, new InvalidStateException("Could not launch " + getName() + "! Application still running!"));
             }
-        });
+
+            launcherTask = GlobalCachedExecutorService.submit(() -> {
+
+                try(final CloseableWriteLockWrapper ignored1 = getManageWriteLockInterruptible(this)) {
+
+                    setState(LauncherState.INITIALIZING);
+
+                    try {
+                        init();
+                        activate();
+                    } catch (CouldNotPerformException | RuntimeException e) {
+                        setState(LauncherState.ERROR);
+                        throw e;
+                    } catch (InterruptedException e) {
+                        setState(LauncherState.STOPPED);
+                        throw e;
+                    }
+
+                    launchable = instantiateLaunchable();
+                    try {
+                        launchable.init();
+                        setState(LauncherState.LAUNCHING);
+
+                        launchable.activate();
+                        launchTime = System.currentTimeMillis();
+                        setState(LauncherState.RUNNING);
+                        try {
+                            verify();
+                            verified = true;
+                        } catch (VerificationFailedException ex) {
+                            verified = false;
+                            verificationFailedException = ex;
+                        }
+                    } catch (InterruptedException ex) {
+                        setState(LauncherState.STOPPING);
+                        return null;
+                    } catch (Exception ex) {
+                        setState(LauncherState.ERROR);
+                        launchable.shutdown();
+                        if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                            ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not launch " + getName(), ex), logger);
+                        }
+                    }
+                    return null;
+                }
+            });
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(ex);
+        }
         return launcherTask;
     }
 
     @Override
     public void relaunch() throws CouldNotPerformException, InterruptedException {
-        synchronized (LAUNCHER_LOCK) {
+        try(final CloseableWriteLockWrapper ignored = getManageWriteLockInterruptible(this)) {
             stop();
             try {
                 launch().get();
@@ -616,14 +619,16 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
     @Override
     public void stop() {
 
-        interruptLaunch();
-
-        synchronized (LAUNCHER_LOCK) {
+        try(final CloseableWriteLockWrapper ignored = getManageWriteLockInterruptible(this)) {
+            interruptLaunch();
             setState(LauncherState.STOPPING);
             if (launchable != null) {
                 launchable.shutdown();
             }
             setState(LauncherState.STOPPED);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(ex);
         }
     }
 
