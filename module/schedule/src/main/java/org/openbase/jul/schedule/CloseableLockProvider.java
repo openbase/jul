@@ -1,6 +1,6 @@
 package org.openbase.jul.schedule;
 
-/**
+/*
  * #%L
  * JUL Schedule
  * %%
