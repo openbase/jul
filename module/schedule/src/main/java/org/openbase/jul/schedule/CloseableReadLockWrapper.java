@@ -40,7 +40,12 @@ public class CloseableReadLockWrapper implements AutoCloseable {
         this.lock = lock;
 
         if(allocate) {
-            this.lock.lockRead();
+            try {
+                this.lock.lockReadInterruptibly();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
         }
     }
 

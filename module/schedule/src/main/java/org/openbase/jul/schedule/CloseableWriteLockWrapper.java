@@ -38,7 +38,12 @@ public class CloseableWriteLockWrapper implements java.lang.AutoCloseable {
     public CloseableWriteLockWrapper(final ReadWriteLock lock, final boolean allocate) {
         this.lock = lock;
         if (allocate) {
-            this.lock.lockWrite();
+            try {
+                this.lock.lockWriteInterruptibly();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
         }
     }
 

@@ -115,7 +115,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     private volatile long transaction_id = 0;
 
     private final CommunicatorFactory factory = CommunicatorFactoryImpl.Companion.getInstance();
-    private final CommunicatorConfig defaultCommunicatorConfig = DefaultCommunicatorConfig.Companion.getInstance();
 
     /**
      * Create a communication service.
@@ -167,7 +166,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws InterruptedException
      */
     public void init(final Scope scope) throws InitializationException, InterruptedException {
-        init(scope, defaultCommunicatorConfig);
+        init(scope, DefaultCommunicatorConfig.Companion.getInstance());
     }
 
     /**

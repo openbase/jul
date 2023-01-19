@@ -44,6 +44,17 @@ public class ShutdownInProgressException extends CouldNotPerformException {
     /**
      * {@inheritDoc}
      *
+     * @param message {@inheritDoc} The reason of the shutdown.
+     *
+     * Note: The given service should provide a proper toString() method.
+     */
+    public ShutdownInProgressException(final String message) {
+        super(message);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @param serviceClass {@inheritDoc} The class of the service which is shutting down.
      */
     public ShutdownInProgressException(final Class serviceClass) {
