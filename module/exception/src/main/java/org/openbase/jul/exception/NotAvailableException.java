@@ -47,154 +47,135 @@ public class NotAvailableException extends InvalidStateException {
     }
 
     /**
-     * Method generates a suitable exception message with the given {@code identifier}.
+     * Method generates a suitable exception message out of the given {@code context} and {@code identifier}.
      *
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param context    a keyword which describes the type of what is missing.
+     * @param identifier a class used as identifier of the missing context.
      */
-    public NotAvailableException(final Object identifier) {
-        this(identifier.toString());
+    public NotAvailableException(final String context, final Class identifier) {
+        this(context, identifier.getSimpleName());
+    }
+
+    /**
+     * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
+     *
+     * @param context    a keyword which describes the type of what is missing.
+     * @param identifier a class used as identifier of the missing context.
+     * @param cause      the cause of this exception.
+     */
+    public NotAvailableException(final String context, final Class identifier, final Throwable cause) {
+        this(context, identifier.getSimpleName(), cause);
+    }
+
+    /**
+     * Method generates a suitable exception message out of the given {@code context} and {@code identifier}.
+     *
+     * @param context    an enum which describes the type of what is missing.
+     * @param identifier a class used as identifier of the missing context.
+     */
+    public NotAvailableException(final ContextType context, final Class identifier) {
+        this(context, identifier.getSimpleName());
+    }
+
+    /**
+     * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
+     *
+     * @param context    an enum which describes the type of what is missing.
+     * @param identifier a class used as identifier of the missing context.
+     * @param cause      the cause of this exception.
+     */
+    public NotAvailableException(final ContextType context, final Class identifier, final Throwable cause) {
+        this(context, identifier.getSimpleName(), cause);
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context} and {@code identifier}.
      *
      * @param context    a keyword which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param identifier a class used as identifier of the missing context.
      */
-    public NotAvailableException(final String context, final Object identifier) {
-        this(context, identifier.toString());
-    }
-
-    /**
-     * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
-     *
-     * @param context    a keyword which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
-     * @param cause      the cause of this exception.
-     */
-    public NotAvailableException(final String context, final Object identifier, final Throwable cause) {
-        this(context, identifier.toString(), cause);
-    }
-
-    /**
-     * Method generates a suitable exception message out of the given {@code context} and {@code identifier}.
-     *
-     * @param context    a enum which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
-     */
-    public NotAvailableException(final ContextType context, final Object identifier) {
-        this(context, identifier.toString());
-    }
-
-    /**
-     * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
-     *
-     * @param context    a enum which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
-     * @param cause      the cause of this exception.
-     */
-    public NotAvailableException(final ContextType context, final Object identifier, final Throwable cause) {
-        this(context, identifier.toString(), cause);
-    }
-
-    /**
-     * Method generates a suitable exception message out of the given {@code context} and {@code identifier}.
-     *
-     * @param context    a keyword which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
-     */
-    public NotAvailableException(final Class context, final Object identifier) {
-        this(context.getSimpleName(), identifier.toString());
+    public NotAvailableException(final Class context, final Class identifier) {
+        this(context.getSimpleName(), identifier.getSimpleName());
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
      * @param context    a class to describe the missing context.
-     * @param identifier an identifier to describe the missing context.
+     * @param identifier a class used as identifier of the missing context.
      * @param cause      the cause of this exception.
      */
-    public NotAvailableException(final Class context, final Object identifier, final Throwable cause) {
-        this(context.getSimpleName(), identifier.toString(), cause);
-    }
-
-    /**
-     * Method generates a suitable exception message out of the given {@code identifier} and {@code message}.
-     *
-     * @param identifier an instance providing a toString() method to identify the missing context.
-     * @param message    an additional message which is added to the end of the generated message.
-     */
-    public NotAvailableException(final Object identifier, final String message) {
-        this((String) null, identifier.toString(), message);
+    public NotAvailableException(final Class context, final Class identifier, final Throwable cause) {
+        this(context.getSimpleName(), identifier.getSimpleName(), cause);
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
      * @param context    a keyword which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param identifier a class used as identifier of the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      */
-    public NotAvailableException(final String context, final Object identifier, final String message) {
-        this(context, identifier.toString(), message);
+    public NotAvailableException(final String context, final Class identifier, final String message) {
+        this(context, identifier.getSimpleName(), message);
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
      * @param context    a keyword which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param identifier a class used as identifier of the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      * @param cause      the cause of this exception.
      */
-    public NotAvailableException(final String context, final Object identifier, final String message, final Throwable cause) {
-        this(context, identifier.toString(), message, cause);
+    public NotAvailableException(final String context, final Class identifier, final String message, final Throwable cause) {
+        this(context, identifier.getSimpleName(), message, cause);
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
-     * @param context    a enum which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param context    an enum which describes the type of what is missing.
+     * @param identifier a class used as identifier of the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      */
-    public NotAvailableException(final ContextType context, final Object identifier, final String message) {
-        this(context, identifier.toString(), message);
+    public NotAvailableException(final ContextType context, final Class identifier, final String message) {
+        this(context, identifier.getSimpleName(), message);
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
-     * @param context    a enum which describes the type of what is missing.
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param context    an enum which describes the type of what is missing.
+     * @param identifier a class used as identifier of the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      * @param cause      the cause of this exception.
      */
-    public NotAvailableException(final ContextType context, final Object identifier, final String message, final Throwable cause) {
-        this(context, identifier.toString(), message, cause);
+    public NotAvailableException(final ContextType context, final Class identifier, final String message, final Throwable cause) {
+        this(context, identifier.getSimpleName(), message, cause);
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
      * @param context    a class to describe the missing context.
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param identifier a class used as identifier of the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      */
-    public NotAvailableException(final Class context, final Object identifier, final String message) {
-        this(context.getSimpleName(), identifier.toString(), message);
+    public NotAvailableException(final Class context, final Class identifier, final String message) {
+        this(context.getSimpleName(), identifier.getSimpleName(), message);
     }
 
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
      * @param context    a class to describe the missing context.
-     * @param identifier an instance providing a toString() method to identify the missing context.
+     * @param identifier a class used as identifier of the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      * @param cause      the cause of this exception.
      */
-    public NotAvailableException(final Class context, final Object identifier, final String message, final Throwable cause) {
-        this(context.getSimpleName(), identifier.toString(), message, cause);
+    public NotAvailableException(final Class context, final Class identifier, final String message, final Throwable cause) {
+        this(context.getSimpleName(), identifier.getSimpleName(), message, cause);
     }
 
     /**
@@ -205,6 +186,17 @@ public class NotAvailableException extends InvalidStateException {
      */
     public NotAvailableException(final Class context, final String identifier) {
         this(context.getSimpleName(), identifier);
+    }
+
+    /**
+     * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
+     *
+     * @param context    an object used to describe the missing context.
+     * @param identifier an identifier to identify the missing context.
+     * @param cause      the cause of this exception.
+     */
+    public NotAvailableException(final Object context, final String identifier, final Throwable cause) {
+        this(context.getClass(), identifier, cause);
     }
 
     /**
@@ -244,7 +236,7 @@ public class NotAvailableException extends InvalidStateException {
     /**
      * Method generates a suitable exception message out of the given {@code context} and {@code identifier}.
      *
-     * @param context    a enum which describes the type of what is missing.
+     * @param context    an enum which describes the type of what is missing.
      * @param identifier an identifier to describe the missing context.
      */
     public NotAvailableException(final ContextType context, final String identifier) {
@@ -254,7 +246,7 @@ public class NotAvailableException extends InvalidStateException {
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
-     * @param context    a enum which describes the type of what is missing.
+     * @param context    an enum which describes the type of what is missing.
      * @param identifier an identifier to describe the missing context.
      * @param cause      the cause of this exception.
      */
@@ -265,7 +257,7 @@ public class NotAvailableException extends InvalidStateException {
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
-     * @param context    a enum which describes the type of what is missing.
+     * @param context    an enum which describes the type of what is missing.
      * @param identifier an identifier to describe the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      */
@@ -276,7 +268,7 @@ public class NotAvailableException extends InvalidStateException {
     /**
      * Method generates a suitable exception message out of the given {@code context}, {@code identifier} and {@code message}.
      *
-     * @param context    a enum which describes the type of what is missing.
+     * @param context    an enum which describes the type of what is missing.
      * @param identifier an identifier to describe the missing context.
      * @param message    an additional message which is added to the end of the generated message.
      * @param cause      the cause of this exception.

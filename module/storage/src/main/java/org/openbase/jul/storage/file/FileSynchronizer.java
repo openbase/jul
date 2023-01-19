@@ -120,7 +120,7 @@ public class FileSynchronizer<D> extends ObservableImpl<FileSynchronizer<D>, D> 
             this.data = data;
 
             if (!file.exists()) {
-                throw new NotAvailableException(File.class, file, "File does not exist!");
+                throw new NotAvailableException(File.class, file.getAbsolutePath(), "File does not exist!");
             }
             
             if (!file.canWrite()) {
