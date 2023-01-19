@@ -527,6 +527,7 @@ AbstractLauncher<L extends Launchable> extends AbstractIdentifiableController<La
             launcherRemote.init(getScope());
             try {
                 launcherRemote.activate();
+                launcherRemote.waitForMiddleware();
                 launcherRemote.waitForConnectionState(State.CONNECTED, 1000);
                 throw new RedundantExecutionException("Launcher[" + getName() + "]");
             } catch (org.openbase.jul.exception.TimeoutException e) {
