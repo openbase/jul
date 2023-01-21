@@ -109,11 +109,11 @@ class RPCClientImpl(
     }
 
     private fun lazyRegisterMethod(methodName: String, return_clazz: KClass<*>, vararg parameters: Any) {
-        resultParserMap.getOrPut(methodName) { RPCMethod.protoAnyToAny(return_clazz) }
+        resultParserMap.getOrPut(methodName) { RPCMethodWrapper.protoAnyToAny(return_clazz) }
         parameterParserMap.getOrPut(methodName) {
             parameters
                 .map { param -> param::class }
-                .map { param_clazz -> RPCMethod.anyToProtoAny(param_clazz) }
+                .map { param_clazz -> RPCMethodWrapper.anyToProtoAny(param_clazz) }
         }
     }
 

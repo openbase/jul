@@ -6,6 +6,7 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import kotlinx.coroutines.*
+import org.openbase.jul.annotation.RPCMethod
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCServer
 import org.openbase.jul.exception.CouldNotPerformException
@@ -40,7 +41,7 @@ class RPCServerImpl(
 
     private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
-    private val methods: HashMap<String, RPCMethod> = HashMap()
+    private val methods: HashMap<String, RPCMethodWrapper> = HashMap()
     private var activationFuture: Future<out Any>? = null
 
     private val lock = SyncObject("Activation Lock")
@@ -111,9 +112,9 @@ class RPCServerImpl(
     override fun registerMethod(
         method: KFunction<*>,
         instance: Any,
-        priority: org.openbase.jul.annotation.RPCMethod.Priority,
+        priority: RPCMethod.Priority,
     ) {
-        methods[method.name] = RPCMethod(method, priority = priority, instance = instance);
+        methods[method.name] = RPCMethodWrapper(method, priority = priority, instance = instance);
     }
 
     private fun handleRemoteCall(mqtt5Publish: Mqtt5Publish) {
@@ -167,8 +168,8 @@ class RPCServerImpl(
         )
     }
 
-    private fun getPriority(mqtt5Publish: Mqtt5Publish): org.openbase.jul.annotation.RPCMethod.Priority {
+    private fun getPriority(mqtt5Publish: Mqtt5Publish): RPCMethod.Priority {
         val request = RequestType.Request.parseFrom(mqtt5Publish.payloadAsBytes)
-        return methods[request.methodName]?.priority ?: org.openbase.jul.annotation.RPCMethod.Priority.HIGH
+        return methods[request.methodName]?.priority ?: RPCMethod.Priority.HIGH
     }
 }
