@@ -36,8 +36,8 @@ import kotlin.reflect.full.memberFunctions
  */
 interface RPCServer : RPCCommunicator {
 
-    fun registerMethod(method: KFunction<*>, instance: Any)
-    fun registerMethod(method: Method, instance: Any): Nothing = TODO()
+    fun registerMethod(method: KFunction<*>, instance: Any, priority: RPCMethod.Priority = RPCMethod.Priority.NORMAL)
+    fun registerMethod(method: Method, instance: Any, priority: RPCMethod.Priority = RPCMethod.Priority.NORMAL): Nothing = TODO()
 
     @Throws(CouldNotPerformException::class)
     fun <I : Any, T : I> registerMethods(
@@ -51,14 +51,17 @@ interface RPCServer : RPCCommunicator {
         interfaceClass: KClass<I>,
         instance: T,
     ) {
+        // map method to RPCMethod annotation or null if not available
         interfaceClass.memberFunctions
-            .filter { method ->
-                method.annotations.any {
+            .map { method ->
+                method.annotations.firstOrNull {
                     it.annotationClass == RPCMethod::class
                             && (JPService.getValue(JPComLegacyMode::class.java, false)
                             || !(it as RPCMethod).legacy)
                 }
             }
-            .forEach { registerMethod(it, instance) }
+            .zip(interfaceClass.memberFunctions)
+            .filter { it.first != null }
+            .forEach { registerMethod(it.second, instance, (it.first as RPCMethod).priority) }
     }
 }
