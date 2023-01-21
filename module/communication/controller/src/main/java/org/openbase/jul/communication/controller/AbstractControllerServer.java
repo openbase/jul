@@ -922,7 +922,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
             return dataClone.getField(findFieldByName);
         } catch (Exception ex) {
-            throw new NotAvailableException(name, this, ex);
+            throw new NotAvailableException(this.getClass(), name, ex);
         }
     }
 
