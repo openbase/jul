@@ -92,7 +92,7 @@ internal class RPCMethodTest {
         val instance = FunctionProvider()
 
         // correct use with class function
-        RPCMethod(FunctionProvider::`no args no return`, instance).invoke(emptyList()) shouldBe protoAny.getDefaultInstance()
+        RPCMethod(FunctionProvider::`no args no return`, instance=instance).invoke(emptyList()) shouldBe protoAny.getDefaultInstance()
 
         // class function but no instance provided should throw an error
         shouldThrow<CouldNotPerformException> { RPCMethod(FunctionProvider::`no args no return`).invoke(emptyList()) }
