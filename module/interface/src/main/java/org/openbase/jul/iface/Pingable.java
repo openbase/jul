@@ -38,6 +38,6 @@ public interface Pingable {
      * @param timestamp the current time in milliseconds.
      * @return the timestamp returned by the controller.
      */
-    @RPCMethod
+    @RPCMethod(priority = RPCMethod.Priority.HIGH)
     Future<Long> ping(final Long timestamp);
 }
