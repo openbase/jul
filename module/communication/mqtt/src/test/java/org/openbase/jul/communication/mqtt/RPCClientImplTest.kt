@@ -134,7 +134,7 @@ internal class RPCClientImplTest {
                 .setMethodName(methodName)
                 .addAllParams(args
                     .zip(args
-                        .map { arg -> RPCMethod.anyToProtoAny(arg::class) })
+                        .map { arg -> RPCMethodWrapper.anyToProtoAny(arg::class) })
                     .map { (arg, toProtoAny) -> toProtoAny(arg) })
                 .build()
             val expectedMqttPublish = Mqtt5Publish.builder()
@@ -212,7 +212,7 @@ internal class RPCClientImplTest {
         @Timeout(value = 30)
         fun `test successful response`() {
             response.status = Response.Status.FINISHED
-            response.result = RPCMethod.anyToProtoAny(expectedResult::class)(expectedResult)
+            response.result = RPCMethodWrapper.anyToProtoAny(expectedResult::class)(expectedResult)
 
             callback.accept(mqtt5Publish)
 

@@ -13,14 +13,14 @@ import kotlin.Any
 import com.google.protobuf.Any as protoAny
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-internal class RPCMethodTest {
+internal class RPCMethodWrapperTest {
 
     @Test
     @Timeout(value = 30)
     fun `test anyToProtoAny and protoAnyToAny Conversion`() {
         fun <T : Any> backAndForth(value: T): T {
-            val anyToProtoAnyConverter = RPCMethod.anyToProtoAny(value::class)
-            val protoAnyToAnyConverter = RPCMethod.protoAnyToAny(value::class)
+            val anyToProtoAnyConverter = RPCMethodWrapper.anyToProtoAny(value::class)
+            val protoAnyToAnyConverter = RPCMethodWrapper.protoAnyToAny(value::class)
             return protoAnyToAnyConverter(anyToProtoAnyConverter(value)) as T
         }
 
@@ -53,8 +53,8 @@ internal class RPCMethodTest {
         backAndForth(valueEnum) shouldBe valueEnum
 
         // test exceptions on other types
-        shouldThrow<CouldNotPerformException> { RPCMethod.anyToProtoAny(Any::class) }
-        shouldThrow<CouldNotPerformException> { RPCMethod.protoAnyToAny(Any::class) }
+        shouldThrow<CouldNotPerformException> { RPCMethodWrapper.anyToProtoAny(Any::class) }
+        shouldThrow<CouldNotPerformException> { RPCMethodWrapper.protoAnyToAny(Any::class) }
     }
 
     internal class FunctionProvider(val returnValue: Double = 43.0) {
@@ -74,15 +74,15 @@ internal class RPCMethodTest {
         val argProto: protoAny = protoAny.pack(Primitive.newBuilder().setDouble(arg).build())
         val instance = FunctionProvider(returnValue = returnValue)
 
-        RPCMethod(instance::`no args no return`).invoke(emptyList()) shouldBe protoAny.getDefaultInstance()
+        RPCMethodWrapper(instance::`no args no return`).invoke(emptyList()) shouldBe protoAny.getDefaultInstance()
 
-        var result: protoAny = RPCMethod(instance::`no args return`).invoke(emptyList())
+        var result: protoAny = RPCMethodWrapper(instance::`no args return`).invoke(emptyList())
         result.unpack(Primitive::class.java).double shouldBe returnValue
 
-        RPCMethod(instance::`args no return`).invoke(listOf(argProto)) shouldBe protoAny.getDefaultInstance()
+        RPCMethodWrapper(instance::`args no return`).invoke(listOf(argProto)) shouldBe protoAny.getDefaultInstance()
         instance.receivedArg shouldBe arg
 
-        result = RPCMethod(instance::`args return`).invoke(listOf(argProto))
+        result = RPCMethodWrapper(instance::`args return`).invoke(listOf(argProto))
         result.unpack(Primitive::class.java).double shouldBe returnValue + arg
     }
 
@@ -92,10 +92,10 @@ internal class RPCMethodTest {
         val instance = FunctionProvider()
 
         // correct use with class function
-        RPCMethod(FunctionProvider::`no args no return`, instance).invoke(emptyList()) shouldBe protoAny.getDefaultInstance()
+        RPCMethodWrapper(FunctionProvider::`no args no return`, instance=instance).invoke(emptyList()) shouldBe protoAny.getDefaultInstance()
 
         // class function but no instance provided should throw an error
-        shouldThrow<CouldNotPerformException> { RPCMethod(FunctionProvider::`no args no return`).invoke(emptyList()) }
+        shouldThrow<CouldNotPerformException> { RPCMethodWrapper(FunctionProvider::`no args no return`).invoke(emptyList()) }
     }
 
     @Test
@@ -105,12 +105,12 @@ internal class RPCMethodTest {
 
         // wrong type of arg
         val wrongTypeArg: protoAny = protoAny.pack(Primitive.newBuilder().setString("WRONG").build())
-        shouldThrow<CouldNotPerformException> { RPCMethod(instance::`args no return`).invoke(listOf(wrongTypeArg)) }
+        shouldThrow<CouldNotPerformException> { RPCMethodWrapper(instance::`args no return`).invoke(listOf(wrongTypeArg)) }
 
         // wrong number of args
         val toManyArg: protoAny = protoAny.pack(Primitive.newBuilder().setDouble(42.0).build())
-        shouldThrow<CouldNotPerformException> { RPCMethod(instance::`no args no return`).invoke(listOf(toManyArg)) }
-        shouldThrow<CouldNotPerformException> { RPCMethod(instance::`args no return`).invoke(emptyList()) }
+        shouldThrow<CouldNotPerformException> { RPCMethodWrapper(instance::`no args no return`).invoke(listOf(toManyArg)) }
+        shouldThrow<CouldNotPerformException> { RPCMethodWrapper(instance::`args no return`).invoke(emptyList()) }
     }
 
 }

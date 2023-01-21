@@ -1,10 +1,7 @@
 package org.openbase.jul.communication.iface
 
-import org.openbase.jps.core.JPService
 import org.openbase.jul.annotation.RPCMethod
-import org.openbase.jul.communication.jp.JPComLegacyMode
 import org.openbase.jul.exception.CouldNotPerformException
-import java.lang.reflect.Method
 import kotlin.jvm.internal.Reflection
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -36,8 +33,7 @@ import kotlin.reflect.full.memberFunctions
  */
 interface RPCServer : RPCCommunicator {
 
-    fun registerMethod(method: KFunction<*>, instance: Any)
-    fun registerMethod(method: Method, instance: Any): Nothing = TODO()
+    fun registerMethod(method: KFunction<*>, instance: Any, priority: RPCMethod.Priority = RPCMethod.Priority.NORMAL)
 
     @Throws(CouldNotPerformException::class)
     fun <I : Any, T : I> registerMethods(
@@ -45,20 +41,13 @@ interface RPCServer : RPCCommunicator {
         instance: T,
     ) = registerMethods(Reflection.getOrCreateKotlinClass(interfaceClass), instance)
 
-
     @Throws(CouldNotPerformException::class)
     fun <I : Any, T : I> registerMethods(
         interfaceClass: KClass<I>,
         instance: T,
-    ) {
-        interfaceClass.memberFunctions
-            .filter { method ->
-                method.annotations.any {
-                    it.annotationClass == RPCMethod::class
-                            && (JPService.getValue(JPComLegacyMode::class.java, false)
-                            || !(it as RPCMethod).legacy)
-                }
-            }
-            .forEach { registerMethod(it, instance) }
-    }
+    ) = interfaceClass.memberFunctions
+        .map { method -> method to method.annotations.firstOrNull { it.annotationClass == RPCMethod::class } }
+        .filter { (_, annotation) -> annotation != null }
+        .map { (method, annotation) -> method to annotation as RPCMethod }
+        .forEach { (method, annotation) -> registerMethod(method, instance, annotation.priority) }
 }

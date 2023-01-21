@@ -2,6 +2,7 @@ package org.openbase.jul.communication.mqtt
 
 import com.google.protobuf.Message
 import com.google.protobuf.ProtocolMessageEnum
+import org.openbase.jul.annotation.RPCMethod
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.type.communication.mqtt.PrimitiveType.Primitive
 import java.util.concurrent.Future
@@ -36,7 +37,7 @@ import com.google.protobuf.Any as protoAny
  * @param function the function to be wrapped
  * @param instance the instance the function is called on, is only required
  */
-class RPCMethod(private val function: KFunction<*>, private val instance: Any = noInstance) {
+class RPCMethodWrapper(private val function: KFunction<*>, val priority: RPCMethod.Priority = RPCMethod.Priority.NORMAL, private val instance: Any = noInstance) {
 
     companion object {
         /**

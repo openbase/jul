@@ -1,5 +1,4 @@
-package org.openbase.jul.annotation;
-
+package org.openbase.jul.annotation
 /*-
  * #%L
  * JUL Annoation
@@ -20,30 +19,30 @@ package org.openbase.jul.annotation;
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
- */
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-/**
+ */ /**
  * This annotations is used to tag methods that are registered for an RPCServer.
  * Therefore the RPCHelper will skip every method when registering an interface which does not have this annotation.
  * Important to note is that when an interface overrides a method tagged with an annotation, the annotation is lost.
  * Thus if desired the annotation has to be added to the overriding method again.
  *
- * @author <a href="mailto:pleminoq@openbase.org">Tamino Huxohl</a>
+ * @author [Tamino Huxohl](mailto:pleminoq@openbase.org)
  */
-@Target(ElementType.METHOD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface RPCMethod {
-
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
+@Retention(
+    AnnotationRetention.RUNTIME
+)
+annotation class RPCMethod(
     /**
      * Flag marking legacy RPCs. When true they will not be registered per default, but can be activated using
-     * a jp property {@code JPComLegacyMode.class} via "--communication-legacy".
+     * a jp property `JPComLegacyMode.class` via "--communication-legacy".
      *
      * @return if the annotated method is an rpc method
      */
-    boolean legacy() default false;
+    val legacy: Boolean = false,
+
+    val priority: Priority = Priority.NORMAL,
+) {
+    enum class Priority {
+        NORMAL, HIGH
+    }
 }

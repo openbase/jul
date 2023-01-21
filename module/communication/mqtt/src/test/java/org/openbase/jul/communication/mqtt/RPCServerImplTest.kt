@@ -152,7 +152,7 @@ internal class RPCServerImplTest {
             vararg parameter: Any
         ) {
             val argsAsProtoAny = parameter
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
+                .map { arg -> RPCMethodWrapper.anyToProtoAny(arg::class) }
                 .zip(parameter)
                 .map { (toProtoAny, arg) -> toProtoAny(arg) }
 
@@ -269,7 +269,7 @@ internal class RPCServerImplTest {
             actualResponse.error.isEmpty() shouldBe true
 
             val expectedResult = adder.add(validArgs[0], validArgs[1])
-            val expectedResultProto = RPCMethod.anyToProtoAny(Int::class)(expectedResult)
+            val expectedResultProto = RPCMethodWrapper.anyToProtoAny(Int::class)(expectedResult)
             actualResponse.result shouldBe expectedResultProto
         }
     }

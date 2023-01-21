@@ -6,6 +6,7 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import kotlinx.coroutines.*
+import org.openbase.jul.annotation.RPCMethod
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCServer
 import org.openbase.jul.exception.CouldNotPerformException
@@ -40,7 +41,7 @@ class RPCServerImpl(
 
     private val logger: Logger = LoggerFactory.getLogger(RPCServerImpl::class.simpleName)
 
-    private val methods: HashMap<String, RPCMethod> = HashMap()
+    private val methods: HashMap<String, RPCMethodWrapper> = HashMap()
     private var activationFuture: Future<out Any>? = null
 
     private val lock = SyncObject("Activation Lock")
@@ -64,22 +65,23 @@ class RPCServerImpl(
             }
 
             activationFuture = mqttClient.subscribe(
-                Mqtt5Subscribe.builder()
-                    .topicFilter(topic)
-                    .qos(MqttQos.EXACTLY_ONCE)
-                    .build(),
-                { mqtt5Publish ->
+                Mqtt5Subscribe.builder().topicFilter(topic).qos(MqttQos.EXACTLY_ONCE).build(), { mqtt5Publish ->
                     // Note: this is a wrapper for the usage of a shared client
                     //       which may remain subscribed even if deactivate is called
                     if (isActive) {
-                        coroutineScope?.launch {
-                            withTimeout(RPC_TIMEOUT.toMillis()) {
-                                handleRemoteCall(mqtt5Publish)
+                        when (getPriority(mqtt5Publish)) {
+                            org.openbase.jul.annotation.RPCMethod.Priority.HIGH -> handleRemoteCall(mqtt5Publish)
+                            else -> {
+                                coroutineScope?.launch {
+                                    withTimeout(RPC_TIMEOUT.toMillis()) {
+                                        handleRemoteCall(mqtt5Publish)
+                                    }
+                                } ?: handleRemoteCall(mqtt5Publish)
                             }
-                        } ?: handleRemoteCall(mqtt5Publish)
+                        }
+
                     }
-                },
-                GlobalCachedExecutorService.getInstance().executorService
+                }, GlobalCachedExecutorService.getInstance().executorService
             )
 
             try {
@@ -101,16 +103,18 @@ class RPCServerImpl(
         synchronized(lock) {
             activationFuture = null
             mqttClient.unsubscribe(
-                Mqtt5Unsubscribe.builder()
-                    .topicFilter(topic)
-                    .build()
+                Mqtt5Unsubscribe.builder().topicFilter(topic).build()
             )
         }
         coroutineScope?.cancel()
     }
 
-    override fun registerMethod(method: KFunction<*>, instance: Any) {
-        methods[method.name] = RPCMethod(method, instance);
+    override fun registerMethod(
+        method: KFunction<*>,
+        instance: Any,
+        priority: RPCMethod.Priority,
+    ) {
+        methods[method.name] = RPCMethodWrapper(method, priority = priority, instance = instance);
     }
 
     private fun handleRemoteCall(mqtt5Publish: Mqtt5Publish) {
@@ -121,17 +125,12 @@ class RPCServerImpl(
         // collisions are unlikely
         responseBuilder.id = UUID.fromString(request.id).toString()
         val requestTopic = topic + "/" + responseBuilder.id
-        val mqttResponseBuilder = Mqtt5Publish.builder()
-            .topic(requestTopic)
-            .qos(MqttQos.EXACTLY_ONCE)
+        val mqttResponseBuilder = Mqtt5Publish.builder().topic(requestTopic).qos(MqttQos.EXACTLY_ONCE)
 
         responseBuilder.status = ResponseType.Response.Status.ACKNOWLEDGED
         responseBuilder.id = request.id
         mqttClient.publish(
-            mqttResponseBuilder
-                .payload(responseBuilder.build().toByteArray())
-                .attachTimestamp()
-                .build()
+            mqttResponseBuilder.payload(responseBuilder.build().toByteArray()).attachTimestamp().build()
         )
 
         if (request.methodName !in methods) {
@@ -140,10 +139,7 @@ class RPCServerImpl(
             responseBuilder.error = ex.stackTraceToString()
 
             mqttClient.publish(
-                mqttResponseBuilder
-                    .payload(responseBuilder.build().toByteArray())
-                    .attachTimestamp()
-                    .build()
+                mqttResponseBuilder.payload(responseBuilder.build().toByteArray()).attachTimestamp().build()
             )
             return;
         }
@@ -168,10 +164,12 @@ class RPCServerImpl(
         }
 
         mqttClient.publish(
-            mqttResponseBuilder
-                .payload(responseBuilder.build().toByteArray())
-                .attachTimestamp()
-                .build()
+            mqttResponseBuilder.payload(responseBuilder.build().toByteArray()).attachTimestamp().build()
         )
+    }
+
+    private fun getPriority(mqtt5Publish: Mqtt5Publish): RPCMethod.Priority {
+        val request = RequestType.Request.parseFrom(mqtt5Publish.payloadAsBytes)
+        return methods[request.methodName]?.priority ?: RPCMethod.Priority.HIGH
     }
 }
