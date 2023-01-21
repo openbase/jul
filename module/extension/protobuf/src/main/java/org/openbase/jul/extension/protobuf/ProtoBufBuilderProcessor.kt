@@ -35,6 +35,7 @@ import java.lang.reflect.Method
  */
 object ProtoBufBuilderProcessor {
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun extractRepeatedFieldBuilderList(repeatedFieldNumber: Int, builder: Message.Builder): List<Message.Builder> {
         return extractRepeatedFieldBuilderList(
             builder.descriptorForType.findFieldByNumber(repeatedFieldNumber),
@@ -43,6 +44,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun extractRepeatedFieldBuilderList(
         repeatedFieldDescriptor: Descriptors.FieldDescriptor?,
         builder: Message.Builder
@@ -54,6 +56,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun extractRepeatedFieldBuilderList(repeatedFieldName: String, builder: Message.Builder): List<Message.Builder> {
         return try {
             val builderClass: Class<*> = builder.javaClass
@@ -80,6 +83,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addMessageToRepeatedField(
         repeatedFieldNumber: Int,
         messageBuilder: Message.Builder,
@@ -93,6 +97,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addMessageToRepeatedField(
         repeatedFieldDescriptor: Descriptors.FieldDescriptor?,
         messageBuilder: Message.Builder,
@@ -105,6 +110,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addMessageToRepeatedField(
         repeatedFieldName: String,
         messageBuilder: Message.Builder,
@@ -147,6 +153,7 @@ object ProtoBufBuilderProcessor {
      * @throws CouldNotPerformException
      */
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addDefaultInstanceToRepeatedField(repeatedFieldNumber: Int, builder: Message.Builder): Message.Builder {
         return addDefaultInstanceToRepeatedField(
             builder.descriptorForType.findFieldByNumber(repeatedFieldNumber),
@@ -163,6 +170,7 @@ object ProtoBufBuilderProcessor {
      * @throws CouldNotPerformException
      */
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addDefaultInstanceToRepeatedField(
         repeatedFieldDescriptor: Descriptors.FieldDescriptor?,
         builder: Message.Builder
@@ -182,6 +190,7 @@ object ProtoBufBuilderProcessor {
      * @throws CouldNotPerformException
      */
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addDefaultInstanceToRepeatedField(repeatedFieldName: String, builder: Message.Builder): Message.Builder {
         return try {
             val builderClass: Class<*> = builder.javaClass
@@ -209,6 +218,7 @@ object ProtoBufBuilderProcessor {
 
     //TODO: all methods below are copies using AbstractMessage instead of message, I think they can be removed as soon as the new registry editor is usable
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun extractRepeatedFieldBuilderList(
         repeatedFieldNumber: Int,
         builder: AbstractMessage.Builder<*>
@@ -220,6 +230,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun extractRepeatedFieldBuilderList(
         repeatedFieldDescriptor: Descriptors.FieldDescriptor?,
         builder: AbstractMessage.Builder<*>
@@ -231,6 +242,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun extractRepeatedFieldBuilderList(
         repeatedFieldName: String,
         builder: AbstractMessage.Builder<*>
@@ -260,6 +272,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addMessageToRepeatedField(
         repeatedFieldNumber: Int,
         messageBuilder: AbstractMessage.Builder<*>,
@@ -273,6 +286,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addMessageToRepeatedField(
         repeatedFieldDescriptor: Descriptors.FieldDescriptor?,
         messageBuilder: AbstractMessage.Builder<*>,
@@ -285,6 +299,7 @@ object ProtoBufBuilderProcessor {
     }
 
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addMessageToRepeatedField(
         repeatedFieldName: String,
         messageBuilder: AbstractMessage.Builder<*>,
@@ -327,6 +342,7 @@ object ProtoBufBuilderProcessor {
      * @throws CouldNotPerformException
      */
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addDefaultInstanceToRepeatedField(
         repeatedFieldNumber: Int,
         builder: AbstractMessage.Builder<*>
@@ -346,6 +362,7 @@ object ProtoBufBuilderProcessor {
      * @throws CouldNotPerformException
      */
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addDefaultInstanceToRepeatedField(
         repeatedFieldDescriptor: Descriptors.FieldDescriptor?,
         builder: AbstractMessage.Builder<*>
@@ -365,6 +382,7 @@ object ProtoBufBuilderProcessor {
      * @throws CouldNotPerformException
      */
     @Throws(CouldNotPerformException::class)
+    @JvmStatic
     fun addDefaultInstanceToRepeatedField(
         repeatedFieldName: String,
         builder: AbstractMessage.Builder<*>
@@ -416,8 +434,8 @@ object ProtoBufBuilderProcessor {
         return mergedInto
     }
 
-    @JvmStatic
     @Throws(NotAvailableException::class)
+    @JvmStatic
     fun <MB> getBuilder(builder: Message.Builder, fieldName: String, builderClass: Class<MB>?): MB {
         return try {
             builder.getFieldBuilder(ProtoBufFieldProcessor.getFieldDescriptor(builder, fieldName)) as MB
