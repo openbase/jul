@@ -10,12 +10,12 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -24,6 +24,7 @@ package org.openbase.jul.communication.controller;
 
 import com.google.protobuf.Any;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.data.RPCResponse;
@@ -52,11 +53,10 @@ import java.util.concurrent.TimeoutException;
 public class FutureCancelTest extends MqttIntegrationTest implements Requestable<Object> {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    private boolean run = true;
 
     public FutureCancelTest() {
     }
-
-    private boolean run = true;
 
     @RPCMethod
     @Override
@@ -91,6 +91,7 @@ public class FutureCancelTest extends MqttIntegrationTest implements Requestable
      * @throws Exception
      */
     @Test
+    @Timeout(5)
     public void testFutureCancellation() throws Exception {
         System.out.println("TestFutureCancellation");
 

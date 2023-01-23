@@ -116,6 +116,7 @@ class IntegrationTest : AbstractIntegrationTest() {
         }
     }
 
+    @Timeout(5)
     @Test
     fun `test parallel method call`() {
         val instance = MethodMock()
