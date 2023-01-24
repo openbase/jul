@@ -13,9 +13,8 @@ dependencies {
     api(project(":jul.communication.mqtt"))
     api("java3d:vecmath:_")
     api("java3d:j3d-core:_")
-    testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
-    testImplementation ("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
-    testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:[5.8,5.9-alpha)")
+    api(Testing.junit.jupiter)
+    api(Testing.junit.jupiter.api)
 }
 
 description = "JUL Transformation"
