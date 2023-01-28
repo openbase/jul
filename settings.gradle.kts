@@ -33,6 +33,7 @@ include(":jul.communication.module")
 include(":jul.pattern.trigger")
 include(":jul.extension")
 include(":jul.transformation")
+include(":jul.test")
 project(":jul.pattern.launch").projectDir = file("module/pattern/launch")
 project(":jul.schedule").projectDir = file("module/schedule")
 project(":jul.audio").projectDir = file("module/audio")
@@ -66,6 +67,7 @@ project(":jul.communication.module").projectDir = file("module/communication")
 project(":jul.pattern.trigger").projectDir = file("module/pattern/trigger")
 project(":jul.extension").projectDir = file("module/extension")
 project(":jul.transformation").projectDir = file("module/transformation")
+project(":jul.test").projectDir = file("module/test")
 
 pluginManagement {
     plugins {

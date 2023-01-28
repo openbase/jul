@@ -1,8 +1,10 @@
 package org.openbase.jul.communication.mqtt.test
+
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.extension.ExtendWith
 import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPServiceException
 import org.openbase.jul.communication.jp.JPComHost
@@ -39,6 +41,7 @@ import java.util.*
 
  * */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(OpenbaseDeadlockChecker::class)
 open class MqttIntegrationTest {
 
     companion object {
@@ -49,6 +52,7 @@ open class MqttIntegrationTest {
     }
 
     @BeforeAll
+    @Timeout(30)
     fun setupMqtt() {
         synchronized(configLock) {
             mosquittoConfig = Files.createTempFile("mosquitto_", ".conf")
@@ -66,14 +70,17 @@ open class MqttIntegrationTest {
                     BindMode.READ_ONLY
                 )
                 .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
-                .also { if (broker?.takeIf { it.containerId != null } != null)
-                    error("broker was already initialized!") }
+                .also {
+                    if (broker?.takeIf { it.containerId != null } != null)
+                        error("broker was already initialized!")
+                }
                 .also { broker = it }
                 .also { setupProperties() }
         }
     }
 
     @AfterAll
+    @Timeout(30)
     fun tearDownMQTT() {
         synchronized(configLock) {
             waitForShutdown()

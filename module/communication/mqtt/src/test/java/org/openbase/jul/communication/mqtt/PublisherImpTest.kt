@@ -4,8 +4,8 @@ import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import io.mockk.*
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Timeout
 import org.openbase.jul.communication.config.CommunicatorConfig
@@ -28,6 +28,7 @@ class PublisherImpTest {
     }
 
     @AfterAll
+    @Timeout(30)
     fun clearMocks() {
         clearAllMocks()
     }
