@@ -109,7 +109,7 @@ object StackTracePrinter {
         logLevel: LogLevel?,
     ) {
         var stackTraceString = ""
-        for (stackTrace in stackTraces!!) {
+        stackTraces?.forEach { stackTrace ->
             stackTraceString += """
                 $stackTrace
                 
@@ -134,7 +134,7 @@ object StackTracePrinter {
      */
     @JvmStatic
     fun printAllStackTraces(responsibleClass: Class<*>?) {
-        printStackTrace(null as String?, null, LoggerFactory.getLogger(responsibleClass), LogLevel.ERROR)
+        printAllStackTraces(null as String?, null, LoggerFactory.getLogger(responsibleClass), LogLevel.ERROR)
     }
 
     /**
