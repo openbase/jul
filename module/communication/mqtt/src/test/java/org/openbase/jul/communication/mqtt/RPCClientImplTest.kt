@@ -61,11 +61,13 @@ internal class RPCClientImplTest {
     }
 
     @AfterAll
+    @Timeout(30)
     fun clearMocks() {
         clearAllMocks()
     }
 
     @BeforeEach
+    @Timeout(30)
     fun initMqttClientMock() {
         clearMocks(mqttClient)
 
@@ -110,6 +112,7 @@ internal class RPCClientImplTest {
         private lateinit var callback: BiConsumer<Mqtt5SubAck, Throwable?>
 
         @BeforeEach
+        @Timeout(30)
         fun setupMethodCall() {
             rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class, *args)
             callback = afterSubscriptionSlot.captured
@@ -164,6 +167,7 @@ internal class RPCClientImplTest {
         }
 
         @BeforeEach
+        @Timeout(30)
         fun setupMethodCall() {
             rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class, *args)
             callback = callbackSlot.captured

@@ -56,11 +56,13 @@ internal class RPCServerImplTest {
     }
 
     @AfterAll
+    @Timeout(30)
     fun clearMocks() {
         clearAllMocks()
     }
 
     @BeforeEach
+    @Timeout(30)
     fun initMqttClientMock() {
         clearMocks(mqttClient)
 
@@ -138,6 +140,7 @@ internal class RPCServerImplTest {
         private lateinit var callback: Consumer<Mqtt5Publish>
 
         @BeforeEach
+        @Timeout(30)
         fun setupSubscriptionCallback() {
             //println("Test ${mqttPublishSlot.size}")
             //mqttPublishSlot.clear()
@@ -149,7 +152,7 @@ internal class RPCServerImplTest {
         private fun simulateMethodCall(
             methodName: String,
             id: String = "00000000-0000-0000-0000-000000000001",
-            vararg parameter: Any
+            vararg parameter: Any,
         ) {
             val argsAsProtoAny = parameter
                 .map { arg -> RPCMethodWrapper.anyToProtoAny(arg::class) }

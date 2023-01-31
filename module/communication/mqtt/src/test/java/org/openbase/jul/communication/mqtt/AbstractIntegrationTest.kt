@@ -4,6 +4,7 @@ import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Timeout
 import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -29,6 +30,7 @@ abstract class AbstractIntegrationTest {
 
         @JvmStatic
         @BeforeAll
+        @Timeout(30)
         fun setup() {
             synchronized(lock) {
                 if (usageCounter == 0) {
@@ -54,6 +56,7 @@ abstract class AbstractIntegrationTest {
 
         @JvmStatic
         @AfterAll
+        @Timeout(30)
         fun cleanup() {
             synchronized(lock) {
                 usageCounter--
@@ -68,7 +71,7 @@ abstract class AbstractIntegrationTest {
 
     protected val brokerHost: String get() = broker.host
 
-    protected val brokerPort: Int get () = broker.firstMappedPort
+    protected val brokerPort: Int get() = broker.firstMappedPort
 }
 
 class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
