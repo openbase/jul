@@ -42,7 +42,7 @@ internal class RPCClientImplTest {
 
     val mqttPublishSlot = slot<Mqtt5Publish>()
     val callbackSlot = slot<Consumer<Mqtt5Publish>>()
-    val afterSubscriptionSlot = slot<BiConsumer<Mqtt5SubAck, Throwable?>>()
+    val afterSubscriptionSlot = slot<BiConsumer<Mqtt5SubAck, Throwable>>()
 
     private var rpcRemote: RPCClientImpl
 
@@ -109,7 +109,7 @@ internal class RPCClientImplTest {
     inner class TestAfterSubscriptionCallback {
 
         private lateinit var rpcFuture: Future<out RPCResponse<out Int>>
-        private lateinit var callback: BiConsumer<Mqtt5SubAck, Throwable?>
+        private lateinit var callback: BiConsumer<Mqtt5SubAck, Throwable>
 
         @BeforeEach
         @Timeout(30)

@@ -33,7 +33,7 @@ object ExceptionProcessor {
      * @return the message as string.
      */
     @JvmStatic
-    fun getInitialCauseMessage(throwable: Throwable?): String {
+    fun getInitialCauseMessage(throwable: Throwable): String {
         val cause = getInitialCause(throwable)
         return if (cause!!.localizedMessage == null) {
             cause.javaClass.simpleName
@@ -48,13 +48,14 @@ object ExceptionProcessor {
      * @return the cause as throwable.
      */
     @JvmStatic
-    fun getInitialCause(throwable: Throwable?): Throwable? {
+    fun getInitialCause(throwable: Throwable): Throwable {
         if (throwable == null) {
             FatalImplementationErrorException(ExceptionProcessor::class.java, NotAvailableException("cause"))
         }
         var cause = throwable
-        while (cause!!.cause != null) {
-            cause = cause.cause
+
+        while (cause.cause != null) {
+            cause = cause.cause!!
         }
         return cause
     }
@@ -68,7 +69,7 @@ object ExceptionProcessor {
      * @return the new cause chain.
      */
     @JvmStatic
-    fun setInitialCause(throwable: Throwable?, initialCause: Throwable?): Throwable? {
+    fun setInitialCause(throwable: Throwable, initialCause: Throwable?): Throwable? {
         getInitialCause(throwable)!!.initCause(initialCause)
         return throwable
     }
@@ -82,7 +83,7 @@ object ExceptionProcessor {
      * @return returns true if the given throwable is caused by a system shutdown, otherwise false.
      */
     @JvmStatic
-    fun isCausedBySystemShutdown(throwable: Throwable?): Boolean {
+    fun isCausedBySystemShutdown(throwable: Throwable): Boolean {
         return getInitialCause(throwable) is ShutdownInProgressException
     }
 
@@ -105,7 +106,7 @@ object ExceptionProcessor {
 
         // check causes
         while (cause.cause != null) {
-            cause = cause.cause?: return false
+            cause = cause.cause ?: return false
             if (cause is InterruptedException) {
                 return true
             }
@@ -127,15 +128,15 @@ object ExceptionProcessor {
     </T> */
     @JvmStatic
     @Throws(InterruptedException::class)
-    fun <T : Throwable?> interruptOnShutdown(throwable: T): T {
+    fun <T : Throwable> interruptOnShutdown(throwable: T): T {
         return if (isCausedBySystemShutdown(throwable)) {
             throw InterruptedException(getInitialCauseMessage(throwable))
         } else {
             throwable
         }
     }
-
 }
+
 val Throwable.initialCauseMessage get() = ExceptionProcessor.getInitialCauseMessage(this)
 val Throwable.initialCause get() = ExceptionProcessor.getInitialCause(this)
 val Throwable.causedBySystemShutdown get() = ExceptionProcessor.isCausedBySystemShutdown(this)
