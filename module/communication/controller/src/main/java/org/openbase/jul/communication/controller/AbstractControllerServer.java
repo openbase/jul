@@ -10,12 +10,12 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -52,10 +52,7 @@ import org.openbase.jul.schedule.*;
 import org.openbase.type.communication.EventType;
 import org.openbase.type.communication.EventType.Event;
 import org.openbase.type.communication.ScopeType.Scope;
-import org.openbase.type.communication.mqtt.PrimitiveType.Primitive;
 import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -68,7 +65,6 @@ import static org.openbase.type.domotic.state.AvailabilityStateType.Availability
 /**
  * @param <M>  the message type of the communication service
  * @param <MB> the builder for message M
- *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 
@@ -120,7 +116,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * Create a communication service.
      *
      * @param builder the initial data builder
-     *
      * @throws InstantiationException if the creation fails
      */
     public AbstractControllerServer(final MB builder) throws InstantiationException {
@@ -161,7 +156,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param scope
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -171,7 +165,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param scope
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -186,7 +179,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     /**
      * @param scope
      * @param communicatorConfig
-     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -440,7 +432,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
@@ -471,7 +462,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param controllerAvailability
-     *
      * @throws InterruptedException
      */
     private void setAvailabilityState(final AvailabilityState.State controllerAvailability) throws InterruptedException {
@@ -537,11 +527,16 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public MB cloneDataBuilder() {
-        dataBuilderReadLock.lock();
         try {
-            return dataBuilder.clone();
-        } finally {
-            dataBuilderReadLock.unlock();
+            dataBuilderReadLock.lockInterruptibly();
+            try {
+                return dataBuilder.clone();
+            } finally {
+                dataBuilderReadLock.unlock();
+            }
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while cloning data builder", ex);
         }
     }
 
@@ -559,7 +554,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
-     *
      * @return {@inheritDoc}
      */
     @Override
@@ -573,7 +567,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @param consumer             {@inheritDoc}
      * @param notificationStrategy {@inheritDoc}
-     *
      * @return {@inheritDoc}
      */
     @Override
@@ -586,7 +579,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
-     *
      * @return {@inheritDoc}
      */
     @Override
@@ -599,7 +591,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @param consumer             {@inheritDoc}
      * @param notificationStrategy {@inheritDoc}
-     *
      * @return {@inheritDoc}
      */
     @Override
@@ -629,7 +620,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
-     *
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer) {
@@ -658,7 +648,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
-     *
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableReadLockWrapper getManageReadLock(final Object consumer) {
@@ -687,7 +676,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
-     *
      * @return a new builder wrapper which already locks the manage lock.
      * @throws InterruptedException in case the thread was externally interrupted during the locking.
      */
@@ -717,7 +705,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
-     *
      * @return a new builder wrapper which already locks the manage lock.
      * @throws InterruptedException in case the thread was externally interrupted during the locking.
      */
@@ -756,7 +743,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -839,9 +825,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * sub classes to update data which can be received by everyone.
      *
      * @param dataBuilder a clone of the current data builder.
-     *
      * @return a message build from the data builder
-     *
      * @throws CouldNotPerformException if the update fails
      */
     protected M updateDataToPublish(MB dataBuilder) throws CouldNotPerformException {
@@ -852,7 +836,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * Overwrite this method to get informed about data updates.
      *
      * @param data new arrived data messages.
-     *
      * @throws CouldNotPerformException
      */
     protected void notifyDataUpdate(M data) throws CouldNotPerformException {
@@ -862,13 +845,12 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     /**
      * @param fieldNumber
      * @param value
-     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
         try {
+            dataBuilderWriteLock.lockInterruptibly();
             try {
-                dataBuilderWriteLock.lock();
                 Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByNumber(fieldNumber);
                 if (findFieldByName == null) {
                     throw new NotAvailableException("Field[" + fieldNumber + "] does not exist for type " + dataBuilder.getClass().getName());
@@ -879,19 +861,21 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not set field [" + fieldNumber + "=" + value + "] for " + this, ex);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while setting data field [" + fieldNumber + "]", ex);
         }
     }
 
     /**
      * @param fieldName
      * @param value
-     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
         try {
+            dataBuilderWriteLock.lockInterruptibly();
             try {
-                dataBuilderWriteLock.lock();
                 Descriptors.FieldDescriptor findFieldByName = dataBuilder.getDescriptorForType().findFieldByName(fieldName);
                 if (findFieldByName == null) {
                     throw new NotAvailableException("Field[" + fieldName + "] does not exist for type " + dataBuilder.getClass().getName());
@@ -903,14 +887,14 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             }
         } catch (CouldNotPerformException | NullPointerException ex) {
             throw new CouldNotPerformException("Could not set field [" + fieldName + "=" + value + "] for " + this, ex);
+        } catch (InterruptedException ex) {
+            throw new RuntimeException("Interrupted while setting data field [" + fieldName + "]", ex);
         }
     }
 
     /**
      * @param name
-     *
      * @return
-     *
      * @throws NotAvailableException
      */
     protected final Object getDataField(String name) throws NotAvailableException {
@@ -928,9 +912,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param name
-     *
      * @return
-     *
      * @throws CouldNotPerformException
      */
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
@@ -948,9 +930,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param name
-     *
      * @return
-     *
      * @throws CouldNotPerformException
      */
     protected final boolean supportsDataField(final String name) throws CouldNotPerformException {
@@ -964,7 +944,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param fieldId
-     *
      * @return
      */
     protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
@@ -1048,7 +1027,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc }
      *
      * @param timestamp {@inheritDoc }
-     *
      * @return {@inheritDoc }
      */
     @Override
@@ -1073,7 +1051,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
     @RPCMethod
@@ -1093,7 +1070,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * Register methods for RPCs on the internal RPC server.
      *
      * @param server the rpc server on which the methods should be registered.
-     *
      * @throws CouldNotPerformException if registering methods fails
      */
     public abstract void registerMethods(final RPCServer server) throws CouldNotPerformException;
@@ -1145,7 +1121,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}.
-     *
      * @throws CouldNotPerformException {@inheritDoc}
      * @throws InterruptedException     {@inheritDoc}
      */
