@@ -10,12 +10,12 @@ package org.openbase.jul.extension.protobuf;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -40,15 +40,25 @@ public class ClosableDataBuilderImpl<MB extends Builder<MB>> implements Closable
     }
 
     public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final boolean notifyChange) {
-        this.builderSetup = builderSetup;
-        this.builderSetup.lockWrite(consumer);
-        this.notificationStrategy = notifyChange ? NotificationStrategy.FORCE : NotificationStrategy.SKIP;
+        try {
+            this.builderSetup = builderSetup;
+            this.builderSetup.lockWriteInterruptibly(consumer);
+            this.notificationStrategy = notifyChange ? NotificationStrategy.FORCE : NotificationStrategy.SKIP;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while initializing ClosableDataBuilder");
+        }
     }
 
     public ClosableDataBuilderImpl(final BuilderSyncSetup<MB> builderSetup, final Object consumer, final NotificationStrategy notificationStrategy) {
-        this.builderSetup = builderSetup;
-        this.builderSetup.lockWrite(consumer);
-        this.notificationStrategy = notificationStrategy;
+        try {
+            this.builderSetup = builderSetup;
+            this.builderSetup.lockWriteInterruptibly(consumer);
+            this.notificationStrategy = notificationStrategy;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Interrupted while initializing ClosableDataBuilder");
+        }
     }
 
     @Override

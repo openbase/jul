@@ -95,15 +95,6 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
         return builder;
     }
 
-    @Deprecated
-    public void lockRead(final Object consumer) {
-        //logger.debug("order lockRead by {}", consumer);
-        readLock.lock();
-        readLockConsumer = consumer;
-        restartReadLockTimeout();
-        //logger.debug("lockRead by {}", consumer);
-    }
-
     public void lockReadInterruptibly(final Object consumer) throws InterruptedException {
         //logger.debug("order lockRead by {}", consumer);
         readLock.lockInterruptibly();
