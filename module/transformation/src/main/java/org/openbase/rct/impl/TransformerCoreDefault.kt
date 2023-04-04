@@ -131,7 +131,7 @@ import kotlin.concurrent.withLock
     private val frameIds: MutableMap<String, Int> = HashMap()
     private val frames: MutableList<TransformCache> = LinkedList()
     private val frameIdsReverse: MutableList<String> = LinkedList()
-    private val frameAuthority: MutableMap<Int, String?> = HashMap()
+    private val frameAuthority: MutableMap<Int, String> = HashMap()
     private val requests: MutableSet<TransformRequest> = HashSet()
     private val lctCache: MutableList<TimeAndFrameID> = LinkedList()
     private val executor = Executors.newCachedThreadPool()
@@ -205,7 +205,7 @@ import kotlin.concurrent.withLock
                 }
                 val frameNumberParent = lookupOrInsertFrameNumber(stripped.parentNode)
                 if (frame.insertData(TransformInternal(stripped, frameNumberParent, frameNumberChild))) {
-                    frameAuthority[frameNumberChild] = authority
+                    authority?.let { frameAuthority[frameNumberChild] = it }
                 } else {
                     LOGGER.warn(
                         """TF_OLD_DATA ignoring data from the past for frame ${stripped.childNode} at time ${stripped.time} according to authority $authority
@@ -556,7 +556,7 @@ Possible reasons are listed at http://wiki.ros.org/tf/Errors%%20explained"""
         targetTime: Long,
         sourceFrame: String,
         sourceTime: Long,
-        fixedFrame: String
+        fixedFrame: String,
     ): Transform {
         validateFrameId("lookupTransform argument target_frame", targetFrame)
         validateFrameId("lookupTransform argument source_frame", sourceFrame)
@@ -644,7 +644,7 @@ Possible reasons are listed at http://wiki.ros.org/tf/Errors%%20explained"""
         targetTime: Long,
         sourceFrame: String,
         sourceTime: Long,
-        fixedFrame: String
+        fixedFrame: String,
     ): Boolean {
         if (warnFrameId("canTransform argument target_frame", targetFrame)) {
             return false

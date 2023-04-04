@@ -77,10 +77,9 @@ internal class RPCClientImplTest {
                 capture(callbackSlot),
                 GlobalCachedExecutorService.getInstance().executorService
             )
-        } returns
-                mockk {
-                    every { whenComplete(capture(afterSubscriptionSlot)) } returns CompletableFuture()
-                }
+        } returns mockk {
+            every { whenComplete(capture(afterSubscriptionSlot)) } returns CompletableFuture()
+        }
         every { mqttClient.unsubscribe(any()) } returns CompletableFuture()
         every { mqttClient.publish(capture(mqttPublishSlot)) } returns CompletableFuture()
     }

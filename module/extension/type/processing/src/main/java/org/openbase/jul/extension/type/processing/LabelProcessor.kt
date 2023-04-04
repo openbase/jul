@@ -165,7 +165,7 @@ object LabelProcessor {
     fun addLabel(
         labelBuilder: LabelType.Label.Builder,
         languageCode: String,
-        label: String?
+        label: String?,
     ): LabelType.Label.Builder {
         for (i in 0 until labelBuilder.entryCount) {
             // found labels for the entry key
@@ -234,23 +234,26 @@ object LabelProcessor {
      */
     @Throws(NotAvailableException::class)
     @JvmStatic
-    fun getBestMatch(languageCode: String, label: LabelType.LabelOrBuilder): String? {
-        return try {
+    fun getBestMatch(languageCode: String?, label: LabelType.LabelOrBuilder): String? = let {
 
-            // handle technical case
-            if (languageCode == LANGUAGE_CODE_TECHNICAL) {
-                getLabelByLanguage(languageCode, label)
-            } else getLabelByLanguage(Locale.forLanguageTag(languageCode).language, label)
-
-            // resolve label via preferred locale.
-        } catch (ex: NotAvailableException) {
+        languageCode?.let {
             try {
-                // resolve world language label.
-                getLabelByLanguage(Locale.ENGLISH, label)
-            } catch (exx: NotAvailableException) {
-                // resolve any label.
-                getFirstLabel(label)
+                // handle technical case
+                return if (languageCode == LANGUAGE_CODE_TECHNICAL) {
+                    getLabelByLanguage(languageCode, label)
+                } else getLabelByLanguage(Locale.forLanguageTag(languageCode).language, label)
+            } catch (ex: NotAvailableException) {
+                // continue with other tries.
             }
+        }
+
+        // resolve label via preferred locale.
+        try {
+            // resolve world language label.
+            getLabelByLanguage(Locale.ENGLISH, label)
+        } catch (exx: NotAvailableException) {
+            // resolve any label.
+            getFirstLabel(label)
         }
     }
 
@@ -312,7 +315,7 @@ object LabelProcessor {
      * @return the first label from the label type for the locale
      */
     @JvmStatic
-    fun getBestMatch(languageCode: String, label: LabelType.LabelOrBuilder, alternative: String?): String? {
+    fun getBestMatch(languageCode: String?, label: LabelType.LabelOrBuilder, alternative: String?): String? {
         return try {
             getBestMatch(languageCode, label)
         } catch (e: NotAvailableException) {
