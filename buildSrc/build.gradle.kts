@@ -19,8 +19,11 @@ dependencies {
     implementation("com.adarshr:gradle-test-logger-plugin:_")
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "17"
+allprojects {
+    tasks.withType<KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "17"
+            freeCompilerArgs = listOf("-Xjvm-default=enable")
+        }
     }
 }
