@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     // Support convention plugins written in Kotlin. Convention plugins are build scripts in 'src/main' that automatically become available as plugins in the main build.
     `kotlin-dsl`
@@ -17,13 +15,4 @@ dependencies {
     implementation(Kotlin.stdlib.jdk8)
     implementation(Kotlin.scriptRuntime)
     implementation("com.adarshr:gradle-test-logger-plugin:_")
-}
-
-allprojects {
-    tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "17"
-            freeCompilerArgs = listOf("-Xjvm-default=enable")
-        }
-    }
 }

@@ -1,6 +1,6 @@
-package org.openbase.jul.iface
+package org.openbase.jul.iface;
 
-import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.CouldNotPerformException;
 
 /*
  * #%L
@@ -30,7 +30,8 @@ import org.openbase.jul.exception.CouldNotPerformException
  * @param <CONFIG> the configuration type of this launchable.
  *
  */
-interface Launchable<CONFIG> : Manageable<CONFIG>, DefaultInitializableImpl<CONFIG> {
+public interface Launchable<CONFIG> extends Manageable<CONFIG>, DefaultInitializableImpl<CONFIG> {
+
     /**
      * Method starts the referred application.
      *
@@ -38,15 +39,13 @@ interface Launchable<CONFIG> : Manageable<CONFIG>, DefaultInitializableImpl<CONF
      * @throws CouldNotPerformException Is thrown in case any error occurs during the startup phase.
      * @throws InterruptedException is thrown in case the thread was externally interrupted.
      */
-    @Throws(CouldNotPerformException::class, InterruptedException::class)
-    @JvmDefault
-    fun launch(): Boolean {
+    default boolean launch() throws CouldNotPerformException, InterruptedException {
         try {
-            init()
-            activate()
-        } catch (ex: CouldNotPerformException) {
-            throw CouldNotPerformException("Could not launch $this", ex)
+            init();
+            activate();
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not launch " + this, ex);
         }
-        return true
+        return true;
     }
 }

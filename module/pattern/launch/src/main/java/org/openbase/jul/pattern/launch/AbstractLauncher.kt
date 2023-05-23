@@ -409,9 +409,9 @@ abstract class AbstractLauncher<L : Launchable<*>>
 
         @JvmStatic
         fun main(
-            application: Class<*>?,
-            submodule: Class<*>?,
-            args: Array<String?>?,
+            application: Class<*>,
+            submodule: Class<*>,
+            args: Array<String>,
             vararg launchers: Class<out AbstractLauncher<*>>,
         ) {
 
@@ -423,9 +423,9 @@ abstract class AbstractLauncher<L : Launchable<*>>
 
         @JvmStatic
         fun main(
-            application: Class<*>?,
-            submoduleName: String?,
-            args: Array<String?>?,
+            application: Class<*>,
+            submoduleName: String,
+            args: Array<String>,
             vararg launchers: Class<out AbstractLauncher<*>>,
         ) {
 
@@ -436,7 +436,7 @@ abstract class AbstractLauncher<L : Launchable<*>>
         }
 
         @JvmStatic
-        fun main(application: Class<*>?, args: Array<String?>?, vararg launchers: Class<out AbstractLauncher<*>>) {
+        fun main(application: Class<*>, args: Array<String>, vararg launchers: Class<out AbstractLauncher<*>>) {
 
             // setup application names
             JPService.setApplicationName(application)
@@ -526,7 +526,9 @@ abstract class AbstractLauncher<L : Launchable<*>>
                 ExceptionPrinter.printHistory("Could not check if launcher should be printed.", ex, logger)
             }
             logger.info("Start " + generateAppName() + "...")
-            for ((key, value) in HashSet<Map.Entry<Class<out AbstractLauncher<*>>, AbstractLauncher<*>>>(launcherMap.entries)) {
+            for ((key, value) in HashSet<Map.Entry<Class<out AbstractLauncher<*>>, AbstractLauncher<*>>>(
+                launcherMap.entries
+            )) {
 
                 // check if launcher was excluded
                 var exclude = false

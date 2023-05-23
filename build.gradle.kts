@@ -15,11 +15,8 @@ nexusPublishing {
     }
 }
 
-allprojects {
-    tasks.withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = "17"
-            freeCompilerArgs = listOf("-Xjvm-default=enable")
-        }
+tasks.withType(KotlinCompile::class).all {
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
