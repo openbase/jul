@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -25,6 +25,7 @@ package org.openbase.jul.storage.registry;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,7 @@ public class RemoteRegistryTest {
     }
 
     @BeforeAll
+    @Timeout(30)
     public static void setUpClass() throws Throwable {
         try {
             JPService.setupJUnitTestMode();
@@ -54,6 +56,7 @@ public class RemoteRegistryTest {
     }
 
     @AfterAll
+    @Timeout(30)
     public static void tearDownClass() throws Throwable {
         try {
             remoteRegistry.shutdown();
@@ -67,6 +70,7 @@ public class RemoteRegistryTest {
      *
      * @throws java.lang.Exception
      */
+    @Timeout(10)
     @Test
     public void testNotifyRegistryUpdate() throws Exception {
         System.out.println("notifyRegistryUpdate");

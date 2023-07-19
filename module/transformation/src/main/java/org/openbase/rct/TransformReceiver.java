@@ -62,7 +62,7 @@ public class TransformReceiver {
     }
 
     /**
-     * Get the transform between two frames by frame ID.
+     * Get the transform between two frames by node ID.
      * @param targetFrame The frame to which data should be transformed
      * @param sourceFrame The frame where the data originated
      * @param time he time at which the value of the transform is desired. (0 will get the latest)
@@ -75,7 +75,7 @@ public class TransformReceiver {
     }
 
     /**
-     * Get the transform between two frames by frame ID assuming fixed frame.
+     * Get the transform between two frames by node ID assuming fixed frame.
      * @param targetFrame The frame to which data should be transformed
      * @param targetTime The time to which the data should be transformed. (0 will get the latest)
      * @param sourceFrame The frame where the data originated
@@ -90,7 +90,7 @@ public class TransformReceiver {
     }
 
     /**
-     * Request the transform between two frames by frame ID.
+     * Request the transform between two frames by node ID.
      * @param targetFrame The frame to which data should be transformed
      * @param sourceFrame The frame where the data originated
      * @param time The time at which the value of the transform is desired. (0 will get the latest)

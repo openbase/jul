@@ -52,7 +52,7 @@ public class TransformationFrameConsistencyHandler extends AbstractProtoBufRegis
     }
 
     /**
-     * Methods verifies and updates the transformation frame id for the given placement configuration.
+     * Methods verifies and updates the transformation node ID for the given placement configuration.
      * If the given placement configuration is up to date this the method returns null.
      *
      * @param alias
@@ -73,7 +73,7 @@ public class TransformationFrameConsistencyHandler extends AbstractProtoBufRegis
 
             String frameId = generateFrameId(alias, placementConfig);
 
-            // verify and update frame id
+            // verify and update node ID
             if (placementConfig.getTransformationFrameId().equals(frameId)) {
                 return null;
 
@@ -94,7 +94,7 @@ public class TransformationFrameConsistencyHandler extends AbstractProtoBufRegis
             labelCollisionList.add(frameId.toLowerCase());
             return frameId;
         } catch (final CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not generate frame id!", ex);
+            throw new CouldNotPerformException("Could not generate node ID!", ex);
         }
     }
 

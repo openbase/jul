@@ -29,6 +29,7 @@ import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractControllerServerImpl;
 import org.openbase.jul.communication.controller.AbstractControllerServerTest.AbstractRemoteClientImpl;
 import org.openbase.jul.communication.iface.RPCServer;
+import org.openbase.jul.communication.mqtt.test.MqttIntegrationTest;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.jul.exception.InstantiationException;
 import org.openbase.jul.exception.TimeoutException;

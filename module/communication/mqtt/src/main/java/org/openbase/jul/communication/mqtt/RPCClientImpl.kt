@@ -7,6 +7,7 @@ import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.data.RPCResponse
 import org.openbase.jul.communication.exception.RPCException
+import org.openbase.jul.communication.exception.RPCResolvedException
 import org.openbase.jul.communication.iface.RPCClient
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.ScopeType
@@ -93,7 +94,7 @@ class RPCClientImpl(
         )
 
         if (response.error.isNotEmpty()) {
-            rpcFuture.completeExceptionally(RPCException(response.error));
+            rpcFuture.completeExceptionally(RPCResolvedException(RPCException(response.error)))
         } else {
             rpcFuture.complete(
                 RPCResponse(
@@ -108,11 +109,11 @@ class RPCClientImpl(
     }
 
     private fun lazyRegisterMethod(methodName: String, return_clazz: KClass<*>, vararg parameters: Any) {
-        resultParserMap.getOrPut(methodName) { RPCMethod.protoAnyToAny(return_clazz) }
+        resultParserMap.getOrPut(methodName) { RPCMethodWrapper.protoAnyToAny(return_clazz) }
         parameterParserMap.getOrPut(methodName) {
             parameters
                 .map { param -> param::class }
-                .map { param_clazz -> RPCMethod.anyToProtoAny(param_clazz) }
+                .map { param_clazz -> RPCMethodWrapper.anyToProtoAny(param_clazz) }
         }
     }
 

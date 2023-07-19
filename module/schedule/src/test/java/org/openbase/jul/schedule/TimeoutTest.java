@@ -10,12 +10,12 @@ package org.openbase.jul.schedule;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -24,6 +24,7 @@ package org.openbase.jul.schedule;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.openbase.jps.core.JPService;
 import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jul.exception.CouldNotPerformException;
@@ -39,6 +40,7 @@ public class TimeoutTest {
     }
 
     @BeforeAll
+    @Timeout(30)
     public static void setUpClass() throws JPServiceException {
         JPService.setupJUnitTestMode();
     }
@@ -46,7 +48,7 @@ public class TimeoutTest {
     /**
      * Test of getTimeToWait method, of class Timeout.
      */
-    @org.junit.jupiter.api.Timeout(3)
+    @Timeout(3)
     @Test
     public void testTimer() throws Exception {
         System.out.println("getTimeToWait");
@@ -54,7 +56,7 @@ public class TimeoutTest {
         final long timeToWait = 200;
 
         // #### Test timeout expire ####
-        Timeout timeout = new Timeout(timeToWait) {
+        org.openbase.jul.schedule.Timeout timeout = new org.openbase.jul.schedule.Timeout(timeToWait) {
 
             @Override
             public void expired() {

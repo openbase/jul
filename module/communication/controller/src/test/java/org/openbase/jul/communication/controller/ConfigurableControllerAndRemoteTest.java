@@ -25,6 +25,7 @@ package org.openbase.jul.communication.controller;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.openbase.jul.communication.iface.RPCServer;
+import org.openbase.jul.communication.mqtt.test.MqttIntegrationTest;
 import org.openbase.jul.exception.CouldNotPerformException;
 import org.openbase.type.communication.ScopeType.Scope;
 import org.openbase.type.domotic.unit.UnitConfigType.UnitConfig;

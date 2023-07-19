@@ -50,10 +50,10 @@ public class InitializationException extends CouldNotPerformException {
     /**
      * Creates a new InitializationException instance.
      *
-     * @param context the class which could not be initialized.
+     * @param clazz the class which could not be initialized.
      * @param cause   the reason why the initialization failed.
      */
-    public InitializationException(Class context, Throwable cause) {
-        super("Could not initialize " + context + "!", cause);
+    public InitializationException(Class clazz, Throwable cause) {
+        super("Could not initialize " + clazz.getSimpleName() + "!", cause);
     }
 }

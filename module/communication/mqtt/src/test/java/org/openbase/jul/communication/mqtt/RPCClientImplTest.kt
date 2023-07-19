@@ -16,7 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.data.RPCResponse
-import org.openbase.jul.communication.exception.RPCException
+import org.openbase.jul.communication.exception.RPCResolvedException
 import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
@@ -61,11 +61,13 @@ internal class RPCClientImplTest {
     }
 
     @AfterAll
+    @Timeout(30)
     fun clearMocks() {
         clearAllMocks()
     }
 
     @BeforeEach
+    @Timeout(30)
     fun initMqttClientMock() {
         clearMocks(mqttClient)
 
@@ -75,10 +77,9 @@ internal class RPCClientImplTest {
                 capture(callbackSlot),
                 GlobalCachedExecutorService.getInstance().executorService
             )
-        } returns
-                mockk {
-                    every { whenComplete(capture(afterSubscriptionSlot)) } returns CompletableFuture()
-                }
+        } returns mockk {
+            every { whenComplete(capture(afterSubscriptionSlot)) } returns CompletableFuture()
+        }
         every { mqttClient.unsubscribe(any()) } returns CompletableFuture()
         every { mqttClient.publish(capture(mqttPublishSlot)) } returns CompletableFuture()
     }
@@ -110,6 +111,7 @@ internal class RPCClientImplTest {
         private lateinit var callback: BiConsumer<Mqtt5SubAck, Throwable?>
 
         @BeforeEach
+        @Timeout(30)
         fun setupMethodCall() {
             rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class, *args)
             callback = afterSubscriptionSlot.captured
@@ -134,7 +136,7 @@ internal class RPCClientImplTest {
                 .setMethodName(methodName)
                 .addAllParams(args
                     .zip(args
-                        .map { arg -> RPCMethod.anyToProtoAny(arg::class) })
+                        .map { arg -> RPCMethodWrapper.anyToProtoAny(arg::class) })
                     .map { (arg, toProtoAny) -> toProtoAny(arg) })
                 .build()
             val expectedMqttPublish = Mqtt5Publish.builder()
@@ -164,6 +166,7 @@ internal class RPCClientImplTest {
         }
 
         @BeforeEach
+        @Timeout(30)
         fun setupMethodCall() {
             rpcFuture = rpcRemote.callMethod(methodName, expectedResult::class, *args)
             callback = callbackSlot.captured
@@ -172,13 +175,22 @@ internal class RPCClientImplTest {
         @Test
         @Timeout(value = 30)
         fun `test error response`() {
-            response.error = "RPCServer answered with an error"
+            val errorMessage = "RPCServer answered with an error"
+            response.error = CouldNotPerformException(errorMessage).stackTraceToString()
 
             callback.accept(mqtt5Publish)
 
             val exception = shouldThrow<ExecutionException> { rpcFuture.get() }
-            exception.cause!!::class.java shouldBe RPCException::class.java
-            exception.cause!!.message shouldBe response.error
+            exception.cause shouldNotBe null
+            exception.cause?.let { cause ->
+                cause::class.java shouldBe RPCResolvedException::class.java
+
+                cause.cause shouldNotBe null
+                cause.cause?.let { initialCause ->
+                    initialCause::class.java shouldBe CouldNotPerformException::class.java
+                    initialCause.message shouldBe errorMessage
+                }
+            }
 
             verify(exactly = 1) {
                 mqttClient.unsubscribe(
@@ -203,7 +215,7 @@ internal class RPCClientImplTest {
         @Timeout(value = 30)
         fun `test successful response`() {
             response.status = Response.Status.FINISHED
-            response.result = RPCMethod.anyToProtoAny(expectedResult::class)(expectedResult)
+            response.result = RPCMethodWrapper.anyToProtoAny(expectedResult::class)(expectedResult)
 
             callback.accept(mqtt5Publish)
 

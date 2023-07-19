@@ -29,7 +29,7 @@ import org.openbase.rct.impl.TransformCommunicator;
 import org.openbase.rct.impl.TransformListener;
 import org.openbase.rct.impl.TransformerCore;
 import org.openbase.rct.impl.TransformerCoreDefault;
-import org.openbase.rct.impl.rsb.TransformCommunicatorImpl;
+import org.openbase.rct.impl.mqtt.TransformCommunicatorImpl;
 
 public class TransformerFactory {
 

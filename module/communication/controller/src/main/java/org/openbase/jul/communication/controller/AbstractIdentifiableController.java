@@ -52,5 +52,4 @@ public abstract class AbstractIdentifiableController<M extends AbstractMessage, 
             throw new NotAvailableException("data.id", ex);
         }
     }
-
 }

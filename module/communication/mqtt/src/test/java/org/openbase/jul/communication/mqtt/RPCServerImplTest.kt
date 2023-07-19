@@ -4,7 +4,6 @@ import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
-import com.hivemq.client.mqtt.mqtt5.message.subscribe.suback.Mqtt5SubAck
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -16,12 +15,12 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.exception.RPCException
 import org.openbase.jul.communication.exception.RPCResolvedException
 import org.openbase.jul.exception.CouldNotPerformException
+import org.openbase.jul.exception.ExceptionProcessor
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.type.communication.mqtt.RequestType.Request
 import org.openbase.type.communication.mqtt.ResponseType.Response
-import java.lang.reflect.InvocationTargetException
 import java.util.concurrent.CompletableFuture
 import java.util.function.Consumer
 
@@ -49,15 +48,21 @@ internal class RPCServerImplTest {
         mockkObject(SharedMqttClient)
         every { SharedMqttClient.get(any()) } returns mqttClient
 
-        rpcServer = RPCServerImpl(ScopeProcessor.generateScope(baseTopic), CommunicatorConfig("localhost", 1234))
+        rpcServer = RPCServerImpl(
+            ScopeProcessor.generateScope(baseTopic),
+            CommunicatorConfig("localhost", 1234),
+            RPCServerImpl.NO_DISPATCHER
+        )
     }
 
     @AfterAll
+    @Timeout(30)
     fun clearMocks() {
         clearAllMocks()
     }
 
     @BeforeEach
+    @Timeout(30)
     fun initMqttClientMock() {
         clearMocks(mqttClient)
 
@@ -135,6 +140,7 @@ internal class RPCServerImplTest {
         private lateinit var callback: Consumer<Mqtt5Publish>
 
         @BeforeEach
+        @Timeout(30)
         fun setupSubscriptionCallback() {
             //println("Test ${mqttPublishSlot.size}")
             //mqttPublishSlot.clear()
@@ -146,10 +152,10 @@ internal class RPCServerImplTest {
         private fun simulateMethodCall(
             methodName: String,
             id: String = "00000000-0000-0000-0000-000000000001",
-            vararg parameter: Any
+            vararg parameter: Any,
         ) {
             val argsAsProtoAny = parameter
-                .map { arg -> RPCMethod.anyToProtoAny(arg::class) }
+                .map { arg -> RPCMethodWrapper.anyToProtoAny(arg::class) }
                 .zip(parameter)
                 .map { (toProtoAny, arg) -> toProtoAny(arg) }
 
@@ -163,12 +169,6 @@ internal class RPCServerImplTest {
             every { clientRequest.payloadAsBytes } answers { request.toByteArray() }
 
             callback.accept(clientRequest)
-        }
-
-        @Test
-        @Timeout(value = 30)
-        fun `test bad request id`() {
-            //TODO: verify that id is a valid uuid
         }
 
         /**
@@ -209,7 +209,7 @@ internal class RPCServerImplTest {
             actualResponse.hasResult() shouldBe false
 
             val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
-            error shouldBe NotAvailableException("Method $methodName")
+            ExceptionProcessor.getInitialCause(error) shouldBe NotAvailableException("Method $methodName")
         }
 
         @Test
@@ -230,7 +230,7 @@ internal class RPCServerImplTest {
             actualResponse.hasResult() shouldBe false
 
             val error = RPCResolvedException.resolveRPCException(RPCException(actualResponse.error))
-            error.shouldBeTypeOf<InvocationTargetException>()
+            error.shouldBeTypeOf<CouldNotPerformException>()
         }
 
         @Test
@@ -272,7 +272,7 @@ internal class RPCServerImplTest {
             actualResponse.error.isEmpty() shouldBe true
 
             val expectedResult = adder.add(validArgs[0], validArgs[1])
-            val expectedResultProto = RPCMethod.anyToProtoAny(Int::class)(expectedResult)
+            val expectedResultProto = RPCMethodWrapper.anyToProtoAny(Int::class)(expectedResult)
             actualResponse.result shouldBe expectedResultProto
         }
     }

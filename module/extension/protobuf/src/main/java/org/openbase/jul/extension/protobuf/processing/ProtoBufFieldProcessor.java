@@ -369,7 +369,7 @@ public class ProtoBufFieldProcessor {
             }
             throw new InvalidStateException("Key is unknown!");
         } catch (Exception ex) {
-            throw new NotAvailableException("Entry of Key", key, ex);
+            throw new NotAvailableException("Entry of Key", key.toString(), ex);
         }
     }
 

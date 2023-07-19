@@ -111,13 +111,13 @@ public abstract class AbstractExecutorService<ES extends java.util.concurrent.Ab
                 overload = true;
                 logger.warn("Further tasks will be rejected because executor service overload is detected!");
                 if (JPService.verboseMode()) {
-                    StackTracePrinter.printAllStackTraces("pool", logger, LogLevel.INFO);
+                    StackTracePrinter.printAllStackTraces("pool", null, logger, LogLevel.INFO);
                 }
             } else if (currentTaskCountProvider.get() >= ((double) maxTaskCountProvider.get() * DEFAULT_WARNING_RATIO)) {
                 overload = true;
                 logger.warn("High Executor service load detected! This can cause system instability issues!");
                 if (JPService.verboseMode()) {
-                    StackTracePrinter.printAllStackTraces("pool", logger, LogLevel.INFO);
+                    StackTracePrinter.printAllStackTraces("pool", null, logger, LogLevel.INFO);
                 }
             } else {
                 overload = false;

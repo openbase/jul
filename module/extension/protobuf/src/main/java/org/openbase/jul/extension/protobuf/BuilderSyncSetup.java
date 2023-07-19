@@ -71,7 +71,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                StackTracePrinter.printStackTrace(logger);
+                StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("ReadLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec! Last access by Consumer[" + readLockConsumer + "]!"));
             }
         };
@@ -79,7 +79,7 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
 
             @Override
             public void expired() {
-                StackTracePrinter.printStackTrace(logger);
+                StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger);
                 new FatalImplementationErrorException(this, new TimeoutException("WriteLock of " + builder.buildPartial().getClass().getSimpleName() + " was locked for more than " + LOCK_TIMEOUT / 1000 + " sec by Consumer[" + writeLockConsumer + "]!"));
             }
         };
@@ -93,15 +93,6 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
      */
     public MB getBuilder() {
         return builder;
-    }
-
-    @Deprecated
-    public void lockRead(final Object consumer) {
-        //logger.debug("order lockRead by {}", consumer);
-        readLock.lock();
-        readLockConsumer = consumer;
-        restartReadLockTimeout();
-        //logger.debug("lockRead by {}", consumer);
     }
 
     public void lockReadInterruptibly(final Object consumer) throws InterruptedException {
@@ -266,10 +257,17 @@ public class BuilderSyncSetup<MB extends Builder<MB>> {
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     return;
+                } catch (NotInitializedException ex) {
+                    // do nothing if service is not initialized yet
                 } catch (CouldNotPerformException ex) {
                     // only print error if the exception was not caused by a system shutdown.
                     if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                        ExceptionPrinter.printHistory(new CouldNotPerformException("Could not inform builder holder about data update!", ex), logger, LogLevel.ERROR);
+                        ExceptionPrinter.printHistory(
+                                "Could not inform builder holder about data update!",
+                                ex,
+                                logger,
+                                LogLevel.ERROR
+                        );
                     }
                 }
         }

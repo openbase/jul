@@ -1,6 +1,6 @@
 package org.openbase.jul.schedule;
 
-/*-
+/*
  * #%L
  * JUL Schedule
  * %%
@@ -21,7 +21,6 @@ package org.openbase.jul.schedule;
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
-
 public interface CloseableLockProvider {
 
     /**
