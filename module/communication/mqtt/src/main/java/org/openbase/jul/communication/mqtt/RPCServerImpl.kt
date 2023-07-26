@@ -65,7 +65,7 @@ class RPCServerImpl(
             }
 
             coroutineScope?.cancel()
-            coroutineScope = if (dispatcher != null) CoroutineScope(dispatcher) else null
+            coroutineScope = dispatcher?.let { CoroutineScope(dispatcher) }
 
             activationFuture = mqttClient.subscribe(
                 Mqtt5Subscribe.builder().topicFilter(topic).qos(MqttQos.EXACTLY_ONCE).build(), { mqtt5Publish ->
@@ -89,15 +89,15 @@ class RPCServerImpl(
             )
 
             try {
-                activationFuture!!.get(ACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS)
+                activationFuture?.get(ACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS)
             } catch (e: TimeoutException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw CouldNotPerformException("Could not activate Subscriber", e)
             } catch (e: AsyncRuntimeException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw CouldNotPerformException("Could not activate Subscriber", e)
             } catch (e: InterruptedException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw e;
             }
         }
