@@ -80,16 +80,16 @@ class TransformCommunicatorImpl(private val authority: String) : TransformCommun
             staticTransformationSubscriber.registerDataHandler { event: EventType.Event -> transformCallback(event) }
             dynamicTransformationSubscriber.registerDataHandler { event: EventType.Event -> transformCallback(event) }
             subscriberSync.registerDataHandler { event: EventType.Event -> syncCallback(event) }
-            transformationPublisherWatchDog!!.activate()
-            publisherSyncWatchDog!!.activate()
-            staticTransformSubscriberWatchDog!!.activate()
-            dynamicTransformSubscriberWatchDog!!.activate()
-            subscriberSyncWatchDog!!.activate()
-            transformationPublisherWatchDog!!.waitForServiceActivation()
-            publisherSyncWatchDog!!.waitForServiceActivation()
-            staticTransformSubscriberWatchDog!!.waitForServiceActivation()
-            dynamicTransformSubscriberWatchDog!!.waitForServiceActivation()
-            subscriberSyncWatchDog!!.waitForServiceActivation()
+            transformationPublisherWatchDog?.activate()
+            publisherSyncWatchDog?.activate()
+            staticTransformSubscriberWatchDog?.activate()
+            dynamicTransformSubscriberWatchDog?.activate()
+            subscriberSyncWatchDog?.activate()
+            transformationPublisherWatchDog?.waitForServiceActivation()
+            publisherSyncWatchDog?.waitForServiceActivation()
+            staticTransformSubscriberWatchDog?.waitForServiceActivation()
+            dynamicTransformSubscriberWatchDog?.waitForServiceActivation()
+            subscriberSyncWatchDog?.waitForServiceActivation()
             requestSync()
         } catch (ex: InterruptedException) {
             Thread.currentThread().interrupt()
