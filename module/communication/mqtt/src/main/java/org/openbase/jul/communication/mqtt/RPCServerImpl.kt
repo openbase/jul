@@ -13,7 +13,6 @@ import org.openbase.jul.exception.CouldNotPerformException
 import org.openbase.jul.exception.NotAvailableException
 import org.openbase.jul.exception.printer.ExceptionPrinter
 import org.openbase.jul.exception.printer.LogLevel
-import org.openbase.jul.extension.type.processing.ScopeProcessor
 import org.openbase.jul.schedule.GlobalCachedExecutorService
 import org.openbase.jul.schedule.SyncObject
 import org.openbase.type.communication.ScopeType.Scope
@@ -60,29 +59,20 @@ class RPCServerImpl(
     }
 
     override fun activate() {
-        logger.warn("#+# try to activate " + ScopeProcessor.generateStringRep(scope))
         synchronized(lock) {
             if (isActive) {
-                logger.warn("#+# already active " + ScopeProcessor.generateStringRep(scope))
                 return
             }
 
-            if (coroutineScope != null) {
-                coroutineScope?.cancel()
-                coroutineScope = null
-            }
-
+            coroutineScope?.cancel()
             coroutineScope = if (dispatcher != null) CoroutineScope(dispatcher) else null
 
-            logger.warn("#+# init rpc on topic " + topic)
             activationFuture = mqttClient.subscribe(
                 Mqtt5Subscribe.builder().topicFilter(topic).qos(MqttQos.EXACTLY_ONCE).build(), { mqtt5Publish ->
 
                     // Note: this is a wrapper for the usage of a shared client
                     //       which may remain subscribed even if deactivate is called
                     if (isActive) {
-                        //handleRemoteCall(mqtt5Publish)
-
                         when (getPriority(mqtt5Publish)) {
                             org.openbase.jul.annotation.RPCMethod.Priority.HIGH -> handleRemoteCall(mqtt5Publish)
                             else -> {
@@ -94,8 +84,6 @@ class RPCServerImpl(
                                 } ?: handleRemoteCall(mqtt5Publish)
                             }
                         }
-                    } else {
-                        printDebug("skip handling because server is disabled..")
                     }
                 }, GlobalCachedExecutorService.getInstance().executorService
             )
@@ -131,12 +119,10 @@ class RPCServerImpl(
         instance: Any,
         priority: RPCMethod.Priority,
     ) {
-        logger.warn("#=# register method " + method.name + " for topic: " + topic)
         methods[method.name] = RPCMethodWrapper(method, priority = priority, instance = instance);
     }
 
     private fun handleRemoteCall(mqtt5Publish: Mqtt5Publish) {
-        printDebug("handle remote call...")
         val responseBuilder = ResponseType.Response.newBuilder()
         val request = RequestType.Request.parseFrom(mqtt5Publish.payloadAsBytes)
 
@@ -168,9 +154,7 @@ class RPCServerImpl(
         //TODO open thread to send PROGRESSING message periodically
         responseBuilder.status = ResponseType.Response.Status.FINISHED
         try {
-            printDebug("handle remote call method ${request.methodName}")
             val result = method.invoke(request.paramsList)
-            printDebug("process result of method ${request.methodName}")
             responseBuilder.result = result
         } catch (ex: Exception) {
             when (ex) {
@@ -187,15 +171,6 @@ class RPCServerImpl(
         mqttClient.publish(
             mqttResponseBuilder.payload(responseBuilder.build().toByteArray()).attachTimestamp().build()
         )
-    }
-
-    fun printDebug(message: String) {
-        try {
-            if (ScopeProcessor.generateStringRep(scope).contains("colorablelight-1")) {
-                logger.warn("#-# " + ScopeProcessor.generateStringRep(scope) + " - " + message)
-            }
-        } catch (e: CouldNotPerformException) {
-        }
     }
 
     private fun getPriority(mqtt5Publish: Mqtt5Publish): RPCMethod.Priority {

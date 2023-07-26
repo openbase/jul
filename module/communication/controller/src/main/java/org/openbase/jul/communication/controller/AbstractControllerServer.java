@@ -209,7 +209,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             final Scope internalScope = ScopeProcessor.generateScope(scopeStringRep);
 
             // init new instances.
-            printDebug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
+            logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
             publisher = factory.createPublisher(ScopeProcessor.concat(internalScope, SCOPE_SUFFIX_STATUS), internalCommunicatorConfig);
             publisherWatchDog = new WatchDog(publisher, "Publisher[" + ScopeProcessor.generateStringRep(publisher.getScope()) + "]");
 
@@ -223,13 +223,11 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             try {
                 server.registerMethods(Pingable.class, this);
             } catch (InvalidStateException ex) {
-                printDebug("Could not register ping for " + ScopeProcessor.generateStringRep(scope));
                 // if already registered then everything is fine and we can continue...
             }
             try {
                 server.registerMethods((Class) getClass(), this);
             } catch (InvalidStateException /*| NoSuchMethodException*/ ex) {
-                printDebug("Could not register ping for " + ScopeProcessor.generateStringRep(scope));
                 // if already registered then everything is fine, and we can continue...
             }
 
@@ -252,7 +250,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                             // mark controller as online.
                             setAvailabilityState(ONLINE);
 
-                            logger.debug("trigger initial sync of " + scopeStringRep);
                             notifyChange();
                         } catch (InterruptedException ex) {
                             Thread.currentThread().interrupt();
@@ -271,8 +268,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
             // check if communication service was already activated before and recover state.
             if (alreadyActivated) {
-
-                printDebug("activate again " + scopeStringRep);
                 activate();
             }
         } catch (CouldNotPerformException | NullPointerException ex) {
@@ -327,7 +322,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         manageLock.lockWriteInterruptibly(this);
         try {
             validateInitialization();
-            printDebug("Activate AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
+            logger.debug("Activate AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
             setAvailabilityState(ACTIVATING);
             assert serverWatchDog != null;
             assert publisherWatchDog != null;
@@ -336,7 +331,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         } finally {
             manageLock.unlockWrite(this);
         }
-        printDebug("Activated AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
     }
 
     /**
@@ -361,7 +355,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 initialDataSyncFuture.cancel(true);
             }
 
-            printDebug("Deactivate AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
+            logger.debug("Deactivate AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
             // The order is important: The publisher publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
             // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
             // and the remotes will think that the server is still there.
@@ -374,7 +368,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 publisherWatchDog.deactivate();
             }
             setAvailabilityState(OFFLINE);
-            printDebug("Deactivated AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
         } finally {
             manageLock.unlockWrite(this);
         }
@@ -1068,9 +1061,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public Future<Long> ping(final Long timestamp) {
-
-        printDebug("ping requested");
-
         try {
             validateMiddleware();
         } catch (InvalidStateException e) {
@@ -1084,18 +1074,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 FutureProcessor.canceledFuture(Long.class, ex);
             }
         }
-        printDebug("ping respond");
         return FutureProcessor.completedFuture(timestamp);
-    }
-
-    public void printDebug(String message) {
-        try {
-            if (ScopeProcessor.generateStringRep(scope).contains("colorablelight-1")) {
-                logger.warn("#-# " + ScopeProcessor.generateStringRep(scope) + " - " + message);
-            }
-        } catch (CouldNotPerformException e) {
-
-        }
     }
 
     /**
@@ -1108,15 +1087,13 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     @RPCMethod
     @Override
     public M requestStatus() throws CouldNotPerformException {
-        printDebug("requestStatus of {}");
+        logger.trace("requestStatus of {}", this);
         try {
             return getData();
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not request status update.", ex), logger, LogLevel.ERROR);
-        } finally {
-            printDebug("requestStatus respond");
         }
     }
 

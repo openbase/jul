@@ -178,10 +178,7 @@ object SharedMqttClient : Shutdownable {
         ): CompletableFuture<Mqtt5UnsubAck> = p0.topicFilters
             .filter { decreaseTopicCounter(it) }
             .takeIf { it.isNotEmpty() }
-            ?.let {
-                Mqtt5Unsubscribe.builder().addTopicFilters(it).build()
-                    .also { println("Unsubscribe from topic ${it.toString()}") }
-            }
+            ?.let { Mqtt5Unsubscribe.builder().addTopicFilters(it).build() }
             ?.let { internalClient.unsubscribe(it) }
             ?: CompletableFuture.completedFuture(null)
 

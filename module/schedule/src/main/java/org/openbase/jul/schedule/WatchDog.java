@@ -92,7 +92,7 @@ public class WatchDog implements Activatable, Shutdownable {
             }
             synchronized (STATE_LOCK) {
                 minder = new Minder(serviceName + "WatchDog");
-                logger.info("Start activation of service: " + serviceName);
+                logger.trace("Start activation of service: " + serviceName);
                 minder.setFuture(GlobalScheduledExecutorService.scheduleAtFixedRate(minder, 0, getRate(), TimeUnit.MILLISECONDS));
             }
         }
@@ -351,7 +351,7 @@ public class WatchDog implements Activatable, Shutdownable {
                 this.serviceState = serviceState;
                 STATE_LOCK.notifyAll();
             }
-            logger.info(this + " is now " + serviceState.name().toLowerCase() + ".");
+            logger.debug(this + " is now " + serviceState.name().toLowerCase() + ".");
             serviceStateObservable.notifyObservers(serviceState);
         } catch (CouldNotPerformException ex) {
             ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify state change to all instances!", ex), logger);
