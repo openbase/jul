@@ -69,7 +69,7 @@ class RPCServerImpl(
 
             logger.warn("#+# init rpc on topic " + topic)
             activationFuture = mqttClient.subscribe(
-                Mqtt5Subscribe.builder().topicFilter(topic).qos(MqttQos.AT_LEAST_ONCE).build(), { mqtt5Publish ->
+                Mqtt5Subscribe.builder().topicFilter(topic).qos(MqttQos.EXACTLY_ONCE).build(), { mqtt5Publish ->
 
                     // Note: this is a wrapper for the usage of a shared client
                     //       which may remain subscribed even if deactivate is called
@@ -135,7 +135,7 @@ class RPCServerImpl(
         // collisions are unlikely
         responseBuilder.id = UUID.fromString(request.id).toString()
         val requestTopic = topic + "/" + responseBuilder.id
-        val mqttResponseBuilder = Mqtt5Publish.builder().topic(requestTopic).qos(MqttQos.AT_LEAST_ONCE)
+        val mqttResponseBuilder = Mqtt5Publish.builder().topic(requestTopic).qos(MqttQos.EXACTLY_ONCE)
 
         responseBuilder.status = ResponseType.Response.Status.ACKNOWLEDGED
         responseBuilder.id = request.id

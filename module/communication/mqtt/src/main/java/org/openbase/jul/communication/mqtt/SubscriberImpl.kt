@@ -50,7 +50,7 @@ class SubscriberImpl(
             activationFuture = mqttClient.subscribe(
                 Mqtt5Subscribe.builder()
                     .topicFilter(topic)
-                    .qos(MqttQos.AT_LEAST_ONCE)
+                    .qos(MqttQos.EXACTLY_ONCE)
                     .build(),
                 { mqtt5Publish: Mqtt5Publish ->
                     // Note: this is a wrapper for the usage of a shared client

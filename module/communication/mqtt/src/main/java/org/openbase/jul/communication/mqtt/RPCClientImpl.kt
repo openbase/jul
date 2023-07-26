@@ -42,7 +42,7 @@ class RPCClientImpl(
         mqttClient.subscribe(
             Mqtt5Subscribe.builder()
                 .topicFilter("$topic/${request.id}")
-                .qos(MqttQos.AT_LEAST_ONCE)
+                .qos(MqttQos.EXACTLY_ONCE)
                 .build(),
             { mqtt5Publish: Mqtt5Publish -> handleRPCResponse(mqtt5Publish, rpcFuture, request) },
             GlobalCachedExecutorService.getInstance().executorService
@@ -53,7 +53,7 @@ class RPCClientImpl(
                 mqttClient.publish(
                     Mqtt5Publish.builder()
                         .topic(topic)
-                        .qos(MqttQos.AT_LEAST_ONCE)
+                        .qos(MqttQos.EXACTLY_ONCE)
                         .payload(request.toByteArray())
                         .attachTimestamp()
                         .build()

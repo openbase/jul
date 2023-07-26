@@ -17,7 +17,7 @@ class PublisherImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : Commun
         mqttClient.publish(
             Mqtt5Publish.builder()
                 .topic(topic)
-                .qos(MqttQos.AT_LEAST_ONCE)
+                .qos(MqttQos.EXACTLY_ONCE)
                 .payload(event.toByteArray())
                 .attachTimestamp(attachTimestamp)
                 .build()
@@ -29,7 +29,7 @@ class PublisherImpl(scope: ScopeType.Scope, config: CommunicatorConfig) : Commun
         mqttClient.publish(
             Mqtt5Publish.builder()
                 .topic(ScopeProcessor.generateStringRep(scope))
-                .qos(MqttQos.AT_LEAST_ONCE)
+                .qos(MqttQos.EXACTLY_ONCE)
                 .payload(event.toByteArray())
                 .attachTimestamp(attachTimestamp)
                 .build()
