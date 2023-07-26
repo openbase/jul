@@ -65,6 +65,7 @@ import static org.openbase.type.domotic.state.AvailabilityStateType.Availability
 /**
  * @param <M>  the message type of the communication service
  * @param <MB> the builder for message M
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 
@@ -116,6 +117,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * Create a communication service.
      *
      * @param builder the initial data builder
+     *
      * @throws InstantiationException if the creation fails
      */
     public AbstractControllerServer(final MB builder) throws InstantiationException {
@@ -156,6 +158,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param scope
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -165,6 +168,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param scope
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -179,6 +183,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     /**
      * @param scope
      * @param communicatorConfig
+     *
      * @throws InitializationException
      * @throws InterruptedException
      */
@@ -204,7 +209,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             final Scope internalScope = ScopeProcessor.generateScope(scopeStringRep);
 
             // init new instances.
-            logger.debug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
+            printDebug("Init AbstractControllerServer for component " + getClass().getSimpleName() + " on " + scopeStringRep);
             publisher = factory.createPublisher(ScopeProcessor.concat(internalScope, SCOPE_SUFFIX_STATUS), internalCommunicatorConfig);
             publisherWatchDog = new WatchDog(publisher, "Publisher[" + ScopeProcessor.generateStringRep(publisher.getScope()) + "]");
 
@@ -218,11 +223,13 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
             try {
                 server.registerMethods(Pingable.class, this);
             } catch (InvalidStateException ex) {
+                printDebug("Could not register ping for " + ScopeProcessor.generateStringRep(scope));
                 // if already registered then everything is fine and we can continue...
             }
             try {
                 server.registerMethods((Class) getClass(), this);
             } catch (InvalidStateException /*| NoSuchMethodException*/ ex) {
+                printDebug("Could not register ping for " + ScopeProcessor.generateStringRep(scope));
                 // if already registered then everything is fine, and we can continue...
             }
 
@@ -245,7 +252,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                             // mark controller as online.
                             setAvailabilityState(ONLINE);
 
-                            logger.debug("trigger initial sync");
+                            logger.debug("trigger initial sync of " + scopeStringRep);
                             notifyChange();
                         } catch (InterruptedException ex) {
                             Thread.currentThread().interrupt();
@@ -264,6 +271,8 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
             // check if communication service was already activated before and recover state.
             if (alreadyActivated) {
+
+                printDebug("activate again " + scopeStringRep);
                 activate();
             }
         } catch (CouldNotPerformException | NullPointerException ex) {
@@ -318,7 +327,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         manageLock.lockWriteInterruptibly(this);
         try {
             validateInitialization();
-            logger.debug("Activate AbstractControllerServer for: " + this);
+            printDebug("Activate AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
             setAvailabilityState(ACTIVATING);
             assert serverWatchDog != null;
             assert publisherWatchDog != null;
@@ -327,6 +336,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         } finally {
             manageLock.unlockWrite(this);
         }
+        printDebug("Activated AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
     }
 
     /**
@@ -351,7 +361,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 initialDataSyncFuture.cancel(true);
             }
 
-            logger.debug("Deactivate AbstractControllerServer for: " + this);
+            printDebug("Deactivate AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
             // The order is important: The publisher publishes a zero event when the availabilityState is set to deactivating which leads remotes to disconnect
             // The remotes try to reconnect again and start a requestData. If the server is still active it will respond
             // and the remotes will think that the server is still there.
@@ -364,6 +374,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 publisherWatchDog.deactivate();
             }
             setAvailabilityState(OFFLINE);
+            printDebug("Deactivated AbstractControllerServer for: " + this + " on " + ScopeProcessor.generateStringRep(scope));
         } finally {
             manageLock.unlockWrite(this);
         }
@@ -432,6 +443,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @SuppressWarnings("unchecked")
@@ -462,6 +474,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param controllerAvailability
+     *
      * @throws InterruptedException
      */
     private void setAvailabilityState(final AvailabilityState.State controllerAvailability) throws InterruptedException {
@@ -554,6 +567,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -567,6 +581,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @param consumer             {@inheritDoc}
      * @param notificationStrategy {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -579,6 +594,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @param consumer {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -591,6 +607,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @param consumer             {@inheritDoc}
      * @param notificationStrategy {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
@@ -620,6 +637,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
+     *
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableWriteLockWrapper getManageWriteLock(final Object consumer) {
@@ -648,6 +666,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
+     *
      * @return a new builder wrapper which already locks the manage lock.
      */
     protected CloseableReadLockWrapper getManageReadLock(final Object consumer) {
@@ -676,7 +695,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
+     *
      * @return a new builder wrapper which already locks the manage lock.
+     *
      * @throws InterruptedException in case the thread was externally interrupted during the locking.
      */
     protected CloseableWriteLockWrapper getManageWriteLockInterruptible(final Object consumer) throws InterruptedException {
@@ -705,7 +726,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * in background after leaving the try brackets.
      *
      * @param consumer a responsible instance which consumes the lock.
+     *
      * @return a new builder wrapper which already locks the manage lock.
+     *
      * @throws InterruptedException in case the thread was externally interrupted during the locking.
      */
     protected CloseableReadLockWrapper getManageReadLockInterruptible(final Object consumer) throws InterruptedException {
@@ -743,6 +766,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -825,7 +849,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * sub classes to update data which can be received by everyone.
      *
      * @param dataBuilder a clone of the current data builder.
+     *
      * @return a message build from the data builder
+     *
      * @throws CouldNotPerformException if the update fails
      */
     protected M updateDataToPublish(MB dataBuilder) throws CouldNotPerformException {
@@ -836,6 +862,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * Overwrite this method to get informed about data updates.
      *
      * @param data new arrived data messages.
+     *
      * @throws CouldNotPerformException
      */
     protected void notifyDataUpdate(M data) throws CouldNotPerformException {
@@ -845,6 +872,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     /**
      * @param fieldNumber
      * @param value
+     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(int fieldNumber, Object value) throws CouldNotPerformException {
@@ -870,6 +898,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     /**
      * @param fieldName
      * @param value
+     *
      * @throws CouldNotPerformException
      */
     protected final void setDataField(String fieldName, Object value) throws CouldNotPerformException {
@@ -894,7 +923,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param name
+     *
      * @return
+     *
      * @throws NotAvailableException
      */
     protected final Object getDataField(String name) throws NotAvailableException {
@@ -912,7 +943,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param name
+     *
      * @return
+     *
      * @throws CouldNotPerformException
      */
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
@@ -930,7 +963,9 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param name
+     *
      * @return
+     *
      * @throws CouldNotPerformException
      */
     protected final boolean supportsDataField(final String name) throws CouldNotPerformException {
@@ -944,6 +979,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     /**
      * @param fieldId
+     *
      * @return
      */
     protected final Descriptors.FieldDescriptor getDataFieldDescriptor(int fieldId) {
@@ -1027,10 +1063,14 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * {@inheritDoc }
      *
      * @param timestamp {@inheritDoc }
+     *
      * @return {@inheritDoc }
      */
     @Override
     public Future<Long> ping(final Long timestamp) {
+
+        printDebug("ping requested");
+
         try {
             validateMiddleware();
         } catch (InvalidStateException e) {
@@ -1044,25 +1084,39 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
                 FutureProcessor.canceledFuture(Long.class, ex);
             }
         }
+        printDebug("ping respond");
         return FutureProcessor.completedFuture(timestamp);
+    }
+
+    public void printDebug(String message) {
+        try {
+            if (ScopeProcessor.generateStringRep(scope).contains("colorablelight-1")) {
+                logger.warn("#-# " + ScopeProcessor.generateStringRep(scope) + " - " + message);
+            }
+        } catch (CouldNotPerformException e) {
+
+        }
     }
 
     /**
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws org.openbase.jul.exception.CouldNotPerformException {@inheritDoc}
      */
     @RPCMethod
     @Override
     public M requestStatus() throws CouldNotPerformException {
-        logger.trace("requestStatus of {}", this);
+        printDebug("requestStatus of {}");
         try {
             return getData();
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not request status update.", ex), logger, LogLevel.ERROR);
+        } finally {
+            printDebug("requestStatus respond");
         }
     }
 
@@ -1070,6 +1124,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * Register methods for RPCs on the internal RPC server.
      *
      * @param server the rpc server on which the methods should be registered.
+     *
      * @throws CouldNotPerformException if registering methods fails
      */
     public abstract void registerMethods(final RPCServer server) throws CouldNotPerformException;
@@ -1121,6 +1176,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}.
+     *
      * @throws CouldNotPerformException {@inheritDoc}
      * @throws InterruptedException     {@inheritDoc}
      */

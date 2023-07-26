@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class SubscriberImpl(
-    scope: Scope, config: CommunicatorConfig
+    scope: Scope, config: CommunicatorConfig,
 ) : CommunicatorImpl(scope, config), Subscriber {
 
     private val lock = SyncObject("Activation Lock")
@@ -50,7 +50,7 @@ class SubscriberImpl(
             activationFuture = mqttClient.subscribe(
                 Mqtt5Subscribe.builder()
                     .topicFilter(topic)
-                    .qos(MqttQos.EXACTLY_ONCE)
+                    .qos(MqttQos.AT_LEAST_ONCE)
                     .build(),
                 { mqtt5Publish: Mqtt5Publish ->
                     // Note: this is a wrapper for the usage of a shared client

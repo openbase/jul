@@ -10,12 +10,12 @@ package org.openbase.jul.extension.protobuf;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -35,9 +35,12 @@ public abstract class AbstractListDiff<KEY, VALUE extends Identifiable<KEY>, MAP
 
     protected final org.slf4j.Logger logger = LoggerFactory.getLogger(getClass());
 
-    private MAP newValues, updatedValues, removedValues, originalValues;
+    private final MAP newValues;
+    private final MAP updatedValues;
+    private final MAP removedValues;
+    private MAP originalValues;
 
-    private final SyncObject listDiffLock = new SyncObject("'ListDiffLock");
+    private final SyncObject listDiffLock = new SyncObject("ListDiffLock");
 
     public AbstractListDiff(final MAP newValues, final MAP updatedValues, final MAP removedValues, final MAP originalValues) {
         this.newValues = newValues;
