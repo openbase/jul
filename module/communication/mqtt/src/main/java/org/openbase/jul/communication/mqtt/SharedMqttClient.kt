@@ -34,7 +34,7 @@ object SharedMqttClient : Shutdownable {
 
     @Synchronized
     fun get(
-        communicatorConfig: CommunicatorConfig
+        communicatorConfig: CommunicatorConfig,
     ) = sharedClients.getOrPut(communicatorConfig) {
         MqttClient.builder()
             .identifier(UUID.randomUUID().toString())
@@ -68,7 +68,7 @@ object SharedMqttClient : Shutdownable {
      * unsubscribe is called on the last client.
      */
     internal class Mqtt5ClientWrapper(
-        private val internalClient: Mqtt5AsyncClient
+        private val internalClient: Mqtt5AsyncClient,
     ) : Mqtt5AsyncClient {
 
         /**
@@ -122,14 +122,14 @@ object SharedMqttClient : Shutdownable {
         override fun connectWith() = internalClient.connectWith()
 
         override fun subscribe(
-            p0: Mqtt5Subscribe
+            p0: Mqtt5Subscribe,
         ) = p0.subscriptions
             .map { increaseTopicCounter(it.topicFilter) }
             .let { internalClient.subscribe(p0) }
 
         override fun subscribe(
             p0: Mqtt5Subscribe,
-            p1: Consumer<Mqtt5Publish>
+            p1: Consumer<Mqtt5Publish>,
         ) = p0.subscriptions
             .map { increaseTopicCounter(it.topicFilter) }
             .let { internalClient.subscribe(p0, p1) }
@@ -137,7 +137,7 @@ object SharedMqttClient : Shutdownable {
         override fun subscribe(
             p0: Mqtt5Subscribe,
             p1: Consumer<Mqtt5Publish>,
-            p2: Executor
+            p2: Executor,
         ) = p0.subscriptions
             .map { increaseTopicCounter(it.topicFilter) }
             .let { internalClient.subscribe(p0, p1, p2) }
@@ -145,7 +145,7 @@ object SharedMqttClient : Shutdownable {
         override fun subscribe(
             p0: Mqtt5Subscribe,
             p1: Consumer<Mqtt5Publish>,
-            p2: Boolean
+            p2: Boolean,
         ) = p0.subscriptions
             .map { increaseTopicCounter(it.topicFilter) }
             .let { internalClient.subscribe(p0, p1, p2) }
@@ -154,7 +154,7 @@ object SharedMqttClient : Shutdownable {
             p0: Mqtt5Subscribe,
             p1: Consumer<Mqtt5Publish>,
             p2: Executor,
-            p3: Boolean
+            p3: Boolean,
         ) = p0.subscriptions
             .map { increaseTopicCounter(it.topicFilter) }
             .let { internalClient.subscribe(p0, p1, p2, p3) }
@@ -174,7 +174,7 @@ object SharedMqttClient : Shutdownable {
             internalClient.publishes(p0, p1, p2, p3)
 
         override fun unsubscribe(
-            p0: Mqtt5Unsubscribe
+            p0: Mqtt5Unsubscribe,
         ): CompletableFuture<Mqtt5UnsubAck> = p0.topicFilters
             .filter { decreaseTopicCounter(it) }
             .takeIf { it.isNotEmpty() }

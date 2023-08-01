@@ -51,11 +51,11 @@ class TransformCommunicatorImpl(private val authority: String) : TransformCommun
     private val executor = Executors.newCachedThreadPool()
     private var transformationPublisher: Publisher? = null
     private var publisherSync: Publisher? = null
-    private var rsbPublisherTransformWatchDog: WatchDog? = null
-    private var rsbPublisherSyncWatchDog: WatchDog? = null
+    private var transformationPublisherWatchDog: WatchDog? = null
+    private var publisherSyncWatchDog: WatchDog? = null
     private var staticTransformSubscriberWatchDog: WatchDog? = null
     private var dynamicTransformSubscriberWatchDog: WatchDog? = null
-    private var rsbSubscriberSyncWatchDog: WatchDog? = null
+    private var subscriberSyncWatchDog: WatchDog? = null
     private val factory: CommunicatorFactory = CommunicatorFactoryImpl.instance
     private val defaultCommunicatorConfig = DefaultCommunicatorConfig.instance
 
@@ -70,24 +70,26 @@ class TransformCommunicatorImpl(private val authority: String) : TransformCommun
             val dynamicTransformationSubscriber =
                 factory.createSubscriber(RCT_SCOPE_TRANSFORM_DYNAMIC, defaultCommunicatorConfig)
             val subscriberSync = factory.createSubscriber(RCT_SCOPE_SYNC, defaultCommunicatorConfig)
-            rsbPublisherTransformWatchDog = WatchDog(transformationPublisher, "RSBPublisherTransform")
-            rsbPublisherSyncWatchDog = WatchDog(publisherSync, "RSBPublisherSync")
-            staticTransformSubscriberWatchDog = WatchDog(staticTransformationSubscriber, "RSBSubscriberTransform")
-            dynamicTransformSubscriberWatchDog = WatchDog(dynamicTransformationSubscriber, "RSBSubscriberTransform")
-            rsbSubscriberSyncWatchDog = WatchDog(subscriberSync, "RSBSubscriberSync")
+            transformationPublisherWatchDog = WatchDog(transformationPublisher, "TransformationPublisher")
+            publisherSyncWatchDog = WatchDog(publisherSync, "PublisherSync")
+            staticTransformSubscriberWatchDog =
+                WatchDog(staticTransformationSubscriber, "StaticTransformationSubscriber")
+            dynamicTransformSubscriberWatchDog =
+                WatchDog(dynamicTransformationSubscriber, "DynamicTransformSubscriberWatchDog")
+            subscriberSyncWatchDog = WatchDog(subscriberSync, "SubscriberSync")
             staticTransformationSubscriber.registerDataHandler { event: EventType.Event -> transformCallback(event) }
             dynamicTransformationSubscriber.registerDataHandler { event: EventType.Event -> transformCallback(event) }
             subscriberSync.registerDataHandler { event: EventType.Event -> syncCallback(event) }
-            rsbPublisherTransformWatchDog!!.activate()
-            rsbPublisherSyncWatchDog!!.activate()
-            staticTransformSubscriberWatchDog!!.activate()
-            dynamicTransformSubscriberWatchDog!!.activate()
-            rsbSubscriberSyncWatchDog!!.activate()
-            rsbPublisherTransformWatchDog!!.waitForServiceActivation()
-            rsbPublisherSyncWatchDog!!.waitForServiceActivation()
-            staticTransformSubscriberWatchDog!!.waitForServiceActivation()
-            dynamicTransformSubscriberWatchDog!!.waitForServiceActivation()
-            rsbSubscriberSyncWatchDog!!.waitForServiceActivation()
+            transformationPublisherWatchDog?.activate()
+            publisherSyncWatchDog?.activate()
+            staticTransformSubscriberWatchDog?.activate()
+            dynamicTransformSubscriberWatchDog?.activate()
+            subscriberSyncWatchDog?.activate()
+            transformationPublisherWatchDog?.waitForServiceActivation()
+            publisherSyncWatchDog?.waitForServiceActivation()
+            staticTransformSubscriberWatchDog?.waitForServiceActivation()
+            dynamicTransformSubscriberWatchDog?.waitForServiceActivation()
+            subscriberSyncWatchDog?.waitForServiceActivation()
             requestSync()
         } catch (ex: InterruptedException) {
             Thread.currentThread().interrupt()
@@ -337,21 +339,11 @@ class TransformCommunicatorImpl(private val authority: String) : TransformCommun
      * {@inheritDoc}
      */
     override fun shutdown() {
-        if (staticTransformSubscriberWatchDog != null) {
-            staticTransformSubscriberWatchDog!!.shutdown()
-        }
-        if (dynamicTransformSubscriberWatchDog != null) {
-            dynamicTransformSubscriberWatchDog!!.shutdown()
-        }
-        if (rsbSubscriberSyncWatchDog != null) {
-            rsbSubscriberSyncWatchDog!!.shutdown()
-        }
-        if (rsbPublisherTransformWatchDog != null) {
-            rsbPublisherTransformWatchDog!!.shutdown()
-        }
-        if (rsbPublisherSyncWatchDog != null) {
-            rsbPublisherSyncWatchDog!!.shutdown()
-        }
+        staticTransformSubscriberWatchDog?.shutdown()
+        dynamicTransformSubscriberWatchDog?.shutdown()
+        subscriberSyncWatchDog?.shutdown()
+        transformationPublisherWatchDog?.shutdown()
+        publisherSyncWatchDog?.shutdown()
     }
 
     companion object {

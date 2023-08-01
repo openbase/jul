@@ -31,7 +31,7 @@ import kotlin.reflect.KFunction
 class RPCServerImpl(
     scope: Scope,
     config: CommunicatorConfig,
-    dispatcher: CoroutineDispatcher? = GlobalCachedExecutorService.getInstance().executorService.asCoroutineDispatcher()
+    private val dispatcher: CoroutineDispatcher? = GlobalCachedExecutorService.getInstance().executorService.asCoroutineDispatcher(),
 ) : RPCCommunicatorImpl(scope, config), RPCServer {
 
     companion object {
@@ -46,7 +46,7 @@ class RPCServerImpl(
 
     private val lock = SyncObject("Activation Lock")
 
-    private val coroutineScope = if (dispatcher != null) CoroutineScope(dispatcher) else null
+    private var coroutineScope: CoroutineScope? = null
 
     internal fun getActivationFuture(): Future<out Any>? {
         return this.activationFuture
@@ -64,14 +64,19 @@ class RPCServerImpl(
                 return
             }
 
+            coroutineScope?.cancel()
+            coroutineScope = dispatcher?.let { CoroutineScope(dispatcher) }
+
             activationFuture = mqttClient.subscribe(
                 Mqtt5Subscribe.builder().topicFilter(topic).qos(MqttQos.EXACTLY_ONCE).build(), { mqtt5Publish ->
+
                     // Note: this is a wrapper for the usage of a shared client
                     //       which may remain subscribed even if deactivate is called
                     if (isActive) {
                         when (getPriority(mqtt5Publish)) {
                             org.openbase.jul.annotation.RPCMethod.Priority.HIGH -> handleRemoteCall(mqtt5Publish)
                             else -> {
+                                coroutineScope?.ensureActive();
                                 coroutineScope?.launch {
                                     withTimeout(RPC_TIMEOUT.toMillis()) {
                                         handleRemoteCall(mqtt5Publish)
@@ -79,21 +84,20 @@ class RPCServerImpl(
                                 } ?: handleRemoteCall(mqtt5Publish)
                             }
                         }
-
                     }
                 }, GlobalCachedExecutorService.getInstance().executorService
             )
 
             try {
-                activationFuture!!.get(ACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS)
+                activationFuture?.get(ACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS)
             } catch (e: TimeoutException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw CouldNotPerformException("Could not activate Subscriber", e)
             } catch (e: AsyncRuntimeException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw CouldNotPerformException("Could not activate Subscriber", e)
             } catch (e: InterruptedException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw e;
             }
         }
@@ -105,8 +109,9 @@ class RPCServerImpl(
             mqttClient.unsubscribe(
                 Mqtt5Unsubscribe.builder().topicFilter(topic).build()
             )
+            coroutineScope?.cancel()
+            coroutineScope = null
         }
-        coroutineScope?.cancel()
     }
 
     override fun registerMethod(

@@ -219,9 +219,9 @@ abstract class AbstractLauncher<L : Launchable<*>>
                         }
                         launchable = instantiateLaunchable()
                         try {
-                            launchable!!.init()
+                            launchable?.init()
                             setState(LauncherDataType.LauncherData.LauncherState.LAUNCHING)
-                            launchable!!.activate()
+                            launchable?.activate()
                             launchTime = System.currentTimeMillis()
                             setState(LauncherDataType.LauncherData.LauncherState.RUNNING)
                             try {

@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class SubscriberImpl(
-    scope: Scope, config: CommunicatorConfig
+    scope: Scope, config: CommunicatorConfig,
 ) : CommunicatorImpl(scope, config), Subscriber {
 
     private val lock = SyncObject("Activation Lock")
@@ -70,15 +70,15 @@ class SubscriberImpl(
             )
 
             try {
-                activationFuture!!.get(ACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS)
+                activationFuture?.get(ACTIVATION_TIMEOUT, TimeUnit.MILLISECONDS)
             } catch (e: TimeoutException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw CouldNotPerformException("Could not activate Subscriber", e)
             } catch (e: AsyncRuntimeException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw CouldNotPerformException("Could not activate Subscriber", e)
             } catch (e: InterruptedException) {
-                activationFuture!!.cancel(true)
+                activationFuture?.cancel(true)
                 throw e;
             }
         }

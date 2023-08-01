@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -35,7 +35,7 @@ import java.util.HashMap;
  * @param <KEY>
  * @param <ENTRY>
  */
-public class ControllerRegistryImpl<KEY, ENTRY extends Controller & Identifiable<KEY>> extends SynchronizableRegistryImpl<KEY, ENTRY> {
+public class ControllerRegistryImpl<KEY, ENTRY extends Controller<?> & Identifiable<KEY>> extends SynchronizableRegistryImpl<KEY, ENTRY> {
 
     public ControllerRegistryImpl() throws InstantiationException {
         super(new HashMap<>());
@@ -47,7 +47,7 @@ public class ControllerRegistryImpl<KEY, ENTRY extends Controller & Identifiable
 
     @Override
     public void clear() throws CouldNotPerformException {
-        for (Controller controller : getEntries()) {
+        for (Controller<?> controller : getEntries()) {
             controller.shutdown();
         }
         super.clear();
