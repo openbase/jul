@@ -69,7 +69,7 @@ abstract class AbstractLauncher<L : Launchable<*>>
  * After instantiation of this class the launcher must be initialized and activated before the communication interface is provided.
  *
  * @param launchableClass  the class to be launched.
- * @param applicationClass the class representing this application. Those is used for scope generation if the getName() method is not overwritten.
+ * @param applicationClass the class representing this application. This is used for scope generation if the getName() method is not overwritten.
  *
  * @throws org.openbase.jul.exception.InstantiationException
  */(private val applicationClass: Class<*>, private val launchableClass: Class<L>) :
