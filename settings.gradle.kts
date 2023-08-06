@@ -1,5 +1,15 @@
 rootProject.name = "jul"
 
+pluginManagement {
+    plugins {
+        id("de.fayard.refreshVersions") version "0.51.0"
+    }
+}
+
+plugins {
+    id("de.fayard.refreshVersions")
+}
+
 include(":jul.pattern.launch")
 include(":jul.schedule")
 include(":jul.audio")
@@ -68,13 +78,3 @@ project(":jul.pattern.trigger").projectDir = file("module/pattern/trigger")
 project(":jul.extension").projectDir = file("module/extension")
 project(":jul.transformation").projectDir = file("module/transformation")
 project(":jul.test").projectDir = file("module/test")
-
-pluginManagement {
-    plugins {
-        id("de.fayard.refreshVersions") version "0.51.0"
-    }
-}
-
-plugins {
-    id("de.fayard.refreshVersions")
-}
