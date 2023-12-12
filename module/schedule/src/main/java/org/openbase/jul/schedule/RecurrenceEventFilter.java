@@ -10,12 +10,12 @@ package org.openbase.jul.schedule;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -134,6 +134,7 @@ public abstract class RecurrenceEventFilter<VALUE> {
      *
      * @param value       the new value which should be published via the next relay.
      * @param immediately this flag forces the trigger to relay immediately without respect to the defined max frequency.
+     *
      * @throws CouldNotPerformException is thrown if the trigger could not be handled (e.g. because of a system shutdown).
      */
     public synchronized void trigger(final VALUE value, final boolean immediately) throws CouldNotPerformException {
