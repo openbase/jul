@@ -10,31 +10,34 @@ package org.openbase.jul.exception.printer;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
  * #L%
  */
 
+import org.openbase.jps.core.JPService;
+import org.openbase.jps.exception.JPServiceException;
+import org.openbase.jps.preset.JPLogLevel;
+import org.openbase.jps.preset.JPVerbose;
+import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.FatalImplementationErrorException;
+import org.openbase.jul.exception.MultiException;
+import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
+import org.openbase.jul.exception.ShutdownInProgressException;
+import org.slf4j.Logger;
+
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-
-import org.openbase.jps.core.JPService;
-import org.openbase.jps.exception.JPServiceException;
-import org.openbase.jps.preset.JPLogLevel;
-import org.openbase.jps.preset.JPVerbose;
-import org.openbase.jul.exception.*;
-import org.openbase.jul.exception.MultiException.SourceExceptionEntry;
-import org.slf4j.Logger;
 
 /**
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
@@ -273,7 +276,7 @@ public class ExceptionPrinter {
             System.exit(errorCode);
         }
 
-        throw new RuntimeException(new ShutdownInProgressException("Shutdown with error code "+ errorCode + " initiated!"));
+        throw new RuntimeException(new ShutdownInProgressException("Shutdown with error code " + errorCode + " initiated!"));
     }
 
     /**
@@ -323,7 +326,7 @@ public class ExceptionPrinter {
             // throw assertion error in case FatalImplementationErrorException was detected.
             printer.print(SEPARATOR);
             printer.print(getContext(th), th);
-            assert ExceptionPrinter.isQuiet() : "Assert because FatalImplementationException was thrown!";
+            assert ExceptionPrinter.isQuiet() : "Assert because FatalImplementationException was thrown: " + th.getMessage();
         } else if (printer.isDebugEnabled()) {
             // Print normal stacktrace in debug mode for all errors.
             switch (printer.getLogLevel()) {
