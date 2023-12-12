@@ -6,6 +6,7 @@ import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import kotlinx.coroutines.*
+import org.openbase.jps.core.JPService
 import org.openbase.jul.annotation.RPCMethod
 import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.iface.RPCServer
@@ -158,8 +159,12 @@ class RPCServerImpl(
             responseBuilder.result = result
         } catch (ex: Exception) {
             when (ex) {
-                is InvocationTargetException -> responseBuilder.error =
-                    ex.cause?.stackTraceToString() ?: ex.stackTraceToString()
+                is InvocationTargetException -> {
+                    if (JPService.verboseMode()) {
+                        ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN)
+                    }
+                    responseBuilder.error = ex.cause?.stackTraceToString() ?: ex.stackTraceToString()
+                }
 
                 else -> {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN)
