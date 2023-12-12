@@ -10,12 +10,12 @@ package org.openbase.jul.pattern;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -24,16 +24,13 @@ package org.openbase.jul.pattern;
 
 import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
-import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @param <S> the type of the data source
@@ -183,10 +180,10 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
      * source of the notification is set as this. Because of data encapsulation reasons this method
      * is not included within the Observer interface.
      * Attention! This method is not thread safe against changes of the observable because the check if the observable has changed is
-     * done by computing its hash value. Therefore if the observable is a collection and it is changed
+     * done by computing its hash value. Therefore, if the observable is a collection, and it is changed
      * while notifying a concurrent modification exception can occur. To avoid this compute the
      * observable hash yourself by setting a hash generator.
-     * If this method is interrupted a rollback is done by reseting the latestHashValue. Thus the observable
+     * If this method is interrupted a rollback is done by resetting the latestHashValue. Thus, the observable
      * has not changed and false is returned.
      *
      * @param observable the value which is notified
@@ -205,10 +202,10 @@ public abstract class AbstractObservable<S, T> implements Observable<S, T> {
      * Because of data encapsulation reasons this method is not included within the Observer
      * interface.
      * Attention! This method is not thread safe against changes of the observable because the check if the observable has changed is
-     * done by computing its hash value. Therefore if the observable is a collection and it is changed
+     * done by computing its hash value. Therefore, if the observable is a collection, and it is changed
      * while notifying a concurrent modification exception can occur. To avoid this compute the
      * observable hash yourself by setting a hash generator.
-     * If this method is interrupted a rollback is done by reseting the latestHashValue. Thus the observable
+     * If this method is interrupted a rollback is done by resetting the latestHashValue. Thus, the observable
      * has not changed and false is returned.
      * <p>
      * Note: In case the given observable is null this notification will be ignored.
