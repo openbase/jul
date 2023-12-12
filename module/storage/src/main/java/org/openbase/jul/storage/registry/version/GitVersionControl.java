@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry.version;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -31,6 +31,7 @@ import org.eclipse.jgit.api.errors.TransportException;
 import org.eclipse.jgit.lib.Ref;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.exception.CouldNotPerformException;
+import org.openbase.jul.exception.ExceptionProcessor;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
 import org.openbase.jul.storage.registry.FileSynchronizedRegistry;
@@ -39,10 +40,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.net.UnknownHostException;
 
 /**
- *
  * This tool class can be used to handle automated update and compatibility handling of external registry dbs.
  *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a> //
@@ -60,7 +60,7 @@ public class GitVersionControl {
 
     public static void syncWithRemoteDatabase(final int latestSupportedDBVersion, final FileSynchronizedRegistry registry) throws CouldNotPerformException {
 
-        try(final Git registryDBGit = Git.open(registry.getDatabaseDirectory())) {
+        try (final Git registryDBGit = Git.open(registry.getDatabaseDirectory())) {
 
             // reset current database state before triggering the remote sync if repo is valid.
             if (registryDBGit.getRepository() != null && registryDBGit.getRepository().getFullBranch() != null) {
@@ -70,9 +70,9 @@ public class GitVersionControl {
                 if (!currentBranchName.equals(MASTER_BRANCH_LOCAL_IDENTIFIER) && !currentBranchName.startsWith(RELEASE_BRANCH_LOCAL_PREFIX)) {
                     if (registryDBGit.status().call().isClean()) {
                         // sync with remote repo
-                        logger.warn("Custom " + registry + " branch "+currentBranchName+" detected, remote sync will be performed but db auto upgrade will be skipped...");
+                        logger.warn("Custom " + registry + " branch " + currentBranchName + " detected, remote sync will be performed but db auto upgrade will be skipped...");
                         try {
-                            if(!registryDBGit.pull().call().isSuccessful()) {
+                            if (!registryDBGit.pull().call().isSuccessful()) {
                                 throw new CouldNotPerformException("Pull was not successful!");
                             }
                         } catch (GitAPIException | CouldNotPerformException ex) {
@@ -88,7 +88,7 @@ public class GitVersionControl {
                 registryDBGit.reset().setMode(ResetType.HARD).call();
                 registryDBGit.clean().setForce(true).call();
             } else {
-                logger.info("Perform initial sync with remote database of "+ registry.getName()+ "...");
+                logger.info("Perform initial sync with remote database of " + registry.getName() + "...");
             }
 
             // sync branches with remote repo
@@ -96,17 +96,16 @@ public class GitVersionControl {
             try {
                 registryDBGit.fetch().call();
             } catch (GitAPIException ex) {
-                final String errorMessage = "Could not sync with remote repository of " + registry.getName() + " and continue in offline mode...";
-                if(JPService.verboseMode()) {
-                    ExceptionPrinter.printHistory(errorMessage, ex, logger, LogLevel.WARN);
+                if (ExceptionProcessor.getInitialCause(ex) instanceof UnknownHostException) {
+                    offline = true;
+                    logger.info("Could not sync with remote repository of " + registry.getName() + " and continue in offline mode...");
                 } else {
-                    logger.warn(errorMessage);
+                    throw ex;
                 }
-                offline = true;
             }
 
             // checkout latest compatible database
-            if(JPService.getValue(JPDeveloperMode.class, false)) {
+            if (JPService.getValue(JPDeveloperMode.class, false)) {
 
                 // lookup local branch
                 boolean localBranchExist = false;
@@ -129,11 +128,11 @@ public class GitVersionControl {
                 int repositoryDBReleaseVersion = 0;
                 for (Ref ref : registryDBGit.branchList().setListMode(ListMode.REMOTE).call()) {
                     final String branchName = ref.getName();
-                    if(branchName.startsWith(RELEASE_BRANCH_REMOTE_PREFIX)) {
+                    if (branchName.startsWith(RELEASE_BRANCH_REMOTE_PREFIX)) {
                         try {
                             repositoryDBReleaseVersion = Math.max(repositoryDBReleaseVersion, Integer.parseInt(branchName.substring(RELEASE_BRANCH_REMOTE_PREFIX.length())));
                         } catch (NumberFormatException ex) {
-                            logger.warn(registry.getName() + " remote database contains an invalid release branch["+branchName+"]! Those will be skipped...");
+                            logger.warn(registry.getName() + " remote database contains an invalid release branch[" + branchName + "]! Those will be skipped...");
                         }
                     }
                 }
@@ -165,12 +164,12 @@ public class GitVersionControl {
                 registryDBGit.pull().call();
             } catch (final TransportException ex) {
                 // skip offline warnings.
-                if(!offline) {
+                if (!offline) {
                     throw ex;
                 }
             }
         } catch (GitAPIException | CouldNotPerformException | IOException ex) {
-            throw new CouldNotPerformException("Auto db update of "+ registry.getName()+" failed!", ex);
+            throw new CouldNotPerformException("Auto db update of " + registry.getName() + " failed!", ex);
         }
     }
 }
