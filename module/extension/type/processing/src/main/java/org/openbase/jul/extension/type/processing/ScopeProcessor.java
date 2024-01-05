@@ -10,12 +10,12 @@ package org.openbase.jul.extension.type.processing;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -34,6 +34,14 @@ public class ScopeProcessor {
 
     public static final String COMPONENT_SEPARATOR = "/";
 
+    public static String generateStringRep(final ScopeType.Scope scope, final String alternative) {
+        try {
+            return generateStringRep(scope);
+        } catch (CouldNotPerformException ex) {
+            return alternative;
+        }
+    }
+
     public static String generateStringRep(final ScopeType.Scope scope) throws CouldNotPerformException {
         try {
             if (scope == null) {
@@ -51,7 +59,7 @@ public class ScopeProcessor {
             for (String component : components) {
 
                 // merge to components in case they are connected by an empty one
-                if(component.isEmpty()) {
+                if (component.isEmpty()) {
                     continue;
                 }
 

@@ -1258,6 +1258,6 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
         if (publisher == null) {
             return getClass().getSimpleName();
         }
-        return getClass().getSimpleName() + "[" + publisher.getScope() + "]";
+        return getClass().getSimpleName() + "[" + ScopeProcessor.generateStringRep(publisher.getScope(), "?") + "]";
     }
 }
