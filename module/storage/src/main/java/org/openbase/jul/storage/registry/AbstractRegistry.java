@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * @param <KEY>      EntryKey
@@ -688,8 +689,13 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             throw new RejectedException("Write access rejected because of registry shutdown!", new ShutdownInProgressException(this));
         }
 
-        if (!isDependingOnConsistentRegistries()) {
-            throw new RejectedException("At least one depending registry is inconsistent!");
+
+        List<Registry> inconsistentDependencies = getInconsistentDependingRegistries();
+        if (!inconsistentDependencies.isEmpty()) {
+            throw new RejectedException("Depending registries [" + inconsistentDependencies
+                    .stream()
+                    .map(Registry::getName)
+                    .toList() + "] is inconsistent!");
         }
 
         pluginPool.checkAccess();
@@ -705,7 +711,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      *
      * @return The method returns should return false if at least one depending registry is not consistent!
      */
-    protected boolean isDependingOnConsistentRegistries() {
+    protected List<Registry> getInconsistentDependingRegistries() {
         try {
             dependingRegistryMapLock.readLock().lockInterruptibly();
         } catch (InterruptedException ex) {
@@ -714,12 +720,10 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         }
 
         try {
-            for (Registry registry : dependingRegistryMap.keySet()) {
-                if (!registry.isConsistent()) {
-                    return false;
-                }
-            }
-            return true;
+            return dependingRegistryMap.keySet()
+                    .stream()
+                    .filter((registry) -> (!registry.isConsistent()))
+                    .collect(Collectors.toList());
         } finally {
             dependingRegistryMapLock.readLock().unlock();
         }
@@ -982,8 +986,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             return modificationCounter;
         }
 
-        if (!isDependingOnConsistentRegistries()) {
-            logger.warn("Skip consistency check because " + getName() + " is depending on at least one inconsistent registry!");
+        List<Registry> inconsistentDependencies = getInconsistentDependingRegistries();
+        if (!inconsistentDependencies.isEmpty()) {
+            logger.warn("Skip consistency check because " + getName() + " is depending on the following inconsistent registries [" + inconsistentDependencies
+                    .stream()
+                    .map(Registry::getName)
+                    .toList() + "]!");
             return modificationCounter;
         }
 
