@@ -75,10 +75,11 @@ public class RPCResolvedException extends CouldNotPerformException {
      * Method parses the RPCException message and resolves the causes and messagen and use those to reconstruct the exception chain.
      *
      * @param rpcException the origin RPCException
+     *
      * @return the reconstruced excetion cause chain.
      */
-    public static Exception resolveRPCException(final RPCException rpcException) {
-        Exception exception = null;
+    public static Throwable resolveRPCException(final RPCException rpcException) {
+        Throwable exception = null;
 
         // build stacktrace array where each line is stored as entry. entry is extract each line stacktrace into arr
         final String[] stacktrace = ("Caused by: " + rpcException.getMessage()).split("\n");
@@ -97,15 +98,16 @@ public class RPCResolvedException extends CouldNotPerformException {
                     final String message = causes.length <= 2 ? "" : stacktrace[i].substring(stacktrace[i].lastIndexOf(exceptionClassName) + exceptionClassName.length() + 2).trim();
 
                     // detect exception class
-                    final Class<Exception> exceptionClass;
+                    final Class<Throwable> exceptionClass;
                     try {
-                        exceptionClass = (Class<Exception>) Class.forName(exceptionClassName);
+                        exceptionClass = (Class<Throwable>) Class.forName(exceptionClassName);
 
                         // build exception
                         try {
                             // try default constructor
                             exception = exceptionClass.getConstructor(String.class, Throwable.class).newInstance(message, exception);
-                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException | ClassCastException | UnsupportedOperationException ex) {
+                        } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                                 NoSuchMethodException | ClassCastException | UnsupportedOperationException ex) {
                             try {
                                 // try to handle missing fields
                                 if (exception == null && message.isEmpty()) {
@@ -117,7 +119,8 @@ public class RPCResolvedException extends CouldNotPerformException {
                                 } else {
                                     throw ex;
                                 }
-                            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException exx) {
+                            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                                     NoSuchMethodException exx) {
                                 throw new CouldNotPerformException("No compatible constructor found!", exx);
                             }
                         }

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory
 import java.lang.reflect.InvocationTargetException
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -158,19 +159,20 @@ class RPCServerImpl(
             val result = method.invoke(request.paramsList)
             responseBuilder.result = result
         } catch (ex: Exception) {
-            when (ex) {
-                is InvocationTargetException -> {
+            val targetException = when (ex) {
+                is InvocationTargetException, is ExecutionException -> {
                     if (JPService.verboseMode()) {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN)
                     }
-                    responseBuilder.error = ex.cause?.stackTraceToString() ?: ex.stackTraceToString()
+                    ex.cause ?: ex
                 }
 
                 else -> {
                     ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN)
-                    responseBuilder.error = CouldNotPerformException("Server error ${ex.message}").stackTraceToString()
+                    CouldNotPerformException("Server error ${ex.message}", ex)
                 }
             }
+            responseBuilder.error = targetException.stackTraceToString()
         }
 
         mqttClient.publish(
