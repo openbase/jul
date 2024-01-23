@@ -222,7 +222,7 @@ open class ResourceDisplayPanel<RP : ResourcePanel> : JPanel() {
             if (bounds !== glassLayer.data.bounds) {
                 glassLayer = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
             }
-            visibleResourcePanel!!.paint(g2, glassLayer.createGraphics())
+            visibleResourcePanel?.paint(g2, glassLayer.createGraphics())
             g2.drawImage(glassLayer, null, 0, 0)
             g2.dispose()
         }

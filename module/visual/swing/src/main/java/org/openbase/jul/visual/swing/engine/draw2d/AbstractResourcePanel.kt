@@ -259,17 +259,15 @@ abstract class AbstractResourcePanel<R : NameProvider, PRP : ResourcePanel>: Res
         val glg2 = glg.create() as Graphics2D
         when (objectType) {
             ObjectType.Dynamic -> {
-                //				Graphics2D g2t = (Graphics2D) g2.create();
-//				Graphics2D glg2t = (Graphics2D) glg2.create();
                 g2.transform(parentPanel.objectTransformation)
                 glg2.transform(parentPanel.objectTransformation)
                 paintComponent(g2, glg2)
-                paintChilderen(g2, glg2)
+                paintChildren(g2, glg2)
             }
 
             ObjectType.Static -> {
                 paintComponent(g2, glg2)
-                paintChilderen(g2, glg2)
+                paintChildren(g2, glg2)
             }
         }
         g2.dispose()
@@ -304,12 +302,12 @@ abstract class AbstractResourcePanel<R : NameProvider, PRP : ResourcePanel>: Res
         }
     }
 
-    protected abstract fun paintComponent(g2: Graphics2D?, gl: Graphics2D?)
+    protected abstract fun paintComponent(g2: Graphics2D, gl: Graphics2D)
 
-    protected fun paintChilderen(g: Graphics2D?, glg: Graphics2D?) {
+    protected fun paintChildren(g: Graphics2D, glg: Graphics2D) {
         synchronized(CHILDREN_MONITOR) {
             for (child in childrens) {
-                child.paint(g!!, glg!!)
+                child.paint(g, glg)
             }
         }
     }
