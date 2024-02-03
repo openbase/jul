@@ -1,14 +1,19 @@
 plugins {
     id("org.openbase.jul")
+    id("org.openjfx.javafxplugin") version "0.1.0"
+}
+
+javafx {
+    version = "21.0.1"
+    modules = listOf(
+        "javafx.swing",
+    )
 }
 
 dependencies {
     api(project(":jul.schedule"))
-    api("org.netbeans.external:AbsoluteLayout:_")
     api(project(":jul.extension.type.interface"))
-    api("org.openjfx:javafx-swing:21.0.1:win")
-    api("org.openjfx:javafx-swing:21.0.1:mac")
-    api("org.openjfx:javafx-swing:21.0.1:linux")
+    api("org.netbeans.external:AbsoluteLayout:_")
 }
 
 description = "JUL Visual Swing"
