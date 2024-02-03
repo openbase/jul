@@ -14,3 +14,7 @@ dependencies {
 }
 
 description = "JUL Storage"
+
+java {
+    withJavadocJar()
+}
