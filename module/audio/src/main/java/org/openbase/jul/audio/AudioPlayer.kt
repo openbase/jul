@@ -24,7 +24,7 @@ class AudioPlayer @JvmOverloads constructor(soundChannels: Int = 10) {
         Executors.defaultThreadFactory().newThread(runnable)
             .apply {
                 isDaemon = true
-                priority = 9
+                priority = Thread.MAX_PRIORITY.dec()
             }
     }
 
