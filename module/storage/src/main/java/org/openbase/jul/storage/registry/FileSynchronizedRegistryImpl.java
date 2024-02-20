@@ -155,16 +155,16 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     @Override
     public ENTRY register(final ENTRY entry) throws CouldNotPerformException {
         try {
+            ENTRY result = super.register(entry);
+            FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(result, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
             fileSynchronizerMapLock.writeLock().lockInterruptibly();
             try {
-                ENTRY result = super.register(entry);
-                FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(result, new File(databaseDirectory, fileProvider.getFileName(entry)), FileSynchronizer.InitMode.CREATE, fileProcessor);
                 fileSynchronizerMap.put(result.getId(), fileSynchronizer);
-                filePluginPool.afterRegister(result, fileSynchronizer);
-                return result;
             } finally {
                 fileSynchronizerMapLock.writeLock().unlock();
             }
+            filePluginPool.afterRegister(result, fileSynchronizer);
+            return result;
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(ex);
@@ -174,26 +174,26 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     @Override
     public ENTRY update(final ENTRY entry) throws CouldNotPerformException {
         try {
+            ENTRY result = super.update(entry);
+            FileSynchronizer<ENTRY> fileSynchronizer;
             fileSynchronizerMapLock.readLock().lockInterruptibly();
             try {
-                ENTRY result = super.update(entry);
-
                 // ignore update during registration process.
                 if (!fileSynchronizerMap.containsKey(result.getId())) {
                     logger.debug("Ignore update during registration process of entry " + result);
                     return entry;
                 }
 
-                FileSynchronizer<ENTRY> fileSynchronizer = fileSynchronizerMap.get(result.getId());
-
-                filePluginPool.beforeUpdate(result, fileSynchronizer);
-                fileSynchronizer.save(result);
-                filePluginPool.afterUpdate(result, fileSynchronizer);
-
-                return result;
+                fileSynchronizer = fileSynchronizerMap.get(result.getId());
             } finally {
                 fileSynchronizerMapLock.readLock().unlock();
             }
+            filePluginPool.beforeUpdate(result, fileSynchronizer);
+            fileSynchronizer.save(result);
+            filePluginPool.afterUpdate(result, fileSynchronizer);
+
+            return result;
+
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(ex);
@@ -203,21 +203,21 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     @Override
     public ENTRY remove(final ENTRY entry) throws CouldNotPerformException {
         try {
+            ENTRY removedValue = super.remove(entry);
+            FileSynchronizer<ENTRY> fileSynchronizer;
+
             fileSynchronizerMapLock.writeLock().lockInterruptibly();
             try {
-                ENTRY removedValue = super.remove(entry);
-
-                FileSynchronizer<ENTRY> fileSynchronizer = fileSynchronizerMap.get(entry.getId());
-
-                filePluginPool.beforeRemove(entry, fileSynchronizer);
-                fileSynchronizer.delete();
-                fileSynchronizerMap.remove(entry.getId());
-                filePluginPool.afterRemove(entry, fileSynchronizer);
-
-                return removedValue;
+                fileSynchronizer = fileSynchronizerMap.get(entry.getId());
             } finally {
                 fileSynchronizerMapLock.writeLock().unlock();
             }
+
+            filePluginPool.beforeRemove(entry, fileSynchronizer);
+            fileSynchronizer.delete();
+            fileSynchronizerMap.remove(entry.getId());
+            filePluginPool.afterRemove(entry, fileSynchronizer);
+            return removedValue;
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(ex);
@@ -309,15 +309,17 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
 
                 // init file synchronizer
                 try {
+                    FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
+                    ENTRY entry = fileSynchronizer.getData();
+
                     fileSynchronizerMapLock.writeLock().lockInterruptibly();
                     try {
-                        FileSynchronizer<ENTRY> fileSynchronizer = new FileSynchronizer<>(file, fileProcessor);
-                        ENTRY entry = fileSynchronizer.getData();
                         fileSynchronizerMap.put(entry.getId(), fileSynchronizer);
-                        super.load(entry);
                     } finally {
                         fileSynchronizerMapLock.writeLock().unlock();
                     }
+
+                    super.load(entry);
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException(ex);
@@ -341,7 +343,7 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
     }
 
     @Override
-    public synchronized void saveRegistry() throws MultiException {
+    public void saveRegistry() throws MultiException {
 
         if (JPService.testMode()) {
             return;
@@ -357,9 +359,9 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
         logger.debug("Save " + this + " into " + databaseDirectory + "...");
         ExceptionStack exceptionStack = null;
 
-        // save all changes.
         try {
-            fileSynchronizerMapLock.readLock().lockInterruptibly();
+            // save all changes.
+            fileSynchronizerMapLock.writeLock().lockInterruptibly();
             try {
                 for (FileSynchronizer<ENTRY> fileSynchronizer : new ArrayList<>(fileSynchronizerMap.values())) {
                     try {
@@ -368,24 +370,13 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
                         exceptionStack = MultiException.push(this, ex, exceptionStack);
                     }
                 }
-            } finally {
-                fileSynchronizerMapLock.readLock().unlock();
-            }
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(ex);
-        }
 
-        // verify and apply file name changes
-        String generatedFileName;
-        FileSynchronizer<ENTRY> fileSynchronizer;
-        FileSynchronizer<ENTRY> newFileSynchronizer;
-        File newFile;
+                // verify and apply file name changes
+                String generatedFileName;
+                FileSynchronizer<ENTRY> fileSynchronizer;
+                FileSynchronizer<ENTRY> newFileSynchronizer;
+                File newFile;
 
-
-        try {
-            fileSynchronizerMapLock.writeLock().lockInterruptibly();
-            try {
                 for (Entry<KEY, FileSynchronizer<ENTRY>> entry : new ArrayList<>(fileSynchronizerMap.entrySet())) {
                     fileSynchronizer = entry.getValue();
                     try {
