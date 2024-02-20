@@ -20,7 +20,13 @@ import kotlin.concurrent.withLock
  * @author [Divine Threepwood](mailto:divine@openbase.org)
  */
 class AudioPlayer @JvmOverloads constructor(soundChannels: Int = 10) {
-    private val executorService: ExecutorService = Executors.newFixedThreadPool(soundChannels)
+    private val executorService: ExecutorService = Executors.newFixedThreadPool(soundChannels) { runnable: Runnable ->
+        Executors.defaultThreadFactory().newThread(runnable)
+            .apply {
+                isDaemon = true
+                priority = Thread.MAX_PRIORITY.dec()
+            }
+    }
 
     @JvmOverloads
     fun playAudio(source: AudioSource, wait: Boolean = false): Boolean {
