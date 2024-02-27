@@ -143,3 +143,17 @@ val Throwable.causedBySystemShutdown get() = ExceptionProcessor.isCausedBySystem
 val Throwable.causedByInterruption get() = ExceptionProcessor.isCausedByInterruption(this)
 fun Throwable.setInitialCause(initialCause: Throwable?) =
     ExceptionProcessor.setInitialCause(this, initialCause)
+
+fun <O> tryOrNull(block: () -> O): O? =
+    try {
+        block()
+    } catch (e: NotAvailableException) {
+        null
+    }
+
+fun <I, O> I.tryOrNull(block: (I) -> O): O? =
+    try {
+        block(this)
+    } catch (e: NotAvailableException) {
+        null
+    }
