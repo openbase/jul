@@ -258,13 +258,11 @@ object TimestampProcessor {
     </M> */
     @JvmStatic
     @Throws(CouldNotPerformException::class)
-    fun <M : MessageOrBuilder> copyTimestamp(sourceMessageOrBuilder: M, targetMessageOrBuilder: M): M {
-        return updateTimestamp<M>(
-            getTimestamp(sourceMessageOrBuilder, TimeUnit.MICROSECONDS),
-            targetMessageOrBuilder,
-            TimeUnit.MICROSECONDS
-        )
-    }
+    fun <M : MessageOrBuilder> copyTimestamp(sourceMessageOrBuilder: M, targetMessageOrBuilder: M): M = updateTimestamp(
+        getTimestamp(sourceMessageOrBuilder, TimeUnit.MICROSECONDS),
+        targetMessageOrBuilder,
+        TimeUnit.MICROSECONDS
+    )
 
     /**
      * Method updates the timestamp field of the given message with the current time.
