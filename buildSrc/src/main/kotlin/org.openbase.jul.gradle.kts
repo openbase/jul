@@ -28,9 +28,9 @@ java {
 
 dependencies {
     api("org.openbase:jps:_")
-    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.0")
+    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.20")
     api("kr.pe.kwonnam.slf4j-lambda:slf4j-lambda-core:0.1")
-    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.7.0")
+    implementation("org.jetbrains.kotlin:kotlin-script-runtime:1.9.20")
     testImplementation("org.junit.jupiter:junit-jupiter:[5.8,5.9-alpha)")
     testImplementation("org.junit.jupiter:junit-jupiter-api:[5.8,5.9-alpha)")
     testImplementation(Testing.mockK)
