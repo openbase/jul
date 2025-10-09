@@ -11,6 +11,8 @@ nexusPublishing {
         sonatype {
             username.set(findProperty("MAVEN_CENTRAL_USERNAME")?.let { it as String? })
             password.set(findProperty("MAVEN_CENTRAL_TOKEN")?.let { it as String? })
+            nexusUrl.set(uri("https://central.sonatype.com/api/v1/publisher"))
+            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
         }
     }
 }
