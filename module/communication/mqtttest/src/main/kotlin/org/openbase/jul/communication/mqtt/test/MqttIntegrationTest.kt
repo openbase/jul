@@ -10,13 +10,12 @@ import org.openbase.jps.exception.JPServiceException
 import org.openbase.jul.communication.jp.JPComHost
 import org.openbase.jul.communication.jp.JPComPort
 import org.openbase.jul.communication.mqtt.SharedMqttClient.waitForShutdown
-import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
+import org.testcontainers.utility.MountableFile
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
-import java.util.*
 
 /*-
  * #%L
@@ -46,7 +45,7 @@ open class MqttIntegrationTest {
 
     companion object {
         const val port = 1884
-        var mosquittoConfig: Path? = null
+        lateinit var mosquittoConfig: Path
         var broker: GenericContainer<*>? = null
         val configLock = Any()
     }
@@ -64,10 +63,9 @@ open class MqttIntegrationTest {
             )
             GenericContainer(DockerImageName.parse("eclipse-mosquitto"))
                 .withExposedPorts(port)
-                .withFileSystemBind(
-                    mosquittoConfig.toString(),
-                    "/mosquitto/config/mosquitto.conf",
-                    BindMode.READ_ONLY
+                .withCopyFileToContainer(
+                    MountableFile.forHostPath(mosquittoConfig.toString()),
+                    "/mosquitto/config/mosquitto.conf"
                 )
                 .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
                 .also {
