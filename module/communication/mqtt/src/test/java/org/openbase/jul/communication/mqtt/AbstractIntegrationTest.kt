@@ -19,12 +19,6 @@ open class AbstractIntegrationTest {
         MqttBrokerManager.setupMqtt(this::class.java.simpleName)
     }
 
-    @AfterAll
-    @Timeout(30)
-    fun cleanup() {
-        MqttBrokerManager.tearDownMQTT()
-    }
-
     protected val brokerHost: String? get() = MqttBrokerManager.broker?.host
 
     protected val brokerPort: Int? get() = MqttBrokerManager.broker?.firstMappedPort

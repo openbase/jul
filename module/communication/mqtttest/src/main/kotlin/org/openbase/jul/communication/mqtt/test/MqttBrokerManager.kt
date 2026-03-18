@@ -50,13 +50,6 @@ object MqttBrokerManager {
         }
     }
 
-    fun tearDownMQTT() {
-        synchronized(lock) {
-            SharedMqttClient.waitForShutdown()
-            // Broker is stopped by shutdown hook
-        }
-    }
-
     @Throws(JPServiceException::class)
     private fun setupProperties() {
         JPService.reset()

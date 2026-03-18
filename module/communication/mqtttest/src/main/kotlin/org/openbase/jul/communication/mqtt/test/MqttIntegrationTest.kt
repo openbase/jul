@@ -41,11 +41,5 @@ open class MqttIntegrationTest {
         setupCustomProperties()
     }
 
-    @AfterAll
-    @Timeout(30)
-    fun tearDownMQTT() {
-        MqttBrokerManager.tearDownMQTT()
-    }
-
     open fun setupCustomProperties() {}
 }
