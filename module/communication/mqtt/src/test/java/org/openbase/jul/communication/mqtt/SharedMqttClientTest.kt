@@ -12,10 +12,12 @@ import org.openbase.jul.communication.config.CommunicatorConfig
 
 internal class SharedMqttClientTest : AbstractIntegrationTest() {
 
+    private val config get() = CommunicatorConfig(brokerHost!!, brokerPort!!)
+
+
     @Test
     @Timeout(value = 30)
     fun `shutdown should be work as expected`() {
-        val config = CommunicatorConfig(brokerHost, brokerPort)
         val client = SharedMqttClient
         client.get(config).apply {
             disconnect()
@@ -27,7 +29,6 @@ internal class SharedMqttClientTest : AbstractIntegrationTest() {
     @Test
     @Timeout(value = 30)
     fun `subscription should be work as expected`() {
-        val config = CommunicatorConfig(brokerHost, brokerPort)
         val topic = "/a/b/c"
         val client = SharedMqttClient
 

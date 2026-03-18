@@ -4,77 +4,82 @@ import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties
 import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Timeout
-import org.testcontainers.containers.BindMode
+import org.junit.jupiter.api.extension.ExtendWith
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
+import org.testcontainers.utility.MountableFile
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Duration
-import kotlin.io.path.absolute
 import kotlin.io.path.deleteIfExists
-import kotlin.io.path.writeLines
+import kotlin.jvm.java
 
-@Testcontainers
-abstract class AbstractIntegrationTest {
+//@Testcontainers
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+open class AbstractIntegrationTest {
 
-    // the companion object makes sure that the container is started once before all tests instead of restarting for every test
     companion object {
+        const val port = 1883
+        var broker: GenericContainer<*>? = null
+        val lock = Any()
+    }
 
-        private const val port: Int = 1883
+    private var usageCounter = 0
 
-        private val mosquittoConfig = kotlin.io.path.createTempFile(prefix = "mosquitto_", suffix = ".conf")
-        private lateinit var broker: MqttBrokerContainer
-
-        private var usageCounter = 0
-        private val lock = Any()
-
-        @JvmStatic
-        @BeforeAll
-        @Timeout(30)
-        fun setup() {
-            synchronized(lock) {
-                if (usageCounter == 0) {
-                    mosquittoConfig.writeLines(
-                        listOf(
-                            "allow_anonymous true",
-                            "listener 1883"
-                        )
+    @BeforeAll
+    @Timeout(30)
+    fun setupMqtt() {
+        synchronized(lock) {
+            if (usageCounter == 0) {
+                val mosquittoConfig: Path = Files.createTempFile("${this::class.java.simpleName}_mosquitto_", ".conf")
+                Files.write(
+                    mosquittoConfig, listOf(
+                        "allow_anonymous true",
+                        "listener $port"
                     )
+                )
 
-                    broker = MqttBrokerContainer()
-                        .withExposedPorts(port)
-                        .withFileSystemBind(
-                            mosquittoConfig.absolute().toString(),
-                            "/mosquitto/config/mosquitto.conf",
-                            BindMode.READ_ONLY
-                        )
-                    broker.withStartupTimeout(Duration.ofSeconds(30)).start()
-                }
-                usageCounter++
+                broker = MqttBrokerContainer()
+                    .withExposedPorts(port)
+                    .withCopyFileToContainer(
+                        MountableFile.forHostPath(mosquittoConfig.toString()),
+                        "/mosquitto/config/mosquitto.conf"
+                    )
+                    .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
+                    .also {
+                        if (broker?.takeIf { it.containerId != null } != null)
+                            error("broker was already initialized!")
+                    }
+                    .also { broker = it }
+
+                mosquittoConfig.deleteIfExists()
             }
+            usageCounter++
         }
+    }
 
-        @JvmStatic
-        @AfterAll
-        @Timeout(30)
-        fun cleanup() {
-            synchronized(lock) {
-                usageCounter--
-                if (usageCounter == 0) {
-                    SharedMqttClient.waitForShutdown()
-                    broker.stop()
-                    mosquittoConfig.deleteIfExists()
-                }
+    @AfterAll
+    @Timeout(30)
+    fun cleanup() {
+        synchronized(lock) {
+            SharedMqttClient.waitForShutdown()
+            usageCounter--
+            if (usageCounter == 0) {
+                SharedMqttClient.waitForShutdown()
+                broker?.stop()
             }
         }
     }
 
-    protected val brokerHost: String get() = broker.host
+    class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
 
-    protected val brokerPort: Int get() = broker.firstMappedPort
+    protected val brokerHost: String? get() = broker?.host
+
+    protected val brokerPort: Int? get() = broker?.firstMappedPort
 }
-
-class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
 
 fun Mqtt5Publish.clearTimestamp() = let {
     this.extend().userProperties(Mqtt5UserProperties.of()).build()

@@ -22,7 +22,7 @@ import kotlin.concurrent.withLock
 class IntegrationTest : AbstractIntegrationTest() {
 
     private val scope = ScopeProcessor.generateScope("/test/integration")
-    private val config = CommunicatorConfig(brokerHost, brokerPort)
+    private val config get() = CommunicatorConfig(brokerHost!!, brokerPort!!)
 
     internal class MethodMock {
         val lock = ReentrantLock()

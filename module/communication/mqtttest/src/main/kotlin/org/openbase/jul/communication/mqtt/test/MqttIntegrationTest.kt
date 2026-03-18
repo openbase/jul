@@ -9,13 +9,15 @@ import org.openbase.jps.core.JPService
 import org.openbase.jps.exception.JPServiceException
 import org.openbase.jul.communication.jp.JPComHost
 import org.openbase.jul.communication.jp.JPComPort
-import org.openbase.jul.communication.mqtt.SharedMqttClient.waitForShutdown
+import org.openbase.jul.communication.mqtt.SharedMqttClient
 import org.testcontainers.containers.GenericContainer
+import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import org.testcontainers.utility.MountableFile
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import kotlin.io.path.deleteIfExists
 
 /*-
  * #%L
@@ -41,50 +43,58 @@ import java.time.Duration
  * */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(OpenbaseDeadlockChecker::class)
+@Testcontainers
 open class MqttIntegrationTest {
 
     companion object {
         const val port = 1884
-        lateinit var mosquittoConfig: Path
         var broker: GenericContainer<*>? = null
-        val configLock = Any()
+        val lock = Any()
     }
+
+    private var usageCounter = 0
 
     @BeforeAll
     @Timeout(30)
     fun setupMqtt() {
-        synchronized(configLock) {
-            mosquittoConfig = Files.createTempFile("mosquitto_", ".conf")
-            Files.write(
-                mosquittoConfig, listOf(
-                    "allow_anonymous true",
-                    "listener " + port
+        synchronized(lock) {
+            if (usageCounter == 0) {
+                val mosquittoConfig: Path = Files.createTempFile("${this::class.java.simpleName}_mosquitto_", ".conf")
+                Files.write(
+                    mosquittoConfig, listOf(
+                        "allow_anonymous true",
+                        "listener $port"
+                    )
                 )
-            )
-            GenericContainer(DockerImageName.parse("eclipse-mosquitto"))
-                .withExposedPorts(port)
-                .withCopyFileToContainer(
-                    MountableFile.forHostPath(mosquittoConfig.toString()),
-                    "/mosquitto/config/mosquitto.conf"
-                )
-                .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
-                .also {
-                    if (broker?.takeIf { it.containerId != null } != null)
-                        error("broker was already initialized!")
-                }
-                .also { broker = it }
-                .also { setupProperties() }
+                MqttBrokerContainer()
+                    .withExposedPorts(port)
+                    .withCopyFileToContainer(
+                        MountableFile.forHostPath(mosquittoConfig.toString()),
+                        "/mosquitto/config/mosquitto.conf"
+                    )
+                    .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
+                    .also {
+                        if (broker?.takeIf { it.containerId != null } != null)
+                            error("broker was already initialized!")
+                    }
+                    .also { broker = it }
+                    .also { setupProperties() }
+                mosquittoConfig.deleteIfExists()
+            }
+            usageCounter++
         }
     }
 
     @AfterAll
     @Timeout(30)
     fun tearDownMQTT() {
-        synchronized(configLock) {
-            waitForShutdown()
-            broker?.stop()
-            Files.delete(mosquittoConfig)
-        }
+        synchronized(lock) {
+            SharedMqttClient.waitForShutdown()
+            usageCounter--
+            if (usageCounter == 0) {
+                //waitForShutdown()
+                broker?.stop()
+        }}
     }
 
     @Throws(JPServiceException::class)
@@ -95,6 +105,8 @@ open class MqttIntegrationTest {
         setupCustomProperties()
         JPService.setupJUnitTestMode()
     }
+
+    class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
 
     open fun setupCustomProperties() {}
 }
