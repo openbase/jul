@@ -5,19 +5,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
-import org.openbase.jps.core.JPService
-import org.openbase.jps.exception.JPServiceException
-import org.openbase.jul.communication.jp.JPComHost
-import org.openbase.jul.communication.jp.JPComPort
-import org.openbase.jul.communication.mqtt.SharedMqttClient
-import org.testcontainers.containers.GenericContainer
 import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
-import org.testcontainers.utility.MountableFile
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.Duration
-import kotlin.io.path.deleteIfExists
 
 /*-
  * #%L
@@ -46,67 +34,18 @@ import kotlin.io.path.deleteIfExists
 @Testcontainers
 open class MqttIntegrationTest {
 
-    companion object {
-        const val port = 1884
-        var broker: GenericContainer<*>? = null
-        val lock = Any()
-    }
-
-    private var usageCounter = 0
-
     @BeforeAll
     @Timeout(30)
     fun setupMqtt() {
-        synchronized(lock) {
-            if (usageCounter == 0) {
-                val mosquittoConfig: Path = Files.createTempFile("${this::class.java.simpleName}_mosquitto_", ".conf")
-                Files.write(
-                    mosquittoConfig, listOf(
-                        "allow_anonymous true",
-                        "listener $port"
-                    )
-                )
-                MqttBrokerContainer()
-                    .withExposedPorts(port)
-                    .withCopyFileToContainer(
-                        MountableFile.forHostPath(mosquittoConfig.toString()),
-                        "/mosquitto/config/mosquitto.conf"
-                    )
-                    .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
-                    .also {
-                        if (broker?.takeIf { it.containerId != null } != null)
-                            error("broker was already initialized!")
-                    }
-                    .also { broker = it }
-                    .also { setupProperties() }
-                mosquittoConfig.deleteIfExists()
-            }
-            usageCounter++
-        }
+        MqttBrokerManager.setupMqtt(this::class.java.simpleName, 1884)
+        setupCustomProperties()
     }
 
     @AfterAll
     @Timeout(30)
     fun tearDownMQTT() {
-        synchronized(lock) {
-            SharedMqttClient.waitForShutdown()
-            usageCounter--
-            if (usageCounter == 0) {
-                //waitForShutdown()
-                broker?.stop()
-        }}
+        MqttBrokerManager.tearDownMQTT()
     }
-
-    @Throws(JPServiceException::class)
-    private fun setupProperties() {
-        JPService.reset()
-        JPService.registerProperty(JPComPort::class.java, broker!!.firstMappedPort)
-        JPService.registerProperty(JPComHost::class.java, broker!!.host)
-        setupCustomProperties()
-        JPService.setupJUnitTestMode()
-    }
-
-    class MqttBrokerContainer : GenericContainer<MqttBrokerContainer>(DockerImageName.parse("eclipse-mosquitto"))
 
     open fun setupCustomProperties() {}
 }
