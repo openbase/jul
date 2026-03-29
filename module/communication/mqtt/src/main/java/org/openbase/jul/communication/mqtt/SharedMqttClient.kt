@@ -14,6 +14,7 @@ import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5UnsubscribeBuilder
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.unsuback.Mqtt5UnsubAck
 import org.openbase.jul.communication.config.CommunicatorConfig
+import org.openbase.jul.exception.tryOrNull
 import org.openbase.jul.iface.Shutdownable
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -52,7 +53,13 @@ object SharedMqttClient : Shutdownable {
         sharedClients.values
             .filter { (it as Mqtt5ClientWrapper).isConnected() }
             .map { it.disconnect() }
-            .map { it.get() }
+            .map {
+                runCatching { it.get() }
+                    .getOrElse { t -> check(t.message == "com.hivemq.client.mqtt.exceptions.MqttClientStateException: MQTT client is not connected.") {
+                        "Could not disconnect client connection: ${t.message}" }
+                        null
+                    }
+            }
             .run { sharedClients.clear() }
 
     @Synchronized
