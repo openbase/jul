@@ -213,10 +213,12 @@ public class FileSynchronizedRegistryImpl<KEY, ENTRY extends Identifiable<KEY>, 
                 fileSynchronizerMapLock.writeLock().unlock();
             }
 
-            filePluginPool.beforeRemove(entry, fileSynchronizer);
-            fileSynchronizer.delete();
+            if (fileSynchronizer != null) {
+                filePluginPool.beforeRemove(entry, fileSynchronizer);
+                fileSynchronizer.delete();
+                filePluginPool.afterRemove(entry, fileSynchronizer);
+            }
             fileSynchronizerMap.remove(entry.getId());
-            filePluginPool.afterRemove(entry, fileSynchronizer);
             return removedValue;
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
