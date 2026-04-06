@@ -1,8 +1,6 @@
 package org.openbase.jul.communication.mqtt
 
-import com.hivemq.client.internal.mqtt.util.MqttChecks.unsubscribe
 import com.hivemq.client.mqtt.datatypes.MqttQos
-import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import org.junit.jupiter.api.Test
@@ -11,9 +9,6 @@ import org.junit.jupiter.api.Timeout
 import org.openbase.jul.communication.config.CommunicatorConfig
 
 internal class SharedMqttClientTest : AbstractIntegrationTest() {
-
-    private val config get() = CommunicatorConfig(brokerHost!!, brokerPort!!)
-
 
     @Test
     @Timeout(value = 30)

@@ -14,7 +14,6 @@ import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5UnsubscribeBuilder
 import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.unsuback.Mqtt5UnsubAck
 import org.openbase.jul.communication.config.CommunicatorConfig
-import org.openbase.jul.exception.tryOrNull
 import org.openbase.jul.iface.Shutdownable
 import java.util.*
 import java.util.concurrent.CompletableFuture

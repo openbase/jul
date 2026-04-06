@@ -15,6 +15,9 @@ import kotlin.concurrent.Volatile
 import kotlin.io.path.deleteIfExists
 
 object MqttBrokerManager {
+    
+    val STARTUP_TIMEOUT: Duration = Duration.ofSeconds(30)
+    
     var broker: GenericContainer<*>? = null
     val lock = Any()
 
@@ -34,7 +37,7 @@ object MqttBrokerManager {
                         MountableFile.forHostPath(mosquittoConfig.toString()),
                         "/mosquitto/config/mosquitto.conf"
                     )
-                    .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
+                    .apply { withStartupTimeout(STARTUP_TIMEOUT).start() }
                     .also { broker = it }
                     .also { setupProperties() }
                     .also {

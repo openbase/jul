@@ -6,10 +6,10 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Timeout
+import org.openbase.jul.communication.config.CommunicatorConfig
 import org.openbase.jul.communication.mqtt.test.MqttBrokerManager
 import org.testcontainers.junit.jupiter.Testcontainers
 
-//@Testcontainers
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 open class AbstractIntegrationTest {
 
@@ -22,6 +22,12 @@ open class AbstractIntegrationTest {
     protected val brokerHost: String? get() = MqttBrokerManager.broker?.host
 
     protected val brokerPort: Int? get() = MqttBrokerManager.broker?.firstMappedPort
+
+    protected val config
+        get() = CommunicatorConfig(
+            hostname = brokerHost ?: error("Host not defined!"),
+            port = brokerPort ?: error("Port not defined!"),
+        )
 }
 
 fun Mqtt5Publish.clearTimestamp() = let {
