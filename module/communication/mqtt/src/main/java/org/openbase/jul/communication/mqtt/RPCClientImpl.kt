@@ -22,7 +22,7 @@ import com.google.protobuf.Any as protoAny
 
 class RPCClientImpl(
     scope: ScopeType.Scope,
-    config: CommunicatorConfig
+    config: CommunicatorConfig,
 ) : RPCCommunicatorImpl(scope, config), RPCClient {
 
     private val parameterParserMap: HashMap<String, List<(Any) -> protoAny>> = HashMap()
@@ -32,7 +32,7 @@ class RPCClientImpl(
     override fun <RETURN : Any> callMethod(
         methodName: String,
         return_clazz: KClass<RETURN>,
-        vararg parameters: Any
+        vararg parameters: Any,
     ): Future<RPCResponse<RETURN>> {
         lazyRegisterMethod(methodName, return_clazz, *parameters)
 
@@ -79,7 +79,7 @@ class RPCClientImpl(
     private fun <RETURN> handleRPCResponse(
         mqtt5Publish: Mqtt5Publish,
         rpcFuture: CompletableFuture<RPCResponse<RETURN>>,
-        request: Request
+        request: Request,
     ) {
         val response = Response.parseFrom(mqtt5Publish.payloadAsBytes)
         if (response.error.isEmpty() && response.status != Response.Status.FINISHED) {

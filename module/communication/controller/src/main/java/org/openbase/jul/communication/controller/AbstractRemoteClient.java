@@ -10,12 +10,12 @@ package org.openbase.jul.communication.controller;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -26,7 +26,6 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 import kotlin.jvm.functions.Function2;
 import org.openbase.jps.core.JPService;
 import org.openbase.jul.communication.config.CommunicatorConfig;
@@ -58,7 +57,6 @@ import org.openbase.jul.schedule.*;
 import org.openbase.jul.schedule.WatchDog.ServiceState;
 import org.openbase.type.communication.EventType.Event;
 import org.openbase.type.communication.ScopeType.Scope;
-import org.openbase.type.communication.mqtt.PrimitiveType.Primitive;
 import org.openbase.type.domotic.state.ConnectionStateType.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +72,7 @@ import static org.openbase.type.domotic.state.ConnectionStateType.ConnectionStat
 
 /**
  * @param <M>
+ *
  * @author <a href="mailto:divine@openbase.org">Divine Threepwood</a>
  */
 //
@@ -142,7 +141,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         this.middlewareFailureObserver = (source, watchDogState) -> {
             switch (watchDogState) {
                 case FAILED:
-                    logger.warn("Broker at "+JPService.getValue(JPComHost.class, "?")+ " not responding.");
+                    logger.warn("Broker at " + JPService.getValue(JPComHost.class, "?") + " not responding.");
                     AbstractRemoteClient.this.setConnectionState(DISCONNECTED);
                     break;
             }
@@ -170,6 +169,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * {@inheritDoc}
      *
      * @param scope {@inheritDoc}
+     *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
@@ -182,6 +182,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Initialize the remote on a scope.
      *
      * @param scope the scope where the remote communicates
+     *
      * @throws InitializationException if the initialization fails
      * @throws InterruptedException    if the initialization is interrupted
      */
@@ -210,6 +211,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      *
      * @param scope              {@inheritDoc}
      * @param communicatorConfig {@inheritDoc}
+     *
      * @throws org.openbase.jul.exception.InitializationException {@inheritDoc}
      * @throws java.lang.InterruptedException                     {@inheritDoc}
      */
@@ -333,6 +335,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Method unlocks this instance.
      *
      * @param maintainer the instance which currently holds the lock.
+     *
      * @throws CouldNotPerformException is thrown if the instance could not be
      *                                  unlocked.
      */
@@ -361,6 +364,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      *
      * @param handler
      * @param wait
+     *
      * @throws InterruptedException
      * @throws CouldNotPerformException
      */
@@ -374,7 +378,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                 logger.debug("Internal notification: " + event.toString());
                 applyEventUpdate(event, userProperties);
             } catch (Exception ex) {
-                if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                     ExceptionPrinter.printHistory(new CouldNotPerformException("Internal notification failed!", ex), logger);
                 }
             }
@@ -448,6 +452,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Atomic deactivate which makes sure that the maintainer stays the same.
      *
      * @param maintainer the current maintainer of this remote
+     *
      * @throws InterruptedException        if deactivation is interrupted
      * @throws CouldNotPerformException    if deactivation fails
      * @throws VerificationFailedException is thrown if the given maintainer does not match the current one
@@ -545,6 +550,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * it is necessary to call {@code requestData.get()}.
      *
      * @param scope the new scope to configure.
+     *
      * @throws InterruptedException     is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException is throws if the reinit has been failed.
      */
@@ -597,6 +603,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * it is necessary to call {@code requestData.get()}.
      *
      * @param maintainer the current maintainer of this remote
+     *
      * @throws InterruptedException        is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
@@ -614,6 +621,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      *
      * @param scope      the new scope to configure.
      * @param maintainer the current maintainer of this remote
+     *
      * @throws InterruptedException        is thrown if the current thread was externally interrupted.
      * @throws CouldNotPerformException    is throws if the reinit has been failed.
      * @throws VerificationFailedException is thrown if the given maintainerLock does not match the current maintainer
@@ -794,7 +802,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         long validTimeout = timeout;
 
         try {
-            logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + rpcClient.getScope());
+            logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + ScopeProcessor.generateStringRep(rpcClient.getScope()));
             if (!isConnected()) {
                 waitForConnectionState(CONNECTED, timeout);
             }
@@ -810,7 +818,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                 }
 
                 try {
-                    logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + rpcClient.getScope());
+                    logger.debug("Calling method [" + methodName + "(" + shortArgument + ")] on scope: " + ScopeProcessor.generateStringRep(rpcClient.getScope()));
                     rpcClientWatchDog.waitForServiceActivation(timeout, TimeUnit.MILLISECONDS);
                     final R returnValue;
                     try {
@@ -834,7 +842,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         validTimeout -= retryTimeout;
                         if (validTimeout <= 0) {
                             ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                            throw new TimeoutException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + rpcClient.getScope() + "] in Time[" + timeout + "ms].");
+                            throw new TimeoutException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + ScopeProcessor.generateStringRep(rpcClient.getScope()) + "] in Time[" + timeout + "ms].");
                         }
                         retryTimeout = Math.min(generateTimeout(retryTimeout), validTimeout);
                     } else {
@@ -844,10 +852,10 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                     // only print warning if timeout is too long.
                     if (retryTimeout > 15000) {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.WARN);
-                        logger.warn("Waiting for RPCServer[" + rpcClient.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
+                        logger.warn("Waiting for RPCServer[" + ScopeProcessor.generateStringRep(rpcClient.getScope()) + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     } else {
                         ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
-                        logger.debug("Waiting for RPCServer[" + rpcClient.getScope() + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
+                        logger.debug("Waiting for RPCServer[" + ScopeProcessor.generateStringRep(rpcClient.getScope()) + "] to call method [" + methodName + "(" + shortArgument + ")]. Next retry timeout in " + (int) (Math.floor(retryTimeout / 1000)) + " sec.");
                     }
 
                     Thread.yield();
@@ -856,7 +864,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         } catch (TimeoutException ex) {
             throw ex;
         } catch (CouldNotPerformException ex) {
-            throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + rpcClient.getScope() + "].", ex);
+            throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + ScopeProcessor.generateStringRep(rpcClient.getScope()) + "].", ex);
         }
     }
 
@@ -867,10 +875,11 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * @param <T>        {@inheritDoc}
      * @param methodName {@inheritDoc}
      * @param argument   {@inheritDoc}
+     *
      * @return {@inheritDoc}
      */
     @Override
-    public <R, T extends Object> Future<RPCResponse<R>> callMethodAsync(final String methodName, final Class<R> returnClazz, final T argument) {
+    public <R, T> Future<RPCResponse<R>> callMethodAsync(final String methodName, final Class<R> returnClazz, final T argument) {
 
         //todo: refactor this section by implementing a PreFutureHandler, so a future object can directly be returned.
         //      Both, the waitForMiddleware and the method call future should be encapsulated in the PreFutureHandler
@@ -885,7 +894,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
             return (Future<RPCResponse<R>>) FutureProcessor.canceledFuture(ex);
         }
 
-        return GlobalCachedExecutorService.submit(new Callable<RPCResponse<R> >() {
+        return GlobalCachedExecutorService.submit(new Callable<RPCResponse<R>>() {
 
             private Future<RPCResponse<R>> internalCallFuture;
 
@@ -896,7 +905,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
 
                 try {
                     try {
-                        logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + rpcClient.getScope().toString());
+                        logger.debug("Calling method async [" + methodName + "(" + shortArgument + ")] on scope: " + ScopeProcessor.generateStringRep(rpcClient.getScope()));
 
                         if (!isConnected()) {
                             try {
@@ -930,7 +939,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                                     } else {
                                         waitForConnectionState(CONNECTING);
                                     }
-                                } catch (ExecutionException | java.util.concurrent.TimeoutException | CancellationException exx) {
+                                } catch (ExecutionException | java.util.concurrent.TimeoutException |
+                                         CancellationException exx) {
                                     // cancel call if connection is broken
                                     if (internalCallFuture != null) {
                                         internalCallFuture.cancel(true);
@@ -950,7 +960,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         }
                         throw ex;
                     } catch (final InvalidStateException ex) {
-                        // reinit remote service because middleware connection lost!
+                        // re-init remote service because middleware connection lost!
                         switch (connectionState) {
                             // only if the connection was established before and no reconnect is ongoing.
                             case CONNECTING:
@@ -964,7 +974,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                         throw ex;
                     }
                 } catch (final CouldNotPerformException | CancellationException | InterruptedException ex) {
-                    throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + rpcClient.getScope() + "].", ex);
+                    throw new CouldNotPerformException("Could not call remote Method[" + methodName + "(" + shortArgument + ")] on Scope[" + ScopeProcessor.generateStringRep(rpcClient.getScope()) + "].", ex);
                 }
             }
         });
@@ -988,7 +998,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                 }
 
                 // Create new sync process
-                if(syncFuture == null || syncFuture.isDone()) {
+                if (syncFuture == null || syncFuture.isDone()) {
                     syncFuture = new CompletableFutureLite<>();
                 }
 
@@ -1008,7 +1018,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * @return fresh synchronized data object.
      */
     private Future<M> sync() {
-        logger.debug("Synchronization of Remote[" + this + "] triggered...");
+        logger.trace("Synchronization of Remote[" + this + "] triggered...");
         try {
             validateInitialization();
             try {
@@ -1086,7 +1096,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                 }
 
                 try {
-                    if(!validateAndUpdateEventTimestamp(userProperties)) {
+                    if (!validateAndUpdateEventTimestamp(userProperties)) {
                         logger.debug("Skip event on scope[" + getScopeStringRep() + "] because event seems to be outdated!");
                         return data;
                     }
@@ -1130,7 +1140,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         } catch (NumberFormatException ex) {
             final String timeMs = userProperties.get(CommunicatorImpl.TIMESTAMP_KEY_MS);
             final String timeNano = userProperties.get(CommunicatorImpl.TIMESTAMP_KEY_NANO);
-            throw new CouldNotPerformException("One of the timestamps milliseconds["+timeMs+"] or nanoseconds["+timeNano+"] cannot be interpreted as a number", ex);
+            throw new CouldNotPerformException("One of the timestamps milliseconds[" + timeMs + "] or nanoseconds[" + timeNano + "] cannot be interpreted as a number", ex);
         }
     }
 
@@ -1161,6 +1171,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -1203,6 +1214,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * transaction sync futures return.
      *
      * @param data the data type notified.
+     *
      * @throws CouldNotPerformException if notification fails or no transaction id could be extracted.
      */
     private void notifyPrioritizedObservers(final M data) throws CouldNotPerformException {
@@ -1273,6 +1285,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      *
      * @param timeout  {@inheritDoc}
      * @param timeUnit {@inheritDoc}
+     *
      * @throws CouldNotPerformException       {@inheritDoc}
      * @throws java.lang.InterruptedException {@inheritDoc}
      */
@@ -1295,7 +1308,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
 
             // wait for data sync
             dataObservable.waitForValue(timeoutSplitter.getTime(), timeoutSplitter.getTimeUnit());
-        } catch (java.util.concurrent.TimeoutException | CouldNotPerformException | ExecutionException | CancellationException ex) {
+        } catch (java.util.concurrent.TimeoutException | CouldNotPerformException | ExecutionException |
+                 CancellationException ex) {
             if (shutdownInitiated) {
                 throw new ShutdownInProgressException(this);
             }
@@ -1416,6 +1430,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * @param connectionState the desired connection state
      * @param timeout         the timeout in milliseconds until the method throw a
      *                        TimeoutException in case the connection state was not reached.
+     *
      * @throws InterruptedException                                is thrown in case the thread is externally
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.TimeoutException         is thrown in case the
@@ -1478,6 +1493,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Method blocks until the remote reaches the desired connection state.
      *
      * @param connectionState the desired connection state
+     *
      * @throws InterruptedException                                is thrown in case the thread is externally
      *                                                             interrupted.
      * @throws org.openbase.jul.exception.CouldNotPerformException is thrown in case the
@@ -1495,6 +1511,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     *
      * @throws NotAvailableException {@inheritDoc}
      */
     @Override
@@ -1730,6 +1747,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      * Get the latest transaction id. It will be updated every time after prioritized observers are notified.
      *
      * @return the latest transaction id.
+     *
      * @throws NotAvailableException if no data has been received yet
      */
     @Override
@@ -1773,14 +1791,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
         public M call() throws CouldNotPerformException {
 
             Future<M> internalFuture = null;
-            Event event;
             M receivedData;
             boolean active = isActive();
             ExecutionException lastException = null;
             try {
                 try {
-                    logger.debug("Request controller synchronization.");
-
+                    logger.trace("Request controller synchronization.");
                     long timeout = METHOD_CALL_START_TIMEOUT;
                     while (true) {
 

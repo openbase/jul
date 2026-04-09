@@ -10,12 +10,12 @@ package org.openbase.jul.schedule;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -31,6 +31,7 @@ import org.openbase.jul.iface.TimedProcessable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
@@ -44,7 +45,7 @@ public abstract class Timeout {
     /**
      * Using Long.MAX_VALUE as infinity timeout is not practical because in any calculations using this timeout like adding +1 causes a value overrun.
      * Therefore, this constant is introduced to use a infinity timeout which represents in fact 3170 years which should covers at least some human generations ;)
-     *
+     * <p>
      * The unit of the {@code INFINITY_TIMEOUT} is in milliseconds.
      */
     public static final long INFINITY_TIMEOUT = TimedProcessable.INFINITY_TIMEOUT;
@@ -79,6 +80,15 @@ public abstract class Timeout {
      */
     public Timeout(final long defaultWaitTime) {
         this.defaultWaitTime = defaultWaitTime;
+    }
+
+    /**
+     * Constructor creates a new Timeout instance. The default timeout can be configured via the given {@code defaultWaitTime} argument.
+     *
+     * @param defaultWaitTime the default timeout.
+     */
+    public Timeout(final Duration defaultWaitTime) {
+        this.defaultWaitTime = defaultWaitTime.toMillis();
     }
 
     /**
@@ -244,7 +254,7 @@ public abstract class Timeout {
                 } catch (InterruptedException ex) {
                     // just finish task on interruption
                 } catch (Exception ex) {
-                    if(!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                    if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                         ExceptionPrinter.printHistory(new CouldNotPerformException("Error during timeout handling!", ex), logger, LogLevel.WARN);
                     }
                 }

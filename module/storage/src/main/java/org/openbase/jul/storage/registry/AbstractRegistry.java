@@ -10,12 +10,12 @@ package org.openbase.jul.storage.registry;
  * it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Lesser Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Lesser Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/lgpl-3.0.html>.
@@ -28,8 +28,8 @@ import org.openbase.jps.exception.JPServiceException;
 import org.openbase.jps.preset.JPForce;
 import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jps.preset.JPVerbose;
-import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.InstantiationException;
+import org.openbase.jul.exception.*;
 import org.openbase.jul.exception.MultiException.ExceptionStack;
 import org.openbase.jul.exception.printer.ExceptionPrinter;
 import org.openbase.jul.exception.printer.LogLevel;
@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * @param <KEY>      EntryKey
@@ -194,8 +195,8 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                     sandbox.register(entry);
                     pluginPool.beforeRegister(entry);
                     entryMap.put(entry.getId(), entry);
-                    finishTransaction();
                     pluginPool.afterRegister(entry);
+                    finishTransaction();
                 } finally {
                     syncSandbox();
                 }
@@ -326,10 +327,6 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             lock();
             try {
                 try {
-                    // validate removal
-                    if (!entryMap.containsKey(entry.getId())) {
-                        throw new InvalidStateException("Entry not registered!");
-                    }
                     // perform removal
                     pluginPool.beforeRemove(entry);
                     sandbox.remove(entry);
@@ -367,7 +364,13 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     public List<ENTRY> removeAll(final Collection<ENTRY> entries) throws MultiException, InvalidStateException {
         final List<ENTRY> removedEntries = new ArrayList<>();
         ExceptionStack exceptionStack = null;
-        registryLock.writeLock().lock();
+        try {
+            registryLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
+
         try {
             for (final ENTRY entry : entries) {
 
@@ -405,7 +408,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     public List<ENTRY> removeAllByKey(final Collection<KEY> keys) throws MultiException, InvalidStateException {
         final List<ENTRY> removedEntries = new ArrayList<>();
         ExceptionStack exceptionStack = null;
-        registryLock.writeLock().lock();
+        try {
+            registryLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
 
         try {
             for (final KEY key : keys) {
@@ -445,7 +453,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             throw new NotAvailableException("key");
         }
         verifyID(key);
-        registryLock.readLock().lock();
+        try {
+            registryLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
         try {
             if (!entryMap.containsKey(key)) {
 
@@ -487,7 +500,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      */
     @Override
     public List<ENTRY> getEntries() {
-        registryLock.readLock().lock();
+        try {
+            registryLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
         try {
             return new ArrayList<>(entryMap.values());
         } finally {
@@ -497,7 +515,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
 
     @Override
     public Map<KEY, ENTRY> getEntryMap() {
-        registryLock.readLock().lock();
+        try {
+            registryLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
         try {
             return Collections.unmodifiableMap(entryMap);
         } finally {
@@ -512,7 +535,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      */
     @Override
     public int size() {
-        registryLock.readLock().lock();
+        try {
+            registryLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
         try {
             return entryMap.size();
         } finally {
@@ -527,7 +555,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      */
     @Override
     public boolean isEmpty() {
-        registryLock.readLock().lock();
+        try {
+            registryLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
         try {
             return entryMap.isEmpty();
         } finally {
@@ -650,14 +683,19 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      */
     @Override
     public void checkWriteAccess() throws RejectedException {
-        logger.debug("checkWriteAccess of " + this);
+        logger.trace("checkWriteAccess of " + this);
 
         if (isShutdownInitiated()) {
             throw new RejectedException("Write access rejected because of registry shutdown!", new ShutdownInProgressException(this));
         }
 
-        if (!isDependingOnConsistentRegistries()) {
-            throw new RejectedException("At least one depending registry is inconsistent!");
+
+        List<Registry> inconsistentDependencies = getInconsistentDependingRegistries();
+        if (!inconsistentDependencies.isEmpty()) {
+            throw new RejectedException("Depending registries [" + inconsistentDependencies
+                    .stream()
+                    .map(Registry::getName)
+                    .toList() + "] is inconsistent!");
         }
 
         pluginPool.checkAccess();
@@ -673,15 +711,19 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      *
      * @return The method returns should return false if at least one depending registry is not consistent!
      */
-    protected boolean isDependingOnConsistentRegistries() {
-        dependingRegistryMapLock.readLock().lock();
+    protected List<Registry> getInconsistentDependingRegistries() {
         try {
-            for (Registry registry : dependingRegistryMap.keySet()) {
-                if (!registry.isConsistent()) {
-                    return false;
-                }
-            }
-            return true;
+            dependingRegistryMapLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
+
+        try {
+            return dependingRegistryMap.keySet()
+                    .stream()
+                    .filter((registry) -> (!registry.isConsistent()))
+                    .collect(Collectors.toList());
         } finally {
             dependingRegistryMapLock.readLock().unlock();
         }
@@ -702,9 +744,21 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         if (registry == null) {
             throw new NotAvailableException("registry");
         }
-        registryLock.writeLock().lock();
+
         try {
-            dependingRegistryMapLock.writeLock().lock();
+            registryLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
+
+        try {
+            try {
+                dependingRegistryMapLock.writeLock().lockInterruptibly();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Thread interrupted!", ex);
+            }
             try {
                 // check if already registered
                 if (dependingRegistryMap.containsKey(registry)) {
@@ -747,7 +801,14 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         if (registry == null) {
             throw new NotAvailableException("registry");
         }
-        registryLock.writeLock().lock();
+
+        try {
+            registryLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
+
         try {
             dependingRegistryMapLock.writeLock().lock();
             try {
@@ -768,9 +829,21 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
      * Removal of all registered registry dependencies in the reversed order in which they where added.
      */
     public void removeAllDependencies() {
-        registryLock.writeLock().lock();
         try {
-            dependingRegistryMapLock.writeLock().lock();
+            registryLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
+
+        try {
+            try {
+                dependingRegistryMapLock.writeLock().lockInterruptibly();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Thread interrupted!", ex);
+            }
+
             try {
                 List<Registry> dependingRegistryList = new ArrayList<>(dependingRegistryMap.keySet());
                 Collections.reverse(dependingRegistryList);
@@ -826,7 +899,7 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
             }
             notificationSkipped = false;
         } catch (CouldNotPerformException ex) {
-            if(!ExceptionProcessor.isCausedByInterruption(ex) && !ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+            if (!ExceptionProcessor.isCausedByInterruption(ex) && !ExceptionProcessor.isCausedBySystemShutdown(ex)) {
                 ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify all registry observer!", ex), logger, LogLevel.ERROR);
             }
             return false;
@@ -904,17 +977,21 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         int modificationCounter = 0;
 
         if (consistencyHandlerList.isEmpty()) {
-            logger.debug("Skip consistency check because no handler are registered.");
+            logger.trace("Skip consistency check because no handler are registered.");
             return modificationCounter;
         }
 
         if (isEmpty()) {
-            logger.debug("Skip consistency check because " + getName() + " is empty.");
+            logger.trace("Skip consistency check because " + getName() + " is empty.");
             return modificationCounter;
         }
 
-        if (!isDependingOnConsistentRegistries()) {
-            logger.warn("Skip consistency check because " + getName() + " is depending on at least one inconsistent registry!");
+        List<Registry> inconsistentDependencies = getInconsistentDependingRegistries();
+        if (!inconsistentDependencies.isEmpty()) {
+            logger.warn("Skip consistency check because " + getName() + " is depending on the following inconsistent registries [" + inconsistentDependencies
+                    .stream()
+                    .map(Registry::getName)
+                    .toList() + "]!");
             return modificationCounter;
         }
 
@@ -927,7 +1004,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
         lock();
         try {
             pluginPool.beforeConsistencyCheck();
-            consistencyCheckLock.writeLock().lock();
+            try {
+                consistencyCheckLock.writeLock().lockInterruptibly();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Thread interrupted!", ex);
+            }
             try {
                 try {
                     try {
@@ -1125,10 +1207,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     }
 
     private void syncSandbox() {
-//        if (consistencyCheckLock.isWriteLocked()) {
-//            throw new FatalImplementationErrorException("Sync sandbox registry during consistency check[" + consistencyCheckLock.writeLock().isHeldByCurrentThread() + "]", this);
-//        }
-        registryLock.readLock().lock();
+        try {
+            registryLock.readLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
         try {
             sandbox.sync(entryMap);
         } finally {
@@ -1163,7 +1247,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
     public void shutdown() {
         shutdownInitiated = true;
         try {
-            registryLock.writeLock().lock();
+            try {
+                registryLock.writeLock().lockInterruptibly();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Thread interrupted!", ex);
+            }
 
             try {
                 super.shutdown();
@@ -1350,7 +1439,12 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
          * thread could already start locking while not everything is unlocked.
          * But by locking this registry additionally the next thread can only try to lock if all registries
          * this one depends on have been unlocked. */
-        registryLock.writeLock().lock();
+        try {
+            registryLock.writeLock().lockInterruptibly();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread interrupted!", ex);
+        }
         try {
             for (Registry registry : lockedRegistries) {
                 if (registry instanceof RemoteRegistry) {
@@ -1425,7 +1519,13 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 // the lock has been acquired so add this to the set
                 lockedRegistries.add(this);
 
-                dependingRegistryMapLock.readLock().lock();
+                try {
+                    dependingRegistryMapLock.readLock().lockInterruptibly();
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Thread interrupted!", ex);
+                }
+
                 try {
                     // iterate over all registries this one depends on and try to lock recursively
                     for (Registry registry : dependingRegistryMap.keySet()) {
@@ -1447,9 +1547,6 @@ public abstract class AbstractRegistry<KEY, ENTRY extends Identifiable<KEY>, MAP
                 // all registries this one depends on could be locked recursively as well, so return true
                 return true;
             } else {
-//                if (!isSandbox()) {
-//                    logger.info("Failed to lock " + this);
-//                }
                 // acquiring the write lock for this registry failed, so return false
                 return false;
             }
