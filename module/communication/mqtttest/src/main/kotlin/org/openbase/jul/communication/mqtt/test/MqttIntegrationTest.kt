@@ -5,18 +5,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
-import org.openbase.jps.core.JPService
-import org.openbase.jps.exception.JPServiceException
-import org.openbase.jul.communication.jp.JPComHost
-import org.openbase.jul.communication.jp.JPComPort
-import org.openbase.jul.communication.mqtt.SharedMqttClient.waitForShutdown
-import org.testcontainers.containers.BindMode
-import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.DockerImageName
-import java.nio.file.Files
-import java.nio.file.Path
-import java.time.Duration
-import java.util.*
+import org.testcontainers.junit.jupiter.Testcontainers
 
 /*-
  * #%L
@@ -42,60 +31,14 @@ import java.util.*
  * */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(OpenbaseDeadlockChecker::class)
+@Testcontainers
 open class MqttIntegrationTest {
-
-    companion object {
-        const val port = 1884
-        var mosquittoConfig: Path? = null
-        var broker: GenericContainer<*>? = null
-        val configLock = Any()
-    }
 
     @BeforeAll
     @Timeout(30)
     fun setupMqtt() {
-        synchronized(configLock) {
-            mosquittoConfig = Files.createTempFile("mosquitto_", ".conf")
-            Files.write(
-                mosquittoConfig, listOf(
-                    "allow_anonymous true",
-                    "listener " + port
-                )
-            )
-            GenericContainer(DockerImageName.parse("eclipse-mosquitto"))
-                .withExposedPorts(port)
-                .withFileSystemBind(
-                    mosquittoConfig.toString(),
-                    "/mosquitto/config/mosquitto.conf",
-                    BindMode.READ_ONLY
-                )
-                .apply { withStartupTimeout(Duration.ofSeconds(30)).start() }
-                .also {
-                    if (broker?.takeIf { it.containerId != null } != null)
-                        error("broker was already initialized!")
-                }
-                .also { broker = it }
-                .also { setupProperties() }
-        }
-    }
-
-    @AfterAll
-    @Timeout(30)
-    fun tearDownMQTT() {
-        synchronized(configLock) {
-            waitForShutdown()
-            broker?.stop()
-            Files.delete(mosquittoConfig)
-        }
-    }
-
-    @Throws(JPServiceException::class)
-    private fun setupProperties() {
-        JPService.reset()
-        JPService.registerProperty(JPComPort::class.java, broker!!.firstMappedPort)
-        JPService.registerProperty(JPComHost::class.java, broker!!.host)
+        MqttBrokerManager.setupMqtt(this::class.java.simpleName, 1884)
         setupCustomProperties()
-        JPService.setupJUnitTestMode()
     }
 
     open fun setupCustomProperties() {}

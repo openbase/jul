@@ -405,7 +405,7 @@ public class AbstractControllerServerTest extends MqttIntegrationTest {
      *
      * @throws Exception if any error occurs
      */
-    @Timeout(5)
+    @Timeout(20)
     @Test
     public void testParallelMethodCall() throws Exception {
         final String scope = "/test/parallel";

@@ -52,7 +52,13 @@ object SharedMqttClient : Shutdownable {
         sharedClients.values
             .filter { (it as Mqtt5ClientWrapper).isConnected() }
             .map { it.disconnect() }
-            .map { it.get() }
+            .map {
+                runCatching { it.get() }
+                    .getOrElse { t -> check(t.message == "com.hivemq.client.mqtt.exceptions.MqttClientStateException: MQTT client is not connected.") {
+                        "Could not disconnect client connection: ${t.message}" }
+                        null
+                    }
+            }
             .run { sharedClients.clear() }
 
     @Synchronized
