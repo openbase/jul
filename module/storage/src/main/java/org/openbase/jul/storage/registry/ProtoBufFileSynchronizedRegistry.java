@@ -181,7 +181,11 @@ public class ProtoBufFileSynchronizedRegistry<KEY extends Comparable<KEY>, M ext
 
     @Override
     public M remove(M message) throws CouldNotPerformException {
-        return remove(new IdentifiableMessage<>(message)).getMessage();
+        IdentifiableMessage<KEY, M, MB> removedEntry = super.remove(new IdentifiableMessage<>(message));
+        if (removedEntry == null) {
+            return null;
+        }
+        return removedEntry.getMessage();
     }
 
     @Override
