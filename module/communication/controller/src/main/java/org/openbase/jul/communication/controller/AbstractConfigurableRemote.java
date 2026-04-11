@@ -37,8 +37,9 @@ import org.openbase.jul.iface.Configurable;
 import org.openbase.jul.pattern.controller.ConfigurableRemote;
 import org.openbase.jul.pattern.ObservableImpl;
 import org.openbase.jul.pattern.Observer;
-import org.openbase.jul.schedule.SyncObject;
 import org.openbase.type.communication.ScopeType.Scope;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import static org.openbase.jul.iface.provider.LabelProvider.TYPE_FIELD_LABEL;
 
 /**
  *
@@ -48,7 +49,10 @@ import org.openbase.type.communication.ScopeType.Scope;
  */
 public abstract class AbstractConfigurableRemote<M extends Message, CONFIG extends Message> extends AbstractIdentifiableRemote<M> implements ConfigurableRemote<String, M, CONFIG>, Configurable<String, CONFIG> {
 
-    private final SyncObject CONFIG_LOCK = new SyncObject("ConfigLock");
+    private final ReentrantReadWriteLock CONFIG_LOCK = new ReentrantReadWriteLock(true);
+
+    private volatile String cachedId = null;
+    private volatile String cachedLabel = null;
 
     private final Class<CONFIG> configClass;
     private CONFIG config;
@@ -70,28 +74,29 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
      */
     @Override
     public void init(final CONFIG config) throws InitializationException, InterruptedException {
-        synchronized (CONFIG_LOCK) {
-            try {
-                if (config == null) {
-                    throw new NotAvailableException("config");
-                }
-                currentScope = detectScope(config);
-                try {
-                    applyConfigUpdate(config);
-                } catch (CouldNotPerformException ex) {
-                    ExceptionPrinter.printHistory("Could not apply config update for " + this, ex, logger);
-                    try {
-                        if (JPService.getProperty(JPTestMode.class).getValue()) {
-                            throw new FatalImplementationErrorException("Could not apply config update for " + this, this, ex);
-                        }
-                    } catch (JPNotAvailableException ex1) {
-                        // to nothing if property could not be resovled.
-                    }
-                }
-                super.init(currentScope);
-            } catch (CouldNotPerformException ex) {
-                throw new InitializationException(this, ex);
+        CONFIG_LOCK.writeLock().lock();
+        try {
+            if (config == null) {
+                throw new NotAvailableException("config");
             }
+            currentScope = detectScope(config);
+            try {
+                applyConfigUpdate(config);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory("Could not apply config update for " + this, ex, logger);
+                try {
+                    if (JPService.getProperty(JPTestMode.class).getValue()) {
+                        throw new FatalImplementationErrorException("Could not apply config update for " + this, this, ex);
+                    }
+                } catch (JPNotAvailableException ex1) {
+                    // to nothing if property could not be resovled.
+                }
+            }
+            super.init(currentScope);
+        } catch (CouldNotPerformException ex) {
+            throw new InitializationException(this, ex);
+        } finally {
+            CONFIG_LOCK.writeLock().unlock();
         }
     }
 
@@ -105,30 +110,36 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
      */
     @Override
     public CONFIG applyConfigUpdate(final CONFIG config) throws CouldNotPerformException, InterruptedException {
-        synchronized (CONFIG_LOCK) {
+        CONFIG_LOCK.writeLock().lock();
+        try {
+            this.config = config;
+            configObservable.notifyObservers(config);
+
+            // detect scope change if instance is already active and reinit if needed.
             try {
-                this.config = config;
-                configObservable.notifyObservers(config);
-
-                // detect scope change if instance is already active and reinit if needed.
-                try {
-                    if (isActive() && !currentScope.equals(detectScope(config))) {
-                        currentScope = detectScope();
-                        reinit(currentScope);
-                    }
-                } catch (CouldNotPerformException ex) {
-                    throw new CouldNotPerformException("Could not verify scope changes!", ex);
+                if (isActive() && !currentScope.equals(detectScope(config))) {
+                    currentScope = detectScope();
+                    reinit(currentScope);
                 }
-
-                try {
-                    notifyConfigUpdate(config);
-                } catch (CouldNotPerformException ex) {
-                    ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify config update!", ex), logger);
-                }
-                return this.config;
             } catch (CouldNotPerformException ex) {
-                throw new CouldNotPerformException("Could not apply config update!", ex);
+                throw new CouldNotPerformException("Could not verify scope changes!", ex);
             }
+
+            try {
+                notifyConfigUpdate(config);
+            } catch (CouldNotPerformException ex) {
+                ExceptionPrinter.printHistory(new CouldNotPerformException("Could not notify config update!", ex), logger);
+            }
+
+            // Invalidate ID and label caches since the config has changed
+            cachedId = null;
+            cachedLabel = null;
+
+            return this.config;
+        } catch (CouldNotPerformException ex) {
+            throw new CouldNotPerformException("Could not apply config update!", ex);
+        } finally {
+            CONFIG_LOCK.writeLock().unlock();
         }
     }
 
@@ -143,8 +154,11 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
     }
 
     private Scope detectScope() throws NotAvailableException {
-        synchronized (CONFIG_LOCK) {
+        CONFIG_LOCK.readLock().lock();
+        try {
             return detectScope(getConfig());
+        } finally {
+            CONFIG_LOCK.readLock().unlock();
         }
     }
 
@@ -157,8 +171,11 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
     }
 
     protected final Object getConfigField(String name) throws CouldNotPerformException {
-        synchronized (CONFIG_LOCK) {
+        CONFIG_LOCK.readLock().lock();
+        try {
             return getConfigField(name, getConfig());
+        } finally {
+            CONFIG_LOCK.readLock().unlock();
         }
     }
 
@@ -175,27 +192,29 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
     }
 
     protected final boolean hasConfigField(final String name) throws CouldNotPerformException {
-        synchronized (CONFIG_LOCK) {
-            try {
-                Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
-                if (findFieldByName == null) {
-                    return false;
-                }
-                return config.hasField(findFieldByName);
-            } catch (Exception ex) {
+        CONFIG_LOCK.readLock().lock();
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
                 return false;
             }
+            return config.hasField(findFieldByName);
+        } catch (Exception ex) {
+            return false;
+        } finally {
+            CONFIG_LOCK.readLock().unlock();
         }
     }
 
     protected final boolean supportsConfigField(final String name) throws CouldNotPerformException {
-        synchronized (CONFIG_LOCK) {
-            try {
-                Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
-                return findFieldByName != null;
-            } catch (NullPointerException ex) {
-                return false;
-            }
+        CONFIG_LOCK.readLock().lock();
+        try {
+            Descriptors.FieldDescriptor findFieldByName = config.getDescriptorForType().findFieldByName(name);
+            return findFieldByName != null;
+        } catch (NullPointerException ex) {
+            return false;
+        } finally {
+            CONFIG_LOCK.readLock().unlock();
         }
     }
 
@@ -207,11 +226,14 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
      */
     @Override
     public CONFIG getConfig() throws NotAvailableException {
-        synchronized (CONFIG_LOCK) {
+        CONFIG_LOCK.readLock().lock();
+        try {
             if (config == null) {
                 throw new NotAvailableException("config");
             }
             return config;
+        } finally {
+            CONFIG_LOCK.readLock().unlock();
         }
     }
 
@@ -223,11 +245,18 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
      */
     @Override
     public String getId() throws NotAvailableException {
+        // Check cache first
+        if (cachedId != null) {
+            return cachedId;
+        }
+
         try {
             String tmpId = (String) getConfigField(TYPE_FIELD_ID);
             if (tmpId.isEmpty()) {
                 throw new InvalidStateException("config.id is empty!");
             }
+            // Update cache
+            this.cachedId = tmpId;
             return tmpId;
         } catch (CouldNotPerformException ex) {
             logger.debug("Config does not contain the remote id!");
@@ -239,6 +268,7 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
+     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
     public Class<CONFIG> getConfigClass() {

@@ -36,20 +36,39 @@ import org.openbase.jul.pattern.controller.IdentifiableController;
  */
 public abstract class AbstractIdentifiableController<M extends AbstractMessage, MB extends M.Builder<MB>> extends AbstractControllerServer<M, MB> implements IdentifiableController<String, M> {
 
+    private volatile String cachedId = null;
+    private volatile boolean idCacheValid = false;
+
     public AbstractIdentifiableController(MB builder) throws InstantiationException {
         super(builder);
     }
 
     @Override
     public String getId() throws NotAvailableException {
+        // Check cache first
+        if (idCacheValid && cachedId != null) {
+            return cachedId;
+        }
+
         try {
             String id = (String) getDataField(TYPE_FIELD_ID);
             if (id.isEmpty()) {
                 throw new InvalidStateException("data.id is empty!");
             }
+            // Update cache
+            this.cachedId = id;
+            this.idCacheValid = true;
             return id;
         } catch (CouldNotPerformException ex) {
             throw new NotAvailableException("data.id", ex);
         }
+    }
+
+    /**
+     * Invalidates the ID cache. Should be called whenever the ID field is updated.
+     */
+    protected void invalidateIdCache() {
+        this.idCacheValid = false;
+        this.cachedId = null;
     }
 }
