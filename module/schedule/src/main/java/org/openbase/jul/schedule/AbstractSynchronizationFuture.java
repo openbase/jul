@@ -113,7 +113,7 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
         try {
             try {
                 beforeWaitForSynchronization(message);
-            } catch (final Exception ex) {
+            } catch (final CouldNotPerformException ex) {
                 throw new CouldNotPerformException("Pre execution task failed!", ex);
             }
 
