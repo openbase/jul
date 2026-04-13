@@ -93,14 +93,14 @@ public abstract class AbstractSynchronizationFuture<T, DATA_PROVIDER extends Dat
             final T result = getInternalFuture().get(timeSplit.getTime(), TimeUnit.MILLISECONDS);
             return waitForSynchronization(result, timeSplit.getTime(), TimeUnit.MILLISECONDS);
         } catch (CouldNotPerformException | ExecutionException ex) {
-            if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
-                ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
-            }
-
             // handle timeout exception
             final Throwable initialCause = ExceptionProcessor.getInitialCause(ex);
             if (initialCause instanceof TimeoutException || initialCause instanceof org.openbase.jul.exception.TimeoutException) {
                 throw new TimeoutException();
+            }
+
+            if (!ExceptionProcessor.isCausedBySystemShutdown(ex)) {
+                ExceptionPrinter.printHistory("Could not sync with internal future!", ex, logger);
             }
 
             throw new CouldNotPerformException("Could not validate future synchronisation!", ex);
