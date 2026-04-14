@@ -25,8 +25,6 @@ package org.openbase.jul.communication.controller;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Any;
 import com.google.protobuf.Descriptors;
-import kr.pe.kwonnam.slf4jlambda.LambdaLogger;
-import kr.pe.kwonnam.slf4jlambda.LambdaLoggerFactory;
 import org.openbase.jul.annotation.RPCMethod;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.iface.CommunicatorFactory;
@@ -54,6 +52,8 @@ import org.openbase.type.communication.EventType;
 import org.openbase.type.communication.EventType.Event;
 import org.openbase.type.communication.ScopeType.Scope;
 import org.openbase.type.domotic.state.AvailabilityStateType.AvailabilityState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -82,7 +82,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
 
     public final static String RPC_REQUEST_STATUS = "requestStatus";
 
-    protected final LambdaLogger logger = LambdaLoggerFactory.getLogger(getClass());
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ShutdownDaemon shutdownDaemon;
 
