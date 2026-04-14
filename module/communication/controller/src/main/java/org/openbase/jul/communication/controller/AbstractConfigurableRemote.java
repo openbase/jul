@@ -268,7 +268,6 @@ public abstract class AbstractConfigurableRemote<M extends Message, CONFIG exten
      * {@inheritDoc}
      *
      * @return {@inheritDoc}
-     * @throws NotAvailableException {@inheritDoc}
      */
     @Override
     public Class<CONFIG> getConfigClass() {
