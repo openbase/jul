@@ -1,7 +1,7 @@
 # JUL - A Java Utility Library 
 
 [![Dev](https://github.com/openbase/jul/actions/workflows/build-and-test.yml/badge.svg?branch=dev)](https://github.com/openbase/jul/actions/workflows/build-and-test.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/org.openbase/jul.svg?label=Latest%20Version)](https://search.maven.org/artifact/org.openbase/jul)
+[![Latest Version](https://img.shields.io/maven-central/v/org.openbase/jul.storage?label=Latest%20Version)](https://central.sonatype.com/artifact/org.openbase/jul.storage)
 
 A collection of java / kotlin utilities featured by [openbase.org](https://openbase.org).
 
@@ -47,4 +47,3 @@ The next gradle build will use the new dependency version without any further st
 your gradle settings within IntelliJ in case you are not using the gradle `auto-reload setting` feature.
 
 Further details about the plugin can be found at: https://jmfayard.github.io/refreshVersions/
-
