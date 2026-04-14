@@ -97,17 +97,11 @@ public class TransactionSynchronizationFuture<T extends Message, REMOTE extends 
         // get transaction id from message
         final long transactionId = (long) message.getField(transactionIdField);
 
-        // to work with older versions where no transaction id has been accept empty ids and print a warning
-        if (!message.hasField(transactionIdField) || transactionId == 0) {
-            logger.warn("Received return value without transactionId");
-            return true;
-        }
-
         // check that the received transaction id has been reached by the provider
         final boolean result = dataProvider.getTransactionId() >= transactionId;
 
         if (!result) {
-            logger.trace("Outdated transition {} received, waiting for {} of {}", dataProvider.getTransactionId(), transactionId, dataProvider);
+            logger.debug("Outdated transition {} received, waiting for {} of {}", dataProvider.getTransactionId(), transactionId, dataProvider.getClass().getSimpleName());
         }
 
         return result;

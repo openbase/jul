@@ -28,6 +28,7 @@ import com.google.protobuf.Message;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function2;
 import org.openbase.jps.core.JPService;
+import org.openbase.jps.preset.JPTestMode;
 import org.openbase.jul.communication.config.CommunicatorConfig;
 import org.openbase.jul.communication.data.RPCResponse;
 import org.openbase.jul.communication.exception.RPCException;
@@ -47,6 +48,7 @@ import org.openbase.jul.extension.protobuf.processing.MessageProcessor;
 import org.openbase.jul.extension.protobuf.processing.SimpleMessageProcessor;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
+import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.pattern.CompletableFutureLite;
 import org.openbase.jul.pattern.Observable;
 import org.openbase.jul.pattern.ObservableImpl;
@@ -556,6 +558,8 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      */
     protected void reinit(final Scope scope) throws InterruptedException, CouldNotPerformException {
 
+        logger.debug("Reinit with scope [" + ScopeProcessor.generateStringRep(scope) + "]");
+
         // to not reinit if shutdown is in progress!
         if (shutdownInitiated) {
             throw new ShutdownInProgressException(this);
@@ -651,6 +655,20 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
     }
 
     private void setConnectionState(final ConnectionState.State connectionState) {
+        var scope = "na";
+        try {
+            scope = ScopeProcessor.generateStringRep(getScope());
+        } catch (Exception e) {
+            //
+        }
+
+        var tid = -9L;
+        try {
+            tid = getTransactionId();
+        } catch (NotAvailableException e) {
+            //
+        }
+        logger.debug("Connection state changed to " + connectionState + " for " + scope + " in transaction [" + tid + "]");
         synchronized (connectionMonitor) {
             if (this.connectionState == RECONNECTING && connectionState == CONNECTED) {
                 // while reconnecting and not yet deactivated a data update can cause switching to connected which causes
@@ -1081,6 +1099,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                 ExceptionPrinter.printVerboseMessage("Remote connection to Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] was detached because the controller shutdown was initiated.", logger);
 
                 // reset transaction id because controller will start at 0 again after reconnect.
+                logger.warn("prepare remote for reconnect...");
                 transactionId = 0;
                 setConnectionState(CONNECTING);
 
@@ -1320,6 +1339,18 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
     protected final Object getDataField(String name) throws CouldNotPerformException {
         try {
             Descriptors.FieldDescriptor findFieldByName = getData().getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                throw new NotAvailableException("Field[" + name + "] does not exist for type " + getData().getClass().getName());
+            }
+            return getData().getField(findFieldByName);
+        } catch (Exception ex) {
+            throw new CouldNotPerformException("Could not return value of field [" + name + "] for " + this.getClass().getSimpleName(), ex);
+        }
+    }
+
+    protected final Object getDataField(String name, M data) throws CouldNotPerformException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
             if (findFieldByName == null) {
                 throw new NotAvailableException("Field[" + name + "] does not exist for type " + getData().getClass().getName());
             }
@@ -1623,6 +1654,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
      */
     @Override
     public Future<Long> ping() {
+//        logger.debug("Ping " + getScopeStringRep() + "...");
         synchronized (pingLock) {
 
             if (shutdownInitiated) {
@@ -1640,6 +1672,13 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                             final Long requestTime = internalTask.get(JPService.testMode() ? PING_TEST_TIMEOUT : PING_TIMEOUT, TimeUnit.MILLISECONDS).getResponse();
                             lastPingReceived = System.currentTimeMillis();
                             connectionPing = lastPingReceived - requestTime;
+                            long tid = -9;
+                            try {
+                                tid = getTransactionId();
+                            } catch (NotAvailableException e) {
+                                //
+                            }
+                            logger.debug("Ping " + getScopeStringRep() + " successful with delay " + connectionPing + " ms in transaction "+ tid);
                             return connectionPing;
                         } finally {
                             if (internalTask != null && !internalTask.isDone()) {
@@ -1839,9 +1878,12 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
 
                         try {
                             // get() is fine because ping task has internal timeout, so task will fail after timeout anyway.
-                            ping().get();
+                            logger.debug("init ping");
+                            var res = ping().get();
+                            logger.debug("got ping ["+res +"] and request status...");
                             //event = internalFuture.get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
                             final RPCResponse<M> response = internalRequestStatus().get(REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
+                            logger.debug("got response");
 
                             try {
                                 if (!validateAndUpdateEventTimestamp(response.getProperties())) {
@@ -1853,6 +1895,13 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                             }
 
                             receivedData = response.getResponse();
+                            long tid = -9L;
+                            try {
+                                tid = (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, receivedData);
+                            } catch (CouldNotPerformException ex) {
+                                ExceptionPrinter.printHistory("Received data of transaction does not contain a transaction id field with name [" + TransactionIdProvider.TRANSACTION_ID_FIELD_NAME + "] on scope " + getScopeStringRep(), ex, logger);
+                            }
+                            logger.debug("got data of transaction: "+ tid);
 
                             if (timeout != METHOD_CALL_START_TIMEOUT && timeout > 15000 && isRelatedFutureCancelled()) {
                                 logger.info("Got response from Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] and continue processing.");
@@ -1899,9 +1948,14 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                                     logger.warn("Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] does not respond: " + ExceptionProcessor.getInitialCauseMessage(ex) + "  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                                 } else {
                                     //ExceptionPrinter.printHistory(ex, logger, LogLevel.DEBUG);
-                                    logger.debug("Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] does not respond: +ExceptionProcessor.getInitialCauseMessage(ex)+  Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
+                                    logger.debug("Controller[" + ScopeProcessor.generateStringRep(getScope()) + "] does not respond:  "+ ExceptionProcessor.getInitialCauseMessage(ex) + " Next retry timeout in " + (int) (Math.floor(timeout / 1000)) + " sec.");
                                 }
                             } finally {
+                                if(JPService.getValue(JPTestMode.class)) {
+                                    if(StackTracePrinter.detectDeadLocksAndPrintStackTraces(logger)) {
+                                        System.exit(1);
+                                    }
+                                }
                                 // wait until controller is maybe available again
                                 Thread.sleep(timeout);
                             }
@@ -1914,6 +1968,7 @@ public abstract class AbstractRemoteClient<M extends Message> implements RPCRemo
                             return data;
                         }
                     }
+                    logger.debug("Apply received data and notify observers...");
                     applyDataUpdate(receivedData);
                     return receivedData;
                     //return applyEventUpdate(event, relatedFuture);

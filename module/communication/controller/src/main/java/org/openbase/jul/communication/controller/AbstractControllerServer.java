@@ -43,6 +43,7 @@ import org.openbase.jul.extension.protobuf.BuilderSyncSetup.NotificationStrategy
 import org.openbase.jul.extension.type.iface.ScopeProvider;
 import org.openbase.jul.extension.type.iface.TransactionIdProvider;
 import org.openbase.jul.extension.type.processing.ScopeProcessor;
+import org.openbase.jul.iface.Identifiable;
 import org.openbase.jul.iface.Pingable;
 import org.openbase.jul.iface.Readyable;
 import org.openbase.jul.pattern.Observer;
@@ -471,6 +472,14 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      * @throws InterruptedException
      */
     private void setAvailabilityState(final AvailabilityState.State controllerAvailability) throws InterruptedException {
+        var scope = "na";
+        try {
+            scope = ScopeProcessor.generateStringRep(getScope());
+        } catch (Exception e) {
+            //
+        }
+
+        logger.debug("Availability state changed to " + controllerAvailability + " for " + scope + " in transaction " + getTransactionId()  );
         synchronized (controllerAvailabilityMonitor) {
 
             // filter unchanged events
@@ -778,7 +787,7 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public void notifyChange() throws CouldNotPerformException, InterruptedException {
-        logger.debug("Notify data change of {}", this);
+        logger.debug("Notify data change of {}", ScopeProcessor.generateStringRep(scope));
         // synchronized by manageable lock to prevent reinit between validateInitialization and publish
         M newData;
         manageLock.lockWriteInterruptibly(this);
@@ -939,6 +948,25 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      *
      * @return
      *
+     * @throws NotAvailableException
+     */
+    protected final Object getDataField(String name, M data) throws NotAvailableException {
+        try {
+            Descriptors.FieldDescriptor findFieldByName = data.getDescriptorForType().findFieldByName(name);
+            if (findFieldByName == null) {
+                throw new NotAvailableException("Field[" + name + "] does not exist for type " + data.getClass().getName());
+            }
+            return data.getField(findFieldByName);
+        } catch (Exception ex) {
+            throw new NotAvailableException(this.getClass(), name, ex);
+        }
+    }
+
+    /**
+     * @param name
+     *
+     * @return
+     *
      * @throws CouldNotPerformException
      */
     protected final boolean hasDataField(final String name) throws CouldNotPerformException {
@@ -1061,6 +1089,15 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
      */
     @Override
     public Future<Long> ping(final Long timestamp) {
+        var scope = "na";
+        try {
+            scope = ScopeProcessor.generateStringRep(getScope());
+        } catch (Exception e) {
+            //
+        }
+
+        logger.debug("Ping requested for " + scope + " in transaction [" + getTransactionId() + "]");
+
         try {
             validateMiddleware();
         } catch (InvalidStateException e) {
@@ -1087,14 +1124,24 @@ public abstract class AbstractControllerServer<M extends AbstractMessage, MB ext
     @RPCMethod
     @Override
     public M requestStatus() throws CouldNotPerformException {
-        logger.trace("requestStatus of {}", this);
+        M dataToSend;
         try {
-            return getData();
+            dataToSend = getData();
         } catch (RuntimeException ex) {
             throw ex;
         } catch (Exception ex) {
             throw ExceptionPrinter.printHistoryAndReturnThrowable(new CouldNotPerformException("Could not request status update.", ex), logger, LogLevel.ERROR);
         }
+
+        long tid = -9L;
+        try {
+            tid = (Long) getDataField(TransactionIdProvider.TRANSACTION_ID_FIELD_NAME, dataToSend);
+        } catch (CouldNotPerformException ex) {
+            //
+        }
+        logger.debug("3 return requested status of transaction {} == {}", transaction_id, tid);
+
+        return dataToSend;
     }
 
     /**
